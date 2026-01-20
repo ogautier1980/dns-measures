@@ -34,7 +34,18 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Large data files (decommenter si necessaire)
-# *.csv
-# *.json
-# *.parquet
+# Large data files and outputs (not needed in build context)
+data/raw/*
+data/processed/*
+output/*
+reports/*.pdf
+reports/*.html
+latex/*.pdf
+
+# Documentation PDFs (already in sources)
+*.pdf
+
+# Temporary files
+tmp/
+temp/
+*.cache

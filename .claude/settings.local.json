@@ -9,7 +9,9 @@
       "Bash(powershell.exe -Command \"docker version\")",
       "Bash(powershell.exe -Command \"cd ''c:\\\\Users\\\\ogaut\\\\dns-measures''; docker build -t dns-measures .\")",
       "Bash(powershell.exe -Command:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
