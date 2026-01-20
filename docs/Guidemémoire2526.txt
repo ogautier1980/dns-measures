@@ -1,0 +1,896 @@
+Guide du mémoire
+INFOM217 – INFOM010 – IHDCM050
+
+Dernière mise à jour le 16/10/2025
+
+Table des matières
+1. Le mémoire : qu’est-ce que c’est ? .......................................................................................... 3
+2. Qui est là pour vous accompagner ? ........................................................................................ 3
+2.1. Votre promoteur ................................................................................................................. 3
+2.2. La coordinatrice pédagogique de la faculté ........................................................................... 4
+2.3. Le secrétariat de la faculté .................................................................................................. 4
+2.4. Le vice-doyen de la faculté .................................................................................................. 5
+3. Le contenu du mémoire .......................................................................................................... 5
+3.1. Remerciements .................................................................................................................. 5
+3.2. Résumé et abstract ............................................................................................................ 5
+3.3. Glossaire/Liste des acronymes ............................................................................................ 5
+3.4. Table des matières ............................................................................................................. 6
+3.5. Introduction ........................................................................................................................ 6
+3.6. État de l’art ........................................................................................................................ 6
+3.7. Développement de la recherche .......................................................................................... 7
+3.8. Discussion ......................................................................................................................... 8
+3.9. Conclusion ......................................................................................................................... 8
+3.10. Bibliographie ...................................................................................................................... 9
+3.11. Annexes ............................................................................................................................ 9
+4. La page « mémoire ».............................................................................................................. 9
+5. Les sujets de mémoire.......................................................................................................... 10
+6. Les modalités pratiques ........................................................................................................ 10
+6.1. Le dépôt du mémoire ........................................................................................................ 10
+6.2. Ce qu’il faut rendre, quand et comment .............................................................................. 10
+7. La défense du mémoire ........................................................................................................ 11
+8. Les critères d’évaluation ....................................................................................................... 12
+9. Les prix des mémoires.......................................................................................................... 14
+9.1. Procédure pour poser sa candidature ................................................................................. 14
+10.
+Des outils pratiques .......................................................................................................... 15
+10.1. Les « p.o.s.t. i.t.s. » du mémoire (p.16)
+10.2. Etablir une bibliographie et référencer ses sources (p.19)
+10.3. Exemple de fiche de lecture pour préparer le travail de synthèse (p.21)
+10.4. Zoom sur la synthèse et la rédaction de l’état de l’art (p.22)
+10.5. Conseils pour préparer la défense du mémoire (p.23)
+
+2
+
+1. Le mémoire : qu’est-ce que c’est ?
+Le mémoire est un travail de recherche mené selon les modalités applicables à une recherche
+scientifique.
+La réalisation d’un mémoire poursuit deux objectifs principaux :
+1) vous former aux principes de la recherche scientifique ;
+2) vérifier votre capacité à étudier une problématique relevant du domaine des sciences
+informatiques.
+Vous endossez donc le rôle d’un « chercheur » et vous vous exercez aux différentes tâches qui
+lui incombent. Le mémoire est un travail personnel et original.
+La réalisation du mémoire se concrétise par la production d’un document écrit personnel rédigé
+en français ou en anglais et sa présentation orale. Le mémoire est avant tout un exercice à
+caractère méthodologique. Il devra vous permettre de vous engager dans une démarche
+scientifique.
+Le mémoire du programme de Master120 est basé sur la réalisation d’un stage dans une
+entreprise, une équipe de recherche, en Belgique ou à l’étranger ; contrairement au mémoire
+réalisé dans le cadre du programme de Master60 qui ne comporte pas de stage.
+Un même sujet de mémoire peut être partagé par deux étudiants.
+Le plagiat est INTERDIT et PUNISSABLE. Il peut être sanctionné par une note de 0/20. Les
+autorités de l’UNamur ont rédigé des documents afin de sensibiliser à l'importance du respect
+de la propriété intellectuelle. Ces documents et ressources sont disponibles à l'adresse
+suivante : https://www.unamur.be/plagiat
+
+2. Qui est là pour vous accompagner ?
+2.1. Votre promoteur
+Votre promoteur a un rôle d’orientation et de conseil. Il vous accompagne tout au long de la
+réalisation de votre mémoire.
+o
+
+Au début de votre travail : votre promoteur vous aide à définir votre question de
+départ, votre problématique, votre méthode de travail. Il vous conseille différentes
+ressources pour la bonne réalisation de votre travail.
+o Au fil de votre travail : votre promoteur critique et apprécie votre avancement. Il
+discute des éléments pertinents à faire figurer dans votre travail, des
+approfondissements et/ou des redirections à entreprendre. Il lit les différentes
+parties de votre mémoire au fil de l’avancement.
+o A la fin de votre travail : votre promoteur relit la version la plus aboutie possible de
+votre mémoire afin de vous rendre un feedback avant le dépôt de la version
+définitive. C’est lui qui donne, ou non, son accord pour le dépôt et juge ainsi la
+qualité scientifique de votre travail.
+3
+
+-
+
+Si avoir un promoteur est obligatoire, avoir un ou deux co-promoteur(s)
+est optionnel. Le co-promoteur endosse le même rôle d’accompagnement
+que le promoteur, mais il n’est pas le responsable académique de
+l’encadrement. Le responsable académique est le promoteur. Le rôle
+d’accompagnement du co-promoteur est ainsi tenu de manière collégiale
+avec le promoteur du mémoire. Il doit y avoir un accord entre le copromoteur et le promoteur face au dépôt du mémoire. De plus, le copromoteur et le promoteur proposent une note commune lors de
+l’évaluation du mémoire.
+
+-
+
+Dès le départ, c’est à vous que revient l’initiative de prendre contact avec votre
+promoteur et/ou co-promoteur. Vous devez le/les tenir régulièrement au courant de
+l’avancement du travail et solliciter les rencontres que vous jugez utiles.
+
+-
+
+Vous êtes le seul responsable de votre mémoire. Votre promoteur (et co-promoteur(s))
+n'intervient nullement dans "la réalisation" proprement dite de votre mémoire et n’en a
+aucunement la responsabilité finale.
+
+2.2. La coordinatrice pédagogique de la faculté
+(fanny.boraita@unamur.be – bureau 309)
+La coordinatrice pédagogique a un rôle d’orientation et de conseil « méthodologiques ». Elle
+peut vous guider dans les différentes étapes de réalisation de votre travail, vous conseiller sur
+une façon de faire pour rédiger une partie spécifique de votre mémoire, etc. N’hésitez-donc
+pas à la contacter. Elle gère, en concertation avec le vice-doyen, l’attribution des sujets, les cas
+problématiques, notamment les désaccords, et la validation des dépôts de mémoire sur
+Webcampus.
+
+-
+
+Pensez à consulter l’outil « Post its » (p.17) qui fournit les balises essentielles à
+garder en tête tout au long de votre travail.
+
+2.3. Le secrétariat de la faculté
+(secretariat.info@unamur.be – bureau 202a)
+Le secrétariat facultaire assure le conseil aux étudiants pour les questions liées aux stages
+(mobilité, financement, convention) et aide le vice-doyen dans la réalisation de ses tâches
+(horaire, composition du jury).
+
+4
+
+2.4. Le vice-doyen de la faculté
+(vice-doyen.info@unamur.be – bureau 206)
+Le vice-doyen de la faculté veille au respect du règlement relatif aux mémoires (voir Règlement
+des Études et des Évaluations). Il fixe le calendrier (dates de récolte des sujets des promoteurs,
+des préférences des étudiants, de l’attribution des sujets, des dépôts de mémoires, …). Il est
+responsable de la procédure de récolte des sujets auprès des promoteurs et des préférences
+de choix des étudiants. Le vice-doyen, en concertation avec la coordinatrice pédagogique,
+établit une proposition d’attribution des sujets de mémoire à soumettre au Bureau Facultaire,
+gère les cas problématiques et valide le dépôt des mémoires sur Webcampus.
+
+3. Le contenu du mémoire
+REMARQUE PRÉALABLE IMPORTANTE : La structure qui suit est une structure qui a pour but de vous
+donner un aperçu général de ce qui est classiquement attendu dans l’organisation d’un mémoire. Chaque
+point sera intégré selon la pertinence de votre travail. Cette structure sera donc à adapter selon la nature
+de votre mémoire et en concertation avec votre promoteur.
+-
+
+Pensez à utiliser le template qui se trouve sur la page mémoire (voir point
+4, p.9). Le template propose une structure-type et indique directement les
+conventions d’écriture à respecter (police et taille, page de garde, résumé,
+insertion des figures…)
+
+3.1. Remerciements
+Cette partie est destinée à adresser des remerciements aux différentes personnes qui ont aidé
+à la réalisation du travail. Cette partie est généralement rédigée lorsque le dépôt du mémoire
+a été autorisé.
+
+3.2. Résumé et abstract
+Le résumé se rédige en fin de travail puisqu’il résume votre recherche (de votre problématique
+à vos résultats). Il doit être rédigé en français et en anglais (abstract). Des mots-clés et des
+keywords doivent également être ajoutés. Le résumé ne doit pas excéder ½ page ; le résumé et
+l’abstract doivent impérativement tenir sur une seule page en début du mémoire.
+
+3.3. Glossaire/Liste des acronymes
+Un glossaire et/ou une liste des acronymes peuvent être utiles lorsque le mémoire contient un
+nombre important d’acronymes et/ou un vocabulaire spécialisé. Cette partie est donc
+facultative. Elle n’a sa place que si vous recourez à une terminologie spécifique qui se retrouve
+de façon abondante dans votre travail.
+
+5
+
+3.4. Table des matières
+La table des matières reprend le plan du travail et permet au lecteur de saisir d'emblée le fil
+conducteur. La table des matières doit être simple et claire.
+
+-
+
+-
+
+Il est vivement conseiller d'adopter une numérotation continue des
+différents points, même si le travail est subdivisé en plusieurs parties.
+
+-
+
+Limitez-vous à 3 chiffres (ex : 2.1.1.) car les numérotations telles que
+3.1.2.4.5 sont parfaitement inintelligibles.
+
+Pensez à faire valider votre table des matières en début de travail. Elle garantit la structure
+de votre mémoire. Elle vous servira de fil conducteur et vous permettra de progresser
+dans un cadre précis. Bien entendu, elle pourra être adaptée en cours de route en fonction
+de votre avancement.
+
+3.5. Introduction
+L’introduction ne doit pas être longue : deux ou trois pages devraient suffire. Elle a pour
+objectifs d’annoncer le cadre général de la recherche et d’expliciter la problématique plus
+précise qui y est traitée. L’introduction doit contenir les éléments suivants :
+-
+
+la définition claire de l’objet du travail ;
+la mise en contexte de la problématique étudiée ;
+la mise en évidence de la méthode de travail, des outils et sources utilisés ;
+la présentation brève du cheminement du travail.
+-
+
+Les balises de votre introduction peuvent être posées en début de travail.
+Néanmoins, vous rédigerez l’entièreté de votre introduction en fin de
+travail afin de disposer d’une vue d’ensemble de tous les éléments qui y
+sont attendus.
+
+3.6. État de l’art
+L'état de l'art constitue un état des connaissances existantes, à un moment donné, sur un objet
+d'étude (Decroly, 2009). Il s’agit donc de consulter la littérature scientifique relative à votre
+sujet et d’en faire une synthèse. Il ne s’agit pas de faire un « catalogue » en juxtaposant et
+compilant les informations retenues. En rédigeant l’état de l’art, votre objectif est de justifier
+votre problématique, de démontrer sa pertinence et son intérêt au regard du contexte actuel
+(Decroly, 2009).
+
+6
+
+La rédaction d'un état de l'art comprend trois étapes :
+1) La réalisation d'une bibliographie aussi complète que possible en relation avec l'objet
+d'étude.
+-
+
+Il ne faudrait pas que vous passiez à côté d’une référence incontournable !
+Pensez à consulter votre promoteur quant à la pertinence de votre
+bibliographie.
+
+2) La synthèse des informations pertinentes qui figurent dans les références
+bibliographiques. Au cours de cette étape, il convient de retirer des lectures consultées
+ce qui est important pour le travail à réaliser.
+-
+
+Faire des courtes fiches de lecture peut être utile pour synthétiser les
+informations.
+Pensez à consulter l’outil « Fiche de lecture » p.22. Il vous explique
+comment rédiger et utiliser ces fiches pour préparer le travail de
+synthèse.
+Votre coordinatrice pédagogique peut vous aider à élaborer ces fiches
+et/ou vous conseiller sur une méthode à adopter pour réaliser cette
+synthèse.
+
+3) La rédaction de l'état de l'art. Si l'étape de synthèse a été soigneusement menée, la
+rédaction sera relativement aisée. Il suffit en effet de reprendre les principaux éléments
+de la synthèse et de les organiser de façon attrayante et cohérente.
+-
+
+N’oubliez pas que dans la réalisation de l’état de l’art, vous endossez déjà
+le rôle de chercheur ! Il vous appartient donc de juger ce qui est pertinent
+pour votre recherche.
+Pensez à consulter l’outil « Synthèse » p.23. Il vous explique comment
+établir une synthèse et rédiger l’état de l’art.
+
+3.7. Développement de la recherche
+Cette partie sert à décrire précisément le développement de votre recherche : ce que vous avez
+fait, comment vous vous y êtes pris, pourquoi, les résultats qui en découlent, les analyses que
+vous en faites. C’est dans cette partie que vous allez plonger le lecteur dans votre démarche
+scientifique. Cette partie peut être variable d’un mémoire à l’autre, en fonction du sujet étudié,
+de la recherche menée ou développée, des attentes de votre promoteur. Quoi qu’il en soit,
+généralement, il est attendu que l’on retrouve les éléments suivants dans cette partie :
+7
+
+•
+•
+
+•
+
+une description de votre problématique/question de recherche ;
+une description et une justification de votre méthodologie (participants ou
+public-cible visé, étapes de conception et/ou de testing, méthode de collecte de
+données, de description des analyses, …) ;
+une description de vos résultats : il s’agit bien d’une description des données
+récoltées ou de l’outil, de l’application, …. Vous êtes dans une écriture objective,
+il n’y a aucune interprétation personnelle.
+-
+
+Aller consulter des mémoires réalisés précédemment peut être très utile
+pour l’organisation de vos différents points.
+N’oubliez pas de faire valider cette structure (qui apparait dans votre table
+des matières) par votre promoteur.
+
+3.8. Discussion
+La discussion est la partie de votre mémoire dans laquelle il y aura une interprétation :
+interprétation des résultats en lien avec l’état de l’art, la question de recherche/la
+problématique. La discussion est différente de la partie conclusion qui arrive en fin de mémoire.
+
+3.9. Conclusion
+Cette dernière partie ne doit pas être longue : trois pages suffisent. Il s’agit de rédiger une sorte
+de bilan de votre recherche. C’est donc en fin de travail que cette partie sera écrite.
+La conclusion a pour objectifs de récapituler les axes essentiels de votre travail et de mettre en
+évidence l’apport original de votre travail. Si des pistes de réflexion n’ont pas pu être suivies
+(pour diverses raisons à signaler) mais qu’elles ont un intérêt particulier, elles peuvent être
+explicitées dans cette partie. De plus, les pistes à explorer à la suite à votre travail et les
+perspectives qui découlent doivent également figurer dans votre conclusion.
+-
+
+Avec le recul, si vous identifiez des limites à votre travail et/ou si vous
+envisageriez d’autres façons de procéder si c’était à refaire, pensez à en
+discuter dans votre conclusion.
+
+REMARQUE IMPORTANTE : Veillez à bien articuler chacune des différentes parties de votre travail.
+Le but n’est pas de juxtaposer chaque partie et chaque point mais d’en faire un tout cohérent !!
+
+8
+
+3.10.
+
+Bibliographie
+
+Les références sur lesquelles se base un mémoire doivent être scientifiques. Elles doivent être
+répertoriées de façon systématique, complète et exacte. Toutes les références que vous
+reprenez dans votre liste bibliographique doivent avoir été effectivement consultées. De plus,
+chaque référence bibliographique doit correspondre au moins à un ‘renvoi’ au sein de votre
+texte.
+-
+
+Pensez à consulter votre promoteur pour qu’il vous conseille des
+références scientifiques. Assurez-vous qu’il approuve votre bibliographie.
+Pensez à consulter l’outil « Bibliographie » p.20. Il vous explique
+comment rédiger vos références et vos renvois.
+Pensez à utiliser Zotero pour la gestion de vos références.
+
+3.11. Annexes
+Il s’agit de toutes les informations qui sont complémentaires, c’est-à-dire non indispensables à
+la compréhension et au développement du raisonnement principal (Van Wymeersch, 1986). Il
+s’agit entre autres des tableaux statistiques, des (longues) démonstrations mathématiques, des
+questionnaires…
+
+-
+
+Toute annexe doit être référencée dans le texte du mémoire.
+Numérotez vos annexes et faites une table des annexes pour faciliter la
+lecture. N’oubliez pas de renvoyer le lecteur aux annexes au moment
+opportun dans votre texte.
+Si vous devez intégrer du code dans votre mémoire, privilégiez l’insertion
+de parcelles de code en format image dans votre texte et renvoyez dans
+les annexes ou dans un autre support informatique l’intégralité de votre
+code. Notez bien que cet aspect doit être discuté avec votre promoteur.
+
+4. La page « mémoire »
+La page mémoire https://www.info.unamur.be/memoires/ reprend l’ensemble des
+promoteurs de la faculté ainsi que leurs thématiques recherche et leurs sujets de mémoire. Elle
+contient également l’ensemble des ressources relatives au mémoire : le calendrier, les
+différents règlements, les conditions de participation aux prix des mémoires, le guide
+méthodologique, la page de garde du mémoire (qui est la page de signature du promoteur pour
+attester du dépôt), un template pour la rédaction du document écrit. Cette page est à votre
+disposition dès que vous êtes inscrit au bloc 1 du Master 120 ou au bloc 3 ou UES du Master 60
+(programme de jour et programme en horaire décalé).
+9
+
+5. Les sujets de mémoire
+Chaque promoteur présente, sur la page mémoire, ses thématiques recherche. À partir de ces
+informations, vous pouvez contacter un promoteur afin de lui proposer un sujet qui vous est
+personnel et que vous souhaiteriez développer avec lui. Les promoteurs mettent également à
+disposition des étudiants une liste de sujets. Il est vivement conseillé de rencontrer au préalable
+le promoteur d’un sujet qui vous intéresse particulièrement. Avec son accord, ce sujet pourrait
+vous être réservé.
+Pour déterminer l’attribution des sujets, le vice-doyen vous invitera à compléter un formulaire
+pour communiquer vos 5 choix de sujets de mémoire (ou uniquement le choix du sujet qui vous
+aurait été réservé au préalable par un promoteur). Pour établir la répartition, le vice-doyen
+favorise d’abord les sujets qui sont réservés (d’où l’importance de contacter et rencontrer un
+promoteur au préalable), ensuite, les premiers choix puis les seconds.
+
+-
+
+Si vous êtes inscrit dans le Master 120, c’est en Master 1 que vous serez
+contacté pour encoder vos choix de sujets.
+Si vous êtes inscrit au Master 60 (programme de jour et programme en
+horaire décalé), la liste des sujets vous sera proposée dans le courant du
+mois d’octobre.
+
+6. Les modalités pratiques
+6.1. Le dépôt du mémoire
+L’approbation du promoteur est requise pour pouvoir déposer le mémoire (cf. Règlement des
+études et des examens). L’accord est matérialisé par la signature de la page de garde du
+mémoire.
+Sauf accord motivé du promoteur, le mémoire sera composé de 100 pages au maximum (hors
+annexes), ceci que le mémoire soit réalisé en binôme ou seul. Il sera imprimé au format A4 et
+en recto-verso. La police et la taille de caractères seront adaptées à la rédaction d’un document
+scientifique universitaire, comme prédéfinis dans le template fourni. Les fantaisies sont donc
+interdites.
+
+6.2. Ce qu’il faut rendre, quand et comment
+Le secrétariat facultaire doit recevoir 4 éléments pour valider le dépôt du mémoire :
+1) Le mémoire – imprimé par l’étudiant – en un exemplaire papier doit être déposé au
+bureau du secrétariat. La page de garde du mémoire sera impérativement signée par le
+10
+
+promoteur. Cette signature témoigne de son accord pour le dépôt. Les reliures seront
+collées et il n’y aura pas de couverture plastique.
+2) Un exemplaire du mémoire en version .pdf doit être envoyé à l'adresse
+secretariat.info@unamur.be .
+3) Une page (maximum !) au format word contenant un résumé en français du mémoire
+et son abstract, c’est-à-dire le résumé en anglais doit être envoyée à l'adresse
+secretariat.info@unamur.be .
+4) Le formulaire "mémoire" doit être complété sur Webcampus dans l’espace de l’UE
+INFOM010, INFOM217 ou IHDCM050. Dans ce formulaire, vous renseignerez les
+informations liées à votre mémoire (intitulé, nom du promoteur, résumé, langue,
+confidentialité), ceci afin d’effectuer l'import des données du mémoire vers SIGALE et
+vers le site de la BUMP.
+Ces éléments doivent être envoyés secrétariat pour les dates suivantes :
+- pour la session de janvier 2026 : le 09 décembre 2025 à midi ;
+- pour la session de juin 2026 :
+o le 02 juin 2026 à midi pour les étudiants des Masters 60 HD et 60 jour ;
+o le 09 juin 2026 à midi pour les étudiants du Master 120 ;
+- pour la session de septembre 2026 : le 18 aout 2026 à midi.
+
+- Le secrétariat peut demander à avoir plusieurs exemplaires papiers en
+fonction de la demande du jury. Si le secrétariat ne vous fait pas de demande
+particulière, 1 seul exemplaire papier suffit.
+- Après la défense du mémoire, le secrétariat valide, ou non, le formulaire
+Webcampus en fonction de l’issue de la défense du mémoire ; ceci afin
+d’effectuer l'import des données du mémoire vers SIGALE et vers le site de la
+BUMP.
+- Lorsque le mémoire fait l’objet d’un accord de confidentialité, celui-ci est répertorié sur le site
+de la BUMP, mais n’est pas rendu visible. La première page du mémoire est estampillée du
+label « confidentiel », comme le propose le modèle.
+
+7. La défense du mémoire
+La défense du mémoire est personnelle. Cela veut dire qu’il n’existe pas de « défense
+standard » : plusieurs présentations sont possibles pour un même mémoire. L’idée est de
+mettre en évidence votre travail et vos apports personnels en respectant un timing de 20
+minutes suivie, éventuellement, de 10 minutes de démonstration. Si vous souhaitez faire une
+démonstration, il faut, lors du dépôt, l’annoncer au secrétariat. Si vous partagez votre sujet de
+mémoire avec un autre étudiant, la présentation dure 30 minutes dans son ensemble ; elle est
+répartie de manière équitable entre vous deux, à savoir 15 minutes de parole chacun.
+11
+
+Le jour J, la défense se déroule en trois temps :
+1) Juste avant la défense orale, entre les membres du jury uniquement :
+o Votre promoteur présente brièvement, à huis clos, les objectifs du mémoire proposé
+et les circonstances dans lesquelles le travail a pu être mené.
+o Les membres du jury donnent ensuite, toujours à huis clos, une note provisoire, sur la
+base du texte écrit, tel qu'ils l'ont reçu.
+2) La défense orale, entre le mémorant, l’assistance (les défenses sont publiques) et les
+membres du jury :
+o Avec l’assistance, vous êtes invité à entrer dans la salle où a lieu la défense.
+o Vous faites votre présentation orale. A la suite, si cela est pertinent, vous pouvez faire
+une démonstration. Le temps de démonstration n’est pas inclus dans le timing de
+présentation. Il s’agit d’un temps supplémentaire qui s’ajoute aux 20 minutes de
+présentation. Si vous décidez de faire une démonstration de logiciel, vous devez en
+avertir le secrétariat pour que l’horaire de passage des mémorants puisse être adapté
+en conséquence.
+o Chaque membre du jury est invité à vous poser un certain nombre de questions.
+3) Après la défense orale, entre les membres du jury uniquement :
+o Avec l’assistance, vous devez vous retirer.
+o Les membres du jury sont invités à proposer une nouvelle note. La note finalement
+attribuée est le fruit d’une délibération du jury. Elle est maintenue secrète jusqu’à la
+proclamation des résultats de la session. Mais si le président du jury le désire, il peut
+vous communiquer une appréciation.
+
+-
+
+Pensez à consulter l’outil « Préparer la défense du mémoire » p.24. Il vous
+donne quelques conseils pour préparer votre support et votre discours et
+appréhender au mieux le moment « questions-réponses ».
+
+8. Les critères d’évaluation
+Le jury se base sur l’atteinte d’objectifs d’apprentissage et de production lors de la
+délibération. Ceux-ci sont repris ci-dessous.
+Objectifs d’apprentissage :
+Au terme de la réalisation du mémoire, l’étudiant sera capable de mener une recherche
+scientifique, plus particulièrement :
+-
+
+Démontrer des connaissances approfondies dans la thématique étudiée.
+Mener un travail original et personnel en développant ses propres résultats et
+conclusions.
+
+12
+
+-
+
+-
+
+S’approprier, intégrer et mobiliser des connaissances existantes approfondies en vue d’un
+apport créatif dans le domaine des sciences informatiques :
+o revue critique de littérature
+o développement de méthodes, architectures, …
+o application et évaluation de méthodes
+o etc…
+Développer l’esprit critique et systématique sur l’ensemble du travail mené.
+Démontrer une capacité d’autonomie dans l’ensemble du travail mené.
+Communiquer à l’écrit avec un style, une rigueur, un formalisme et une clarté scientifique.
+Communiquer à l’oral ses résultats.
+
+Objectifs de production :
+-
+
+-
+
+Un travail écrit : un document objectif et scientifique qui rend compte des objectifs
+d’apprentissage et qui :
+o constitue une synthèse scientifique du travail personnel et original mené ;
+o porte sur les résultats, conclusions et arguments/justifications.
+Une défense orale constituée :
+o d’une présentation claire, concise, en vue de présenter ses résultats, conclusions
+et arguments/justifications ;
+o d’une séance de questions-réponses avec les membres du jury, démontrant une
+maitrise du sujet étudié et un esprit critique.
+
+-
+
+Une séance « méthodo » est organisée durant octobre/novembre par la
+coordinatrice pédagogique de la faculté et le professeur du cours de Démarche
+scientifique. Cette séance a pour objectif de présenter les attendus du mémoire
+en terme de contenu ainsi que de fournir des balises méthodologiques pour la
+réalisation du document écrit.
+
+En général, une note de :
+-
+
+10
+
+signifie que l'étudiant s'est acquitté sans originalité ni élégance particulière des
+objectifs minima de son travail ;
+
+-
+
+12
+
+signifie que l'étudiant s'est acquitté sans originalité ni élégance particulière des
+objectifs de son travail ;
+
+-
+
+14
+
+signifie que l'étudiant a présenté son travail écrit et oral avec élégance et une
+certaine originalité ;
+
+-
+
+16
+
+signifie que l'étudiant a réalisé un apport personnel au niveau de la synthèse,
+de l'étude ou de l'implémentation ;
+
+-
+
+18
+
+salue un travail exceptionnel et publiable sans sérieuse modification.
+
+13
+
+9. Les prix des mémoires
+Les prix de la Faculté d’Informatique sont destinés à récompenser annuellement le travail
+personnel d'un étudiant et de souligner l'excellence de son mémoire. Tous les mémoires
+défendus durant l'année académique de la date limite de soumission pour les prix peuvent être
+pris en considération
+Deux prix peuvent être attribués, chaque année :
+1) Le « Prix du meilleur mémoire 202x en Informatique, impact sociétal » : ce prix tend à
+promouvoir les mémoires se distinguant par leur caractère sociétal. Les thématiques
+portent sur une technologie ou un développement qui améliore la qualité du vivreensemble ou encore sur une réflexion éthique au départ d'une technologie ou d'un
+développement étudié.
+2) Le « Prix du meilleur mémoire 202x en Informatique, impact général » : ce prix a une
+portée plus vaste et concerne toutes les thématiques étudiées au sein de la Faculté
+d’Informatique, y compris les thématiques sociétales.
+Dans les deux cas, le prix vise à récompenser un travail qui se distingue particulièrement par sa
+qualité, son originalité, sa rigueur et la portée des résultats obtenus. Le caractère applicable
+et/ou publiable est également un critère pris en compte.
+Chaque prix consiste en la délivrance d'un certificat officiel, accompagné d'une récompense
+financière de 1000 euros. Un même étudiant ne peut recevoir qu'un seul prix. Dans le cas où
+un mémoire est envisagé comme étant le meilleur mémoire, impact général et impact sociétal,
+l’étudiant se voit décerner le montant de 1000 euros et un seul mémoire est récompensé.
+L'étudiant se voit alors décerner le prix du meilleur mémoire, impact sociétal et général.
+
+- Les candidats s'engagent à être présents lors de la cérémonie de remise des
+diplômes.
+- Toute publication concernant le mémoire portera la mention du Prix octroyé.
+- Les mémorants acceptent également qu'une publicité pour le prix renvoie à la
+page Web mentionnant tous les contributeurs.
+
+9.1. Procédure pour poser sa candidature
+Pour être recevables, les candidatures sont introduites par écrit au Doyen, via le secrétariat
+facultaire (secretariat.info@unamur.be) à la date du 30 septembre de l'année civile de la
+défense.
+La candidature comprend :
+- un exemplaire papier du mémoire
+- une version pdf de celui-ci
+14
+
+-
+
+un résumé d'une page maximum du mémoire, en français,
+une lettre de motivation de 1 page maximum, pour justifier sa candidature, précisant
+l'apport personnel du travail, son originalité, et de manière générale, les arguments
+pour le soumettre au jury dans l'une et/ou l'autre impact.
+
+Si le candidat le désire, il peut également soumettre le nom d’un expert extérieur qui pourrait
+être sollicité pour avis (cet expert ne doit pas avoir contribué au travail du mémoire) ainsi
+qu’une vidéo illustrant une démonstration de l’outil développé ou une vidéo de 180 secondes
+maximum, présentant le travail réalisé en vulgarisant le propos. L’objectif est de diffuser la
+vidéo lors de la proclamation des résultats.
+Le jury se réunit au plus tard le 30 octobre pour délibérer. Il est composé des présidents des
+jurys des mémoires soumis et du doyen. Le jury décide à la majorité simple. En cas d'égalité, la
+voix du doyen est prépondérante. Le doyen avertit les candidats par lettre du résultat de la
+délibération.
+
+- L'attribution du prix est laissée à l'entière responsabilité du jury qui se réserve le
+
+droit de ne pas l'attribuer ou de le partager dans des circonstances
+exceptionnelles.
+
+10.
+
+Des outils pratiques
+
+10.1.
+
+Les « p.o.s.t. i.t.s. » du mémoire (p.16)
+
+10.2.
+
+Etablir une bibliographie et référencer ses sources (p.19)
+
+10.3.
+
+Exemple de fiche de lecture pour préparer le travail de synthèse (p.21)
+
+10.4.
+
+Zoom sur la synthèse et la rédaction de l’état de l’art (p.22)
+
+10.5.
+
+Conseils pour préparer la défense du mémoire (p.23)
+
+15
+
+10.1. Les « p.o.s.t. i.t.s. » du mémoire
+Voici 7 « post-its » à toujours garder en tête pendant la réalisation de votre mémoire.
+
+Tenez à jour un planning des grandes étapes de votre travail, fixez des rencontres avec votre promoteur (même si
+vous n’avez rien de concret, forcez-vous à aller faire le point avec lui). Définissez avec lui les moments où il pourra
+consacrer du temps pour vous (re)lire : une relecture efficace prend du temps ! Veillez à lui envoyer suffisamment tôt
+vos versions intermédiaires et n’oubliez pas, pour les dépôts de mémoire en seconde session, que les professeurs
+prennent généralement des congés pendant l’été. Essayez au maximum de respecter votre planning. La rédaction du
+mémoire prend toujours plus de temps que prévu et les imprévus sont fréquents.
+➢ Le diagramme de Gantt http://www.gantt.com/fr/ et les cartes conceptuelles http://www.mindmapping.com/fr/mind-map.php
+ou XMind (dont une version peut être téléchargée gratuitement) sont des outils utiles pour créer des plannings.
+
+Faites attention aux fautes d’orthographe et erreurs de grammaire. Privilégiez des phrases courtes et des structures
+grammaticales simples. Le mémoire n’est pas un récit personnel. Vous devez recourir à une écriture scientifique qui
+doit être facilement compréhensible (Ferreux, 2006).
+➢ Utilisez le « nous » et privilégiez la forme passive (ex : au lieu d’écrire : « Dans cette partie, nous présenterons … », préférez
+« cette partie présentera … » ; au lieu d’écrire : « nous avons utilisé la méthodologie … », préférez « la méthodologie … a été
+utilisée »).
+
+16
+
+La valeur du mémoire ne se mesure pas au nombre de pages (pour rappel, 100 pages hors annexes sont autorisées).
+Au contraire, faites preuve d’esprit de synthèse pour obtenir un mémoire de qualité. N’écrivez pas pour dire
+d’écrire et allez à l’essentiel. Sélectionnez les explications et les justifications qui sont nécessaires et indispensables.
+➢ Quand vous synthétisez, reformulez avec vos propres mots. Ne reprenez pas des phrases toutes faites.
+➢ Citez vos sources et vos références. Le plagiat est INTERDIT et PUNISSABLE.
+➢ Les fiches de lecture peuvent être utiles pour vous aider à synthétiser votre état de l’art.
+
+C’est votre fil conducteur. Elle est indispensable.
+Etablissez la structure complète de votre mémoire avant d'en écrire le contenu. Cette structure sera adaptée en cours
+de travail.
+
+En réalisant votre mémoire, vous endossez le rôle d’Informaticien-chercheur. Ce que l’on évalue c’est votre capacité
+à étudier une question, un problème en sciences informatiques avec des outils, avec une méthode rigoureuse et en
+lien avec la communauté scientifique en informatique. Vous devez faire preuve de rigueur, d’honnêteté et d’esprit
+critique.
+➢ Vous ne rédigez pas un récit personnel mais une recherche. L’écriture scientifique est une écriture objective. Appuyez-vous
+sur des faits, sur des recherches et des concepts d’auteurs préalablement validés (Besnard, 2011).
+➢ Gardez en tête que faire preuve d’esprit critique ce n’est pas émettre des critiques sans fondement. Evitez donc les
+« Personnellement, je pense que… (alors j’ai fait comme ça) » ou « Dans l’équipe avec laquelle j’ai collaboré, ça se passe
+comme ça (voilà pourquoi je pense cela) ».
+17
+
+Gardez des traces de tout ce que vous entreprenez comme travaux (lectures, réflexions, pratique, stage, rencontres,
+analyses, résultats…). Utilisez un carnet, un fichier spécial « traces » sur votre ordinateur… Vous retournerez dans vos
+traces lorsqu’il faudra rédiger certaines parties de votre mémoire.
+➢ Ecrivez vos idées dès le début de votre travail. Même si c’est brouillon ! L’idée n’est pas d’obtenir quelque chose de propre et
+construit. Essayez tout de même de classer vos idées, d’utiliser des mots-clés ou un code-couleurs. Ce sera un réel gain de
+temps quand vous retournez dans vos notes.
+
+Enregistrez l’ensemble de vos fichiers en lien avec votre mémoire sur plusieurs supports (une clé USB, un dossier de
+partage en ligne, envoyez-vous par mails les fichiers les plus importants, … )
+« Il n'y a pas de sauvegardes excessives. Il n'y a que du temps gaspillé à refaire le travail perdu » (Besnard, 2011).
+
+18
+
+10.2. Etablir une bibliographie et référencer ses sources
+Rappelez-vous que le plagiat est INTERDIT et PUNISSABLE. Vous pouvez être sanctionné par une note de 0/20 ! Afin de sensibiliser au
+respect de la propriété intellectuelle, les autorités de l’UNamur ont rédigé un document disponible à l’adresse suivante :
+➔https://terranostra.unamur.be/aden/archives/Brochure-PLAGIAT-2008-12-11.pdf/view?searchterm=plagiat
+
+Comment établir une liste bibliographique ?
+Pour réaliser une bibliographie de mémoire, il recommandé de recourir à BibTeX (si vous utilisez LaTeX).
+➔ http://stephlefevre.free.fr/LaTeX/BibTeX.php OU http://www.tuteurs.ens.fr/logiciels/latex/bibtex.html
+BibTeX vous permettra d’établir votre bibliographie au fil de votre travail tout en respectant les normes exigées. C’est un réel gain de temps !
+Le tableau ci-dessous synthétise les différentes démarches pour établir manuellement votre liste bibliographique selon le type de document que
+vous souhaitez référencer.
+Document
+
+Ouvrage
+
+Article
+
+Démarche
+Mentionner, dans l’ordre et séparées par une virgule, les informations
+suivantes :
+- le nom du (ou des) auteur(s),
+- le titre de l'ouvrage (sans guillemets, en caractères italiques),
+- le nom de l'éditeur,
+- le lieu de l'édition,
+- la date de l'édition.
+Mentionner, dans l’ordre et séparées par une virgule, les informations
+suivantes :
+- le nom du (ou des) auteur(s),
+- le titre de l'article (éventuellement entre guillemets),
+- l'intitulé de la revue (en italique),
+- le cas échéant, le numéro du volume,
+- les numéros des pages du début et de la fin de l'article, séparés par un
+tiret,
+- la date de la parution de l'article.
+
+Exemples
+Booch G., Analyse & conception orientées objets, Addison-Wesley, Paris,
+France, 1994.
+
+Raddatz R. and Bergmann K., "Programming with Microsoft Visual Basic : An
+architectural approach for Visual Basic Information Systems", Microsoft
+Developer Network News, Technical Resources for Developers, Volume 3,
+Number 6, pages 6-10, November 1994.
+
+19
+
+Chapitre
+d’un livre
+
+Page web
+
+Mentionner, dans l’ordre et séparées par une virgule, les informations
+suivantes :
+- le nom du (ou des) auteur(s),
+- le titre du chapitre (éventuellement entre guillemets),
+- l'intitulé du livre (en italique) et précédé de ‘in’,
+- le nom de l'éditeur,
+- le lieu de l'édition,
+- les numéros des pages du début et de la fin du chapitre, séparés par
+un tiret,
+- la date de l'édition.
+Mentionner, dans l’ordre et séparées par une virgule, les informations
+suivantes :
+- le nom du (ou des) auteur(s),
+- le titre de l'article,
+- l’adresse Web,
+- la date de la dernière mise-à-jour (si disponible) ou celle de mise sur le
+Web,
+- la date de consultation.
+
+Smith M. D., Bayley J. & Brynjolfosson E., “ Understanding Digital Markets :
+Review and Assessment ”, in Understanding the Digital Economy, Brynjolfosson
+E. (eds), MIT Press, Boston, pages 23-48, 1999.
+
+Resnick P., PICS, Censorship, & Intellectual Freedom FAQ,
+http://www.w3.org/PICS/PICS-FAQ-980126.html (Version 1.14 last revised 04Aug-1999) (Date of access 18/03/2008).
+
+Comment référencer ses sources dans le texte ?
+Le renvoi dans le corps du texte à une référence bibliographique se fait en mentionnant, entre crochets (ou entre parenthèses), le nom de l'auteur,
+l'année de publication et, le cas échéant, le numéro de la page à laquelle on se réfère.
+Exemple : ‘We first discuss the key points we have been asked to fulfill and the notations defined in [Mylopoulos 95] that we have used to describe the requirements.‘
+
+Lorsque la liste bibliographique comprend plusieurs ouvrages d'un même auteur publiés la même année, on fera suivre l'indication de l'année de
+publication par une lettre minuscule identifiant la référence concernée.
+Exemple : Dans la bibliographie : Keller T. S., Hansson T. H., Abram A. C., Spengler D. M., Panjabi M. M., "Regional variations in the compressive properties of lumbar
+vertebral trabeculae : Effects of disc degeneration", Spine, Volume 14, pages 1012-1019, 1989.
+Keller T. S. & Spengler D. M., " Regulation of bone stress and strain in the immature and mature rat femur ", Journal of Biomechanics,
+volume 22, pages 1115-1128, 1989.
+Dans le corps du texte : on aura [Keller et al, 1989a] pour référencer le premier article.
+20
+
+10.3. Exemple de fiche de lecture pour préparer le travail de synthèse
+Trois étapes peuvent être utiles pour rédiger au mieux la partie « état de l’art » :
+1) établir une bibliographie complète ;
+2) réaliser une synthèse des différentes sources consultées (en utilisant par exemple des
+fiches de lecture) ;
+3) rédiger votre état de l’art (en organisant en un tout cohérent les informations pertinents
+des fiches de lecture).
+A partir de votre bibliographie, il est important que vous puissiez dégager les informations
+pertinentes et essentielles pour votre recherche. Un moyen utile est d’établir des fiches
+reprenant une série de critères que vous compléterez pour chacune de vos références jugées
+les plus importantes. Chaque fiche doit contenir les mêmes critères. L’idée est d’analyser et
+d’évaluer chacune des sources séparément par rapport aux critères retenus. De cette façon,
+vous pourrez comparer vos différentes sources et les intégrer en un état de l’art cohérent.
+A titre d’exemple, voici une fiche de lecture à compléter selon un ensemble de critères
+préétablis. Adaptez cette série de critères pour ne conserver que ceux qui vous intéressent
+et/ou intégrez-en de nouveaux.
+Critères
+Référence bibliographique
+Thème
+Intérêt pour le mémoire
+Objectif(s)/Question(s)/Problématique
+Cadre global d'explication (la théorie)
+Méthodologie
+Résultats
+Conclusion
+Que garder pour le mémoire
+Complétez chaque critère en synthétisant avec vos propres mots. Ne restez pas attaché au
+texte original. Ceci vous permettra de gagner un temps précieux lors de la rédaction de votre
+état de l’art et de limiter les risques de plagiat !
+
+21
+
+10.4. Zoom sur la synthèse et la rédaction de l’état de l’art
+La synthèse est la base de l’état de l’art. En effet, pour rédiger la partie « état de
+l’art », il est utile de reprendre les principaux éléments de votre synthèse et de
+les organiser de façon cohérente.
+La synthèse doit être ni trop courte (car il faut pouvoir distinguer l'intérêt respectif de chaque
+source), ni trop longue (elle doit éviter les répétitions et les détails inutiles). Il n'existe pas une
+façon unique de faire une synthèse : il appartient à chacun de juger ce qui mérite qu'on s'y
+arrête.
+A titre d’exemple, voici différentes étapes qui peuvent guider votre travail de synthèse.
+L’utilisation des fiches de lecture est mise en correspondance.
+1) Analyser et évaluer chacune des sources séparément (= réaliser des fiches de lecture).
+2) Comparer les sources selon différents critères (= comparer les fiches de lecture selon
+les critères).
+3) Identifier le fil conducteur qui relie les sources, tout en situant chacune dans son
+contexte propre.
+4) Résumer les points forts (et les points faibles) en soulignant les convergences et
+divergences qui apparaissent dans la littérature.
+5) Commenter l'utilité de ces sources dans le domaine.
+Tout au long de l’élaboration de la synthèse, gardez en tête que vous êtes un InformaticienChercheur et que vous devez recourir à une écriture scientifique, objective et rigoureuse. Faites
+preuve d’esprit critique et analytique en vous posant, entre autres, les questions suivantes :
+-
+
+L’auteur prouve-t-il ses arguments à l'aide de statistiques, de données vérifiables
+(enquêtes, sondages, témoignages, statistiques, expertises, etc.) ?
+Existe-t-il des liens logiques entre les problèmes que l'auteur expose, la manière dont il
+les explique et les solutions qu'il met en avant ?
+Les propositions de l'auteur sont-elles réalisables dans le cadre de ma recherche? À
+quelles conditions ?
+
+22
+
+10.5. Conseils pour préparer la défense du mémoire
+Pour approcher sereinement votre défense de mémoire et anticiper au mieux le
+jour J, les 4 étapes ci-dessous semblent être incontournables.
+
+1) Préparer le contenu de votre présentation
+Il important que vous preniez le temps de réfléchir à la sélection des informations que vous
+allez présenter. En 20 minutes, il est impossible de présenter l’intégralité de votre travail.
+L’objectif est que vous dégagiez les informations essentielles. L’idée n’est pas de présenter un
+« calque », un « copier-coller » de votre travail écrit. Montrez que vous maitrisez votre
+problématique.
+Posez-vous les questions suivantes : qu’est-ce qui est important à dire pour résumer ma
+contribution personnelle dans la réalisation de ce mémoire ? pourquoi est-ce que j’ai contribué
+de cette façon ? qu’est-ce que ma contribution a apporté ?
+Reprenez votre table des matières/votre structure et sélectionnez les points qui méritent d’être
+mis en avant. Réfléchissez à une trame logique. Votre présentation orale doit être bien
+articulée. Pensez à votre public : vous ne devez pas le perdre en cours de route lors de votre
+discours !
+
+2) Préparer le support et le discours
+Il est vivement recommandé de préparer votre support (le plus souvent des transparents) et
+votre discours en parallèle. Votre support doit servir de base à vos propos ; il fournit en quelque
+sorte des repères. Utilisez votre support intelligemment et ne lisez pas textuellement vos
+transparents. Pour garantir une cohérence entre votre support et votre discours, il importe de
+les co-construire.
+Votre support doit être soigné et lisible. Essayez de le structurer au mieux en gardant une
+organisation logique. Proposer un bref plan de votre présentation peut être utile pour guider
+votre public. Etant donné le temps imparti, vos transparents ne doivent pas être trop nombreux
+(entre 10 à 15 paraît être une quantité optimale).
+
+3) Préparer la présentation orale
+Il est primordial que vous répétiez votre présentation devant vos proches ou vos collègues. La
+répétition vous permettra de vérifier le timing qui doit être rigoureusement respecté et de
+tester si le tout est bien cohérent et compréhensible. Est-ce que vos propos reflètent bien ce
+que vous souhaitez réellement dire ? Parfois, il se peut que vous ayez le sentiment de maitriser
+votre discours mais qu’au moment de le formuler oralement, vous ne parveniez pas à l’exprimer
+clairement (Houart, 2013, p.194). Prenez les impressions de vos proches ; laissez-les vous poser
+des questions et exercez-vous à vous exprimer à voix haute sur votre travail. C’est aussi en
+23
+
+répétant que vous vous rendrez compte si vous en dites trop ou pas assez. Il sera encore temps
+à ce moment-là d’adapter votre présentation.
+
+4) Préparer les réponses aux questions du jury
+Si vous vous êtes déjà exercé à répondre à des questions lors de vos répétitions, il est fort
+possible que vous appréhendiez un peu moins ce moment face au jury. La séance de questionsréponses est toujours un moment stressant. Pourtant, gardez à l’esprit, qu’il s’agit de questions
+portant sur votre travail qui vont vous être en principe posées. Soyez donc honnête dans vos
+réponses. Expliquez et justifiez vos démarches. Défendez ce que vous avez réalisé en montrant
+que vous maitrisez le domaine que vous avez exploré.
+Face à certaines questions, il est parfois utile d’essayer d’abord de les reformuler avec vos
+propres mots. Ceci permet d’assurer une bonne compréhension de ce qui est attendu de vous
+et de rassembler vos idées. Il est important que vous répondiez de façon structurée et
+développée en mettant en lien les informations, en argumentant, en proposant des
+explications.
+
+24
+
+

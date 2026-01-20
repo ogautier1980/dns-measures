@@ -1,0 +1,65 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NE PAS EDITER CE FICHIER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\fancyfoot[C]{} % Retrait footer
+
+    \pagestyle{fancyplain}
+    \begin{tikzpicture}[remember picture,overlay]
+        \node[anchor=north west,yshift=-30pt,xshift=30pt]
+            at (current page.north west)
+            {\includegraphics[height=5cm]{img/FAC_informatique.png}};
+    \end{tikzpicture}
+    
+\centerline{UNIVERSITÉ DE NAMUR}
+\centerline{Faculté d'informatique}
+\centerline{Année académique \anneeacademique}
+    
+    \vspace{4cm}
+\begin{center}
+	\fbox{ \begin{minipage}[c][5.4cm]{9.6cm}
+            \large
+            \begin{spacing}{1.2}
+                \begin{center}
+                    \centering \textbf{\titreMemoire}
+	         \\
+                    \vspace{1cm}
+                    \auteurMemoire
+                \end{center}
+            \end{spacing}
+        \end{minipage}}
+\end{center}
+
+    % ==> CADRE A COMPLETER
+    \vspace{2.8cm}
+    \centerline{
+        \begin{minipage}[c][3cm]{9.6cm} 
+            \begin{spacing}{2}
+                \begin{center}
+                    \leftline{........................ (Signature pour approbation du dépôt - REE art. 40)}
+                    \leftline{Promoteur : \promoteur}
+                    \ifx\copromoteur\empty\leftline{Co-promoteur : \copromoteur}\else\fi
+                \end{center}
+            \end{spacing}
+        \end{minipage}
+    }
+
+    \vspace{2cm}
+    \centering\mbox{
+        \begin{minipage}[c][5cm]{9.6cm}
+            \begin{spacing}{2}
+                \begin{center}
+                    \vspace{6.4cm}
+                    \centerline{\large\diplome}
+                    %\newline
+                    \vspace{1.6cm}
+                    \centerline{ Faculté d'Informatique --- Université de Namur}
+                   % \newline 
+                    \centerline{ RUE GRANDGAGNAGE, 21 $\bullet$ B-5000 NAMUR  $\bullet$ BELGIUM}
+                \end{center}
+            \end{spacing}
+        \end{minipage}
+    }
+
+\renewcommand{\headrulewidth}{1pt} % Retrait header

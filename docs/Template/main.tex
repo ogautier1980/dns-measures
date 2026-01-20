@@ -1,0 +1,369 @@
+\documentclass[a4paper,11pt]{book}
+
+
+% Package definition
+\usepackage[T1]{fontenc}
+\usepackage[sfdefault]{atkinson} %% usage de la police Atkinson Hypereligible
+\usepackage{graphicx} 
+\usepackage{setspace}
+\usepackage{fancybox}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+\usepackage{pifont}
+\usepackage{lipsum} % génère du texte aléatoire
+% \usepackage{draftwatermark}
+% \SetWatermarkText{CONFIDENTIEL}
+% \SetWatermarkColor{gray!20}
+% \SetWatermarkFontSize{3cm}
+\usepackage[top=2cm, bottom=2.5cm, left=2cm, right=2cm]{geometry} % marge des pages
+\usepackage{ragged2e} % justifier texte
+\usepackage[french]{babel} 
+\usepackage{microtype} %% pour améliorer la typographie, facultatif.
+
+\usepackage{xcolor}
+\usepackage{hyperref} %% pour \url avec hyperlien
+\usepackage{listings} %% To insert code (Java, Python, etc)
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e} %% Pseudo-code
+
+%\pagestyle{fancy} % Activer le style fancy
+\renewcommand{\headrulewidth}{0pt} % Retrait header
+\renewcommand{\familydefault}{\sfdefault}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% TITRE DU MEMOIRE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\titreMemoire}{Les programmes seraient-ils plus intelligents si les pointeurs étaient moins nuls} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% AUTEUR(S) DU MEMOIRE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\auteurMemoire}{Hilarion LEFUNESTE\\(éventuellement auteur2)}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DIPLOME
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\diplome}{\textbf\textit{{Décommenter la ligne de redéfinition de la commande \texttt{diplome}}}}
+%% MASTER 60
+%\renewcommand{\diplome}{Mémoire présenté en vue de l'obtention du grade de Master 60 en Sciences Informatiques}
+%% MASTER 120
+%\renewcommand{\diplome}{Mémoire présenté en vue de l'obtention du grade de Master 120 en Sciences Informatiques}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ANNEE ACADEMIQUE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\anneeacademique}{20XX-20YY}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PROMOTEUR & (CO-PROMOTEUR)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\promoteur}{Prof. Achille TALON}
+%% laisser vide si pas de co-promoteur
+\newcommand{\copromoteur}{} 
+
+
+\input{configListing} %% configuration pour les listings
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\setlength{\headheight}{13.59999pt}
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NE PAS EDITER CE FICHIER
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\fancyfoot[C]{} % Retrait footer
+    \pagestyle{fancyplain}
+    \begin{tikzpicture}[remember picture,overlay]
+        \node[anchor=north west,yshift=-30pt,xshift=30pt]
+            at (current page.north west)
+            {\includegraphics[height=5cm]{img/FAC_informatique.png}};
+    \end{tikzpicture}
+    
+\centerline{UNIVERSITÉ DE NAMUR}
+\centerline{Faculté d'informatique}
+\centerline{Année académique \anneeacademique}
+
+\vspace{4cm}
+
+\begin{center}
+	\fbox{ \begin{minipage}[c][5.4cm]{9.6cm}
+            \large
+            \begin{spacing}{1.2}
+                \begin{center}
+                    \centering \textbf{\titreMemoire}
+                    \vspace{1cm}
+                    
+                    \auteurMemoire
+                \end{center}
+            \end{spacing}
+        \end{minipage}}
+\end{center}
+
+    % ==> CADRE A COMPLETER
+    \vspace{2.8cm}
+    \centerline{
+        \begin{minipage}[c][3cm]{9.6cm} 
+            \begin{spacing}{2}
+                \begin{center}
+                    \leftline{........................ (Signature pour approbation du dépôt - REE art. 40)}
+                    \leftline{Promoteur : \promoteur}
+                    \ifx\copromoteur\empty\leftline{Co-promoteur : \copromoteur}\else\fi
+                \end{center}
+            \end{spacing}
+        \end{minipage}
+    }
+
+    \vspace{2cm}
+    \centering\mbox{
+        \begin{minipage}[c][5cm]{9.6cm}
+            \begin{spacing}{2}
+                \begin{center}
+                    \vspace{6.4cm}
+                    \centerline{\large\diplome}
+                    %\newline
+                    \vspace{1.6cm}
+                    \centerline{ Faculté d'Informatique --- Université de Namur}
+                   % \newline 
+                    \centerline{ RUE GRANDGAGNAGE, 21 $\bullet$ B-5000 NAMUR  $\bullet$ BELGIUM}
+                \end{center}
+            \end{spacing}
+        \end{minipage}
+    }
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\justifying % Texte justifié pour toutes les pages suivantes
+
+
+%% page blanche
+
+\clearpage\newpage\hbox{ }\clearpage\newpage
+
+
+\noindent\textbf{\huge Remerciements}
+
+\bigskip
+
+\begin{quote}
+ Cette partie est destinée à adresser des remerciements aux différentes personnes qui ont aidé à la réalisation du travail.
+\end{quote}
+
+%% page blanche
+
+\clearpage\newpage\hbox{ }\clearpage\newpage
+
+
+\noindent\textbf{\huge Résumé}
+\bigskip
+
+\begin{quote}
+    Le résumé du mémoire en français. Il se rédige en fin de travail puisqu'il résume votre recherche (de votre problématique à vos résultats). Le résumé ne doit pas excéder ½ page ; le résumé et l'abstract doivent impérativement tenir sur une seule page en début du mémoire.
+\end{quote} 
+\bigskip
+\noindent\textbf{Mots-clés} : un, deux, etc
+
+\vspace{0.75cm}
+
+\noindent\textbf{\huge Abstract}
+\bigskip
+
+\begin{quote}
+     The summary of the dissertation in English. This is written at the end of the dissertation, as it summarises your research (from your problem to your results). The summary should not exceed ½ page; the summary and abstract must fit on a single page at the beginning of the dissertation.
+\end{quote}
+\bigskip
+\noindent\textbf{Keywords} : one, two, ...
+
+%% page blanche
+
+\clearpage\newpage\hbox{ }\clearpage\newpage
+
+
+\tableofcontents
+
+\clearpage\newpage\hbox{ }\clearpage\newpage
+\pagestyle{empty}
+
+
+\section*{Acronymes}
+
+ Cette partie est facultative. Elle peut être utile lorsque le mémoire contient un nombre important d'acronymes. Songez à trier vos entrées. \LaTeX\ fournit également une commande \verb+\glossary+ et des packages ad-hoc pour faciliter leur gestion. Songez à trier vos entrées du glossaire.
+
+ \begin{description}
+     \item[CORBA:]  Common Object Request Broker Architecture
+     \item[FTP:] File Transfert Protocol
+ \end{description}
+
+
+\clearpage\newpage\hbox{ }\clearpage\newpage
+
+\renewcommand{\headrulewidth}{1pt} % Retrait header
+
+\pagestyle{fancy}
+
+\chapter{Introduction}
+
+
+ L'introduction ne doit pas être longue : deux ou trois pages devraient suffire. Elle a pour objectifs d'annoncer le cadre général de la recherche et d'expliciter la problématique plus précise qui y est traitée. La structure du mémoire et sa stratégie pour répondre à la problématique y sont également présentées.
+
+ La police utilisée pour ce document est la Atkinson Hypereligible Font\footnote{\url{https://www.brailleinstitute.org/freefont}}. Elle a été conçue afin de faciliter l'accessibilité aux personnes avec une déficience visuelle. Ainsi, le contraste entre les caractères \{O,0\}, \{1,7\}, \{B,8\}, \{1,I,L,|\}, \{1,i,l,|\} et \{jgqpy\}  a été accru afin d'éviter toute confusion. 
+
+\chapter{État de l'art}
+
+ L'état de l'art constitue un état des connaissances existantes, à un moment donné, sur un objet d'étude. Il s'agit donc de consulter la littérature scientifique relative à votre sujet et d'en faire une synthèse. Il ne s'agit pas de faire un \og  catalogue \fg{}  en juxtaposant et compilant les informations retenues. En rédigeant l'état de l'art, votre objectif est de justifier votre problématique, de démontrer sa pertinence et son intérêt au regard du contexte actuel.
+
+ Toujours prévoir un paragraphe avant une section. Une présentation générale, d'une ou deux lignes peuvent suffire. 
+
+\section{Titre de section}
+
+Toujours prévoir un paragraphe avant une section. Une présentation générale, d'une ou deux lignes peuvent suffire. Reprendre l'objet du titre. Voir exemple suivant.
+
+\subsection{Télétransportation quantique sur IP}
+
+La télétransportation quantique sur le protocole IP permet de transférer instantanément un corps à distance par la conversion d'unités quantiques en trames IP. Le résultat s'avère cependant hasardeux lorsque des trames se perdent. 
+
+\subsection{Titre de subsection}
+
+Toujours prévoir un paragraphe avant une section. Une présentation générale, d'une ou deux lignes peuvent suffire. Reprendre l'objet du titre.
+
+
+\subsubsection{Titre de subsubsection}
+
+\section{Synthèse}
+
+Il peut être utile pour certains chapitres complexes d'ajouter une section \og Synthèse\fg{} qui résume le chapitre et ce qu'il faut en retenir pour poursuivre sereinement la lecture des chapitres suivants.
+
+\chapter[Titre long]{Le titre de ce chapitre est délibérément très long afin de montrer comment gérer un titre long}
+
+Si un titre est très long (à éviter), il est possible et souhaitable de fournir une alternative plus courte, qui sera utilisée pour la table des matières et les en-têtes de page.
+
+\chapter{Autres chapitres} 
+
+Après l'état de l'art, les parties varient en fonction de votre recherche. Vous devez adapter vos titres : Problématique, Développement, Méthodologie, Résultats\ldots
+
+
+Ces parties vont servir à décrire précisément le développement de votre recherche : ce que vous avez fait, comment vous vous y êtes pris, pourquoi, les résultats qui en découlent, les analyses que vous en faites. C'est dans cette partie que vous allez plonger le lecteur dans votre démarche scientifique. Cette partie peut être variable d'un mémoire à l'autre, en fonction du sujet étudié, de la recherche menée ou développée, des attentes de votre promoteur. Quoi qu'il en soit, généralement, il est attendu que l'on retrouve les éléments suivants dans cette partie :
+
+\begin{itemize}
+    \item[\textbullet] une description de votre problématique/question de recherche ;
+    \item[\textbullet] une description et une justification de votre méthodologie (participants ou public-cible visé, étapes de conception et/ou de testing, méthode de collecte de données, de description des analyses, …) ;
+    \item[\textbullet] une description de vos résultats : il s'agit bien d'une description des données récoltées ou de l'outil, de l'application, … Vous êtes dans une écriture objective, il n'y a aucune interprétation personnelle.
+\end{itemize}
+
+\chapter{Un autre chapitre}
+
+\lipsum[1-40]
+
+\chapter{Discussion}
+
+La discussion arrive toujours après le développement de votre recherche, la présentation de votre méthode et de vos résultats… Il s'agit de la partie de votre mémoire dans laquelle il y aura une interprétation : interprétation des résultats en lien avec l'état de l'art, la question de recherche/la problématique. La discussion est différente de la partie conclusion qui arrive en fin de mémoire.
+
+\chapter{Rappels \LaTeX}
+
+Ce chapitre présente quelques balises et rappels concernant le bon emploi de \LaTeX.
+
+\section{Les figures et tables}
+\label{sec:figandtab}
+
+Une figure est un corps flottant dans votre document. \LaTeX\ se charge par défaut de le placer au meilleur endroit afin de privilégier l'esthétique de vos pages et éviter des blancs disgracieux. Il est souhaitable de guider \LaTeX\ pour qu'il place vos figures de préférence en haut ou sur une page séparée (paramètre \texttt{[tp]}). Cela produit les meilleurs résultats. Il est également possible de forcer le positionnement (paramètre \texttt{[h]}), mais cette politique doit être utilisée avec parcimonie, pour la raison énoncée plus haut.
+
+Toutes les figures (et le tables) doivent être référencées explicitement dans le texte avec la commande \verb+\ref{fig:mafigure}+. Vous pouvez utiliser la commande \verb+\pageref{fig:mafigure}+ pour indiquer le numéro de page. Cela peut être utile si votre figure est fort éloignée, dans les annexes par exemple.
+Pour faire référence à une figure dans le texte, il suffit de l'indiquer entre parenthèses dans le corps de texte comme ceci (Figure \ref{fig:mafigure}, page~\pageref{fig:mafigure}, dans la section~\ref{sec:figandtab}) ou de manière explicite: \textit{la figure~\ref{fig:mafigure} illustre bla bla}.
+
+\begin{figure}[ht]
+	\centering
+        %% vous pouvez utiliser width=\textwidth pour ajuster la figure à la largeur de la feuille, ou utiliser un facteur multiplicatif pour une largeur proportionnelle, comme width=0.33\textwidth
+        \includegraphics[height=5cm]{img/figure1.jpg}
+        \caption{Titre de la figure} 
+        \label{fig:mafigure} 
+\end{figure}
+
+\LaTeX\ fait une distinction entre les Figures et les Tables. Chacune dispose par défaut d'une numérotation spécifique et d'une mise en page différente. Il est préférable de délaisser les environnements Table afin de privilégier une certaine homogénéité.
+
+
+
+\chapter{Conclusion}
+
+Cette dernière partie ne doit pas être longue : trois pages suffisent. Il s'agit de rédiger une sorte de bilan de votre recherche. C'est donc en fin de travail que cette partie sera écrite. La conclusion a pour objectifs de récapituler les axes essentiels de votre travail et de mettre en évidence l'apport original de votre travail. Si des pistes de réflexion n'ont pas pu être suivies (pour diverses raisons à signaler) mais qu'elles ont un intérêt particulier, elles peuvent être explicitées dans cette partie. De plus, les pistes à explorer à la suite à votre travail et les perspectives qui découlent doivent également figurer dans votre conclusion. Si vous identifiez des limites et/ou si vous envisageriez d'autres façons de procéder si c'était à refaire, vous pouvez aussi en discuter dans votre conclusion.
+
+
+\chapter{ Bibliographie ou Références}
+
+Les références sur lesquelles se base un mémoire doivent être scientifiques. Elles doivent être répertoriées de façon systématique, complète et exacte. Toutes les références que vous reprenez dans votre liste bibliographique doivent avoir été effectivement consultées. De plus, chaque référence bibliographique doit correspondre au moins à un ‘renvoi' au sein de votre texte.
+
+Il est recommandé d'utiliser l'outil \textbf{BibTeX} qui va faciliter la gestion de votre bibliographie et attirera votre attention sur de potentielles erreurs (omission de champs importants, etc).
+
+
+
+\part*{Annexes}
+\addcontentsline{toc}{part}{Annexes}
+ 
+ \chapter{Questionnaires}
+
+ 
+ \section{Questionnaire 1}
+
+Il s'agit de toutes les informations complémentaires. Il s'agit entre autres des tableaux statistiques, des tableaux de résultats, des (longues) démonstrations mathématiques, des questionnaires, des guides d'entretien, etc. Toute annexe doit être référencée dans le texte du mémoire. Numérotez vos annexes et faites une table des annexes pour faciliter la lecture. Pensez à renvoyer le lecteur aux annexes au moment opportun dans votre texte. 
+
+ \section{Questionnaire 2}
+
+ \chapter{Résultats}
+
+\section{Résultats 1}
+\section{Résultats 2}
+
+\chapter{Programmes}
+
+ \section{Algorithme}
+
+
+Si vous devez produire du code, vous pouvez utiliser le package \texttt{listings}. Par défaut, ce package reconnaît de nombreux langages de programmation. 
+
+\begin{lstlisting}[caption=Classe HelloWorld en Java]
+public class HelloWorld {
+    public static void main(String[] args) {
+        // Affiche un message
+        System.out.println("Bonjour, monde !");
+    }
+}
+\end{lstlisting}
+
+Il est également possible (voire préférable) d'externaliser le code dans un fichier spécifique et de l'insérer avec la commande \texttt{lstinputlisting}.
+
+\begin{verbatim}
+\lstinputlisting[caption=HelloWorld.java]{HelloWorld.java}
+\end{verbatim}
+
+Pour des langages plus ésotériques ou des besoins plus spécifiques, le package \texttt{minted} offre plus de possibilités, mais il introduit une dépendance supplémentaire en soutraitant la compilation à Python. Il est donc plus lent et son installation est plus compliquée. Le code source de votre document est moins portable également.
+ 
+ \section{Pseudo-Code}
+
+Si vous devez produire du pseudo-code, l'environnement \texttt{algorithm2e} est sans doute le plus adapté.
+
+ \begin{algorithm}[H]
+\DontPrintSemicolon
+\KwData{Un tableau $A$ de $n$ entiers}
+\KwResult{Le plus grand élément de $A$}
+$max \leftarrow A[1]$\;
+\For{$i \leftarrow 2$ \KwTo $n$}{
+    \If{$A[i] > max$}{
+        $max \leftarrow A[i]$\;
+    }
+}
+\Return $max$\;
+\caption{Recherche du maximum dans un tableau}
+\end{algorithm}
+
+\end{document}

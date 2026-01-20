@@ -1,0 +1,313 @@
+Le mémoire en Master 60
+INFOM010 – IHDCM050
+Faculté d’informatique – UNamur
+Séance du 22/10/2025
+
+Plan de la séance
+• Les différentes parties du mémoire
+• Quelques conseils d’écriture
+• L’évaluation du mémoire
+• Les ressources
+
+Le mémoire
+• deux objectifs principaux :
+• vous former aux principes de la recherche scientifique ;
+• vérifier votre capacité à étudier une problématique
+relevant du domaine des sciences informatiques
+
+• vous endossez donc le rôle d’un « chercheur » et vous
+vous exercez aux différentes tâches qui lui incombent
+• le mémoire est un travail personnel et original
+
+Introduction
+Etat de l’art
+Développement de la recherche
+• Contient au moins les points suivants :
+• Question de recherche (et hypothèse)
+• Méthodologie
+• Résultats
+• Discussion
+
+Conclusion
+
+Introduction
+• deux ou trois pages
+• contient :
+• la définition claire de l’objet du travail ;
+• la mise en contexte de la problématique étudiée ;
+• la mise en évidence de la méthode de travail, des
+outils et sources utilisés ;
+• la présentation brève du cheminement du travail.
+
+Etat de l’art
+• état des connaissances existantes, à un moment
+donné, sur un objet d'étude
+• objectif est de justifier votre problématique, de
+démontrer sa pertinence et son intérêt au regard du
+contexte actuel
+• consulter la littérature scientifique relative à votre
+sujet et en faire une synthèse
+➔ il ne s’agit pas de faire un « catalogue » en
+juxtaposant et compilant les informations retenues
+
+Comment faire un état de l’art ?
+
+Comment faire un état de l’art ? – les mots
+clés
+• Demandez quelques articles de référence à votre promoteur
+• Familiarisez-vous avec le vocabulaire de votre domaine de
+recherche et les contributeurs principaux
+• Réfléchissez aux mots clés qui caractérisent ce que vous
+recherchez
+• N'utilisez pas un mot-clé par concept. Pensez aux synonymes.
+
+Comment faire un état de l’art ? – Où
+chercher ?
+• Bibliothèques scientifiques en ligne
+• Google Scholar, Scopus, Science Direct
+• ACM, IEEE (plus focalisé sur les sciences informatiques)
+
+• Effet « boule de neige »
+• Pour un article de référence, aller voir quels sont les articles qu'il
+cite et par quels articles il est cité
+
+Comment faire un état de l’art ? – Quel article
+est pertinent ?
+• Critères d'exclusion
+• Pour quelle raison estimez-vous qu’un article n'est pas
+pertinent ?
+
+• Critères d'inclusion
+• Pour quelle raison estimez-vous qu’un article est pertinent ?
+
+• Si un article répond à au moins un critère d'inclusion et
+à aucun des critères d'exclusion, conservez-le
+
+Introduction
+Etat de l’art
+Développement de la recherche
+• Contient au moins les points suivants :
+• Question de recherche (et hypothèse)
+• Méthodologie
+• Résultats
+• Discussion
+
+Conclusion
+
+Question de recherche
+• 1 interrogation
+• En lien avec le thème, la problématique
+• Ce qu’on se demande sur la problématique
+• Elle est basée sur l’état de l’art
+• Elle doit faire « émerger » la méthodologie et favoriser les
+analyses
+
+• Quelques caractéristiques indispensables dans sa formulation
+12
+
+Question de recherche
+• pas trop ouverte/pas trop générique MAIS pas trop
+fermée non plus (pas de réponse qui sera OUI ou NON)
+➔ avoir différents points de variations qui demandent des
+précisions sur, par exemple :
+- public, zone géographique
+- contexte (domaine, le niveau ou les effets, le type ou les
+caractéristiques)
+➔ soit on choisit 1 domaine type, soit 1 public type OU on
+peut comparer les deux
+
+Examples de formulation de question de
+recherche
+• Décrire et explorer
+• Quelles sont les caractéristiques de X (dans le contexte Y) ?
+• Comment X a-t-il évolué dans le temps (dans le contexte Y) ?
+• Quels sont les principaux facteurs de X ?
+• Comment X a-t-il géré Y ?
+
+• Expliquer et tester
+• Quelle est la relation entre X et Y ?
+• Quel est le rôle de X dans Y ?
+• Quel est l'impact de X sur Y ?
+• Comment X influence-t-il Y ?
+• Quelles sont les causes de X ?
+https://www.scribbr.com/research-process/research-questions/
+
+14
+
+Examples de formulation de question de
+recherche
+• Évaluer et agir
+• Quels sont les avantages et les inconvénients de X (dans le contexte Y) ?
+• Quelle est l'efficacité de X (pour la tâche Y) ?
+• Comment réaliser X (dans le contexte Y) ?
+• Quelles sont les stratégies les plus efficaces pour améliorer X (dans le
+contexte Y) ?
+• Comment X peut-il être utilisé dans Y ?
+
+https://www.scribbr.com/research-process/research-questions/
+
+15
+
+Examples de question de recherche
+• En quoi les interfaces persuasives utilisées dans la
+publicité influencent-elles les jeunes enfants ?
+• Quels sont les effets au niveau IHM d’une utilisation simultanée par un
+nombre élevé d’utilisateurs sur un écran public multi-utilisateurs ?
+• Comment concevoir un pilulier électronique capable de remplacer un
+pilulier classique ?
+
+16
+
+Méthodologie
+• Bref rappel de la contribution (déjà présente dans question
+de recherche)
+• Description + Justifications de :
+• participants ou public-cible visé
+• développement (étapes de conception et/ou de testing)
+• collecte de données / description des analyses
+
+Résultats
+• Description des données récoltées (pas d’interprétation)
+• Analyse statistique des données selon les méthodes
+appropriées
+• Description de l’outil, de l’application, …. et des résultats
+de son évaluation
+
+➔ écriture « objective »
+
+Conclusion =/= Discussion
+• Discussion :
+
+• Interprétation des résultats en lien avec l’état de l’art,
+question et hypothèse
+• Implications pratiques pour la recherche et la société
+
+• Conclusion :
+
+• Rappel des résultats qui confirment ou non les hypothèses
+et la question de recherche
+• Critique de la recherche (limites)
+• Ouverture suite aux résultats (perspectives, généralisation
+des résultats)
+
+Quelques conseils généraux
+• Gestion de la communication avec les promoteurs/rices
+• Soyez clair sur la manière de communiquer
+• Teams, mails, …
+
+• Prévoyez des réunions pour faire le point
+• Au moins une fois par mois
+
+• Demandez du feedback de manière régulière
+• Faites relire des brouillons du mémoire le plus tôt possible
+
+Quelques conseils d’écriture
+• Écriture :
+• FR : forme passive privilégiée (les données ont été récoltées, ….)
+• EN : forme active (we collected data, …)
+• phrase courte (max. 3 lignes, pas d’excès des « qui », « que »)
+• phrase facile à lire (ordonnée, pas de formulation négative)
+
+• Rigueur scientifique :
+• précision des termes
+• pas de généralisation abusive (références, justifications, contextualisation,…)
+https://cooperationuniversitaire.com/2013/12/20/apprendre-lecriturescientifique/
+
+Quelques outils d’aide à la rédaction
+• Overleaf
+• Zotero
+• DeepL
+• Grammarly
+• ChatGPT ?
+AUCUNE utilisation sans concertation au préalable avec
+votre promoteur
+
+Les modalités pratiques de dépôt
+4 éléments sont à rendre pour valider le dépôt :
+1. Un exemplaire papier, sans couverture plastifiée, au bureau du
+secrétariat
+2. Un exemplaire en version .pdf à l'adresse secretariat.info@unamur.be
+3. Une page (maximum !) au format word contenant un résumé en français
+du mémoire et son abstract, c’est-à-dire le résumé en anglais à l'adresse
+secretariat.info@unamur.be
+4. Un formulaire numérique et une version .pdf pour la BUMP dans
+l'espace Webcampus INFOM010 ou IHDCM050
+
+Les modalités pratiques de dépôt
+• Quand rendre les 4 éléments ?
+• Pour la session de janvier 2026 : le 09 décembre 2025 à midi​
+• Pour la session de juin 2026 : le 02 juin 2026 à midi​
+• Pour la session de septembre 2026 : le 18 aout 2026 à midi
+
+Les modalités pratiques de rédaction et
+d'impression
+• max. 100 pages (hors annexes) pour un mémoire en binôme ou seul
+• imprimé (par l'étudiant.e) au format A4
+• police et taille de caractères adaptées à la rédaction d’un document
+scientifique universitaire
+•
+•
+
+elles sont prédéfinies dans le template fourni dans l‘espace Webcampus et
+sur la page mémoire
+les fantaisies sont interdites
+
+• page de garde du mémoire impérativement signée par le promoteur
+•
+•
+
+signature témoigne de son accord pour le dépôt
+page de garde = page de couverture du mémoire
+
+• reliures collées et pas de couverture plastique
+
+Évaluation
+Le jury attend de vous :
+• Un travail écrit : un document objectif et scientifique qui rend
+compte de votre capacité à mener une recherche scientifique et qui :
+• constitue une synthèse scientifique du travail personnel et original mené ;
+• porte sur les résultats, conclusions et arguments/justifications.
+
+• Une défense orale constituée :
+• d’une présentation claire, concise, en vue de présenter ses résultats,
+conclusions et arguments/justifications ;
+• 20 minutes max. (éventuellement + 10 minutes de démo => prévenir le secrétariat!)
+• si binôme : 30 minutes max. à savoir 15 minutes de parole chacun
+
+• d’une séance de questions-réponses avec les membres du jury, démontrant
+une maitrise du sujet étudié et un esprit critique.
+
+À travers le mémoire, le jury vous évalue sur vos capacités à :
+• Démontrer des connaissances approfondies dans la thématique étudiée ;
+• Mener un travail original et personnel en développant ses propres résultats et
+conclusions ;
+• S’approprier, intégrer et mobiliser des connaissances existantes approfondies en
+vue d’un apport créatif dans le domaine des sciences informatiques :
+• revue critique de littérature
+• développement de méthodes, architectures, …
+• application et évaluation de méthodes
+• etc…
+
+• Développer l’esprit critique et systématique sur l’ensemble du travail mené ;
+• Démontrer une capacité d’autonomie dans l’ensemble du travail mené ;
+• Communiquer à l’écrit avec un style, une rigueur, un formalisme et une clarté
+scientifique ;
+• Communiquer à l’oral ses résultats.
+
+Ressources
+• Votre promoteur et/ou co-promoteur
+• La coordinatrice pédagogique – Fanny Boraita
+• Le vice-doyen – Marie-Ange Remiche
+• Le secrétariat – Benjamine Lurquin (HD) et Isabelle Daelman (jour)
+
+• Les espaces Webcampus INFOM010 ou IHDCM050
+et la page mémoire
+https://www.info.unamur.be/memoires/
+
+• Guide du mémoire
+• Template
+• BVE
+
+Avez-vous des questions ?
+
+
