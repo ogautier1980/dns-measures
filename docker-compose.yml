@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  dns-measures:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dns-measures-env
+    hostname: dns-measures
+
+    # Volumes pour persister les donnees
+    volumes:
+      - .:/workspace
+      - dns-data:/workspace/data
+      - jupyter-config:/root/.jupyter
+
+    # Ports exposes
+    ports:
+      - "8888:8888"   # Jupyter Lab
+      - "8080:8080"   # Serveur web optionnel
+
+    # Variables d'environnement
+    environment:
+      - PYTHONPATH=/workspace
+      - JUPYTER_ENABLE_LAB=yes
+
+    # Garder le container actif
+    stdin_open: true
+    tty: true
+
+    # Commande de demarrage (interactif par defaut)
+    command: bash
+
+    # Ressources (ajuster selon votre machine)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 4G
+    #     reservations:
+    #       memory: 2G
+
+  # Service Jupyter Lab (optionnel, demarre automatiquement)
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dns-measures-jupyter
+    volumes:
+      - .:/workspace
+      - dns-data:/workspace/data
+    ports:
+      - "8889:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token='' --NotebookApp.password=''
+    profiles:
+      - jupyter
+
+volumes:
+  dns-data:
+  jupyter-config:
