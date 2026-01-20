@@ -69,6 +69,10 @@ reports/*.html
 !reports/.gitkeep
 !reports/README.md
 
+# Documentation (keep source, ignore generated PDF)
+!docs/documentation.md
+!docs/README.md
+
 # IDE
 .vscode/
 .idea/

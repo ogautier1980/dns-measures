@@ -12,6 +12,7 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 
 ```
 /workspace/
+├── docs/                 # Documentation complète du projet (MD + PDF)
 ├── sources/              # Articles académiques et références PDF
 ├── data/                 # Données brutes et traitées (persisté via Docker volume)
 ├── notebooks/            # Notebooks Jupyter pour analyses exploratoires
@@ -23,9 +24,9 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 ├── .claude/              # Configuration Claude Code
 ├── Dockerfile            # Image Docker principale
 ├── docker-compose.yml    # Orchestration des services
+├── docker-entrypoint.sh  # Script d'entrée du container
 ├── requirements.txt      # Dépendances Python
-├── readme.md             # Documentation principale du projet
-├── DOCKER_README.md      # Guide d'utilisation Docker
+├── readme.md             # Sujet du mémoire
 └── claude.md            # Ce fichier - journal et bonnes pratiques
 ```
 
@@ -43,10 +44,20 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
    - Repository : `https://github.com/ogautier1980/dns-measures.git`
    - Commit initial avec l'environnement Docker complet
 
-3. 🔄 Réorganisation de la structure du projet
+3. ✅ Réorganisation de la structure du projet
    - Création des répertoires sources, reports, latex, output
    - Déplacement des PDF académiques dans sources/
    - Nettoyage des fichiers temporaires
+   - Ajout de .gitignore et .dockerignore
+   - Création de README.md dans chaque répertoire
+
+4. ✅ Création de la documentation complète
+   - Nouveau répertoire `docs/` pour centraliser la documentation
+   - `docs/documentation.md` : Documentation complète en Markdown (23KB)
+   - `docs/documentation.pdf` : Version PDF générée via pandoc/XeLaTeX (101KB)
+   - Suppression de `DOCKER_README.md` redondant
+   - Script `docker-entrypoint.sh` conservé (utilisé par Docker)
+   - Documentation couvre : structure, outils, utilisation, bonnes pratiques, dépannage
 
 **Configuration actuelle :**
 - Image Docker : Python 3.11 slim-bookworm
