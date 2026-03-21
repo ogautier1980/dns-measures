@@ -157,10 +157,17 @@ Article critique pour comprendre les limitations des mesures RIPE Atlas lorsque 
 - Considérer périodes haute/basse charge
 
 **Chiffres/statistiques importantes** :
-- Désynchronisation jusqu'à **1 heure** possible
-- Impact timing **significatif** (non quantifié précisément dans résumé)
-- Hardware récent **réduit** mais **n'élimine pas** interférence
-- Code open source disponible (GitHub)
+- **Désynchronisation** jusqu'à **1 heure** possible
+- **Impact timing median** (100 traceroutes concurrents) :
+  - v1/v2: +1.10-1.20 ms (médiane), +7.30-7.70 ms (95e percentile)
+  - v3: +0.06 ms (médiane), +0.10 ms (95e percentile)
+- **Standard deviation augmentation** (v2): +7.4 ms, v1: +16.3 ms, v3: 0.00 ms
+- **Plateforme 2015** : 6,700 sondes publiques, 197 pays
+- **Mesures historiques** : 29.8M mesures individuelles totales
+- **Concurrent load** : 592K mesures concurrentes simultanées
+- **Distribution hardware (avril 2015)** : 28.2% v1/v2, reste v3
+- **Probe usage** : jusqu'à 608,824 résultats/mois (1 mesure/4s)
+- Code open source disponible (GitHub: github.com/nsg-ethz/atlas_interference)
 
 **Limites identifiées (pertinentes pour nous)** :
 - ⚠️ **Impact sur mesures DNS non documenté spécifiquement**
@@ -229,8 +236,15 @@ Article critique pour comprendre les limitations des mesures RIPE Atlas lorsque 
 **Sur timing interference** :
 > "First, we show that measurements performed from and towards the platform can significantly increase timings reported by the probe. We found that increasing hardware CPU greatly helped in limiting interference on the measured timings."
 
+> "Starting 100 one-off traceroutes increases the median delay of the concurrent pings by more than 1 ms. For v1 and v2 Atlas probes, the standard deviation is seriously impacted: +16.3 ms (v1) and +7.4 ms (v2). Atlas probes v3 show less effect, the median is only increased by 0.06 ms while the standard deviation is not impacted." (p. 439)
+
 **Sur scheduling interference** :
 > "Second, we show that measurement campaigns can end up completely out-of-synch (by up to one hour), due to concurrent loads. In contrast to precision, we found that better hardware does not help."
+
+**Statistiques plateforme (2015)** :
+> "As of April 2015, RIPE Atlas is composed of over 6,700 public probes scattered in 197 countries." (p. 437)
+
+> "When we collected those results, 592,000 concurrent individual measurements were running on the platform." (Table 1)
 
 ---
 
@@ -325,12 +339,11 @@ Article critique pour comprendre les limitations des mesures RIPE Atlas lorsque 
 
 **Tags** : #ripe-atlas #interference #timing #scheduling #measurement-quality #hardware #limitations
 
-**Statut** : [X] Lu (résumé) / [ ] Relu / [X] Fiché / [ ] PDF complet lu / [ ] Intégré mémoire
+**Statut** : [X] Lu (PDF via MD) / [X] Relu / [X] Fiché / [X] Chiffres précis intégrés / [ ] Intégré mémoire
 
 **Prochaines étapes** :
-1. ✅ Fiche complétée (basée sur résumé)
-2. ⏭️ Télécharger PDF complet via ACM DL (accès UNamur)
-3. ⏭️ Lire section résultats détaillés (chiffres précis)
-4. ⏭️ Analyser code GitHub (méthodologie expérimentale)
-5. ⏭️ Vérifier évolution hardware RIPE Atlas 2015-2024
-6. ⏭️ Chercher articles citant Holterbach (solutions proposées ?)
+1. ✅ Fiche complétée avec chiffres précis du PDF
+2. ⏭️ Analyser code GitHub (méthodologie expérimentale)
+3. ⏭️ Vérifier évolution hardware RIPE Atlas 2015-2024
+4. ⏭️ Chercher articles citant Holterbach (solutions proposées ?)
+5. ⏭️ Comparer avec Nosyk 2024 (évolution plateforme)

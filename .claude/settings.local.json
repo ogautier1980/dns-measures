@@ -12,7 +12,24 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(pandoc:*)"
+      "Bash(pandoc:*)",
+      "Bash(ls:*)",
+      "Bash(pdftotext:*)",
+      "Bash(git config:*)",
+      "Bash(for pdf in *.pdf)",
+      "Bash(do echo \"Converting: $pdf\")",
+      "Bash(done)",
+      "Bash(chmod:*)",
+      "Bash(python3:*)",
+      "Bash(make check:*)",
+      "Bash(make:*)",
+      "Bash(grep:*)",
+      "Bash(pdflatex:*)",
+      "Bash(tee:*)",
+      "Bash(biber main:*)",
+      "Bash(pdfinfo:*)",
+      "Bash(latexmk:*)",
+      "Bash(du:*)"
     ]
   }
 }

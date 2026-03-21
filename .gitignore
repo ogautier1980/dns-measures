@@ -50,6 +50,7 @@ output/*.svg
 *.aux
 *.bbl
 *.blg
+*.bcf
 *.fdb_latexmk
 *.fls
 *.lof
@@ -60,7 +61,10 @@ output/*.svg
 *.nav
 *.snm
 *.vrb
+*.run.xml
 latex/*.pdf
+latex/*_BACKUP.md
+latex/test_*.py
 !latex/README.md
 
 # Reports
