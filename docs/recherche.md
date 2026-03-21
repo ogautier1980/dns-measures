@@ -44,9 +44,10 @@ Ce document contient toutes les requêtes et stratégies de recherche pour const
 ### Articles pertinents trouvés (à lire et ficher)
 
 **RIPE Atlas et DNS** :
-- [ ] Bortzmeyer, S. - "DNS Measurements with RIPE Atlas" (RIPE presentation)
+- [X] Bortzmeyer, S. - "DNS Measurements with RIPE Atlas" (RIPE presentation)
   - URL : https://www.ripe.net/media/documents/DNS-Measurements-with-RIPE-Atlas.pdf
-  - Intérêt : Tutorial pratique mesures DNS avec Atlas
+  - Fiche : [sources/fiches/bortzmeyer_dns_measurements_atlas.md](../sources/fiches/bortzmeyer_dns_measurements_atlas.md)
+  - Intérêt : Tutorial pratique mesures DNS avec Atlas, interfaces API/Web/CLI, pièges
 
 - [ ] Bajpai & Schönwälder - "Benefits and Limitations of RIPE Atlas Tags" (IM 2017)
   - URL : https://vaibhavbajpai.com/documents/papers/proceedings/ripeatlas-im-2017.pdf
@@ -806,12 +807,12 @@ sources/fiches/
 - ✅ Recherches web RIPE Atlas effectuées (5 articles identifiés)
 - ☐ RFCs DNS (1034, 1035, 4033-35, 7871) - à consulter
 
-### Sections état de l'art (Progrès: 3/~40 articles = 7.5%)
+### Sections état de l'art (Progrès: 5/~40 articles = 12.5%)
 - ☐ Section 2.1 - Documentation technique DNS rassemblée (0/1)
 - ☐ Section 2.2 - Actif vs passif (0/5-8 articles)
 - ⏳ Section 2.3 - OpenINTEL et infrastructures (1/5-8 articles) ✅ van Rijswijk-Deij
 - ⏳ Section 2.4 - Tranco et rankings (1/3-5 articles) ✅ Le Pochat
-- ⏳ Section 2.5 - RIPE Atlas (1/5-8 articles) ✅ Nosyk + 5 identifiés à lire
+- ⏳ Section 2.5 - RIPE Atlas (3/5-8 articles) ✅ Nosyk, Holterbach, Bortzmeyer + 3 identifiés
 - ☐ Section 2.6 - CDN/géo (0/3-5 articles)
 - ☐ Section 2.6 - Sécurité DNS (0/3-5 articles)
 - ☐ Section 2.6 - ECS (0/2-3 articles)
