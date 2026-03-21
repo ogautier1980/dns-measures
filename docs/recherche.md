@@ -65,6 +65,25 @@ Ce document contient toutes les requêtes et stratégies de recherche pour const
   - URL : https://dl.ifip.org/db/conf/tma/tma2024/tma2024poster-final1.pdf
   - Intérêt : Mesures DNS internes avec Atlas
 
+**Anycast et DNS** :
+- [ ] Finnegan, K. - "Measuring Anycast DNS Services Using RIPE Atlas" (RIPE Labs)
+  - URL : https://labs.ripe.net/author/kenneth_finnegan/measuring-anycast-dns-services-using-ripe-atlas/
+  - Intérêt : Méthodologie mesures anycast DNS, instance discovery
+
+- [ ] Bortzmeyer, S. - "Using RIPE Atlas to Find Popular Instances of DNS Anycast Name Server" (RIPE Labs)
+  - URL : https://labs.ripe.net/author/stephane_bortzmeyer/using-ripe-atlas-user-defined-measurements-to-find-the-most-popular-instances-of-a-dns-anycast-name-server/
+  - Intérêt : Identification instances anycast populaires
+
+- [ ] "Seeing the World with RIPE Atlas" (RIPE Labs - Verizon Digital)
+  - URL : https://labs.ripe.net/author/verizon_digital/seeing-the-world-with-ripe-atlas/
+  - Intérêt : Use case CDN/DNS global perspective
+
+**Interférence mesures** :
+- [X] Holterbach et al. (2015) - "Quantifying Interference between Measurements on RIPE Atlas" (IMC)
+  - URL : https://dl.acm.org/doi/10.1145/2815675.2815710
+  - Fiche : [sources/fiches/holterbach2015_atlas_interference.md](../sources/fiches/holterbach2015_atlas_interference.md)
+  - Intérêt : Impact interférence timing/scheduling, critique pour fiabilité
+
 **OpenINTEL évolution** :
 - [ ] "The Ongoing Story of OpenINTEL: Measuring the DNS for Research" (NLnet Labs blog)
   - URL : https://blog.nlnetlabs.nl/the-ongoing-story-of-openintel/
