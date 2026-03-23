@@ -1,493 +1,145 @@
-# Fiche de lecture - Evolution and Challenges of DNS-based CDNs
+# Reading Note - Evolution and Challenges of DNS-Based CDNs
 
-**Référence bibliographique** :
-Wang, Z., Huang, J., & Rose, S. (2018). *Evolution and challenges of DNS-based CDNs*. Digital Communications and Networks, 4(4), 235-243. https://doi.org/10.1016/j.dcan.2017.07.005
+**Bibliographic Reference**:
+Wang, Z., Huang, J., & Rose, S. (2018). Evolution and challenges of DNS-based CDNs. *Digital Communications and Networks*, 4(4), 235–243. https://doi.org/10.1016/j.dcan.2017.07.005. National Institute of Standards and Technology (NIST) / Chongqing University of Posts and Telecommunications.
 
-**Thème** :
-Survey complet DNS-based CDNs : problème remote DNS, solutions (ECS, Name Extension, Direct Resolution), privacy concerns (client location + redirection enumeration)
+**Theme**:
+This survey paper systematically reviews DNS-based Content Delivery Network (CDN) technologies, focusing on server selection, server redirecting mechanisms, and the challenges introduced by remote DNS recursive resolvers. The authors analyze the remote DNS problem — where the geographic mismatch between a client and its recursive resolver causes suboptimal CDN server selection — and evaluate state-of-the-art solutions including EDNS Client Subnet (ECS), name extension, and direct resolution. Privacy concerns arising from these solutions are also addressed.
 
-**Intérêt pour le mémoire** :
-Synthèse état de l'art 2018 sur redirection DNS/CDN. Identifie **paradoxe remote DNS** : adoption croissante (27%/an) DNS publics (Google, OpenDNS) dégrade performance CDN (113% distance si mismatch 2 units). Solutions (ECS) posent problèmes privacy. Pertinent pour comprendre trade-offs performance vs privacy et impact choix DNS resolver sur diversité géographique réponses.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 mars 2026
-**Section du mémoire** :
-- Section 2.6 (CDN, DNS resolvers, remote DNS problem, ECS)
+**Relevance to thesis**:
+This paper provides the essential theoretical framework for understanding why DNS responses vary depending on the geographic location of both the client and the recursive resolver — the central mechanism driving spatial variation in our distributed DNS measurements. The remote DNS problem and the ECS solution are directly observable phenomena in our RIPE Atlas measurements: probes using distant or public resolvers may receive different CDN-related DNS answers than probes using local ISP resolvers. This paper enables our thesis to contextualize this geographic variation within the CDN performance optimization ecosystem.
 
 ---
 
-## Contenu de l'article
-
-### Objectif(s) / Question(s) de recherche
-
-**Problème central** : **Remote DNS issue** :
-- DNS-based CDNs = méthode redirection **la plus populaire** (Akamai, Limelight, Mirror Image)
-- Assume : **DNS recursive server proche client**
-- Réalité : **Adoption croissante remote DNS** (Google 8.8.8.8, OpenDNS, etc.)
-  - 2012 : **8.6% users** public DNS, **27% annual growth**
-  - Google DNS : **74% annual increase**
-- Conséquence : CDN redirige vers serveur proche **DNS resolver**, pas proche **client**
-  - → **Performance degradation** significative
-
-**Questions de recherche** :
-1. Comment résoudre **remote DNS problem** sans casser infrastructure DNS existante ?
-2. Quelles **implications privacy** des solutions proposées ?
-3. Quels **trade-offs** entre performance CDN, simplicité déploiement, et privacy ?
-
-**Objectif paper** :
-- ✅ **First comprehensive survey** DNS-based CDNs
-- ✅ Synthèse **state-of-art solutions** remote DNS (ECS, Name Extension, Direct Resolution)
-- ✅ Identification **privacy concerns** : client location + redirection enumeration
-- ✅ Comparaison systématique 7 solutions selon 5 métriques
-- ✅ Modèle conceptuel CDN performance (Weibull, Lognormal distributions)
-
-### Méthodologie
-
-- **Type d'étude** : Survey + analyse comparative + modélisation théorique
-- **Pas de mesures empiriques** : synthèse littérature existante (2017-2018)
-- **Sources** :
-  - Publications académiques (Calder 2015, Otto 2012, etc.)
-  - RFCs (EDNS, ECS)
-  - Industry reports (Google, Akamai, CDN providers)
-
-- **Approche** :
-  1. **Taxonomie** mécanismes redirection CDN (4 types)
-  2. **Analyse** remote DNS problem
-  3. **Synthèse** 3 solutions proposées récentes
-  4. **Identification** 2 privacy concerns
-  5. **Comparaison** 7 solutions selon 5 métriques
-  6. **Modélisation** CDN performance (distributions probability)
-
-**Framework d'analyse (5 métriques)** :
-
-| Métrique | Description |
-|----------|-------------|
-| **Client complexity** | Overhead stub resolver (IoT, mobile) |
-| **Intermediate transparency** | Compatibilité middle-boxes (recursive servers) |
-| **CDN performance** | Précision client location → optimal server |
-| **Client location privacy** | Information leaked in-path (recursive → authoritative) |
-| **Redirection privacy** | Difficulté enumeration complete CDN mapping |
-
-### Résultats principaux
-
-#### 1. Taxonomie mécanismes redirection CDN (Section 2)
-
-**4 approches** :
-
-**HTTP redirection** :
-- Web server → HTTP headers (301, 302)
-- ❌ Extra round-trip delay
-- ❌ Heavy processing overhead
-- Utilisation : limitée
-
-**URL rewriting** :
-- Origin server rewrites embedded objects URLs
-- ❌ URL parsing delay
-- ❌ Rewritten URLs non-cacheable
-- Utilisation : objets embarqués
-
-**Anycast** (Section 2.3) :
-- Network layer, transparent
-- Same IP → multiple servers (BGP routing)
-- ✅ Simple, scalable, DDoS-resilient
-- ❌ Performance-agnostic (BGP ≠ latency-aware)
-- ❌ 20% clients suboptimal (Calder 2015)
-- ❌ Routing changes → TCP session disruptions
-- Utilisation : CloudFlare, root DNS (12/13)
-
-**DNS-based redirection** (Section 2.4) :
-- ✅ **Most popular** (Akamai, Limelight, Mirror Image)
-- ✅ **Transparent** to end users
-- ✅ **Simple** : uses existing DNS infrastructure
-- ✅ **Flexible** : TTL tuning (static vs dynamic)
-- Mécanisme : CNAME content → CDN domain → IP optimal server
-- TTL small → dynamic redirection (zero TTL = per-request)
-
-#### 2. Remote DNS problem (Section 3.1)
-
-**False assumption** : DNS recursive server **proximate** to client
-
-**Réalité adoption public DNS** :
-- **2012** : 8.6% users (Google, OpenDNS, Level3)
-- **Growth** : 27% annual (Google 74% annual)
-- Motivations : availability, stability, security (vs ISP DNS)
-
-**Impact mesuré** (Otto 2012) :
-- **ISP DNS** : 80% locations similarity with clients
-- **Public DNS** : 90% locations **NO similarity** with clients
-- **HTTP latency** : Public DNS = **2× latency** vs ISP DNS
-- Explication : sub-optimal redirection (servers far from clients)
-
-**Afrique study** (2019) :
-- Remote DNS → **+100 ms** DNS resolution delay (50% probes)
-- Geographic mismatch critique
-
-**Local DNS clusters** :
-- Behind local DNS : clusters hosts (size, geography unknown)
-- CDN cannot optimize without knowledge → suboptimal
-
-#### 3. Solutions remote DNS (Section 3.2)
-
-**Solution 1 : ECS (EDNS-Client-Subnet)** - RFC 7871
-
-**Principe** :
-- DNS recursive server inclut **client IP prefix** in DNS query (EDNS0 OPT record)
-- Authoritative server uses **client location** (not resolver location) for redirection
-
-**Avantages** :
-- ✅ Résout remote DNS problem (client location accurate)
-- ✅ Standardisé (Google proposal, IETF accepted)
-
-**Limitations** :
-
-*Deployment complexity* :
-- ❌ **End users** : upgrade stub resolvers (browsers, email clients)
-- ❌ **Recursive servers** : ECS support (implementation barely available 2017)
-- ❌ **Authoritative servers** : ECS compatibility
-- ❌ **Middle-boxes** : forward ECS payloads unmodified
-- → **Joint effort** all parties (non-trivial)
-
-*Cache efficiency* :
-- ❌ **1-to-1 caching** → **1-to-many** (ECS scope dimension)
-- ❌ Cache expanded by **factor of ECS scopes**
-- ❌ Vulnerability DoS attacks (bypass caching, flood authoritative)
-
-*Transition challenges* :
-- ❌ **No signaling** ECS support upstream → downstream
-- ❌ ECS-compliant clients → non-ECS recursive servers = **wasted payload**
-- ❌ ECS recursive → non-ECS authoritative = **privacy leak** unnecessary
-
-*Privacy concerns* (Section 4.1) :
-- ❌ **Client location exposed** to authoritative servers + on-path eavesdroppers
-- Trade-off : **longer prefix** = better CDN, worse privacy
-- Conventional DNS : client **hidden** by recursive server (behavioral privacy)
-- ECS : client visible → monitoring, recording, analysis possible
-
-*Redirection enumeration* (Section 4.2) :
-- ❌ **Easy enumeration** CDN mapping (Calder 2016)
-  - Routable /24 prefixes → **1 day** enumerate Google
-- ❌ Reveals CDN infrastructure, serving strategy
-- ❌ Risk DDoS attacks (complete mapping known)
-- ❌ Violates CDN provider privacy
-
-**Solution 2 : Name Extension**
-
-**Principe** :
-- Client encodes location in **DNS query name** (prefix original name)
-- Recursive server handles as normal (transparent)
-- Authoritative server extracts location from query name
-
-**Avantages** :
-- ✅ **End-to-end** extension (client ↔ authoritative)
-- ✅ **No intermediate support** required (DNS recursive unchanged)
-- ✅ Lower deployment obstacles vs ECS
-
-**Limitations** :
-- ❌ Similar **privacy issues** as ECS (location exposed)
-- ❌ Scope-based redirection → **enumeration possible**
-- ❌ Client complexity slightly higher (encoding)
-
-**Solution 3 : Direct Resolution**
-
-**Principe** :
-- Recursive server translates content domain → CDN domain
-- **Client itself** contacts CDN authoritative server (not via recursive)
-- Redirection based on **client location** (not resolver)
-
-**Avantages** :
-- ✅ Better optimization (client location accurate)
-- ✅ Outperforms remote DNS + even local DNS (some cases)
-
-**Limitations** :
-- ❌ **Client complexity increased** : more queries, caching overhead
-- ❌ **Privacy reduced** : full client IP visible (not just prefix like ECS)
-- ❌ Client must handle DNS resolution complexity
-
-#### 4. Privacy solution : Client Pseudononymizing (Section 4.3)
-
-**Principe** :
-- Client uses **pseudonymizing identifier** (not IP prefix) in DNS requests
-- **Trustworthy third party** : maintains IP ↔ pseudonym mapping
-- Authoritative server forwards to third party for redirection decision
-- Third party returns CDN selection (secure lookup)
-
-**Avantages** :
-- ✅ **Client location privacy** preserved (on-path cannot see IP)
-- ✅ **Redirection privacy** preserved (no enumeration)
-- ✅ **CDN performance** maintained (third party knows real location)
-
-**Limitations** :
-- ❌ **Extra latency** : authoritative → third party lookup
-- ❌ **Bottleneck** : third party = critical infrastructure
-- ❌ **Trust** : requires trustworthy third party
-
-**Optimizations** :
-- Clouding third party infrastructure (reduce latency)
-- Piggyback predicted results
-- Validity time → enable caching
-
-#### 5. Comparaison systématique (Section 5, Table 1)
-
-**7 solutions analysées** :
-
-| Solution | Client complexity | Intermediate transp. | CDN perf. | Client priv. | Redir. priv. |
-|----------|-------------------|----------------------|-----------|--------------|--------------|
-| **Local server** | Low | Good | Medium | Medium | Good |
-| **Remote server** | Low | Good | **Bad** | **Good** | Good |
-| **Client server** | **High** | Good | **Good** | **Bad** | Good |
-| **ECS** | Low | **Bad** | **Good** | **Bad** | **Bad** |
-| **Direct Resolution** | Medium | Good | **Good** | **Bad** | Good |
-| **Name Extension** | Low | Good | **Good** | **Bad** | **Bad** |
-| **Client pseudononymizing** | Low | **Bad** | **Good** | **Good** | **Good** |
-
-**Insights** :
-
-**Local server** :
-- ✅ Default choice most users (majority)
-- ⚠️ Proximity not always guaranteed (cellular DNS = suboptimal)
-- Balance : medium CDN perf, medium client privacy
-- Public DNS study (2011) : ISP DNS better than Google/OpenDNS
-
-**Remote server** :
-- ❌ **Worst CDN performance** (location mismatch)
-- ✅ Best client privacy (client hidden)
-- Growing adoption despite performance penalty
-
-**Client server** :
-- ✅ Optimal CDN (co-location client + server)
-- ❌ Rare in practice (high complexity, uneconomical)
-- ❌ Worst client privacy (full IP exposed)
-
-**ECS** :
-- ✅ Best CDN performance (accurate client location)
-- ❌ Worst client privacy (IP prefix exposed)
-- ❌ Worst redirection privacy (easy enumeration)
-- ❌ Bad intermediate transparency (recursive server modifications)
-
-**Direct Resolution** :
-- ✅ Best CDN performance
-- ⚠️ Medium complexity (client handles resolution)
-- ❌ Worst client privacy (full IP, not just prefix)
-- ✅ Good redirection privacy (single IP-based, no enumeration)
-
-**Name Extension** :
-- Similar to ECS but better intermediate transparency
-- ❌ Same privacy issues (location exposed, enumeration)
-
-**Client pseudononymizing** :
-- ✅ **Only solution** preserving both privacies + CDN performance
-- ❌ Requires trustworthy third party (infrastructure cost)
-- ❌ Extra latency
-
-#### 6. Modélisation CDN performance (Section 5.3)
-
-**Modèle conceptuel** : Impact location mismatch (client ↔ recursive server) on CDN performance
-
-**Distributions testées** : Weibull, Lognormal (distance recursive ↔ CDN server)
-
-**Hypothèses** :
-- Optimal CDN : server proche requestor
-- Distance distribution f(x) : prob(co-location) ≈ 0, prob(infinite distance) ≈ 0
-- Peak probability at x_max (most likely distance)
-
-**Résultats (Figures 3-6)** :
-
-**Weibull distribution** (λ=1.09, k=5) :
-- Location mismatch **0.2 units** : CDN distance increase **< 5%**
-- Location mismatch **2 units** : CDN distance increase **113%**
-- → Performance penalty grows **rapidly** with mismatch
-
-**Lognormal distribution** (μ=0.5493, σ=1.0481) :
-- Similar curve, **steeper slope** (near-field effects)
-- Confirms rapid degradation with mismatch
-
-**Implications** :
-- Explains **remote server poor performance** (large mismatch)
-- Explains **local server medium performance** (small but non-zero mismatch)
-- Matches empirical measurements (Otto 2012, others)
-
-### Conclusion des auteurs
-
-**Contributions** :
-1. ✅ **First comprehensive survey** DNS-based CDNs
-2. ✅ **State-of-art solutions** remote DNS problem (ECS, Name Extension, Direct Resolution)
-3. ✅ **Privacy identification** : client location + redirection enumeration
-4. ✅ **Systematic comparison** 7 solutions, 5 metrics
-5. ✅ **Conceptual model** CDN performance (quantifies mismatch impact)
-
-**Key findings** :
-
-**Remote DNS = growing problem** :
-- 8.6% users public DNS (2012), 27% annual growth
-- Performance penalty severe (2× latency, 113% distance increase)
-
-**Solutions trade-offs** :
-- **ECS** : best CDN performance, worst privacy
-- **Local DNS** : balance performance + privacy (majority users)
-- **Client pseudononymizing** : best privacy + CDN, but infrastructure cost
-
-**Privacy overlooked** :
-- Most prior works ignore privacy
-- ECS enables enumeration (1 day Google CDN mapping)
-- Client location exposure → behavioral tracking
-
-**Design guidelines** :
-- CDN providers : consider privacy-preserving solutions
-- Users : understand trade-off public DNS (security) vs ISP DNS (performance)
-- Researchers : need better solutions (privacy + performance + simplicity)
-
-**Limitations** :
-- Survey 2017-2018 (évolution depuis ?)
-- No empirical measurements (synthesis only)
-- Model simpliste (distributions assumptions)
+## Reading Context
+
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.4 (CDN and DNS-based routing)
+- Section 2.5 (EDNS Client Subnet — geographic routing)
+- Section 2.2 (DNS fundamentals — recursive resolution and caching)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés** :
-- **Remote DNS paradox** : adoption croissante (security) dégrade CDN performance
-- **Trade-off triangle** : CDN performance ↔ client privacy ↔ deployment simplicity
-- **ECS** = solution dominante (IETF) mais privacy concerns majeurs
-- **Location mismatch** = performance penalty exponential (113% si 2 units)
-- **Redirection enumeration** = privacy threat (1 day CDN mapping)
+**Problem**: DNS-based CDN server selection assumes the recursive resolver is geographically close to the end user. As public DNS services (Google 8.8.8.8, OpenDNS, Cloudflare 1.1.1.1) are increasingly adopted, this proximity assumption fails, causing the CDN authoritative server to select a surrogate server optimized for the resolver's location rather than the user's location. This "remote DNS problem" results in suboptimal CDN performance, with documented cases of HTTP latency doubling when using public DNS compared to ISP DNS.
 
-**Chiffres essentiels** :
-- **8.6%** users public DNS (2012), **27% annual growth**, Google **74% annual**
-- **2× latency** public DNS vs ISP DNS (Otto 2012)
-- **+100 ms** DNS delay Afrique (50% probes) due to remote DNS
-- **113%** CDN distance increase si location mismatch 2 units (model)
-- **1 day** enumerate Google CDN mapping avec ECS (Calder 2016)
-- **90%** locations no similarity public DNS vs clients (Otto)
+**Research questions**:
+1. What are the available mechanisms for CDN server redirection, and what are the comparative advantages of DNS-based approaches?
+2. What solutions have been proposed or deployed to address the remote DNS problem, and how do they compare in terms of client complexity, transparency, cache efficiency, and privacy?
 
-**Taxonomie solutions** (7) :
-1. Local server (majority users, default)
-2. Remote server (growing, poor CDN perf)
-3. Client server (rare, high complexity)
-4. ECS (IETF, best CDN, worst privacy)
-5. Direct Resolution (client-side, medium complexity)
-6. Name Extension (similar ECS, better transparency)
-7. Client pseudononymizing (best privacy, infrastructure cost)
+### Background
 
-**Limites pour nous** :
-- Survey 2017-2018 (évolution ECS adoption ?)
-- Pas mesures empiriques (synthesis only)
-- Model théorique (Weibull, Lognormal = assumptions)
-- Focus CDN performance (pas DNS query time, cache effects)
+CDNs replicate content on geographically distributed surrogate servers to minimize delivery latency and improve scalability. Request routing — the mechanism that directs each user to an optimal surrogate — typically uses the user's network location as the primary input. Four server redirecting mechanisms exist: HTTP redirection (requires extra round-trip), URL rewriting (non-cacheable), anycast (network-layer, limited control), and DNS-based redirecting (the dominant approach). DNS-based CDN redirection exploits the DNS infrastructure's existing global distribution and allows CDN operators to return dynamically selected surrogate server IP addresses in response to DNS queries. CNAME records decouple content domain names from CDN domain names, enabling independent management.
 
-### Critique personnelle
+### Methodology
 
-**Forces** :
-- ✅ **Comprehensive survey** : first systematic DNS-based CDN overview
-- ✅ **Multi-dimensional analysis** : 5 metrics × 7 solutions
-- ✅ **Privacy emphasis** : identifies overlooked threats (enumeration)
-- ✅ **Practical model** : quantifies mismatch impact (113%)
-- ✅ **Design guidelines** : actionable for CDN providers
-- ✅ **Honest trade-offs** : no silver bullet (performance vs privacy)
+- **Study type**: Survey / analytical comparison
+- **Tools used**: Literature analysis; reference to measurement studies (Otto et al. 2012 on public DNS impact; Calder et al. on ECS-based CDN enumeration)
+- **Scale**: Survey covers industry deployments (Akamai, Limelight Networks, Mirror Image, Google) and academic proposals
+- **Measurement protocol**: N/A (survey); references a 2012 study measuring ISP vs. public DNS CDN similarity at multiple locations
+- **Data collected**: N/A (survey); key cited measurement: ISP DNS had similar CDN server selection to clients in at least 80% of locations; public DNS had no similarity to clients for 90% of locations; public DNS doubled HTTP latency compared to ISP DNS or direct client resolution
 
-**Faiblesses** :
-- ⚠️ **No empirical data** : survey only, no measurements
-- ⚠️ **Model simpliste** : distributions assumptions not validated
-- ⚠️ **Snapshot 2017** : ECS adoption evolved since ?
-- ⚠️ **Limited solutions** : ignores hybrid approaches
-- ⚠️ **Privacy light** : mentions concerns but no deep analysis
-- ⚠️ **No temporal evolution** : adoption trends predictions ?
+### Main Results
 
-**Lien avec autres articles** :
+1. **DNS-based CDN advantages**: DNS-based redirection offers transparency (invisible to users), simplicity (compatible with existing infrastructure), and flexibility (TTL controls cache lifetime). Zero-TTL allows per-request dynamic redirection; large TTLs reduce authoritative server load. CDN providers like Akamai, Limelight, and Mirror Image have adopted this approach as their primary redirection mechanism.
 
-- **Hours 2016 (DNS resolvers CDN)** :
-  - Hours : causal analysis LDNS vs GDNS (14% distance, 30% config)
-  - Wang : survey solutions remote DNS problem
-  - Cohérence : remote DNS = performance penalty confirmed
-  - Wang modèle (113%) > Hours empirique (14%) → depends context
+2. **Remote DNS problem severity**: A 2012 study found that ISP DNS and client IP had similar CDN server selection in at least 80% of locations, while public DNS had no similarity with clients for 90% of locations. HTTP performance with public DNS showed doubled latencies compared to ISP DNS or client-direct resolution. The impact worsens as public DNS adoption grows (27% annual growth in public DNS user base as of 2012, with 8.6% of users relying on public DNS).
 
-- **Calder 2015 (Anycast)** :
-  - Wang : anycast = 20% suboptimal, session disruptions
-  - Calder : confirms 20% suboptimal empirically
-  - Wang : DNS-based redirection preferred despite anycast simplicity
+3. **ECS solution analysis**: ECS (RFC 7871) allows recursive resolvers to forward the client's IP prefix to authoritative nameservers. It requires joint deployment across all parties (stub resolvers, recursive resolvers, authoritative servers, middleboxes). Cache efficiency is compromised: the standard one-to-one DNS caching model expands to a per-scope model, potentially enabling DoS attacks that bypass caching. The transition challenge is that ECS-compliant parties have no way to signal support to upstream parties, causing unnecessary privacy leakage.
 
-- **Xu 2023 (Centralization)** :
-  - Xu : DNS infrastructure centralized (oligopoly)
-  - Wang : public DNS adoption 27% annual (Google, OpenDNS)
-  - Paradoxe : centralization + remote DNS = double performance threat
+4. **Name extension alternative**: Encoding client location in the DNS query name (e.g., prefixing geolocation information onto the query) allows the CDN authoritative server to derive client location without modifying intermediate DNS infrastructure. This approach requires only client-side and authoritative-server-side changes, reducing deployment obstacles compared to ECS. However, cache efficiency is similarly affected and recursive resolvers must handle modified query names correctly.
 
-- **Nosyk 2024 (RIPE Atlas)** :
-  - Nosyk : RIPE Atlas 12.9K vantage points
-  - Wang : local vs remote DNS = location matters
-  - Notre mémoire : RIPE Atlas peut mesurer variations remote DNS impact
+5. **Direct resolution approach**: The client-side resolver directly contacts the CDN authoritative server (bypassing the standard recursive resolution chain). This provides the most accurate location information (the client's actual IP) but increases client complexity and exposes the full client IP address (reducing privacy more than ECS's truncated prefix approach).
 
-**Questions ouvertes** :
-1. **ECS adoption 2018-2024** : déploiement généralisé ? Privacy résolu ?
-2. **Public DNS trends** : 27% growth continue ? Saturation ?
-3. **IPv6 impact** : ECS patterns IPv6 vs IPv4 ?
-4. **Hybrid solutions** : combining privacy + performance ?
-5. **Client awareness** : users comprennent trade-off DNS choice ?
-6. **CDN evolution** : edge computing reduce remote DNS impact ?
+6. **Privacy concerns**: ECS makes client location information visible to authoritative nameservers and on-path observers. Additionally, ECS-enabled queries allow adversaries to enumerate CDN mapping tables efficiently: Calder et al. demonstrated that Google's entire CDN mapping could be enumerated using ECS queries with /24 prefixes in approximately one day. This "redirection privacy" concern is distinct from location privacy and affects CDN operators' competitive and security interests.
 
-### Citations importantes
+### Authors' Conclusion
 
-> "DNS-based server redirecting is considered the most popular means of deploying CDNs. However, with the increasing use of remote DNS, DNS-based CDNs face a great challenge in performance degradation." (Abstract)
-
-> "According to a 2012 study, the public DNS user base grew by 27% annually, and 8.6% of users in the sample relied on a public DNS service." (Section 3.1)
-
-> "ISP DNS was shown to have some similarity with clients in at least 80% of locations, and there was no similarity between public DNS and client for 90% of locations. [...] For HTTP performance, public DNS was found to yield doubled latencies compared with clients and ISP DNS." (Section 3.1)
-
-**Sur modèle performance** :
-> "The expected distance between a client and a CDN surrogate server increases by less than 5% when the DNS recursive server is 0.2 units away from the client. The CDN performance penalty grows rapidly with the increase in location mismatch. E.g., the expected distance between the client and the CDN surrogate server increases by 113% when the DNS recursive server is 2 units away from the client." (Section 5.3)
-
-**Sur privacy ECS** :
-> "ECS makes client location information visible to the DNS authoritative server and on-path eavesdroppers. Thus, client location privacy, which is well protected by remote DNS, is almost invalidated by ECS." (Introduction)
-
-**Sur redirection enumeration** :
-> "By using routable/24 client prefixes, queries against Google were reported as taking about a day to enumerate. The efficiency of ECS-based redirection enumeration highlights the privacy issue with any IP block-based redirection mechanism." (Section 4.2)
+The authors conclude that DNS-based server redirection remains the dominant and most practical CDN deployment mechanism, but faces two fundamental challenges: the remote DNS problem (degraded performance when resolver and client are geographically distant) and privacy concerns (ECS reveals client location and enables CDN mapping enumeration). ECS is the most widely deployed solution to the remote DNS problem but introduces significant deployment complexity and privacy trade-offs. No current solution simultaneously achieves optimal CDN performance, low client complexity, high intermediate transparency, good cache efficiency, and strong privacy protection.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-**Sections concernées** :
-- **Section 2.6 (CDN, DNS resolvers)** : Remote DNS problem, ECS, trade-offs
-- **Section 7 (Discussion)** : Privacy vs performance, distributed measurements value
+### Key Takeaways for the Thesis
 
-**Points à développer** :
+**Key concepts to reuse**:
+- The remote DNS problem as the primary source of geographic variation in DNS-CDN interactions — foundational to interpreting why RIPE Atlas probes at different locations receive different DNS answers
+- CNAME chain as the mechanism linking content domain names to CDN domain names — our measurements should trace full CNAME chains, not just the initial A record
+- TTL as a control mechanism: low TTL values allow frequent CDN updates but increase query load; this temporal dimension connects to our thesis's focus on DNS "in time"
 
-**État de l'art** :
-- DNS-based CDN = most popular (Akamai, etc.)
-- Remote DNS problem = growing (27% annual public DNS adoption)
-- Performance penalty severe (2× latency, 113% distance model)
-- ECS = solution IETF mais privacy concerns (enumeration 1 day)
-- Trade-off insoluble : performance vs privacy vs simplicity
+**Applicable methods**:
+- Comparing DNS responses received by probes using local ISP resolvers vs. public resolvers (Google 8.8.8.8, Cloudflare 1.1.1.1) to quantify the remote DNS effect on CDN selection
+- Analyzing SCOPE PREFIX-LENGTH in ECS responses to determine geographic granularity of CDN routing policies
+- Measuring CNAME chain depth across the Tranco top domains to understand the CDN delegation structure
 
-**Notre contribution** :
-- Wang : remote DNS = location mismatch → performance degradation
-- Notre approche : RIPE Atlas 12.9K vantage points → mesure impact distributed
-- Geographic diversity queries → révèle variations redirection selon resolver location
-- Quantifier empiriquement remote DNS impact à l'échelle globale
+**Important statistics**:
+- ISP DNS similar to client in at least 80% of locations; public DNS has no similarity with client in 90% of locations
+- Public DNS doubles HTTP latency compared to ISP DNS or direct client resolution
+- Public DNS user base grew 27% annually; 8.6% of users relying on public DNS services (2012 data)
+- Anycast CDNs directed roughly 20% of clients to suboptimal front ends
 
-**Discussion** :
-- Wang modélise impact théorique (113% distance si mismatch 2 units)
-- RIPE Atlas peut mesurer impact **réel** : probes different locations + different DNS resolvers
-- Identifier si public DNS (Google) vraiment 2× latency vs local (Otto 2012)
-- Complémentarité : survey (Wang) + empirical distributed measurements (nous)
+**Identified limitations (gaps to fill)**:
+- The survey's empirical data is from 2012 studies; public DNS adoption has likely accelerated substantially since then (Cloudflare 1.1.1.1 launched in 2018, after this paper)
+- No measurement of ECS deployment rates across the global authoritative nameserver population
+- The paper focuses on traditional DNS-based CDN; it does not address DNS over HTTPS/TLS, which changes the resolver visibility model
 
-**Méthodologie** :
-- Inspiration 5 metrics framework (complexity, transparency, performance, privacy)
-- RIPE Atlas peut tester solutions (local DNS, public DNS, ECS-enabled)
-- Measure redirection variations géographiques
+### Personal Critique
 
-**Limitations** :
-- RIPE Atlas probes = fixed locations (not all users)
-- But 178 countries → better coverage than Otto 2012 sample
+**Strengths**:
+- Systematic taxonomy of CDN redirection mechanisms and the five comparison metrics (client complexity, intermediate transparency, deployment cost, cache efficiency, privacy) provide a clean analytical framework
+- Clear explanation of the CNAME-based CDN delegation architecture — essential background for any DNS measurement study involving CDN domains
+- Balanced treatment of ECS trade-offs, including the often-overlooked redirection privacy (CDN mapping enumeration) concern
+
+**Weaknesses**:
+- Survey nature means no original empirical data; relies heavily on cited measurement studies
+- The 2012 measurement data on public DNS impact is significantly outdated relative to the 2018 publication date
+- Limited coverage of the rapidly evolving DNS privacy landscape (DoH, DoT, DNSSEC are not discussed)
+
+**Links to other papers**:
+- RFC 7871 (Contavalli et al., 2016) — ECS specification: this paper surveys ECS as a deployed solution; the RFC provides the normative definition
+- Li et al. (2025) — Twitch CDN measurement: empirically demonstrates the CDN architecture this paper describes theoretically
+- Hours et al. (2016) — DNS resolvers and CDN impact: provides the empirical basis for several of the performance claims in this survey
+- Calder et al. (2015) — ECS-based CDN enumeration: cited for the redirection privacy concern
+
+**Open questions**:
+- Has ECS deployment expanded significantly between 2018 and 2026? What fraction of the Tranco top 10,000 domains have ECS-aware authoritative nameservers?
+- How does DNS over HTTPS (DoH) change the remote DNS problem? DoH resolvers are typically operated by large tech companies (Cloudflare, Google, Mozilla) and thus likely to be remote from most users.
+- Can our RIPE Atlas measurements distinguish between CDN geographic routing granularity (via SCOPE PREFIX-LENGTH) and simple anycast-based routing?
+
+### Key Quotes
+
+> "DNS-based server redirecting is considered the most popular means of deploying CDNs. However, with the increasing use of remote DNS, DNS-based CDNs face a great challenge in performance degradation."
+
+> "The remote DNS issue arises from the false assumption that a DNS recursive server is in proximity to its clients."
+
+> "ISP DNS was shown to have some similarity with clients in at least 80% of locations, and there was no similarity between public DNS and client for 90% of locations."
+
+> "ECS may make [CDN mapping enumeration] possible because it greatly reduces the number of queries. Calder et al. used ECS-enabled queries to measure the redirection mapping of the Google web service... queries against Google were reported as taking about a day to enumerate."
 
 ---
 
-**Tags** : #dns #cdn #remote-dns #ecs #edns-client-subnet #privacy #performance #survey #google-dns #public-dns #redirection #enumeration #location-privacy
+## Use in Thesis
 
-**Statut** : [X] Lu (PDF via MD) / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.4 (CDN and DNS-based routing): Primary survey reference; provides the taxonomy of CDN redirection mechanisms and the CNAME-based delegation architecture
+- Section 2.5 (EDNS Client Subnet): Comparative analysis of ECS vs. alternative approaches; the five-metric comparison framework can structure our discussion
+- Section 2.2 (DNS fundamentals): TTL semantics, caching behavior, and the recursive resolution chain are described here in the CDN context
 
-**Date fiche** : 21 mars 2026
+**Points to develop**:
+- Updating the empirical picture: our measurements will provide 2024–2026 data on ECS deployment and the remote DNS effect, updating the 2012-era statistics cited in this survey
+- Quantifying the spatial dimension of the remote DNS problem using RIPE Atlas: how much does the DNS answer for a CDN domain vary across RIPE Atlas probes as a function of their distance to the resolver?
+
+**Cross-references**:
+- `rfc7871_edns_client_subnet.md` — normative ECS specification
+- `li2025_twitch_cdn_global.md` — empirical CDN measurement complementing this survey
+- `hours2016_dns_resolvers_cdn_impact.md` — empirical quantification of remote DNS performance impact
+
+---
+
+**Tags**: #CDN #DNS-based-redirecting #remote-DNS #ECS #CNAME #TTL #privacy #anycast #HTTP-redirection #survey
+**Status**: [X] Read / [X] Filed

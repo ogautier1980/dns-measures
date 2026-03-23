@@ -1,349 +1,130 @@
-# Fiche de lecture - Quantifying Interference between Measurements on RIPE Atlas
+# Reading Note - Quantifying Interference between Measurements on the RIPE Atlas Platform
 
-**Référence bibliographique** :
-Holterbach, T., Pelsser, C., Bush, R., & Vanbever, L. (2015). Quantifying Interference between Measurements on the RIPE Atlas Platform. *Proceedings of the 2015 Internet Measurement Conference (IMC '15)*, 437–443. https://doi.org/10.1145/2815675.2815710
+**Bibliographic Reference**:
+Holterbach, T., Pelsser, C., Bush, R., & Vanbever, L. (2015). Quantifying interference between measurements on the RIPE Atlas platform. In *Proceedings of the 2015 Internet Measurement Conference (IMC '15)* (pp. 437–443). ACM. https://doi.org/10.1145/2815675.2815710
 
-**Thème** : Interférence entre mesures simultanées sur RIPE Atlas
+**Theme**:
+This paper investigates the extent to which concurrent measurements on the RIPE Atlas platform interfere with one another, degrading both the precision of delay measurements and the synchrony of distributed experiments. The authors develop a rigorous methodology using colocated Ring nodes to isolate probe-induced effects from network noise, then quantify interference under controlled load conditions across different probe hardware generations.
 
-**Intérêt pour le mémoire** :
-Article critique pour comprendre les limitations des mesures RIPE Atlas lorsque plusieurs utilisateurs lancent des mesures en parallèle. Impact direct sur la fiabilité des résultats DNS que nous allons collecter et sur la conception de notre stratégie de mesure.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 janvier 2026
-**Section du mémoire** : 2.5 (État de l'art - RIPE Atlas et mesures distribuées)
+**Relevance to thesis**:
+Our thesis relies on RIPE Atlas as its primary platform for distributed DNS measurements across geographic locations. Understanding the inherent noise floor introduced by concurrent platform usage is a prerequisite for correctly interpreting DNS timing and synchrony results. The findings reported here — up to 7 ms additional latency at the 95th percentile and desynchronization up to one hour — must be factored into our experimental design and analysis of temporal DNS behaviour.
 
 ---
 
-## Contenu de l'article
+## Reading Context
 
-### Objectif(s) / Question(s) de recherche
-
-**Question principale** : "Do measurements launched by others impact my results?"
-
-**Objectif** : Mesurer l'impact des mesures concurrentes lancées par différents utilisateurs sur la précision et la synchronisation des résultats RIPE Atlas.
-
-**Motivation** :
-- Plateformes de mesures publiques (RIPE Atlas) = hardware low-end
-- Permettent mesures concurrentes entre utilisateurs (scalabilité)
-- Besoin de quantifier l'interférence pour évaluer fiabilité résultats
-- Impact sur recherche académique utilisant ces plateformes
-
-### Cadre global d'explication
-
-**Context RIPE Atlas** :
-- Plateforme de mesures Internet distribuée
-- Sondes = dispositifs hardware limités (CPU, mémoire)
-- Multiples utilisateurs lancent mesures simultanément
-- Modèle communautaire = partage des ressources
-
-**Types d'interférence potentiels** :
-1. **Timing interference** : Augmentation des latences mesurées
-2. **Scheduling interference** : Désynchronisation des campagnes de mesure
-
-**Hardware sondes** (à l'époque) :
-- Premières générations : CPU très limité
-- Générations récentes : meilleur CPU mais toujours contraint
-
-### Méthodologie
-
-**Type d'étude** : Expérimentale avec mesures contrôlées
-
-**Configuration expérimentale** :
-- Mesures vers/depuis sondes RIPE Atlas
-- Campagnes de mesures avec charges variables
-- Monitoring impact sur timing et scheduling
-
-**Paramètres étudiés** :
-1. **Timing measurements** :
-   - Mesure RTT (Round-Trip Time)
-   - Impact charge CPU sur précision timing
-   - Comparaison hardware générations différentes
-
-2. **Scheduling synchronization** :
-   - Campagnes mesures récurrentes
-   - Décalage horaire par rapport au planning prévu
-   - Impact charge concurrente
-
-**Échelle** :
-- Sondes RIPE Atlas (nombre non spécifié dans résumé)
-- Mesures concurrentes contrôlées
-- Durée : tests multiples avec charges variables
-
-**Outils utilisés** :
-- API RIPE Atlas
-- Mesures ping, traceroute
-- Monitoring charge CPU sondes
-- Code disponible : https://github.com/nsg-ethz/atlas_interference
-
-### Résultats principaux
-
-#### 1. Timing interference (précision mesures)
-
-**Impact sur RTT** :
-- ✅ **Mesures concurrentes augmentent significativement les timings**
-- Augmentation latences rapportées par les sondes
-- Impact variable selon charge CPU
-
-**Influence hardware** :
-- ✅ **CPU plus puissant réduit interférence timing**
-- Sondes anciennes (low CPU) : forte dégradation
-- Sondes récentes (better CPU) : interférence limitée
-- **Recommandation** : préférer sondes hardware récent
-
-#### 2. Scheduling interference (synchronisation)
-
-**Désynchronisation campagnes** :
-- ✅ **Campagnes peuvent se décaler jusqu'à 1 heure**
-- Décalage dû à charge concurrente sur sondes
-- Impact sur mesures récurrentes programmées
-
-**Influence hardware** :
-- ❌ **Meilleur hardware N'aide PAS pour synchronisation**
-- Problème architectural de la plateforme
-- Persiste même avec sondes récentes
-- Limitation fondamentale du scheduling RIPE Atlas
-
-#### 3. Implications pour utilisateurs
-
-**Timing** :
-- Sélectionner sondes hardware récent (v3+)
-- Éviter périodes haute charge si précision critique
-- Considérer variance timing dans analyses
-
-**Scheduling** :
-- Ne pas se fier strictement aux horaires programmés
-- Accepter décalages jusqu'à 1h pour mesures récurrentes
-- Vérifier timestamps réels dans résultats (pas juste scheduling)
-
-### Conclusion des auteurs
-
-**Contributions principales** :
-1. ✅ **Première quantification interférence RIPE Atlas**
-2. ✅ Identification 2 types interférence (timing + scheduling)
-3. ✅ Impact hardware documenté (CPU améliore timing, pas scheduling)
-4. ✅ Recommandations pour utilisateurs plateforme
-
-**Limitations reconnues** :
-- Étude sur génération hardware de 2015 (peut avoir changé)
-- Pas d'analyse impact sur types mesures spécifiques (DNS focus)
-- Pas de solution proposée pour scheduling interference
-
-**Implications recherche** :
-- ⚠️ Résultats RIPE Atlas = potentiellement biaisés par interférence
-- ✅ Quantification permet ajuster interprétation résultats
-- ✅ Sélection sondes = critère important (hardware version)
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 3.x (RIPE Atlas methodology and measurement validity)
+- Section 4.x (Interpretation of DNS timing results)
+- Section 2.4 (State of the art on RIPE Atlas measurement practices)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés à réutiliser** :
-- ✅ Interférence timing = timing measurements biaisés
-- ✅ Interférence scheduling = désynchronisation campagnes
-- ✅ Hardware sonde = critère sélection important
-- ✅ Timestamps réels ≠ timestamps programmés
-- ✅ Charge concurrente = facteur à considérer
+**Problem**: Public measurement platforms such as RIPE Atlas schedule multiple users' experiments concurrently on the same low-end hardware probes. This raises the question of whether, and by how much, overlapping measurements corrupt each other's results — both in terms of precision (reported delays) and synchrony (the temporal alignment of distributed campaigns).
 
-**Méthodes applicables** :
-- Filtrer sondes par version hardware (v3+)
-- Vérifier timestamps réels dans résultats
-- Accepter variance timing dans analyses
-- Ne pas se fier strictement au scheduling prévu
-- Considérer périodes haute/basse charge
+**Research questions**:
+1. Do concurrent measurements launched by different users on the same RIPE Atlas probe significantly alter the delay measurements reported by that probe?
+2. Do concurrent measurements desynchronize distributed experiments, and does upgrading probe hardware mitigate this effect?
 
-**Chiffres/statistiques importantes** :
-- **Désynchronisation** jusqu'à **1 heure** possible
-- **Impact timing median** (100 traceroutes concurrents) :
-  - v1/v2: +1.10-1.20 ms (médiane), +7.30-7.70 ms (95e percentile)
-  - v3: +0.06 ms (médiane), +0.10 ms (95e percentile)
-- **Standard deviation augmentation** (v2): +7.4 ms, v1: +16.3 ms, v3: 0.00 ms
-- **Plateforme 2015** : 6,700 sondes publiques, 197 pays
-- **Mesures historiques** : 29.8M mesures individuelles totales
-- **Concurrent load** : 592K mesures concurrentes simultanées
-- **Distribution hardware (avril 2015)** : 28.2% v1/v2, reste v3
-- **Probe usage** : jusqu'à 608,824 résultats/mois (1 mesure/4s)
-- Code open source disponible (GitHub: github.com/nsg-ethz/atlas_interference)
+### Background
 
-**Limites identifiées (pertinentes pour nous)** :
-- ⚠️ **Impact sur mesures DNS non documenté spécifiquement**
-- ⚠️ Étude 2015 = hardware peut avoir évolué depuis
-- ⚠️ Pas de recommandation pour minimiser scheduling interference
-- ⚠️ Pas de guidelines charge optimale par sonde
+RIPE Atlas is composed of low-end embedded devices (probes) deployed in private homes and organisations worldwide. As of April 2015, the platform hosted over 6,700 probes in 197 countries and had executed nearly 30 million individual measurements. Three probe hardware generations exist: v1 and v2 are based on 167 MHz Lantronix XPort Pro CPUs, while v3 uses a 400 MHz TP-Link MR3020 with more RAM and flash. The platform uses a credit system to regulate usage and schedules all users' measurements concurrently without providing feedback about co-resident load. The RIPE Atlas measurement toolkit supports ping, traceroute, DNS, and SSL queries; one-off measurements are near-real-time and more expensive in credits than scheduled ones. The platform was executing 592,000 concurrent individual measurements at the time of data collection (Table 1 of the paper).
 
-### Critique personnelle
+### Methodology
 
-**Forces de l'article** :
-- ✅ Première étude systématique interférence RIPE Atlas
-- ✅ Méthodologie expérimentale rigoureuse
-- ✅ Identification claire 2 types interférence
-- ✅ Recommandations pratiques utilisateurs
-- ✅ Code open source (reproductibilité)
-- ✅ Publication IMC (conférence prestigieuse)
-- ✅ Affiliation institutions reconnues (ETH Zürich, IIJ)
+- **Study type**: Controlled active measurement / experimental
+- **Tools used**: RIPE Atlas REST API, NL Ring nodes (colocated reference nodes in the same LAN as probes), Scamper (for remote pings), custom tooling published openly
+- **Scale**: Multiple probes tested per hardware generation (v1, v2, v3); load ranging from 10 to 500 concurrent one-off traceroutes; incoming ping rates from 16 to 1,840 ping/s
+- **Measurement protocol**: Delay was measured between an Atlas probe and its colocated Ring node (same LAN, no Internet path) to isolate probe-induced effects from external network variation. Load was induced by launching increasing numbers of one-off traceroutes from the probe (outbound load) or by directing increasing ICMP echo request floods towards the probe (inbound load). Synchrony was measured by tracking the completion time of one-off traceroute campaigns.
+- **Data collected**: RTT distributions (median, 95th percentile, standard deviation) before and during load; completion times of distributed one-off experiments under varying concurrent load levels
 
-**Faiblesses identifiées** :
-- ⚠️ Résumé manque chiffres précis (amplitude interférence)
-- ⚠️ Pas d'analyse par type de mesure (ping vs DNS vs traceroute)
-- ⚠️ Hardware 2015 = possiblement obsolète (v5 sondes maintenant)
-- ⚠️ Pas de solution proposée pour scheduling problem
-- ⚠️ Pas d'analyse impact selon charge réseau (vs CPU)
-- ⚠️ Pas de guidelines fréquence mesures optimale
+### Main Results
 
-**Lien avec autres articles lus** :
-- **Nosyk et al. (2024) - RIPE Atlas DITL** :
-  - Nosyk mentionne 88K mesures DNS quotidiennes
-  - Holterbach montre que charge affecte timing + scheduling
-  - Implique : 88K mesures = potentiellement forte interférence
-  - Notre étude : besoin considérer ce biais
+1. **Precision degradation (outbound load)**: On v1/v2 probes, launching 100 concurrent one-off traceroutes increases the median ping delay by more than 1 ms (v1: +1.10 ms, v2: +1.20 ms) and the 95th percentile by more than 7 ms (v1: +7.30 ms, v2: +7.70 ms). Standard deviation increases by 16.3 ms for v1 and 7.4 ms for v2.
+2. **Precision degradation (inbound load)**: Pings directed towards a v2 probe at 400 ping/s increase the median outbound delay by 0.22 ms and the 95th percentile by 2.90 ms; at 1,000 ping/s the probe becomes overloaded, with delays approaching 1,000 ms and 10% packet loss above 1,280 ping/s.
+3. **Hardware improvement limits**: v3 probes show dramatically lower sensitivity to load — median delay increases of only 0.06 ms and no standard deviation impact — but upgrading hardware does not solve the synchrony problem.
+4. **Desynchronization**: Under heavy concurrent load, one-off traceroute campaigns can complete up to one hour later than intended. Even 10 concurrent traceroutes produce the same magnitude of desynchronization as 100, though for a shorter duration.
+5. **Retrospective validity concern**: Because interference is not documented by the platform and probe load is not reported to users, prior research results and the RIPE Atlas historical dataset may have been unknowingly affected by interfering measurements.
 
-- **OpenINTEL (van Rijswijk-Deij 2016)** :
-  - OpenINTEL = infrastructure dédiée (pas d'interférence)
-  - RIPE Atlas = partagée (interférence documentée ici)
-  - Trade-off : contrôle (OpenINTEL) vs diversité géo (RIPE)
+### Authors' Conclusion
 
-- **Tranco (Le Pochat 2019)** :
-  - Tranco fournit liste stable pour mesures
-  - Holterbach : timing variance affecte fiabilité
-  - Combinaison : liste stable + variance timing à gérer
-
-**Questions ouvertes** :
-1. **Impact interférence spécifiquement sur mesures DNS ?**
-   → DNS = queries rapides, timing moins critique que traceroute ?
-2. **Hardware v5 (2024) a-t-il résolu ces problèmes ?**
-   → Comparer avec Nosyk 2024 (hardware récent)
-3. **Comment détecter interférence dans nos propres mesures ?**
-   → Monitoring charge sondes ? Analyse variance timing ?
-4. **Fréquence mesures optimale pour minimiser interférence ?**
-   → Quotidien vs hebdomadaire : impact charge ?
-5. **Scheduling interference affecte-t-il analyses temporelles ?**
-   → Notre étude = dimension temporelle importante
-6. **Peut-on compenser interférence algorithmiquement ?**
-   → Filtrage, pondération, calibration ?
-
-### Citations importantes
-
-> "Public measurement platforms composed of low-end hardware devices such as RIPE Atlas have gained significant traction in the research community."
-
-> "This paper answers a fundamental question for any platform user: Do measurements launched by others impact my results?"
-
-> "We found that overlapping measurements do interfere with each other in at least two ways."
-
-**Sur timing interference** :
-> "First, we show that measurements performed from and towards the platform can significantly increase timings reported by the probe. We found that increasing hardware CPU greatly helped in limiting interference on the measured timings."
-
-> "Starting 100 one-off traceroutes increases the median delay of the concurrent pings by more than 1 ms. For v1 and v2 Atlas probes, the standard deviation is seriously impacted: +16.3 ms (v1) and +7.4 ms (v2). Atlas probes v3 show less effect, the median is only increased by 0.06 ms while the standard deviation is not impacted." (p. 439)
-
-**Sur scheduling interference** :
-> "Second, we show that measurement campaigns can end up completely out-of-synch (by up to one hour), due to concurrent loads. In contrast to precision, we found that better hardware does not help."
-
-**Statistiques plateforme (2015)** :
-> "As of April 2015, RIPE Atlas is composed of over 6,700 public probes scattered in 197 countries." (p. 437)
-
-> "When we collected those results, 592,000 concurrent individual measurements were running on the platform." (Table 1)
+The authors conclude that measurement interference on RIPE Atlas is a real and significant phenomenon that should be systematically accounted for when designing and analysing experiments on the platform. They identify two mitigation techniques: (1) using v3 probes for precision-sensitive measurements, and (2) scheduling experiments during low-load periods or using the API to check concurrent load. They also call for the platform to provide users with load feedback, and release all measurement and analysis tools for reproducibility.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-### Sections concernées
+### Key Takeaways for the Thesis
 
-- **Section 2.5** : RIPE Atlas et mesures distribuées
-  Décrire limitations plateforme (interférence timing + scheduling)
-  Impact sur fiabilité résultats
+**Key concepts to reuse**:
+- Probe load as a confounding variable in distributed measurement campaigns
+- Distinction between precision degradation (hardware-dependent) and synchrony degradation (hardware-independent)
+- Colocated reference node methodology to isolate probe behaviour from network effects
 
-- **Section 4** : Méthodologie
-  Justifier choix sondes hardware récent
-  Expliquer stratégie gestion interférence
-  Utilisation timestamps réels (pas programmés)
-  Considération variance timing dans analyses
+**Applicable methods**:
+- Filtering or flagging measurements made during periods of anomalously high concurrent platform load
+- Selecting v3 probes preferentially for delay-sensitive DNS response-time comparisons
+- Measuring distribution tails (95th percentile, standard deviation) rather than only medians
 
-- **Section 5** : Résultats
-  Discuter variance observée (potentielle interférence)
-  Analyse robustesse résultats face à interférence
+**Important statistics**:
+- On v2 probes: +1.20 ms median, +7.70 ms at 95th percentile, +7.40 ms standard deviation when sourcing 100 traceroutes
+- Desynchronization of up to 1 hour under heavy load, even when campaigns were launched simultaneously
+- 592,000 concurrent individual measurements were running at the time of data collection in 2015
 
-- **Section 7** : Discussion
-  Limitations RIPE Atlas vs OpenINTEL
-  Trade-off diversité géographique vs contrôle infrastructure
-  Recommandations futurs travaux
+**Identified limitations (gaps to fill)**:
+- The paper focuses on ping and traceroute interference; DNS measurement interference is noted as less sensitive but not quantified separately — our thesis could explore this directly
+- The paper predates significant growth of the Atlas platform (now over 10,000 probes); the interference dynamics may have changed
 
-### Points à développer
+### Personal Critique
 
-**Dans état de l'art** :
-- Deux types interférence RIPE Atlas :
-  1. **Timing** : augmentation latences mesurées (réduit par meilleur CPU)
-  2. **Scheduling** : désynchronisation jusqu'à 1h (non résolu par hardware)
-- Impact charge concurrente sur précision mesures
-- Hardware sonde = critère sélection important
+**Strengths**:
+- Rigorous colocated measurement design that isolates probe effects from Internet noise
+- Systematic quantification across all three hardware generations
+- Results published with full tool availability, enabling reproduction
 
-**Pour notre méthodologie** :
-- **Sélection sondes** :
-  - Filtrer par version hardware (v3+ minimum, v5 préféré)
-  - Vérifier disponibilité CPU via API ?
-  - Éviter sondes avec charge excessive
-- **Gestion timing** :
-  - Utiliser timestamps réels (pas timestamps programmés)
-  - Accepter variance timing dans analyses
-  - Possiblement : mesures multiples pour moyenner variance
-- **Gestion scheduling** :
-  - Ne pas se fier strictement aux horaires programmés
-  - Fenêtre temporelle flexible (tolérer décalages)
-  - Vérifier distribution temporelle résultats a posteriori
-- **Stratégie optimisation** :
-  - Lancer mesures périodes basse charge si possible ?
-  - Fréquence mesures : balance précision vs charge
-  - Monitoring impact interférence (analyse variance)
+**Weaknesses**:
+- Results are from a small number of probes per version (at least two); broader sampling across geographic regions and ISPs could reveal heterogeneity
+- The study focuses on v1/v2/v3 hardware; newer probe generations are not covered
 
-**Pour discussion/limitations** :
-- ⚠️ Résultats potentiellement affectés par interférence
-- ⚠️ Variance timing non due uniquement au réseau
-- ⚠️ Désynchronisation limite précision analyses temporelles
-- ✅ Trade-off accepté pour bénéficier diversité géographique
-- ✅ Sélection sondes hardware récent minimise impact
+**Links to other papers**:
+- Koch et al. (2021): Uses RIPE Atlas for anycast inflation measurements; the synchrony limitations noted here are relevant to how Koch interprets geographic routing results
+- Johnson et al. (2016): Uses RIPE Atlas for DNS root manipulation detection; probe desynchronisation could affect their latency-based anomaly detection
 
-**Tableau comparatif (à ajouter)** :
+**Open questions**:
+- How do interference effects scale as the Atlas platform grows to 10,000+ probes and more concurrent users?
+- Is DNS measurement precision specifically impacted by concurrent traceroute load, as the paper hints but does not quantify?
 
-| Critère | OpenINTEL | RIPE Atlas (notre approche) |
-|---------|-----------|------------------------------|
-| Contrôle infrastructure | ✅ Total | ❌ Partagée |
-| Interférence mesures | ❌ Aucune | ⚠️ Timing + scheduling |
-| Précision timing | ✅ Haute | ⚠️ Variable (CPU-dependent) |
-| Synchronisation | ✅ Précise | ⚠️ ±1h désync possible |
-| Mitigation | N/A | ✅ Hardware récent (partiel) |
-| Trade-off accepté | N/A | ✅ Pour diversité géo |
+### Key Quotes
 
-### Références croisées
+> "We found that overlapping measurements do interfere with each other in at least two ways. First, we show that measurements performed from and towards the platform can significantly increase timings reported by the probe."
 
-**Articles à lire ensuite** :
-- [ ] Articles citant Holterbach 2015 (évolution depuis)
-- [ ] Études RIPE Atlas post-2015 (hardware v4, v5)
-- [ ] Comparaisons timing précision RIPE vs autres plateformes
-- [ ] Analyses impact interférence sur types mesures spécifiques (DNS)
+> "Measurements are very quickly desynchronized when other measurements are run in parallel. Under heavy load, completion time may be delayed by close to 1 hour."
 
-**Auteurs à suivre** :
-- Thomas Holterbach (ETH Zürich) - network measurements
-- Laurent Vanbever (ETH Zürich) - Internet measurement platforms
-- Cristel Pelsser (IIJ) - routing, measurements
-- Randy Bush (IIJ) - Internet infrastructure
-
-**Ressources complémentaires** :
-- Code GitHub : https://github.com/nsg-ethz/atlas_interference
-- Présentation RAIM 2015 : https://www.irtf.org/raim-2015-papers/raim-2015-paper23.pdf
-- HAL archive : https://hal.science/hal-01306027
+> "Overall, our results show that measurement interferences should be systematically taken into account when analyzing results from public platforms."
 
 ---
 
-**Tags** : #ripe-atlas #interference #timing #scheduling #measurement-quality #hardware #limitations
+## Use in Thesis
 
-**Statut** : [X] Lu (PDF via MD) / [X] Relu / [X] Fiché / [X] Chiffres précis intégrés / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.4 (State of the art on RIPE Atlas): Cite as a key limitation of the platform, noting the interference characterisation and the hardware-generation dependency
+- Section 3.x (Methodology): Reference when justifying probe selection criteria (preference for v3 probes) and when describing how we control for concurrent load
+- Section 4.x (Results): Reference when discussing variance in DNS response time measurements that may reflect probe-induced noise rather than true network conditions
 
-**Prochaines étapes** :
-1. ✅ Fiche complétée avec chiffres précis du PDF
-2. ⏭️ Analyser code GitHub (méthodologie expérimentale)
-3. ⏭️ Vérifier évolution hardware RIPE Atlas 2015-2024
-4. ⏭️ Chercher articles citant Holterbach (solutions proposées ?)
-5. ⏭️ Comparer avec Nosyk 2024 (évolution plateforme)
+**Points to develop**:
+- Discuss whether DNS measurements are less sensitive to interference than ping (as the paper states), and whether this means our DNS timing results are robust to the platform's concurrent load
+- Mention the synchrony risk when comparing DNS measurements taken from geographically distributed probes at nominally the same time
+
+**Cross-references**:
+- johnson2016_dns_root_manipulation.md (both use RIPE Atlas; synchrony is relevant to their latency-based detection)
+- koch2021_anycast_context.md (Atlas used to supplement CDN measurements; interference considerations apply)
+
+---
+
+**Tags**: #ripe-atlas #measurement-methodology #interference #precision #synchrony #probe-hardware #distributed-measurements
+**Status**: [X] Read / [X] Filed

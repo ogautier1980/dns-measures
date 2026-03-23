@@ -1,375 +1,646 @@
 #!/usr/bin/env python3
 """
-Script de conversion Markdown → LaTeX pour le mémoire
-Convertit les chapitres .md en fichiers .tex compatibles avec le préambule
+Markdown → LaTeX conversion for the DNS thesis chapters.
+Reads chapter*.md files and writes chapters/*.tex.
 """
 
 import re
-import sys
 from pathlib import Path
 
 
-def protect_code_blocks(md_content):
-    """Protège les blocs de code en les remplaçant par des placeholders
-    ET remplace les caractères Unicode problématiques dans les blocs"""
-    code_blocks = []
+# ---------------------------------------------------------------------------
+# Citation map: (exact-string-to-replace, replacement)
+# Processed in order so longest/most-specific patterns come first.
+# ---------------------------------------------------------------------------
+CITATION_REPLACEMENTS = [
+    # Multi-citation parentheticals
+    ('(van Rijswijk-Deij et al., 2016; van Rijswijk-Deij, 2018)',
+     r'\cite{vanRijswijk2016,vanRijswijk2018blog}'),
+    ('(Bajpai et al., 2017; Nosyk et al., 2024)',
+     r'\cite{Bajpai2017,Nosyk2024}'),
+    ('(Bortzmeyer, 2013; Finnegan, 2018)',
+     r'\cite{Bortzmeyer2013,Finnegan2018}'),
+    # RFC 1034 and RFC 1035
+    ('RFC 1034 and RFC 1035 (Mockapetris, 1987)',
+     r'\cite{RFC1034,RFC1035}'),
+    ('(RFC 1034 and RFC 1035, Mockapetris, 1987)',
+     r'\cite{RFC1034,RFC1035}'),
+    ('RFC 1034 (Mockapetris, 1987)',
+     r'RFC~1034~\cite{RFC1034}'),
+    ('(RFC 1034, Mockapetris, 1987)',
+     r'\cite{RFC1034}'),
+    ('RFC 1035 (Mockapetris, 1987)',
+     r'RFC~1035~\cite{RFC1035}'),
+    ('(RFC 1035, Mockapetris, 1987)',
+     r'\cite{RFC1035}'),
+    # RFC 7871 compound forms (specific → general)
+    ('RFC 7871 (Contavalli et al., 2016)',
+     r'RFC~7871~\cite{RFC7871}'),
+    # Narrative forms: Author (year) → Author~\cite{key}
+    ('van Rijswijk-Deij et al. (2016)',
+     r'van Rijswijk-Deij et al.~\cite{vanRijswijk2016}'),
+    ('van Rijswijk-Deij (2018)',
+     r'van Rijswijk-Deij~\cite{vanRijswijk2018blog}'),
+    ('Le Pochat et al. (2019)',
+     r'Le Pochat et al.~\cite{LePochat2019}'),
+    ('Nosyk et al. (2024)',
+     r'Nosyk et al.~\cite{Nosyk2024}'),
+    ('Bortzmeyer (n.d., tutorial)',
+     r'Bortzmeyer~\cite{Bortzmeyer_tutorial}'),
+    ("Bortzmeyer's tutorial (n.d.)",
+     r"Bortzmeyer's tutorial~\cite{Bortzmeyer_tutorial}"),
+    ('Bortzmeyer (n.d.)',
+     r'Bortzmeyer~\cite{Bortzmeyer_tutorial}'),
+    ('Bortzmeyer (2013)',
+     r'Bortzmeyer~\cite{Bortzmeyer2013}'),
+    ('Holterbach et al. (2015)',
+     r'Holterbach et al.~\cite{Holterbach2015}'),
+    ('Bajpai et al. (2017)',
+     r'Bajpai et al.~\cite{Bajpai2017}'),
+    ('Boswell and Perkins (2024)',
+     r'Boswell and Perkins~\cite{Boswell2024}'),
+    ('Jones et al. (2016)',
+     r'Jones et al.~\cite{Jones2016}'),
+    ('Calder et al. (2015)',
+     r'Calder et al.~\cite{Calder2015}'),
+    ('Koch et al. (2021)',
+     r'Koch et al.~\cite{Koch2021}'),
+    ('Hours et al. (2016)',
+     r'Hours et al.~\cite{Hours2016}'),
+    ('Wang et al. (2018)',
+     r'Wang et al.~\cite{Wang2018}'),
+    ('Contavalli et al. (2016)',
+     r'Contavalli et al.~\cite{RFC7871}'),
+    ('Finnegan (2018)',
+     r'Finnegan~\cite{Finnegan2018}'),
+    ('Kisteleki et al. (2016)',
+     r'Kisteleki et al.~\cite{Kisteleki2016}'),
+    ('van der Toorn et al. (2018)',
+     r'van der Toorn et al.~\cite{vanderToorn2018}'),
+    ('Xu et al. (2023)',
+     r'Xu et al.~\cite{Xu2023}'),
+    ('Cicalese et al. (2015)',
+     r'Cicalese et al.~\cite{Cicalese2015}'),
+    ('Li and Huang (2025)',
+     r'Li and Huang~\cite{Li2025}'),
+    ('Li & Huang (2025)',
+     r'Li and Huang~\cite{Li2025}'),
+    ('Edgio (2017)',
+     r'Edgio~\cite{Edgio2017}'),
+    # Parenthetical forms: (Author, year) → \cite{key}
+    ('(van Rijswijk-Deij et al., 2016)',  r'\cite{vanRijswijk2016}'),
+    ('(van Rijswijk-Deij, 2018)',         r'\cite{vanRijswijk2018blog}'),
+    ('(Le Pochat et al., 2019)',          r'\cite{LePochat2019}'),
+    ('(Nosyk et al., 2024)',              r'\cite{Nosyk2024}'),
+    ('(Holterbach et al., 2015)',         r'\cite{Holterbach2015}'),
+    ('(Bajpai et al., 2017)',             r'\cite{Bajpai2017}'),
+    ('(Boswell and Perkins, 2024)',       r'\cite{Boswell2024}'),
+    ('(Jones et al., 2016)',              r'\cite{Jones2016}'),
+    ('(Calder et al., 2015)',             r'\cite{Calder2015}'),
+    ('(Koch et al., 2021)',               r'\cite{Koch2021}'),
+    ('(Hours et al., 2016)',              r'\cite{Hours2016}'),
+    ('(Wang et al., 2018)',               r'\cite{Wang2018}'),
+    ('(RFC 7871, 2016)',                  r'\cite{RFC7871}'),
+    ('(Contavalli et al., 2016)',         r'\cite{RFC7871}'),
+    ('(Finnegan, 2018)',                  r'\cite{Finnegan2018}'),
+    ('(Bortzmeyer, 2013)',                r'\cite{Bortzmeyer2013}'),
+    ('(Kisteleki et al., 2016)',          r'\cite{Kisteleki2016}'),
+    ('(van der Toorn et al., 2018)',      r'\cite{vanderToorn2018}'),
+    ('(Xu et al., 2023)',                 r'\cite{Xu2023}'),
+    ('(Cicalese et al., 2015)',           r'\cite{Cicalese2015}'),
+    ('(Li and Huang, 2025)',              r'\cite{Li2025}'),
+    ('(Edgio, 2017)',                     r'\cite{Edgio2017}'),
+    # Standalone RFC 7871 (fallback after compound forms handled above)
+    ('RFC 7871',                          r'RFC~7871~\cite{RFC7871}'),
+]
 
-    # Caractères Unicode à remplacer dans les blocs de code
-    unicode_map_code = {
-        '─': '-', '│': '|', '┌': '+', '┐': '+', '└': '+', '┘': '+',
-        '├': '+', '┤': '+', '┬': '+', '┴': '+', '┼': '+',
-        '═': '=', '║': '|', '╔': '+', '╗': '+', '╚': '+', '╝': '+',
-        '╠': '+', '╣': '+', '╦': '+', '╩': '+', '╬': '+',
-        '→': '->', '←': '<-', '↔': '<->', '⇒': '=>', '⇐': '<=', '⇔': '<=>',
-    }
 
-    def save_code_block(match):
-        block = match.group(0)
-        # Remplacer les caractères Unicode dans ce bloc
-        for old, new in unicode_map_code.items():
-            block = block.replace(old, new)
-        code_blocks.append(block)
-        return f"\n___CODE_BLOCK_{len(code_blocks)-1}___\n"
+# ---------------------------------------------------------------------------
+# Unicode substitution table
+# ---------------------------------------------------------------------------
+UNICODE_MAP = {
+    '\u2014': '---',              # em-dash
+    '\u2013': '--',               # en-dash
+    '\u2212': '-',                # minus sign (U+2212)
+    '\u2018': '`',                # left single quotation
+    '\u2019': "'",                # right single quotation
+    '\u201c': "``",               # left double quotation
+    '\u201d': "''",               # right double quotation
+    '\u2026': r'\ldots{}',        # ellipsis
+    '\u00a0': '~',                # non-breaking space
+    '\u2248': r'$\approx$',       # ≈ approximately equal
+    '\u2260': r'$\neq$',          # ≠ not equal
+    '\u2265': r'$\geq$',          # ≥
+    '\u2264': r'$\leq$',          # ≤
+    '\u00d7': r'$\times$',        # × multiplication sign
+    '\u00b1': r'$\pm$',           # ±
+    '\u221e': r'$\infty$',        # ∞
+    '\u221a': r'$\sqrt{}$',       # √
+    '\u00b2': r'$^{2}$',          # ²
+    '\u00b3': r'$^{3}$',          # ³
+    # Bullets / checkmarks
+    '\u2022': r'\textbullet{}',   # •
+    '\u25e6': 'o',                # ◦
+    '\u25aa': '-',                # ▪
+    '\u2713': '[OK]', '\u2717': '[X]',
+    '\u2714': '[OK]', '\u2718': '[X]',
+    '\u2705': '[OK]', '\u274c': '[X]',
+    '\u26a0': '[!]',              # ⚠
+    # Box-drawing characters
+    '\u2500': '-', '\u2502': '|', '\u250c': '+', '\u2510': '+',
+    '\u2514': '+', '\u2518': '+', '\u251c': '+', '\u2524': '+',
+    '\u252c': '+', '\u2534': '+', '\u253c': '+',
+    '\u2550': '=', '\u2551': '|', '\u2554': '+', '\u2557': '+',
+    '\u255a': '+', '\u255d': '+', '\u2560': '+', '\u2563': '+',
+    '\u2566': '+', '\u2569': '+', '\u256c': '+',
+    # Arrows
+    '\u2192': r'$\rightarrow$',
+    '\u2190': r'$\leftarrow$',
+    '\u2194': r'$\leftrightarrow$',
+    '\u21d2': r'$\Rightarrow$',
+    '\u21d0': r'$\Leftarrow$',
+    '\u21d4': r'$\Leftrightarrow$',
+    # Greek letters used in statistics (in math mode)
+    '\u03c1': r'$\rho$',
+    '\u03b1': r'$\alpha$', '\u03b2': r'$\beta$',
+    '\u03b3': r'$\gamma$', '\u03b4': r'$\delta$',
+    '\u03b5': r'$\epsilon$', '\u03bb': r'$\lambda$',
+    '\u03c3': r'$\sigma$', '\u03c4': r'$\tau$',
+    # Greek capitals
+    '\u0394': r'$\Delta$', '\u03a3': r'$\Sigma$',
+    '\u03a0': r'$\Pi$',    '\u0393': r'$\Gamma$',
+    '\u0398': r'$\Theta$', '\u03a9': r'$\Omega$',
+    # Unicode variation selectors (remove silently)
+    '\ufe0f': '', '\ufe0e': '',
+}
 
-    md_content = re.sub(r'```.*?```', save_code_block, md_content, flags=re.DOTALL)
-    return md_content, code_blocks
+
+# ---------------------------------------------------------------------------
+# Regex for protected-zone placeholders (used in escape loop)
+# ---------------------------------------------------------------------------
+PLACEHOLDER_RE = re.compile(
+    r'(___(?:P\d+_[A-Z]+|TABLEBLOCK_\d+|CODEBLOCK_\d+)___)'
+)
 
 
-def restore_code_blocks(md_content, code_blocks):
-    """Restaure les blocs de code depuis les placeholders"""
-    for i, block in enumerate(code_blocks):
-        md_content = md_content.replace(f"___CODE_BLOCK_{i}___", block)
-    return md_content
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def escape_text(text: str) -> str:
+    """Escape LaTeX special characters in plain text."""
+    text = text.replace('\\', r'\textbackslash{}')
+    text = text.replace('%',  r'\%')
+    text = text.replace('$',  r'\$')
+    text = text.replace('&',  r'\&')
+    text = text.replace('#',  r'\#')
+    text = text.replace('_',  r'\_')
+    text = text.replace('{',  r'\{')
+    text = text.replace('}',  r'\}')
+    text = text.replace('~',  r'\textasciitilde{}')
+    text = text.replace('^',  r'\textasciicircum{}')
+    return text
 
 
-def escape_latex_special_chars(text):
-    """Échappe les caractères spéciaux LaTeX"""
-    # Ordre important : backslash en premier
-    replacements = [
-        ('\\', '\\textbackslash{}'),
-        ('%', '\\%'),
-        ('$', '\\$'),
-        ('&', '\\&'),
-        ('#', '\\#'),
-        ('_', '\\_'),
-        ('{', '\\{'),
-        ('}', '\\}'),
-        ('~', '\\textasciitilde{}'),
-        ('^', '\\textasciicircum{}'),
+def escape_inner(text: str) -> str:
+    """Escape special chars inside bold/italic content.
+    Like escape_text but skips placeholders."""
+    parts = PLACEHOLDER_RE.split(text)
+    result = []
+    for p in parts:
+        if PLACEHOLDER_RE.match(p):
+            result.append(p)
+        else:
+            result.append(escape_text(p))
+    return ''.join(result)
+
+
+def escape_cell(text: str) -> str:
+    """Escape a table cell.
+
+    Order of operations ensures no content is escaped twice:
+    1. Protect inline code, math, bold, italic (each escaped/preserved once).
+    2. Escape remaining plain-text characters.
+    3. Restore protected content.
+    """
+    protected: dict[str, str] = {}
+    pid = [0]
+
+    # Use null-byte prefix+suffix as placeholder delimiters (safe in LaTeX strings)
+    def protect(content: str) -> str:
+        key = f'\x00C{pid[0]}\x00'
+        protected[key] = content
+        pid[0] += 1
+        return key
+
+    # Inline code: escape the code content properly NOW
+    text = re.sub(r'`([^`\n]+)`',
+                  lambda m: protect(r'\texttt{' + escape_text(m.group(1)) + '}'),
+                  text)
+    # Math $...$
+    text = re.sub(r'\$[^$\n]+\$', lambda m: protect(m.group(0)), text)
+    # Bold — escape inner content before protecting
+    text = re.sub(r'\*\*([^\n*]+?)\*\*',
+                  lambda m: protect(r'\textbf{' + escape_text(m.group(1)) + '}'), text)
+    # Italic — escape inner content before protecting
+    text = re.sub(r'\*([^\n*]+?)\*',
+                  lambda m: protect(r'\textit{' + escape_text(m.group(1)) + '}'), text)
+
+    # Escape plain-text special characters
+    text = text.replace('%', r'\%')
+    text = text.replace('$', r'\$')
+    text = text.replace('&', r'\&')
+    text = text.replace('#', r'\#')
+    text = text.replace('_', r'\_')
+    text = text.replace('^', r'\textasciicircum{}')
+    text = text.replace('~', r'\textasciitilde{}')
+
+    # Restore all protected content
+    for key, val in protected.items():
+        text = text.replace(key, val)
+
+    return text.strip()
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 – Protect code blocks
+# ---------------------------------------------------------------------------
+
+def protect_code_blocks(text: str):
+    blocks = []
+
+    def replace_block(m):
+        lang = (m.group(1) or '').strip()
+        code = m.group(2)
+        # Basic unicode cleanup inside code blocks
+        for char, repl in {'\u2192': '->', '\u2190': '<-',
+                           '\u2500': '-', '\u2502': '|'}.items():
+            code = code.replace(char, repl)
+        idx = len(blocks)
+        blocks.append((lang, code))
+        return f'\n___CODEBLOCK_{idx}___\n'
+
+    text = re.sub(r'```(\w*)\n(.*?)```', replace_block, text, flags=re.DOTALL)
+    return text, blocks
+
+
+def restore_code_blocks(text: str, blocks) -> str:
+    for i, (lang, code) in enumerate(blocks):
+        if lang in ('python', 'json', 'bash'):
+            latex = f'\\begin{{lstlisting}}[style={lang}]\n{code}\n\\end{{lstlisting}}'
+        elif lang == '':
+            latex = f'\\begin{{verbatim}}\n{code}\n\\end{{verbatim}}'
+        else:
+            latex = f'\\begin{{lstlisting}}[language={lang}]\n{code}\n\\end{{lstlisting}}'
+        text = text.replace(f'___CODEBLOCK_{i}___', latex)
+    return text
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 – Extract and convert Markdown tables
+# ---------------------------------------------------------------------------
+
+def extract_tables(text: str):
+    tables = []
+    lines = text.split('\n')
+    result = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if re.match(r'^\s*\|', line):
+            table_lines = [line]
+            i += 1
+            while i < len(lines) and re.match(r'^\s*\|', lines[i]):
+                table_lines.append(lines[i])
+                i += 1
+            if len(table_lines) >= 3:
+                idx = len(tables)
+                tables.append(convert_table(table_lines))
+                result.append(f'___TABLEBLOCK_{idx}___')
+            else:
+                result.extend(table_lines)
+        else:
+            result.append(line)
+            i += 1
+    return '\n'.join(result), tables
+
+
+def convert_table(lines) -> str:
+    header_raw = [c.strip() for c in lines[0].split('|')]
+    header_raw = [c for c in header_raw if c]   # drop empty from borders
+    n = len(header_raw)
+    if n == 0:
+        return '\n'.join(lines)
+
+    data_rows = []
+    for line in lines[2:]:
+        cells = [c.strip() for c in line.split('|')]
+        if cells and cells[0] == '':
+            cells = cells[1:]
+        if cells and cells[-1] == '':
+            cells = cells[:-1]
+        if cells:
+            while len(cells) < n:
+                cells.append('')
+            data_rows.append(cells[:n])
+
+    col_spec = ' '.join(['l'] * n)
+    tex = [
+        '\\begin{table}[H]',
+        '\\centering',
+        '\\small',
+        f'\\begin{{tabular}}{{{col_spec}}}',
+        '\\toprule',
+        ' & '.join(f'\\textbf{{{escape_cell(h)}}}' for h in header_raw) + ' \\\\',
+        '\\midrule',
     ]
+    for row in data_rows:
+        tex.append(' & '.join(escape_cell(c) for c in row) + ' \\\\')
+    tex += ['\\bottomrule', '\\end{tabular}', '\\end{table}']
+    return '\n'.join(tex)
 
-    for old, new in replacements:
+
+def restore_tables(text: str, tables) -> str:
+    for i, tbl in enumerate(tables):
+        text = text.replace(f'___TABLEBLOCK_{i}___', tbl)
+    return text
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 – Citation replacement
+# ---------------------------------------------------------------------------
+
+def replace_citations(text: str) -> str:
+    for old, new in CITATION_REPLACEMENTS:
         text = text.replace(old, new)
+    return text
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 – Unicode normalisation
+# ---------------------------------------------------------------------------
+
+def normalise_unicode(text: str) -> str:
+    for char, repl in UNICODE_MAP.items():
+        text = text.replace(char, repl)
+    return text
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 – Heading conversion
+# ---------------------------------------------------------------------------
+
+def convert_headings(text: str) -> str:
+    # H1: "# Chapter N - Title" or "# Chapter N — Title"
+    text = re.sub(
+        r'^#\s+Chapter\s+\d+\s+[-\u2014]\s+(.+)$',
+        r'\\chapter{\1}', text, flags=re.MULTILINE)
+    text = re.sub(r'^#\s+(.+)$', r'\\chapter{\1}', text, flags=re.MULTILINE)
+
+    # H2 with section number
+    def h2_label(m):
+        return f'\\section{{{m.group(2)}}}\n\\label{{sec:{m.group(1)}}}'
+    text = re.sub(r'^##\s+(\d+\.\d+)\s+(.+)$', h2_label, text, flags=re.MULTILINE)
+    text = re.sub(r'^##\s+(.+)$', r'\\section{\1}', text, flags=re.MULTILINE)
+
+    # H3 with subsection number
+    def h3_label(m):
+        return f'\\subsection{{{m.group(2)}}}\n\\label{{subsec:{m.group(1)}}}'
+    text = re.sub(r'^###\s+(\d+\.\d+\.\d+)\s+(.+)$', h3_label, text, flags=re.MULTILINE)
+    text = re.sub(r'^###\s+(.+)$', r'\\subsection{\1}', text, flags=re.MULTILINE)
+
+    # H4
+    text = re.sub(r'^####\s+(.+)$', r'\\subsubsection{\1}', text, flags=re.MULTILINE)
+    return text
+
+
+# ---------------------------------------------------------------------------
+# Phases 6-9 – Protect inline markup, escape plain text, restore
+# ---------------------------------------------------------------------------
+
+def protect_and_escape(text: str) -> str:
+    store = {}
+    counter = [0]
+
+    def save(tag, content):
+        key = f'___P{counter[0]}_{tag}___'
+        store[key] = content
+        counter[0] += 1
+        return key
+
+    # -- 0. Protect display math $$...$$ FIRST (before $...$) --
+    def protect_display_math(m):
+        inner = m.group(1).strip()
+        return save('DMATH', f'\\[\n{inner}\n\\]')
+    text = re.sub(r'\$\$(.+?)\$\$', protect_display_math, text, flags=re.DOTALL)
+
+    # -- 1. Protect ~\cite{...} as a unit (non-breaking space before citation) --
+    def protect_tilde_cite(m):
+        return save('CMD', f'~\\cite{{{m.group(1)}}}')
+    text = re.sub(r'~\\cite\{([^}]*)\}', protect_tilde_cite, text)
+
+    # -- 2. Protect existing LaTeX commands with braces: \cmd{...} --
+    def protect_cmd(m):
+        return save('CMD', m.group(0))
+    text = re.sub(r'\\[a-zA-Z]+\{[^}]*\}', protect_cmd, text)
+    # Also protect bare \cite{} patterns from citations step
+    text = re.sub(r'\\cite\{[^}]+\}', protect_cmd, text)
+    # Protect ~\ref and similar that might remain
+    text = re.sub(r'~\\[a-zA-Z]+\{[^}]*\}', protect_cmd, text)
+
+    # -- 3. Protect URLs --
+    def protect_url(m):
+        url = m.group(0)
+        return save('URL', f'\\url{{{url}}}')
+    text = re.sub(r'https?://[^\s\)\]]+', protect_url, text)
+
+    # -- 4. Protect inline math $...$ (single dollar) --
+    def protect_math(m):
+        return save('MATH', m.group(0))
+    text = re.sub(r'\$[^$\n]+\$', protect_math, text)
+
+    # -- 5. Protect bold **...** (escape inner content) --
+    def protect_bold(m):
+        inner = escape_inner(m.group(1))
+        return save('B', f'\\textbf{{{inner}}}')
+    text = re.sub(r'\*\*([^\n*]+?)\*\*', protect_bold, text)
+
+    # -- 6. Protect italic *...* (escape inner content) --
+    def protect_italic(m):
+        inner = escape_inner(m.group(1))
+        return save('I', f'\\textit{{{inner}}}')
+    text = re.sub(r'\*([^\n*]+?)\*', protect_italic, text)
+
+    # -- 7. Protect inline code `...` --
+    def protect_code(m):
+        # Fully escape all LaTeX special chars inside \texttt{...}
+        content = escape_text(m.group(1))
+        return save('TT', f'\\texttt{{{content}}}')
+    text = re.sub(r'`([^`\n]+)`', protect_code, text)
+
+    # -- 8. Escape plain text (line by line, respecting protected zones) --
+    LATEX_CMD_STARTS = (
+        '\\chapter', '\\section', '\\subsection', '\\subsubsection',
+        '\\label', '\\begin', '\\end', '\\item',
+        '\\toprule', '\\midrule', '\\bottomrule',
+        '\\medskip', '\\bigskip', '\\hrule', '\\noindent',
+        '\\[', '\\]',
+    )
+    lines = text.split('\n')
+    escaped = []
+    for line in lines:
+        stripped = line.strip()
+        if any(stripped.startswith(cmd) for cmd in LATEX_CMD_STARTS):
+            escaped.append(line)
+            continue
+        # Split on protected zones (including TABLEBLOCK, CODEBLOCK placeholders)
+        parts = PLACEHOLDER_RE.split(line)
+        out = []
+        for part in parts:
+            if PLACEHOLDER_RE.match(part):
+                out.append(part)
+            else:
+                out.append(escape_text(part))
+        escaped.append(''.join(out))
+    text = '\n'.join(escaped)
+
+    # -- 9. Restore all protected content --
+    for key in sorted(store, key=len, reverse=True):
+        text = text.replace(key, store[key])
 
     return text
 
 
-def convert_table_to_latex(table_lines):
-    """Convertit un tableau Markdown en tableau LaTeX"""
-    if len(table_lines) < 3:
-        return '\n'.join(table_lines)
+# ---------------------------------------------------------------------------
+# Phase 10 – Block structures: blockquotes, lists, horizontal rules
+# ---------------------------------------------------------------------------
 
-    # Ligne 1: header
-    header_cells = [cell.strip() for cell in table_lines[0].split('|') if cell.strip()]
-    num_cols = len(header_cells)
-
-    # Ligne 2: séparateur (ignorer)
-    # Lignes suivantes: données
-    data_rows = []
-    for line in table_lines[2:]:
-        cells = [cell.strip() for cell in line.split('|') if cell.strip()]
-        if cells:
-            data_rows.append(cells)
-
-    # Générer LaTeX
-    latex = '\\begin{table}[H]\n'
-    latex += '\\centering\n'
-    latex += '\\begin{tabular}{' + '|'.join(['l'] * num_cols) + '}\n'
-    latex += '\\hline\n'
-
-    # En-têtes
-    latex += ' & '.join(header_cells) + ' \\\\\n'
-    latex += '\\hline\n'
-
-    # Données
-    for row in data_rows:
-        # Compléter si moins de colonnes
-        while len(row) < num_cols:
-            row.append('')
-        latex += ' & '.join(row[:num_cols]) + ' \\\\\n'
-
-    latex += '\\hline\n'
-    latex += '\\end{tabular}\n'
-    latex += '\\end{table}\n'
-
-    return latex
-
-
-def convert_markdown_to_latex(md_content):
-    """Convertit le contenu Markdown en LaTeX"""
-
-    # Supprimer la section références (déjà dans bibliography.bib)
-    md_content = re.sub(
-        r'## Références bibliographiques.*$',
-        '',
-        md_content,
-        flags=re.DOTALL
-    )
-
-    # 1. Protéger les blocs de code (ne pas les transformer)
-    md_content, code_blocks = protect_code_blocks(md_content)
-
-    # 2. Protéger les tableaux Markdown (mettre en commentaire pour révision manuelle)
-    lines = md_content.split('\n')
-    result_lines = []
-    in_table = False
-    table_lines = []
-
-    for i, line in enumerate(lines):
-        # Détecter ligne de tableau (contient |)
-        if '|' in line and line.strip().startswith('|'):
-            if not in_table:
-                in_table = True
-                table_lines = [line]
-            else:
-                table_lines.append(line)
-        elif in_table:
-            # Fin du tableau - mettre en commentaire
-            if len(table_lines) >= 2:
-                result_lines.append('')
-                result_lines.append('% TODO: Convertir ce tableau Markdown en LaTeX')
-                for tline in table_lines:
-                    result_lines.append('% ' + tline)
-                result_lines.append('%')
-            else:
-                # Pas un vrai tableau
-                result_lines.extend(table_lines)
-            result_lines.append(line)
-            in_table = False
-            table_lines = []
-        else:
-            result_lines.append(line)
-
-    # Si tableau en fin de fichier
-    if in_table and len(table_lines) >= 2:
-        result_lines.append('% TODO: Convertir ce tableau Markdown en LaTeX')
-        for tline in table_lines:
-            result_lines.append('% ' + tline)
-
-    md_content = '\n'.join(result_lines)
-
-    # 3. Remplacer les caractères Unicode spéciaux par des versions LaTeX-safe
-    unicode_replacements = {
-        '─': '-', '│': '|', '┌': '+', '┐': '+', '└': '+', '┘': '+',
-        '├': '+', '┤': '+', '┬': '+', '┴': '+', '┼': '+',
-        '═': '=', '║': '|', '╔': '+', '╗': '+', '╚': '+', '╝': '+',
-        '╠': '+', '╣': '+', '╦': '+', '╩': '+', '╬': '+',
-        '→': '->', '←': '<-', '↔': '<->', '⇒': '=>', '⇐': '<=', '⇔': '<=>',
-        '•': '*', '◦': 'o', '▪': '-', '▫': 'o', '…': '...',
-        '≥': '>=', '≤': '<=', '≠': '!=', '≈': '~=',
-        '×': 'x', '÷': '/', '±': '+/-', '°': ' deg', 'µ': 'micro',
-        '²': '^2', '³': '^3', '√': 'sqrt', '∞': 'inf',
-        '✓': '[OK]', '✗': '[X]', '✔': '[OK]', '✘': '[X]',
-        '✅': '[OK]', '❌': '[X]', '⚠': '[!]', '⚠️': '[!]',
-        'ρ': 'rho', 'α': 'alpha', 'β': 'beta', 'γ': 'gamma',
-        'δ': 'delta', 'ε': 'epsilon', 'θ': 'theta', 'λ': 'lambda',
-        'σ': 'sigma', 'τ': 'tau', 'φ': 'phi', 'ω': 'omega',
-    }
-
-    for unicode_char, replacement in unicode_replacements.items():
-        md_content = md_content.replace(unicode_char, replacement)
-
-    # Remove Unicode variation selectors (U+FE0F, U+FE0E, etc.) that cause LaTeX errors
-    md_content = md_content.replace('\uFE0F', '').replace('\uFE0E', '')
-
-    # 4. Convertir les titres (AVANT l'échappement LaTeX)
-    md_content = re.sub(r'^# (.+)$', r'\\chapter{\1}', md_content, flags=re.MULTILINE)
-    md_content = re.sub(r'^## (\d+\.\d+) (.+)$', r'\\section{\2}\n\\label{sec:\1}', md_content, flags=re.MULTILINE)
-    md_content = re.sub(r'^### (\d+\.\d+\.\d+) (.+)$', r'\\subsection{\2}\n\\label{subsec:\1}', md_content, flags=re.MULTILINE)
-    md_content = re.sub(r'^#### (.+)$', r'\\subsubsection{\1}', md_content, flags=re.MULTILINE)
-
-    # 5. Convertir URLs (AVANT l'échappement LaTeX)
-    md_content = re.sub(r'https?://[^\s\)]+', lambda m: f'___URL___{m.group(0)}___URL___', md_content)
-
-    # 6. Gras et italique (AVANT l'échappement LaTeX)
-    # Protéger le contenu entre ** et * (NE PAS matcher les retours à la ligne)
-    def protect_bold(match):
-        return f'___BOLD___{match.group(1)}___BOLD___'
-
-    def protect_italic(match):
-        return f'___ITALIC___{match.group(1)}___ITALIC___'
-
-    # [^\n] pour ne pas matcher les retours à la ligne
-    md_content = re.sub(r'\*\*([^\n*]+?)\*\*', protect_bold, md_content)
-    md_content = re.sub(r'\*([^\n*]+?)\*', protect_italic, md_content)
-
-    # 7. Code inline (AVANT l'échappement LaTeX)
-    def protect_code_inline(match):
-        return f'___CODEINLINE___{match.group(1)}___CODEINLINE___'
-
-    md_content = re.sub(r'`([^`]+)`', protect_code_inline, md_content)
-
-    # 8. Protéger les commandes LaTeX déjà présentes
-    md_content = re.sub(r'(\\[a-zA-Z]+(?:\{[^}]*\})?)', r'___LATEXCMD___\1___LATEXCMD___', md_content)
-
-    # 9. MAINTENANT échapper les caractères spéciaux LaTeX dans le texte normal
-    lines = md_content.split('\n')
-    escaped_lines = []
-
+def convert_block_structures(text: str) -> str:
+    # -- Blockquotes --
+    lines = text.split('\n')
+    result, in_quote = [], False
     for line in lines:
-        # Ne pas échapper les lignes qui sont des commandes LaTeX
-        if line.strip().startswith('\\chapter') or line.strip().startswith('\\section') or \
-           line.strip().startswith('\\subsection') or line.strip().startswith('\\subsubsection') or \
-           line.strip().startswith('\\label') or line.strip().startswith('\\begin') or \
-           line.strip().startswith('\\end') or line.strip().startswith('\\item'):
-            escaped_lines.append(line)
+        if line.startswith('> '):
+            if not in_quote:
+                result.append('\\begin{quote}')
+                in_quote = True
+            result.append(line[2:])
         else:
-            # Échapper caractères spéciaux sauf dans les zones protégées
-            parts = re.split(r'(___[A-Z]+___.*?___[A-Z]+___)', line)
-            escaped_parts = []
-            for part in parts:
-                if part.startswith('___') and part.endswith('___'):
-                    # Zone protégée, ne pas échapper
-                    escaped_parts.append(part)
-                else:
-                    # Texte normal, échapper
-                    escaped_parts.append(escape_latex_special_chars(part))
-            escaped_lines.append(''.join(escaped_parts))
+            if in_quote:
+                result.append('\\end{quote}')
+                in_quote = False
+            result.append(line)
+    if in_quote:
+        result.append('\\end{quote}')
+    text = '\n'.join(result)
 
-    md_content = '\n'.join(escaped_lines)
-
-    # 10. Restaurer les commandes LaTeX protégées
-    md_content = md_content.replace('___LATEXCMD___', '').replace('___LATEXCMD___', '')
-
-    # 11. Restaurer et convertir le gras, italique, code
-    def restore_bold(match):
-        content = match.group(1)
-        # Ensure % is escaped even in bold text
-        content = content.replace('%', '\\%')
-        return f'\\textbf{{{content}}}'
-
-    def restore_italic(match):
-        content = match.group(1)
-        # Ensure % is escaped even in italic text
-        content = content.replace('%', '\\%')
-        return f'\\textit{{{content}}}'
-
-    def restore_code_inline(match):
-        content = match.group(1)
-        return f'\\texttt{{{content}}}'
-
-    md_content = re.sub(r'___BOLD___(.+?)___BOLD___', restore_bold, md_content)
-    md_content = re.sub(r'___ITALIC___(.+?)___ITALIC___', restore_italic, md_content)
-    md_content = re.sub(r'___CODEINLINE___(.+?)___CODEINLINE___', restore_code_inline, md_content)
-
-    # 12. Restaurer les URLs
-    def restore_url(match):
-        url = match.group(1)
-        return f'\\url{{{url}}}'
-
-    md_content = re.sub(r'___URL___(.+?)___URL___', restore_url, md_content)
-
-    # 13. Restaurer les blocs de code et les convertir
-    def convert_code_block(match):
-        lang = match.group(1) or 'text'
-        code = match.group(2)
-        if lang in ['python', 'json', 'bash']:
-            return f'\\begin{{lstlisting}}[style={lang}]\n{code}\n\\end{{lstlisting}}'
+    # -- Bullet lists (- item) --
+    lines = text.split('\n')
+    result, in_blist = [], False
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r'^-\s+\S', stripped):
+            if not in_blist:
+                result.append('\\begin{itemize}')
+                in_blist = True
+            result.append('  \\item ' + re.sub(r'^-\s+', '', stripped))
         else:
-            return f'\\begin{{verbatim}}\n{code}\n\\end{{verbatim}}'
+            if in_blist:
+                result.append('\\end{itemize}')
+                in_blist = False
+            result.append(line)
+    if in_blist:
+        result.append('\\end{itemize}')
+    text = '\n'.join(result)
 
-    md_content = restore_code_blocks(md_content, code_blocks)
-    md_content = re.sub(r'```(\w+)?\n(.*?)```', convert_code_block, md_content, flags=re.DOTALL)
-
-    # 14. Listes à puces (avec environnement itemize)
-    lines = md_content.split('\n')
-    result_lines = []
-    in_list = False
-
-    for i, line in enumerate(lines):
-        if line.strip().startswith('- ') and not in_list:
-            result_lines.append('\\begin{itemize}')
-            result_lines.append('\\item ' + line.strip()[2:])
-            in_list = True
-        elif line.strip().startswith('- ') and in_list:
-            result_lines.append('\\item ' + line.strip()[2:])
-        elif not line.strip().startswith('- ') and in_list:
-            result_lines.append('\\end{itemize}')
-            result_lines.append(line)
-            in_list = False
+    # -- Numbered lists (1. item) --
+    lines = text.split('\n')
+    result, in_nlist = [], False
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r'^\d+\.\s+\S', stripped):
+            if not in_nlist:
+                result.append('\\begin{enumerate}')
+                in_nlist = True
+            result.append('  \\item ' + re.sub(r'^\d+\.\s+', '', stripped))
         else:
-            result_lines.append(line)
+            if in_nlist:
+                result.append('\\end{enumerate}')
+                in_nlist = False
+            result.append(line)
+    if in_nlist:
+        result.append('\\end{enumerate}')
+    text = '\n'.join(result)
 
-    if in_list:
-        result_lines.append('\\end{itemize}')
+    # -- Horizontal rules → vertical space --
+    text = re.sub(r'^\s*---+\s*$', r'\\bigskip', text, flags=re.MULTILINE)
 
-    md_content = '\n'.join(result_lines)
-
-    # 15. Citations (références)
-    md_content = re.sub(r'\(([A-Z][a-z]+ et al\., \d{4})\)', r'~\\cite{TODO}', md_content)
-
-    # 16. Lignes horizontales
-    md_content = re.sub(r'^---+$', r'\\medskip\\hrule\\medskip', md_content, flags=re.MULTILINE)
-
-    return md_content
+    return text
 
 
-def convert_chapter(input_md, output_tex, chapter_num):
-    """Convertit un chapitre Markdown en LaTeX"""
+# ---------------------------------------------------------------------------
+# Master conversion
+# ---------------------------------------------------------------------------
 
-    print(f"Converting {input_md} → {output_tex}")
+def convert_markdown_to_latex(md: str) -> str:
+    # Drop reference/bibliography section (handled by .bib)
+    md = re.sub(
+        r'^## (Bibliography|References|Références bibliographiques).*$', '',
+        md, flags=re.DOTALL | re.MULTILINE)
 
-    # Lire Markdown
-    with open(input_md, 'r', encoding='utf-8') as f:
-        md_content = f.read()
+    md, code_blocks  = protect_code_blocks(md)
+    # Unescape Markdown backslash-escapes (\_ \* etc.) so they don't get double-escaped
+    md = re.sub(r'\\([_*\[\]()#`!{}])', r'\1', md)
+    md               = replace_citations(md)
+    md               = normalise_unicode(md)   # before table extraction so cells are clean
+    md, tables       = extract_tables(md)
+    md               = convert_headings(md)
+    md               = protect_and_escape(md)
+    md               = convert_block_structures(md)
 
-    # Convertir
-    tex_content = convert_markdown_to_latex(md_content)
+    # Restore tables and code blocks AFTER block-structure processing
+    md = restore_tables(md, tables)
+    md = restore_code_blocks(md, code_blocks)
 
-    # Ajouter en-tête
-    header = f"% Chapitre {chapter_num} - Généré automatiquement depuis {input_md.name}\n"
-    header += f"% Ne pas éditer directement - modifier le fichier Markdown source\n\n"
+    return md
 
-    tex_content = header + tex_content
 
-    # Écrire LaTeX
-    with open(output_tex, 'w', encoding='utf-8') as f:
-        f.write(tex_content)
+# ---------------------------------------------------------------------------
+# Per-chapter driver
+# ---------------------------------------------------------------------------
 
-    print(f"  ✓ Conversion réussie")
+def convert_chapter(src: Path, dst: Path, num: int):
+    print(f'  Chapter {num}: {src.name} → {dst.name}')
+    md  = src.read_text(encoding='utf-8')
+    tex = convert_markdown_to_latex(md)
+    header = (
+        f'% Chapter {num} — auto-generated from {src.name}\n'
+        f'% Edit the Markdown source, not this file.\n\n'
+    )
+    dst.write_text(header + tex, encoding='utf-8')
+    print(f'    OK')
+
+
+CHAPTERS = [
+    ('chapter1_introduction.md',     'chapters/01-introduction.tex',  1),
+    ('chapter2_state_of_the_art.md', 'chapters/02-etat-art.tex',      2),
+    ('chapter3_methodology.md',      'chapters/03-methodologie.tex',   3),
+    ('chapter4_results.md',          'chapters/04-resultats.tex',      4),
+    ('chapter5_conclusion.md',       'chapters/05-conclusion.tex',     5),
+]
 
 
 def main():
-    """Point d'entrée principal"""
-
     latex_dir = Path(__file__).parent
-
-    chapters = [
-        ('chapitre1_introduction.md', 'chapters/01-introduction.tex', 1),
-        ('chapitre2_etat_art.md', 'chapters/02-etat-art.tex', 2),
-        ('chapitre3_methodologie.md', 'chapters/03-methodologie.tex', 3),
-        ('chapitre4_resultats.md', 'chapters/04-resultats.tex', 4),
-        ('chapitre5_conclusion.md', 'chapters/05-conclusion.tex', 5),
-    ]
-
-    print("=== Conversion Markdown → LaTeX ===\n")
-
-    for md_file, tex_file, num in chapters:
-        input_path = latex_dir / md_file
-        output_path = latex_dir / tex_file
-
-        if not input_path.exists():
-            print(f"⚠ Fichier introuvable: {input_path}")
+    print('=== Markdown → LaTeX ===\n')
+    for md_name, tex_name, num in CHAPTERS:
+        src = latex_dir / md_name
+        dst = latex_dir / tex_name
+        if not src.exists():
+            print(f'  [SKIP] {src} not found')
             continue
-
-        convert_chapter(input_path, output_path, num)
-
-    print("\n=== Conversion terminée ===")
-    print("\nÉtapes suivantes:")
-    print("1. Vérifier les fichiers .tex générés dans chapters/")
-    print("2. Ajuster manuellement les tableaux complexes si nécessaire")
-    print("3. Ajouter les citations BibTeX (remplacer TODO par clés)")
-    print("4. Compiler avec: latexmk -pdf main.tex")
+        convert_chapter(src, dst, num)
+    print('\n=== Done ===')
 
 
 if __name__ == '__main__':

@@ -1,274 +1,138 @@
-# Fiche de lecture - Measuring DNS Infrastructure Centrality
+# Reading Note - Measuring the Centrality of DNS Infrastructure in the Wild
 
-**Référence bibliographique** :
-Xu, C., Zhang, Y., Shi, F., Shan, H., Guo, B., Li, Y., & Xue, P. (2023). *Measuring the Centrality of DNS Infrastructure in the Wild*. Applied Sciences, 13(9), 5739. https://doi.org/10.3390/app13095739
+**Bibliographic Reference**:
+Xu, C., Zhang, Y., Shi, F., Shan, H., Guo, B., Li, Y., & Xue, P. (2023). Measuring the Centrality of DNS Infrastructure in the Wild. *Applied Sciences*, 13(9), 5739. https://doi.org/10.3390/app13095739
 
-**Thème** :
-Centralisation infrastructure DNS (client-side + server-side) via mesures actives Internet-wide
+**Theme**:
+This paper investigates the degree of centralization in the DNS ecosystem's underlying infrastructure, covering both the client-side (resolver pools) and server-side (authoritative name servers). The authors propose a novel lightweight measurement technique based on NS chain reflection to uncover implicit resolver pool structures invisible to traditional passive analysis. Their Internet-wide active measurement spans over 210 million domain names across 1138 gTLDs.
 
-**Intérêt pour le mémoire** :
-Quantification oligopole DNS infrastructure. Révèle concentration extrême : 90% forwarding resolvers par 5% indirect resolvers, 48.5% domaines par top 10 providers. Implications sécurité (single point of failure) et complémentarité avec notre approche distribuée RIPE Atlas.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 mars 2026
-**Section du mémoire** :
-- Section 2.3 (Infrastructure DNS - centralisation)
-- Section 2.6 (État de l'art - concentration providers)
+**Relevance to thesis**:
+Understanding DNS infrastructure centralization is directly relevant to a thesis on distributed DNS measurements, as it reveals that the supposedly distributed DNS system is in practice highly concentrated among a small number of providers. This concentration affects the geographic diversity of DNS responses observed from RIPE Atlas probes. Findings on resolver pool structures and authoritative name server concentration inform the design of measurement campaigns, particularly the selection of target domains from the Tranco list and the interpretation of vantage-point diversity.
 
 ---
 
-## Contenu de l'article
+## Reading Context
 
-### Objectif(s) / Question(s) de recherche
-
-**Problème** : Centralisation DNS ecosystem = risques :
-- **Single point of failure** (Akamai outage 17 juin 2021 → Google, Amazon, Cloudflare inaccessibles)
-- **Enterprise failures** (Facebook outage 4 octobre 2021 → BGP mistake + DNS authoritatives down)
-- **Privacy** concerns (eavesdropping centralisé)
-- **Oligopoly** market → EU lance DNS4EU Infrastructure Project
-
-**Gap littérature** :
-- Études précédentes = concentration traffic DNS OU market share OU name servers
-- **Manque** : centralisation **infrastructure DNS** elle-même
-- Challenge : resolver pools = multiples layers, transparents aux clients
-
-**Questions** :
-1. Quel degré centralisation infrastructure client-side (resolver pools) ?
-2. Quel degré centralisation infrastructure server-side (authoritative name servers) ?
-3. Combien providers dominent infrastructure backing ?
-
-### Méthodologie
-
-- **Type d'étude** : Active measurements Internet-wide + zone file analysis
-- **Innovation** : Novel resolver pool discovery method (**NS chain reflecting**)
-- **Échelle** :
-  - **Client-side** : scan toutes adresses IPv4 routable
-  - **Server-side** : analyse 1,138 gTLDs zone files (210,446,494 domain names)
-- **Outils** :
-  - Active measurement (single probing point)
-  - Zone file analysis
-  - IP geolocation, AS mapping
-- **Période** : 2023 (received 10 avril, accepted 3 mai, published 6 mai)
-
-**Taxonomy DNS (Schomp et al.)** :
-- **FDNS** (Forwarding DNS) : reçoit queries, forward vers RDNS
-- **RDNS** (Recursive DNS) : execute resolution, contact ADNS
-  - **iRDNS** (indirect RDNS) : hidden, backend
-  - **dRDNS** (direct RDNS) : visible clients
-- **ADNS** (Authoritative DNS) : maintient records domaine
-
-**Resolver pool** : implicit collaborative relationship entre RDNS du même provider
-
-**Méthode CNAME chain** (Schomp 2013) :
-- Idée : "RDNS sending request ≠ RDNS resolving CNAME redirection"
-- **Limitation** (découverte auteurs) : patterns CNAME varient selon providers
-- 20 public DNS testés → 3 patterns :
-  1. **Multi-RDNSIP** : Google, Level3 (2/20)
-  2. **Single-RDNS** : Cloudflare, OpenDNS, etc. (14/20)
-  3. **Multi-Query** : Quad9, Tencent, AliDNS, Yandex, AdGuard, DNSDB (6/20)
-- **Conclusion** : CNAME method ineffective modern DNS
-
-**Méthode NS chain reflecting** (proposée) :
-- Novel, lightweight, single probing point
-- Exploite NS records chains (analogique CNAME mais name servers)
-- Fast, low-cost
-- Identifie resolver pool structure
-
-### Résultats principaux
-
-#### 1. Client-side centralization (Resolver Pools)
-
-**Chiffre clé** :
-- **>90% forwarding resolvers** backed by **<5% (4,071) indirect resolvers**
-- Concentration extrême infrastructure client-side
-
-**Implications** :
-- Petit nombre iRDNS supporte majorité FDNSs
-- Providers utilisent shared infrastructure massive
-- Single point of failure pour 90%+ users
-
-#### 2. Server-side centralization (Authoritative Name Servers)
-
-**Chiffres clés** :
-- **210,446,494 domain names** analysés (1,138 gTLDs)
-- **0.45% (12,679) all name servers** = tous name servers top providers
-- **Top 10 DNS providers** servent **48.5%** (>100M) domain names
-- **>98% domain names** rely on **single name server provider**
-
-**Shared infrastructure** :
-- **60% combinations** name server providers **share infrastructure** (directly or indirectly)
-- Enterprises using multiple providers → may implicitly rely on **same infrastructure**
-
-#### 3. Leading DNS Providers
-
-**Top providers** (non exhaustive, article mentionne) :
-- Google Public DNS
-- Cloudflare
-- OpenDNS
-- Quad9
-- Level3
-- Yandex
-- Tencent
-- AliDNS
-- AdGuard DNS
-- 114DNS
-- (+ autres, total 20 testés)
-
-**Geographic distribution, IP infrastructure, load balancing** explorés mais détails dans sections 5-6 (non lues complètement).
-
-### Conclusion des auteurs
-
-**Contributions** :
-1. ✅ **Novel measurement approach** : NS chain reflecting (léger, single probing point)
-2. ✅ **Comprehensive analysis** : client-side + server-side centralization
-3. ✅ **Quantification centrality** : multiple dimensions (IP, domain, provider, AS)
-4. ✅ **Insights inédits** :
-   - 90% FDNSes par 5% iRDNSes
-   - 98% domains = single provider
-   - 60% provider combinations = shared infrastructure
-
-**Implications** :
-- DNS infrastructure **much more centralized** than previously believed
-- Oligopoly risk confirmed empirically
-- Single points of failure systémiques
-- Multi-provider strategy ≠ true redundancy (shared infrastructure)
-
-**Limitations** :
-- Méthode active = snapshot 2023 (pas évolution temporelle)
-- IPv4 uniquement (pas IPv6)
-- Zone files = gTLDs (pas ccTLDs complets)
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.1 (DNS ecosystem overview and architecture)
+- Section 2.7 (Centralization trends and risks)
+- Section 4 (Methodology: resolver-side considerations)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés** :
-- **DNS centralization** = oligopole infrastructure (pas juste market share)
-- **Resolver pools** = hidden collaborative infrastructure
-- **Shared infrastructure** = redundancy illusoire (multi-provider)
-- **Single point of failure** = risque systémique confirmé
+**Problem**: The DNS was designed as a distributed system, yet centralization has emerged through commercial consolidation. The degree of centralization in the supporting infrastructure — resolver pools and authoritative name servers — is not well quantified, and existing passive measurement methods fail to reveal the implicit multi-layer resolver pool structure deployed by major public DNS providers.
 
-**Chiffres essentiels** :
-- **90%** FDNSes → 5% iRDNSes
-- **48.5%** domaines → Top 10 providers
-- **98%** domaines → single provider
-- **60%** provider combos → shared infra
-- **210M** domaines analysés
-- **1,138 gTLDs** zone files
+**Research questions**:
+1. How centralized is the client-side DNS infrastructure in terms of resolver pools, and can a single probing point efficiently uncover implicit resolver pool structures?
+2. How centralized is the server-side DNS infrastructure in terms of authoritative name server providers across all gTLDs?
+3. What is the degree of shared infrastructure between different DNS service providers, and what are the implications for resilience?
 
-**Limites pertinentes** :
-- Active measurement = point-in-time (évolution ?)
-- IPv4 only (IPv6 centralisation différente ?)
-- gTLDs focus (ccTLDs patterns ?)
-- Resolver pool discovery = heuristic (validation ?)
+### Background
 
-### Critique personnelle
+The DNS resolution model has evolved from a simple client-resolver-authoritative chain into a multi-layer architecture where public DNS providers deploy Forwarding Resolvers (FDNS), Recursive Resolvers (RDNS), Indirect RDNS (iRDNS), and Direct RDNS (dRDNS). These layers form implicit resolver pools that are transparent to end users but critically determine the actual infrastructure dependencies of DNS resolution. Prior work by Schomp et al. introduced a CNAME-chain-based pool discovery method, but this paper demonstrates it is no longer effective across modern providers. On the server side, the concentration of authoritative DNS has been partially explored using TLD zone files, but no study had previously covered all 1138 gTLDs at scale.
 
-**Forces** :
-- ✅ **Novel method** : NS chain reflecting (advance over CNAME)
-- ✅ **Comprehensive** : client + server sides
-- ✅ **Large scale** : 210M domains, Internet-wide scan
-- ✅ **Multi-dimensional** : IP, domain, provider, AS
-- ✅ **Timely** : 2023 data (récent)
-- ✅ **Alarming findings** : 90%/5% = concentration extrême
+### Methodology
 
-**Faiblesses** :
-- ⚠️ **No temporal analysis** : snapshot, pas évolution
-- ⚠️ **IPv4 bias** : IPv6 potentially different patterns
-- ⚠️ **Method validation** : NS chain reflecting = black box (pas open source visible ?)
-- ⚠️ **Provider identification** : comment mapper IP → provider ?
-- ⚠️ **Geographic analysis light** : mentions geo-distribution mais peu détails
-- ⚠️ **No privacy analysis** : implications eavesdropping non quantifiées
+- **Study type**: Active measurement (Internet-wide scanning) combined with passive zone file analysis
+- **Tools used**: NS chain reflection technique (novel), custom probing infrastructure, DNS zone file collection from 1138 gTLDs
+- **Scale**: Internet-wide scan of all routable IPv4 addresses; 210,446,494 domain names from 1138 gTLD zone files; 20 public DNS providers tested for CNAME behavior
+- **Measurement protocol**: NS chain reflection sends crafted queries that cause resolvers to reveal their internal structure through the chain of NS referrals observed at the authoritative level; a single probing point suffices to map full resolver pools. For server-side analysis, zone files were downloaded and analyzed to identify name server providers and their IP infrastructure.
+- **Data collected**: Resolver pool memberships (FDNS to iRDNS mappings), name server provider market share, shared IP infrastructure across providers, geographic distribution of name server deployments
 
-**Lien avec autres articles** :
+### Main Results
 
-- **OpenINTEL (van Rijswijk-Deij 2016)** :
-  - OpenINTEL = centralisé (1 point mesure)
-  - Xu : DNS **backend** aussi centralisé (oligopole providers)
-  - Ironie : infrastructure "distribuée" DNS = highly centralized
+1. **Client-side concentration**: Over 90% of forwarding resolvers (FDNSes) are backed by fewer than 5% (4,071) of indirect recursive resolvers (iRDNSes), demonstrating extreme concentration in the actual resolution infrastructure even when the visible surface appears diverse.
+2. **Server-side concentration**: Only 0.45% (12,679) of all name servers across 1138 gTLDs, operated by just 10 DNS providers, provide authoritative resolution for 48.5% of all domain names — over 100 million domains.
+3. **Single-provider dependency**: More than 98% of all domain names rely on a single authoritative name server provider, meaning a failure of that provider causes complete DNS unavailability for the domain.
+4. **Shared infrastructure**: 60% of combinations of name server providers share infrastructure directly or indirectly, meaning enterprises that diversify across multiple DNS providers may still implicitly share a common underlying infrastructure, undermining resilience strategies.
+5. **CNAME method invalidation**: The CNAME chain-based resolver discovery method proposed by Schomp et al. is no longer effective: public DNS providers fall into three distinct behavioral patterns (Multi-RDNSIP, Single-RDNS, Multi-Query), and most use Single-RDNS resolution that prevents pool discovery via CNAME chains.
 
-- **RIPE Atlas (Nosyk 2024)** :
-  - RIPE = 12.9K sondes distribuées (géo-diversity)
-  - Xu : DNS providers = concentrés malgré distribution apparente
-  - Notre mémoire : RIPE Atlas = antidote centralisation (vantage points distribués)
+### Authors' Conclusion
 
-- **Boswell 2024, Johnson 2016** :
-  - Boswell : internal names, client-side
-  - Johnson : root manipulation
-  - Xu : infrastructure centralization (systemic)
-  - Complémentarité : threats multiples niveaux
-
-**Questions ouvertes** :
-1. **Évolution** : Centralisation augmente ou stable ?
-2. **IPv6** : Patterns différents IPv4 vs IPv6 ?
-3. **CDN impact** : CDNs contribuent centralisation ?
-4. **Geographic diversity** : Providers concentrés géographiquement aussi ?
-5. **Resilience** : Comment mesurer vraie redundancy ?
-6. **Regulatory** : EU DNS4EU efficace contre oligopole ?
-
-### Citations importantes
-
-> "The centralization of the global DNS ecosystem may accelerate the creation of an oligopoly market, thereby, increasing the risk of a single point of failure and network traffic manipulation." (Abstract)
-
-> "Our measurement results show that the DNS infrastructure is much more centralized than previously believed. Over 90% of forwarding resolvers are backed by less than 5% (4071) of indirect resolvers." (Abstract)
-
-> "Merely 0.45% (12,679) of all name servers across 1138 gTLDs, operated by just 10 DNS providers, provide authoritative domain resolution service for 48.5% (more than 100 million) of domain names." (Abstract)
-
-> "We found that 60% combinations of name server providers share their infrastructure directly or indirectly, which suggests that enterprises may implicitly rely on the same infrastructure even if they outsource their DNS service to multiple DNS providers." (Introduction)
-
-**Sur outages réels** :
-> "On 17 June 2021, the Akamai DNS outage left numerous top websites and online services inaccessible, including Google, Amazon, Steam, Cloudflare, and FedEx." (Introduction)
-
-> "Facebook experienced the most influential outage in the entire history of the Internet on 4 October 2021, which was caused by a mistake in BGP updating that resulted in the authoritative DNS service outage." (Introduction)
+The DNS infrastructure is substantially more centralized than previously believed, with the failure of a single provider capable of rendering millions of domains unreachable — as demonstrated by real-world outages (Akamai June 2021, Facebook October 2021). The authors argue that the NS chain reflection technique fills a critical methodological gap by enabling active, low-cost, single-point discovery of implicit resolver pools. They call on the Internet community to recognize infrastructure-level centralization as distinct from, and more dangerous than, market-share centralization, and support initiatives like DNS4EU as a structural response.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-**Sections concernées** :
-- **Section 2.3 (Infrastructure)** : Centralisation vs distribution DNS
-- **Section 2.6 (État de l'art)** : Oligopole providers, concentration infrastructure
-- **Section 7 (Discussion)** : Notre approche = antidote centralisation
+### Key Takeaways for the Thesis
 
-**Points à développer** :
+**Key concepts to reuse**:
+- FDNS / RDNS / iRDNS / dRDNS taxonomy for client-side DNS infrastructure
+- Resolver pool: implicit cooperative structure invisible to clients but determinant for infrastructure dependency
+- NS chain reflection as an active measurement technique for resolver pool discovery
+- Shared infrastructure as a hidden single point of failure even when provider diversity appears high
 
-**État de l'art** :
-- DNS infrastructure = paradoxe : designed distributed, actually centralized
-- 90% FDNSes / 5% iRDNSes = concentration backend
-- Multi-provider strategy = false security (shared infrastructure)
-- Outages réels (Akamai, Facebook) = proof centralization risk
+**Applicable methods**:
+- Active probing from a single vantage point to characterize resolver behavior (applicable to RIPE Atlas probe measurements)
+- Zone file analysis for domain-to-provider mapping (complements Tranco-based domain selection)
+- Provider-level aggregation of name server measurements rather than per-IP analysis
 
-**Notre contribution** :
-- RIPE Atlas (12.9K sondes, 178 pays) = distributed measurements
-- Antidote centralisation : vantage points géographiquement distribués
-- Diversité géographique DNS responses = invisible à infrastructure centralisée
-- Complémentarité :
-  - Xu : centralisation backend infrastructure
-  - Nous : diversité frontend responses (client perspective)
+**Important statistics**:
+- 90%+ of FDNSes backed by fewer than 5% of iRDNSes
+- Top 10 providers handle 48.5% of all gTLD domain names (>100 million)
+- 98%+ of domains rely on a single name server provider
+- 60% of provider combinations share underlying infrastructure
 
-**Discussion** :
-- Xu montre **why** distributed measurements matter (centralization risk)
-- Notre approche : observer variations **malgré** backend centralisé
-- Geographic diversity queries → révèle comportements invisibles à single vantage point
-- Trade-off : OpenINTEL (centralized but comprehensive) vs RIPE (distributed but sampled)
+**Identified limitations (gaps to fill)**:
+- No temporal dimension: measurements represent a point-in-time snapshot, not longitudinal evolution; our thesis adds the time dimension
+- No geographic analysis of resolver pool distribution: RIPE Atlas probes distributed across 178 countries could reveal geographic variation in which resolver pools are encountered
+- Focus on gTLDs only; ccTLD centralization not covered
 
-**Références croisées** :
-- OpenINTEL : Centralized measurement platform
-- RIPE Atlas : Distributed measurement (counter-centralization)
-- Nosyk 2024 : RIPE Atlas capabilities
-- Boswell 2024 : Client-side diversity
+### Personal Critique
+
+**Strengths**:
+- Novel NS chain reflection method overcomes a demonstrated methodological limitation in prior work
+- Exceptional scale: 210+ million domains across 1138 gTLDs is the most comprehensive server-side analysis to date
+- Clear practical implications: links measurement results to real-world outage events
+- Multi-dimensional analysis (IP, domain, provider, IP provider) avoids single-metric bias
+
+**Weaknesses**:
+- Single probing point for active measurements limits geographic perspective on resolver pool behavior; pools may differ depending on the client's location
+- Point-in-time snapshot: DNS infrastructure evolves rapidly (CDN shifts, provider acquisitions) and findings may age quickly
+- No analysis of ccTLDs, which represent a significant portion of the global DNS and may show different centralization patterns
+- The shared infrastructure finding (60%) lacks a precise definition of "direct or indirect" sharing, making it difficult to assess severity
+
+**Links to other papers**:
+- Moura et al. (DNS traffic centralization): complementary passive traffic analysis vs. this paper's active infrastructure probing
+- Schomp et al. (CNAME chain method): this paper refutes that method's current validity
+- Le Pochat et al. / Tranco: domain selection methodology intersects with the zone file analysis used here
+
+**Open questions**:
+- Does the resolver pool structure differ depending on the geographic location of the probing point? RIPE Atlas probes distributed worldwide could test this.
+- How does DNS infrastructure centralization evolve over time — are the trends accelerating, and which providers are gaining share?
+
+### Key Quotes
+
+> "The DNS infrastructure is much more centralized than previously believed. Over 90% of forwarding resolvers are backed by less than 5% (4071) of indirect resolvers."
+
+> "Merely 0.45% (12,679) of all name servers across 1138 gTLDs, operated by just 10 DNS providers, provide authoritative domain resolution service for 48.5% (more than 100 million) of domain names."
+
+> "60% combinations of name server providers share their infrastructure directly or indirectly, which suggests that enterprises may implicitly rely on the same infrastructure even if they outsource their DNS service to multiple DNS providers."
 
 ---
 
-**Tags** : #dns-infrastructure #centralization #oligopoly #resolver-pools #name-servers #security #single-point-failure #measurement #active-measurement #zone-files
+## Use in Thesis
 
-**Statut** : [X] Lu (PDF via MD - partial) / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.1 (DNS Architecture): Use taxonomy (FDNS/RDNS/iRDNS/dRDNS) to describe the real-world multi-layer resolver architecture
+- Section 2.7 (Centralization): Cite the 48.5% / top-10-providers statistic as empirical evidence of DNS consolidation risk
+- Section 4 (Methodology): Discuss how resolver pool concentration affects the interpretation of RIPE Atlas measurements (probes may route through the same iRDNS regardless of geographic location)
 
-**Date fiche** : 21 mars 2026
+**Points to develop**:
+- Contrast the "designed as distributed" principle with the empirical centralization findings to frame the research problem
+- Use shared infrastructure findings to motivate geographic vantage point diversity as a way to detect hidden dependencies
 
-**Note** : Fiche basée sur Abstract + Introduction + Methodology + Results summary. Sections 5-6 (detailed analysis) à lire pour chiffres complets IP/AS/geo-distribution si nécessaire ultérieurement.
+**Cross-references**:
+- Fiche Nosyk 2024 (RIPE Atlas operations): geographic diversity of probes vs. concentration at the resolver infrastructure level
+- Fiche van Rijswijk-Deij / OpenINTEL: server-side measurement at scale complements resolver-side analysis
+
+---
+
+**Tags**: #dns-centralization #resolver-pools #active-measurement #infrastructure #anycast #authoritative-nameservers #internet-consolidation
+**Status**: [X] Read / [X] Filed

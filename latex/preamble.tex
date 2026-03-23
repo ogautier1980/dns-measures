@@ -8,8 +8,8 @@
 % Encodage et langue
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[sfdefault]{atkinson}  % Police Atkinson Hyperlegible (obligatoire UNamur)
-\usepackage[french]{babel}
+\usepackage[sfdefault]{atkinson}  % Atkinson Hyperlegible font (mandatory UNamur)
+\usepackage[english]{babel}
 
 % Marges et mise en page (conformes template UNamur)
 \usepackage[top=2cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
@@ -61,8 +61,23 @@
 % PACKAGES BIBLIOGRAPHIE
 % ============================================================================
 
-\usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=99]{biblatex}
+\usepackage[backend=biber,style=authoryear,maxcitenames=2,maxbibnames=99,uniquename=false,uniquelist=false,dashed=false]{biblatex}
 \addbibresource{bibliography.bib}
+
+% \cite{} produces [Author, Year] with square brackets and comma
+\renewcommand*{\mkbibparens}[1]{\mkbibbrackets{#1}}
+\AtBeginDocument{\let\cite\parencite}
+% Force comma between author and year
+\renewcommand*{\nameyeardelim}{\addcomma\addspace}
+
+% et al without trailing period
+\DefineBibliographyStrings{english}{andothers = {et~al}}
+
+% For entries with a shorthand (RFCs), cite as [RFC1034, 1987] — no a/b disambiguation
+\renewbibmacro*{cite:shorthand}{%
+  \printfield{shorthand}%
+  \setunit{\nameyeardelim}%
+  \printfield{labelyear}}
 
 % ============================================================================
 % PACKAGES LIENS ET RÉFÉRENCES
@@ -77,10 +92,10 @@
     linkcolor=black,
     citecolor=black,
     urlcolor=blue,
-    pdftitle={Mesures DNS dans l'espace et le temps},
+    pdftitle={DNS Measurements in Space and Time},
     pdfauthor={Olivier Gautier},
-    pdfsubject={Master 60 Sciences Informatiques - UNamur},
-    pdfkeywords={DNS, RIPE Atlas, mesures distribuées, géolocalisation}
+    pdfsubject={Master 60 Computer Science - UNamur},
+    pdfkeywords={DNS, RIPE Atlas, distributed measurements, geolocation}
 }
 
 % Configuration des URLs
@@ -233,10 +248,10 @@
 % Commande pour le symbole de référence
 \newcommand{\refmark}[1]{\textsuperscript{\cite{#1}}}
 
-% Commande pour faciliter les références
+% Convenience reference commands
 \newcommand{\figref}[1]{Figure~\ref{#1}}
-\newcommand{\tabref}[1]{Tableau~\ref{#1}}
-\newcommand{\chapref}[1]{Chapitre~\ref{#1}}
+\newcommand{\tabref}[1]{Table~\ref{#1}}
+\newcommand{\chapref}[1]{Chapter~\ref{#1}}
 \newcommand{\secref}[1]{Section~\ref{#1}}
 
 % ============================================================================

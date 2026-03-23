@@ -1,492 +1,277 @@
-% Chapitre 1 - Généré automatiquement depuis chapitre1_introduction.md
-% Ne pas éditer directement - modifier le fichier Markdown source
+% Chapter 1 — auto-generated from chapter1_introduction.md
+% Edit the Markdown source, not this file.
 
-\chapter{Chapitre 1 - Introduction}
+\chapter{Introduction}
 
-\section{Contexte et motivation}
+
+\section{Context and Motivation}
 \label{sec:1.1}
 
-\subsection{Le DNS : infrastructure critique d'Internet}
+\subsection{The DNS: Critical Infrastructure of the Internet}
 \label{subsec:1.1.1}
 
-Le Domain Name System (DNS), créé en 1983 par Paul Mockapetris, constitue aujourd'hui l'une des infrastructures les plus critiques d'Internet. Son rôle fondamental consiste à traduire les noms de domaine lisibles par l'humain (comme \texttt{www.example.com}) en adresses IP utilisables par les machines (comme \texttt{93.184.216.34}). Cette fonction de "répertoire téléphonique d'Internet" est si essentielle qu'une défaillance du DNS peut rendre inaccessibles des pans entiers du web, comme l'a démontré la panne historique de Facebook le 4 octobre 2021.
+The Domain Name System (DNS), specified by Paul Mockapetris in \cite{RFC1034,RFC1035}, is the distributed directory service that underlies virtually every networked application on the Internet. Its function --- translating human-readable domain names such as \texttt{www.example.com} into machine-routable information such as IPv4 and IPv6 addresses, mail server designations, and cryptographic key references --- is so fundamental that van Rijswijk-Deij et al.~\cite{vanRijswijk2016} characterise it as a service on which "almost all networked services depend". The scale of this dependency is correspondingly enormous: the \textit{.com} Top-Level Domain alone contained approximately 123 million registered names during the 2015--2016 period studied by van Rijswijk-Deij et al.~\cite{vanRijswijk2016}, and OpenINTEL's measurement infrastructure must process at least 1.85 billion DNS queries per day for \textit{.com} alone to achieve full daily coverage.
 
-Pourtant, malgré son importance, le DNS demeure \textbf{souvent oublié dans les études sur la résilience et la qualité de service d'Internet} (Bortzmeyer, tutorial RIPE Atlas). Cette infrastructure invisible fonctionne si efficacement en arrière-plan que son rôle n'est pleinement reconnu que lorsqu'elle fait défaut.
+The criticality of the DNS is most visible when it fails. The Facebook BGP misconfiguration of October 4, 2021 --- which withdrew the BGP routes to Facebook's authoritative name servers, making the domain unresolvable from any resolver worldwide --- illustrates what Xu et al.~\cite{Xu2023} document empirically: when over 98\% of all global domains depend on a single DNS provider, a provider-level failure propagates immediately and universally. The Akamai DNS outage of June 2021 and the Fastly CDN outage of the same month produced comparable effects, crippling access to large portions of the web for millions of users. In each case, the DNS was the critical failure point: not the application servers, not the network, but the name resolution layer that clients depend on before any application connection can be established.
 
-\subsection{L'information DNS : une donnée éphémère}
+Despite this criticality, the DNS has historically received less systematic measurement attention than other Internet infrastructure layers. Bortzmeyer~\cite{Bortzmeyer_tutorial} observes that the DNS is "often forgotten in studies of Internet resilience and quality of service" --- functioning so transparently in normal operation that its role is fully recognised only in failure. This relative neglect is reflected in the state of measurement infrastructure: as of this thesis's writing, the most comprehensive longitudinal DNS measurement system --- OpenINTEL, developed at the University of Twente \cite{vanRijswijk2016} --- measures over 50\% of the global DNS namespace daily, but does so from \textbf{a single vantage point in the Netherlands}. The geographic dimension of DNS responses is not captured.
+
+\subsection{The Ephemeral Nature of DNS Data}
 \label{subsec:1.1.2}
 
-Le DNS présente une caractéristique unique et problématique pour la recherche : son contenu est \textbf{éphémère}. Les administrateurs de zones DNS peuvent modifier à tout moment les enregistrements associés à leurs domaines, \textbf{sans qu'aucun historique des changements ne soit automatiquement conservé}. Un domaine qui pointait hier vers un serveur en Europe peut aujourd'hui pointer vers un serveur en Asie, et cette transition ne laisse aucune trace dans l'infrastructure DNS elle-même.
+A fundamental characteristic of the DNS that motivates archival measurement is the \textbf{ephemeral nature of DNS data}. DNS resource records --- the atomic units of information in the DNS --- carry a Time To Live (TTL) field that governs how long resolvers and caches may retain them \cite{RFC1034,RFC1035}. When a TTL expires, the record is discarded; subsequent queries retrieve a fresh response from the authoritative server, which may contain different information. Zone administrators can modify records at any time: a domain that resolved to a server cluster in Europe this morning may resolve to a server cluster in Asia this afternoon, and the DNS infrastructure itself retains no trace of the previous configuration.
 
-Cette nature éphémère pose un défi majeur pour la recherche académique et l'investigation de sécurité. Comment étudier l'évolution de l'infrastructure Internet si nous ne pouvons pas "remonter le temps" pour observer l'état du DNS à une date donnée ? Comment analyser rétrospectivement un incident de sécurité si les enregistrements DNS critiques ont disparu entre-temps ?
+This ephemerality creates a structural gap in Internet research. As the thesis subject statement articulates: "in certain research domains, it is interesting to be able to obtain the DNS information provided at a given period." The use cases are varied but share a common dependency on historical DNS data:
 
-\textbf{Exemple concret} : Un chercheur étudiant la propagation d'une campagne de phishing en mars 2024 ne peut plus, en mars 2026, déterminer quelles adresses IP étaient associées aux domaines malveillants utilisés, car ces enregistrements ont été modifiés ou supprimés depuis longtemps.
+\textbf{Network simulation}: Researchers developing Internet simulators --- for evaluating routing protocols, security mechanisms, or traffic engineering policies --- need realistic DNS data for their simulated networks. Simulating the Internet as it existed two years ago requires knowing what addresses the DNS returned for major domains at that time, from diverse geographic vantage points. Without archival DNS data, these simulations rely on present-day snapshots that do not reflect the historical state of the network.
 
-\subsection{La diversité géographique : une dimension négligée}
+\textbf{Security forensics}: Malicious infrastructure --- command-and-control servers for botnets, phishing domains, spam networks --- frequently changes its DNS configuration to evade detection and blacklisting. Van der Toorn et al. (2018) demonstrate that snowshoe spam domains are detectable from their DNS patterns as much as 100 days before appearing on blacklists, but only if historical DNS data is available for analysis. Without longitudinal archival, post-incident investigation cannot reconstruct the full temporal evolution of malicious DNS configurations.
+
+\textbf{Infrastructure evolution studies}: Long-term trends in DNS configuration --- the adoption of cloud email services \cite{vanRijswijk2016}, the migration of domains between DNS providers, the deployment of DNSSEC --- are only observable through continuous longitudinal measurement. Point-in-time studies capture a static snapshot; only sustained active measurement captures the dynamics.
+
+\subsection{The Geographic Dimension: A Neglected Aspect}
 \label{subsec:1.1.3}
 
-Au-delà du problème temporel, la recherche DNS fait face à une \textbf{limitation spatiale} tout aussi importante. Les réponses DNS ne sont pas uniformes : elles \textbf{varient selon la localisation géographique du client} qui effectue la requête.
+Beyond the temporal dimension, DNS responses exhibit a \textbf{geographic dimension} that single-vantage-point measurement cannot capture. The authoritative name server for a domain does not necessarily return the same response to all clients: it may return different IP addresses, or redirect through different CNAME chains, depending on the inferred geographic location of the querying resolver. Three distinct mechanisms produce this geographic variation:
 
-\textbf{Trois mécanismes principaux} expliquent cette diversité :
+\textbf{CDN-based geographic routing}: Large web services --- streaming platforms, search engines, social networks --- deploy Content Delivery Networks with server clusters distributed across multiple continents. DNS is the primary mechanism for directing clients to the appropriate cluster: when the CDN's authoritative server receives a DNS query, it infers the client's location from the querying resolver's IP address and returns the address of the nearest server cluster. Li and Huang~\cite{Li2025} find that this geographic routing operates at continent-level granularity for the Twitch CDN: distinct IP address sets are assigned to clients in Europe, North America, and Asia-Pacific. Hours et al.~\cite{Hours2016} causally confirm the performance rationale: clients using local ISP resolvers are assigned Akamai CDN servers that are, on average, 20 ms closer in round-trip time than servers assigned to clients using Google Public DNS, translating to a 14\% throughput improvement. DNS-based CDN routing thus produces \textbf{systematically different} DNS responses from different geographic vantage points.
 
-\textbf{1. Content Delivery Networks (CDN)} : Les grands services web (Google, Facebook, Netflix) utilisent des CDN pour distribuer leur contenu depuis des serveurs géographiquement proches des utilisateurs. Lorsqu'un utilisateur en France interroge le DNS pour \texttt{www.netflix.com}, il reçoit l'adresse IP d'un serveur européen. Un utilisateur au Japon recevra l'adresse d'un serveur asiatique. Cette optimisation, transparente pour l'utilisateur, réduit drastiquement les temps de latence et améliore l'expérience utilisateur.
+\textbf{IP anycast routing}: DNS root servers, TLD servers, and large public resolvers (Google 8.8.8.8, Cloudflare 1.1.1.1) employ IP anycast: a single global IP address is announced from multiple geographically distributed Points of Presence (PoPs), and BGP routing directs each client to the "nearest" PoP in BGP path-length terms. Koch et al.~\cite{Koch2021} demonstrate that more than 95\% of users experience some geographic inflation when accessing DNS root servers --- being routed to a PoP that is farther than the geographically closest one --- because BGP metrics do not correspond to geographic distance. Bortzmeyer~\cite{Bortzmeyer2013} documents this counter-intuitively for the .fr TLD: North American probes route 55\% of their queries to the Paris PoP rather than to any transatlantic alternative, due to BGP peering arrangements. Anycast thus creates \textbf{BGP attraction basins} --- geographic regions whose traffic converges on the same physical instance --- that do not respect continental boundaries.
 
-\textbf{2. Anycast DNS} : Les serveurs DNS racines et de nombreux services utilisent le routage anycast, où une même adresse IP est annoncée depuis plusieurs localisations géographiques. Le routage BGP (Border Gateway Protocol) dirige automatiquement les requêtes vers le serveur le plus "proche" selon des métriques réseau. Mais "proche" au sens BGP ne signifie pas nécessairement "proche" géographiquement, comme l'ont démontré Koch et al. (2021) : plus de 95\% des utilisateurs accédant aux serveurs DNS racines subissent une certaine "inflation" de latence, le routage BGP optimisant pour des métriques réseau plutôt que pour la proximité géographique pure.
+\textbf{EDNS Client Subnet (ECS)}: RFC\textasciitilde{}7871~\cite{RFC7871} specifies the EDNS Client Subnet extension, which allows a recursive resolver to embed a truncated version of the client's IP prefix in its query to the authoritative CDN server. ECS enables the CDN to perform geographic routing based on the end client's network location rather than the resolver's location --- partially solving the remote DNS problem identified by Wang et al.~\cite{Wang2018}, wherein centralized public resolvers (Google 8.8.8.8, Cloudflare 1.1.1.1) cause CDN servers to assign geographically inappropriate replicas. However, ECS carries significant privacy implications (the client prefix is exposed to the authoritative server and on-path observers) and is not universally deployed: Bortzmeyer~\cite{Bortzmeyer_tutorial} reports that only a small fraction of RIPE Atlas probes in Belgium use resolvers that forward ECS options.
 
-\textbf{3. EDNS Client Subnet (ECS)} : Pour contourner le problème des DNS publics distants (Google DNS 8.8.8.8 utilisé par un client français), l'extension ECS permet au resolver d'inclure le préfixe IP du client dans la requête DNS envoyée au serveur autoritaire. Le serveur peut ainsi géolocaliser le client réel plutôt que le resolver, et retourner une réponse optimisée. Cependant, ECS pose des \textbf{problèmes de confidentialité} : le préfixe IP du client est exposé aux serveurs autoritaires et aux intermédiaires réseau ~\cite{TODO}.
+The practical consequence of these three mechanisms is that DNS responses for popular domains are \textbf{geographically heterogeneous}: clients at different locations receive different responses, reflecting different CDN server assignments, different anycast routing paths, and different resolver configurations. OpenINTEL, despite measuring 50\% of the global DNS namespace daily, cannot observe this geographic variation because it operates from a single point in the Netherlands \cite{vanRijswijk2016,vanRijswijk2018blog}. The fraction of popular domains that return geographically differentiated responses, the magnitude of that differentiation, the mechanisms that drive it, and its temporal stability remain empirically uncharacterised at population scale. This is the research gap that this thesis addresses.
 
-\textbf{Le problème} : Les infrastructures de mesures DNS existantes, comme OpenINTEL (van Rijswijk-Deij et al., 2016), mesurent depuis \textbf{un point unique} (Pays-Bas). Elles collectent quotidiennement les enregistrements DNS de 123 millions de domaines, mais ne capturent qu'une \textbf{seule perspective géographique}. La diversité réelle des réponses DNS à travers le monde reste \textbf{invisible}.
-
-\subsection{Implications pour la recherche et la sécurité}
+\subsection{Implications for Research and Practice}
 \label{subsec:1.1.4}
 
-L'absence d'archivage DNS spatialement et temporellement distribué limite sévèrement plusieurs domaines de recherche :
+The absence of a systematic, longitudinal, spatially distributed DNS measurement dataset constrains multiple research communities:
 
-\textbf{Recherche en performance réseau} : Impossible de valider rétrospectivement si un CDN a effectivement optimisé ses redirections DNS pour minimiser la latence globale. Les chercheurs ne peuvent analyser que l'état actuel, pas l'évolution historique.
+\textbf{Network performance research} cannot retrospectively validate whether CDN operators actually optimised their geographic routing policies over time, or identify which network regions consistently receive suboptimal server assignments. Calder et al.~\cite{Calder2015} show empirically that 20\% of clients accessing Microsoft's Bing CDN are directed to suboptimal front-end servers, with potential latency savings of 7--100 ms if DNS-based routing were applied. Identifying and quantifying such routing inefficiencies at scale requires distributed measurement data.
 
-\textbf{Sécurité et investigation d'incidents} : Les domaines malveillants (phishing, C\&C de botnets) changent fréquemment d'adresses IP pour échapper aux blacklists. Sans historique DNS géographiquement distribué, il est impossible de cartographier complètement l'infrastructure d'une campagne d'attaque passée.
+\textbf{DNS centralisation research} can document that 10 DNS providers host 48.5\% of all gTLD domains \cite{Xu2023}, but cannot determine whether this centralisation has a geographic dimension --- whether specific regions are more heavily dependent on specific providers, or whether provider failures would have asymmetric geographic impact. Addressing this requires measurement from diverse geographic vantage points.
 
-\textbf{Études de centralisation} : Xu et al. (2023) ont révélé qu'une poignée de providers DNS (Cloudflare, Google, AWS) gèrent plus de 48\% des domaines mondiaux. Mais cette centralisation varie-t-elle géographiquement ? Les domaines chinois dépendent-ils des mêmes providers que les domaines européens ? Sans mesures distribuées, cette question reste sans réponse.
+\textbf{Internet simulation} requires historically accurate DNS data from multiple geographic perspectives to construct realistic network models. A simulation of Internet-circa-2023 from a Tokyo vantage point requires knowing what DNS responses a Tokyo client would have received at that time --- data that is neither available from OpenINTEL (single Dutch vantage point) nor reconstructible from existing passive DNS datasets (which observe only queries that naturally flowed through specific observation points).
 
-\textbf{Simulation réseau} : Les chercheurs développant des simulateurs réseau ou des environnements de test ont besoin de données DNS réalistes pour reproduire fidèlement Internet tel qu'il était à une date donnée, depuis différentes localisations. Sans archivage DNS spatio-temporel, ces simulations reposent sur des approximations.
-
-\medskip\hrule\medskip
-
-\section{Problématique de recherche}
+\textbf{Policy and sovereignty debates} around DNS infrastructure --- including questions of which nations' citizens depend on DNS infrastructure under foreign jurisdiction, and what the geographic exposure of national DNS infrastructure is --- require geographically distributed empirical data. Xu et al.~\cite{Xu2023} document that over 60\% of DNS provider pairs share underlying infrastructure, but the geographic distribution of this shared dependency has not been characterised.
+\bigskip
+\section{Research Problem}
 \label{sec:1.2}
 
-\subsection{Question principale}
+\subsection{Main Research Question}
 \label{subsec:1.2.1}
 
-Comment concevoir et déployer un \textbf{système d'archivage DNS} qui capture la \textbf{diversité géographique} des réponses DNS dans le temps, pour les domaines web les plus populaires, de manière éthique, reproductible et exploitable par la communauté scientifique ?
+This thesis addresses the following main research question:
 
-\subsection{Questions secondaires}
+\textit{How can one design and deploy a distributed DNS measurement system that captures the geographic and temporal diversity of DNS responses for the most popular domains on the web, in a manner that is ethically sound, reproducible, and useful to the research community?}
+
+The question has two inseparable dimensions: the \textbf{engineering dimension} (how to build the system) and the \textbf{empirical dimension} (what the system reveals about DNS behaviour). The engineering choices --- platform, domain corpus, measurement parameters, data format --- are motivated by and evaluated against the empirical goals: producing data that accurately characterises the geographic and temporal structure of popular-domain DNS responses.
+
+\subsection{Secondary Research Questions}
 \label{subsec:1.2.2}
 
-Cette question principale se décline en quatre sous-questions opérationnelles que notre travail vise à répondre empiriquement :
+The main question decomposes into four operational sub-questions that the measurement campaign and analysis directly address:
 
-\textbf{Q1 : Diversité géographique}
-Quelle proportion de domaines Tranco Top 10K retourne des réponses DNS différentes selon la localisation géographique du client ?
+\textbf{Q1 --- Geographic diversity}: What proportion of Tranco top-ranked domains return different DNS responses depending on the geographic location of the querying client, and what infrastructure mechanisms (CDN-based routing, anycast, ECS) explain the observed differentiation?
 
-Cette question quantifie l'ampleur du phénomène. Si 80\% des domaines populaires retournent la même adresse IP quelle que soit la localisation du client, alors la dimension géographique est secondaire. Si au contraire 80\% varient significativement, alors mesurer depuis un point unique (comme OpenINTEL) perd une information critique.
+This question quantifies the scale of the phenomenon. If a large proportion of popular domains return identical responses regardless of query origin, then single-vantage-point measurement captures the essential picture and geographically distributed measurement adds little. If, conversely, a substantial proportion return geographically differentiated responses, then the single-vantage-point approach of OpenINTEL systematically misses a critical dimension of the DNS. The answer determines how significant the research gap is in quantitative terms, and guides the interpretation of any DNS study that does not account for geographic variation.
 
-\textbf{Q2 : Stabilité temporelle}
-Quelle est la stabilité temporelle des enregistrements DNS pour ces domaines ? Observe-t-on des variations jour/semaine/mois ?
+\textbf{Q2 --- Temporal stability}: What is the temporal stability of DNS responses for popular domains over a multi-month measurement period? Do changes occur at day, week, or month timescales, and are they correlated with identifiable infrastructure events?
 
-Cette question éclaire la dynamique temporelle du DNS. Les enregistrements DNS sont-ils majoritairement stables (changements rares, planifiés) ou volatiles (changements fréquents, imprévisibles) ? La réponse détermine la fréquence de mesure optimale pour un archivage DNS efficace.
+This question characterises the dynamics of the DNS at the population level. DNS resource records carry TTLs that reflect administrator intent about how frequently records should be refreshed, but the actual rate of content change --- when the \textit{substance} of records changes, not merely their cached lifetime --- has not been characterised at the scale of the Tranco top list. Understanding temporal dynamics informs the appropriate measurement frequency for longitudinal archival: if records change rarely, weekly measurements suffice; if records change daily, daily measurement is required.
 
-\textbf{Q3 : Biais géographiques}
-Les biais géographiques de RIPE Atlas (91\% des sondes en Europe + Amérique du Nord) impactent-ils significativement l'observation de la diversité ?
+\textbf{Q3 --- Geographic bias of RIPE Atlas}: Do the documented geographic biases of the RIPE Atlas probe distribution --- 91\% of probes in Europe and North America \cite{Bajpai2017} --- significantly affect the ability to observe geographic DNS response variation?
 
-RIPE Atlas, notre infrastructure de mesures distribuées, présente un biais géographique documenté ~\cite{TODO}. Cette question évalue si ce biais limite la validité de nos observations. Si les sondes asiatiques et africaines (minoritaires) apportent des réponses DNS radicalement différentes, alors notre échantillon est biaisé. Si au contraire elles confirment les tendances observées en Europe/Amérique du Nord, le biais est acceptable.
+RIPE Atlas is the only platform with sufficient probe count (approximately 12,892 probes in 178 countries as of Nosyk et al., 2024) and built-in DNS measurement support to enable the distributed measurement campaign this thesis requires. However, its geographic distribution is heavily skewed toward Europe and North America. This question evaluates whether probes from underrepresented regions (Africa, Latin America, Southeast Asia, Oceania) produce systematically different DNS observations --- indicating that the platform bias limits the validity of global inferences --- or whether they corroborate patterns observed in the majority regions, indicating that the bias is acceptable for the study's purposes.
 
-\textbf{Q4 : Impact du choix de resolver}
-Quel est l'impact du choix de resolver (ISP local vs DNS public comme Google 8.8.8.8) sur les adresses IP observées ?
+\textbf{Q4 --- Impact of resolver choice}: What is the measurable impact of resolver choice --- local ISP resolver versus public DNS service --- on the DNS responses observed, and does it interact with the geographic location of the probe?
 
-Cette question dissocie deux sources de variabilité : la localisation géographique du client et le type de resolver utilisé. Les DNS publics (Google, Cloudflare) supportant ECS devraient théoriquement retourner des réponses similaires aux resolvers ISP locaux. Mais qu'en est-il empiriquement ? Cette validation est cruciale pour interpréter correctement nos résultats.
-
-\medskip\hrule\medskip
-
-\section{Objectifs du mémoire}
+The remote DNS problem \cite{Wang2018} predicts that probes using centralized public resolvers (Google 8.8.8.8, Cloudflare 1.1.1.1) should receive geographically inappropriate CDN assignments relative to probes using local ISP resolvers. This question empirically tests this prediction in the RIPE Atlas context. Xu et al.~\cite{Xu2023} further show that over 90\% of forwarding resolvers are backed by fewer than 5\% of indirect recursive resolvers, meaning that resolver centralisation may cause probes at geographically diverse locations to receive convergent DNS responses --- not because the DNS is geographically uniform, but because their resolvers all converge on the same infrastructure. Measuring the impact of this convergence is both practically important (for interpreting the measurement results) and scientifically significant (validating the centralisation thesis of Xu et al., 2023 from a client perspective).
+\bigskip
+\section{Thesis Objectives}
 \label{sec:1.3}
 
-\subsection{Objectif général}
+\subsection{General Objective}
 \label{subsec:1.3.1}
 
-Développer un système opérationnel de mesures DNS distribuées géographiquement qui :
+The general objective of this thesis is to design, implement, and operate a \textbf{geographically distributed active DNS measurement system} that:
+
 \begin{itemize}
-\item Archive les réponses DNS pour les domaines Tranco Top 10K
-\item Mesure depuis \textasciitilde{}100 vantage points répartis sur 6 continents (via RIPE Atlas)
-\item Collecte quotidiennement pendant 3 mois minimum
-\item Stocke les données dans un format réutilisable (FAIR principles)
-\item Analyse quantitativement la diversité géographique et la stabilité temporelle
+  \item Measures DNS responses for a representative, stable, and reproducible corpus of popular domains (the Tranco Top list, Le Pochat et al., 2019);
+  \item Collects measurements from a globally distributed set of RIPE Atlas probes selected to maximise geographic coverage while controlling for known platform biases \cite{Bajpai2017,Nosyk2024};
+  \item Repeats measurements over a multi-month period to enable temporal analysis;
+  \item Stores results in structured, archivable formats conforming to FAIR data principles (Findable, Accessible, Interoperable, Reusable);
+  \item Analyses the collected data to provide quantitative answers to questions Q1--Q4.
 \end{itemize}
 
-\subsection{Objectifs spécifiques}
+\subsection{Specific Objectives}
 \label{subsec:1.3.2}
 
-\textbf{1. Concevoir une méthodologie de mesure optimale}
-\begin{itemize}
-\item Sélectionner les domaines à mesurer (Tranco Top 10K)
-\item Choisir les vantage points RIPE Atlas (critères géographiques, techniques)
-\item Définir les paramètres DNS (types de requêtes, fréquence, options EDNS)
-\item Optimiser l'utilisation des crédits RIPE Atlas disponibles
-\end{itemize}
+\textbf{Objective 1 --- Design an optimal measurement methodology}
 
-\textbf{2. Implémenter un pipeline de collecte et traitement robuste}
-\begin{itemize}
-\item Collecte automatisée via API RIPE Atlas
-\item Parsing et validation des résultats DNS (filtrage lying resolvers, erreurs)
-\item Enrichissement métadonnées (GeoIP, AS mapping)
-\item Stockage 2-tiers (Avro pour archivage, Parquet pour analytics)
-\end{itemize}
+The measurement methodology must balance competing constraints: geographic coverage (more probes = better coverage), domain coverage (more domains = more representative corpus), measurement frequency (more frequent = better temporal resolution), and resource consumption (all three dimensions are bounded by the finite RIPE Atlas credit budget). Designing the optimal point in this multidimensional space requires understanding the cost model of RIPE Atlas measurements (Holterbach et al., 2015; Nosyk et al., 2024), the geographic distribution of available probes \cite{Bajpai2017}, and the stability characteristics of the Tranco list \cite{LePochat2019}. The measurement methodology must also specify EDNS options (including NSID for anycast instance identification, following Bortzmeyer, 2013 and Finnegan, 2018) and resolver targeting (direct authoritative queries to bypass resolver centralization effects).
 
-\textbf{3. Analyser quantitativement les données collectées}
-\begin{itemize}
-\item Mesurer la diversité géographique (proportion domaines variant selon localisation)
-\item Quantifier la stabilité temporelle (taux de changement jour/semaine/mois)
-\item Évaluer l'impact du biais géographique RIPE Atlas
-\item Comparer resolvers ISP vs DNS publics
-\end{itemize}
+\textbf{Objective 2 --- Implement a robust collection and processing pipeline}
 
-\textbf{4. Partager les données et la méthodologie}
-\begin{itemize}
-\item Publier le dataset sur Zenodo (DOI permanent)
-\item Documenter complètement la méthodologie (reproductibilité)
-\item Fournir le code source (GitHub)
-\item Respecter les principes FAIR (Findable, Accessible, Interoperable, Reusable)
-\end{itemize}
+The engineering implementation must reliably collect measurement results via the RIPE Atlas API, parse and validate DNS responses (filtering invalid responses, identifying in-path proxy effects following Jones et al., 2016), and store results in a two-tier format: Apache Avro for long-term archival and Apache Parquet for efficient columnar analytics, following the storage architecture of OpenINTEL \cite{vanRijswijk2016}. The pipeline must be sufficiently automated to operate over a three-month measurement period with minimal manual intervention.
 
-\subsection{Contributions attendues}
-\label{subsec:1.3.3}
+\textbf{Objective 3 --- Quantitatively analyse the collected data}
 
-\textbf{Contribution scientifique principale} : Première quantification empirique de la diversité géographique des réponses DNS pour les domaines populaires, sur une période longitudinale de 3 mois.
+The analysis must produce empirical answers to Q1--Q4: quantifying the proportion of domains with geographically differentiated responses, characterising the distribution and magnitude of geographic variation, measuring the rate and pattern of temporal change, evaluating the effect of geographic probe bias and resolver choice, and identifying the DNS mechanisms (CDN routing, anycast, ECS) responsible for observed variation.
 
-\textbf{Contributions secondaires} :
-\begin{itemize}
-\item Méthodologie reproductible pour mesures DNS distribuées avec RIPE Atlas
-\item Dataset public réutilisable pour la communauté scientifique
-\item Validation empirique (ou invalidation) des hypothèses sur ECS et CDN
-\item Recommandations pour futures infrastructures de mesures DNS distribuées
-\end{itemize}
+\textbf{Objective 4 --- Publish data and methodology}
 
-\medskip\hrule\medskip
-
-\section{Défis et contraintes}
+To fulfil the scientific contribution goals of the thesis, the measurement dataset must be published with a permanent identifier (DOI), the methodology must be documented to enable independent replication, and the analysis code must be made openly available. These commitments follow the FAIR data principles and the reproducibility norms of Internet measurement research (van Rijswijk-Deij et al., 2016; Le Pochat et al., 2019).
+\bigskip
+\section{Challenges and Constraints}
 \label{sec:1.4}
 
-\subsection{Défis techniques}
+\subsection{Technical Challenges}
 \label{subsec:1.4.1}
 
-\textbf{1. Volume de données}
-\begin{itemize}
-\item 10,000 domaines x 100 sondes x 1 mesure/jour x 90 jours = \textbf{90 millions de résultats}
-\item Après parsing : \textasciitilde{}20 GB compressé (Avro) + métadonnées
-\item Pipeline de traitement devant gérer quotidiennement >1M résultats
-\end{itemize}
+\textbf{Data volume}: A measurement campaign of 10,000 Tranco domains $\times$ 100 RIPE Atlas probes $\times$ one measurement per day $\times$ 90 days produces approximately 90 million individual DNS query-response records. Each record includes the queried domain, record type, DNS response (potentially multiple resource records), query and response timing, probe metadata (geographic location, ASN, resolver), and EDNS option results (NSID string, ECS scope). After parsing and enrichment, this produces on the order of 20--30 GB of compressed data. The pipeline must handle this volume with sufficient efficiency to process each day's measurements before the next measurement cycle begins.
 
-\textbf{2. Qualité et fiabilité des mesures}
-\begin{itemize}
-\item Interférence entre mesures concurrentes sur RIPE Atlas ~\cite{TODO}
-\item Désynchronisation scheduling (jusqu'à 1h de décalage possible)
-\item Lying resolvers et interception DNS réseau (Bortzmeyer, tutorial)
-\item Nécessité de filtrage et validation rigoureux
-\end{itemize}
+\textbf{Measurement quality and reliability}: Holterbach et al.~\cite{Holterbach2015} demonstrate that simultaneous measurements from multiple RIPE Atlas probes can be desynchronised by up to one hour under high platform load, and that concurrent measurements from other users degrade timing precision by more than 1 ms in the median and more than 7 ms at the 95th percentile. Bortzmeyer~\cite{Bortzmeyer_tutorial} identifies additional quality issues: lying resolvers that return incorrect responses, DNS interception by in-path proxies \cite{Jones2016}, DNSSEC validation failures that produce \texttt{SERVFAIL} responses misidentified as unavailability, and cache divergence between probes that confounds geographic and temporal variation. Rigorous filtering and validation are required to distinguish genuine DNS variation from measurement artefacts.
 
-\textbf{3. Hétérogénéité de l'infrastructure}
-\begin{itemize}
-\item Sondes RIPE Atlas de différentes générations (v1-v5)
-\item Hardware variable (impact timing selon Holterbach et al.)
-\item Resolvers hétérogènes (ISP locaux, Google DNS, Cloudflare, etc.)
-\item Nécessité de normalisation et stratification dans l'analyse
-\end{itemize}
+\textbf{Infrastructure heterogeneity}: RIPE Atlas probes span three hardware generations with substantially different computing power \cite{Holterbach2015}: Versions 1 and 2 are resource-constrained devices (167 MHz CPU, 8--16 MB RAM) susceptible to timing degradation under concurrent measurement load; Version 3 devices (400 MHz CPU, 32 MB RAM) are more reliable but not immune. Probes also use heterogeneous local resolvers --- ISP resolvers, corporate gateways, misconfigured devices --- with different caching policies, DNSSEC validation support, and ECS forwarding behaviour \cite{Bajpai2017}. This heterogeneity must be characterised and controlled in the analysis.
 
-\subsection{Contraintes opérationnelles}
+\subsection{Operational Constraints}
 \label{subsec:1.4.2}
 
-\textbf{1. Crédits RIPE Atlas limités}
-\begin{itemize}
-\item Budget fixe alloué au projet
-\item Nécessité d'optimisation :
-\item Vérifier mesures existantes avant de lancer (réutilisation)
-\item Privilégier mesures récurrentes vs one-shot multiples
-\item Ajuster dynamiquement selon consommation observée
-\end{itemize}
+\textbf{RIPE Atlas credit budget}: The measurement campaign is bounded by a finite RIPE Atlas credit allocation. The credit cost of each measurement depends on the measurement type, the number of probes, and the scheduling mode: scheduled recurring measurements cost approximately half as much as equivalent one-off measurements \cite{Holterbach2015}. The credit constraint imposes a three-way trade-off between domain coverage (number of domains), geographic coverage (number of probes), and temporal resolution (measurement frequency). Optimising this trade-off within budget while respecting the RIPE Atlas measurement quotas is a central design challenge of the methodology (described in Chapter 3).
 
-\textbf{2. Distribution géographique biaisée}
-\begin{itemize}
-\item 91\% sondes RIPE Atlas en Europe + Amérique du Nord ~\cite{TODO}
-\item Sous-représentation Asie, Afrique, Amérique du Sud
-\item Stratégie de pondération nécessaire pour compenser
-\end{itemize}
+\textbf{Geographic distribution bias}: As documented by Bajpai et al.~\cite{Bajpai2017} and confirmed by Nosyk et al.~\cite{Nosyk2024}, approximately 91\% of dual-stacked RIPE Atlas probes are concentrated in the RIPE (Europe/Middle East) and ARIN (North America) regions. Africa, Latin America, Central Asia, and Oceania are substantially underrepresented relative to their shares of the global Internet user population. This concentration means that results will be statistically robust for Europe and North America but are based on smaller samples for other regions. Geographic stratification --- selecting probes to ensure minimum coverage of each inhabited continent --- mitigates but cannot eliminate this structural limitation.
 
-\textbf{3. Durée limitée du projet}
-\begin{itemize}
-\item Mémoire Master 60 : contrainte temporelle stricte
-\item Collecte limitée à 3 mois (vs années pour OpenINTEL)
-\item Trade-off entre profondeur temporelle et autres dimensions
-\end{itemize}
+\textbf{Measurement duration}: A Master 60 thesis at the University of Namur imposes a strict time constraint. The measurement period is limited to approximately three months of continuous collection, compared to the ten-plus years of continuous operation achieved by OpenINTEL \cite{vanRijswijk2016,vanRijswijk2018blog}. This three-month window enables meaningful temporal analysis at day and week timescales but cannot capture annual seasonality, multi-year trends, or the long-term evolution of DNS infrastructure.
 
-\subsection{Défis éthiques et déontologiques}
+\subsection{Ethical Constraints}
 \label{subsec:1.4.3}
 
-\textbf{1. Impact sur les serveurs DNS cibles}
-\begin{itemize}
-\item Éviter surcharge serveurs autoritaires
-\item Respecter TTL (pas de requêtes plus fréquentes que recommandé)
-\item Fréquence modérée : 1 mesure/jour maximum
-\end{itemize}
+Active DNS measurements using volunteer-hosted infrastructure raise ethical responsibilities that must be explicitly built into the research design. Kisteleki et al.~\cite{Kisteleki2016} establish the primary ethical framework for RIPE Atlas measurements, grounded in the Menlo Report (2012) and the Belmont Report (1978): RIPE Atlas probe hosts are volunteers whose internet connections generate the measurement traffic, and researchers bear responsibility for ensuring that traffic is benign, proportionate, and does not expose probe hosts to legal or social risk.
 
-\textbf{2. Vie privée et anonymisation}
-\begin{itemize}
-\item Sondes RIPE Atlas = infrastructure volontaire mais données sensibles
-\item Pas de publication adresses IP sondes individuelles
-\item Agrégation statistique uniquement
-\end{itemize}
+For this thesis, three ethical design choices follow from this framework:
 
-\textbf{3. Reproductibilité vs confidentialité}
-\begin{itemize}
-\item Équilibre entre :
-\item Partage complet données (reproductibilité scientifique)
-\item Protection vie privée participants RIPE Atlas
-\item Solution : Anonymisation + agrégation + métadonnées détaillées
-\end{itemize}
+\textbf{Impact on DNS infrastructure}: van Rijswijk-Deij et al.~\cite{vanRijswijk2016} demonstrate that OpenINTEL's measurements --- 1.85 billion queries per day --- represent only 0.3\%--1.6\% of total DNS traffic at the measured authoritative servers, confirming that well-paced active measurement has negligible infrastructure impact. This thesis's measurement campaign is orders of magnitude smaller and must similarly be paced to avoid creating an undue burden on measured authoritative servers.
 
-\medskip\hrule\medskip
+\textbf{Query target selection}: Following the principles of Kisteleki et al.~\cite{Kisteleki2016}, the domain corpus is drawn exclusively from the Tranco list of popular, publicly accessible domains. No politically sensitive, censored, or jurisdictionally restricted domains are included: measuring access to blocked content from probes in restrictive jurisdictions could expose probe hosts to legal risk, as illustrated by the "Ebonia" case described in Kisteleki et al.~\cite{Kisteleki2016}.
 
-\section{Approche méthodologique}
+\textbf{Probe host privacy}: Raw probe IP addresses are not published in the dataset; results are aggregated at country and ASN level for public release, preserving the statistical value of the data while protecting the network location of individual volunteer probe hosts.
+\bigskip
+\section{Methodological Approach}
 \label{sec:1.5}
 
-\subsection{Choix de la liste Tranco}
+\subsection{Choice of Domain Corpus: The Tranco List}
 \label{subsec:1.5.1}
 
-Nous utilisons la \textbf{liste Tranco} (Le Pochat et al., 2019) plutôt que les listes commerciales pour trois raisons principales :
+The thesis uses the \textbf{Tranco Top list} \cite{LePochat2019} as its domain corpus. This choice is motivated by three requirements identified by the research design:
 
-\textbf{Stabilité} : Tranco change seulement 0.6\% quotidiennement vs 50\% pour Alexa. Cette stabilité est cruciale pour une étude longitudinale : nous suivons les mêmes domaines dans le temps sans bruit dû à l'instabilité de la liste.
+\textbf{Stability for longitudinal analysis}: The domain corpus must remain stable over the three-month measurement period, so that the same domains are measured across all campaign repetitions and temporal comparisons are meaningful. Tranco's 30-day aggregation window produces a list that changes by only 0.6\% per day, compared to approximately 50\% for the Alexa list after its methodology change in 2018 \cite{LePochat2019}. This stability is indispensable: a corpus that changes by 50\% daily cannot serve as the foundation for temporal comparison.
 
-\textbf{Résistance à la manipulation} : Tranco requiert 4x plus d'effort pour manipulation que les listes individuelles. Alexa peut être manipulé avec une seule requête HTTP, rendant la liste peu fiable pour la recherche académique.
+\textbf{Manipulation resistance for result validity}: Le Pochat et al.~\cite{LePochat2019} demonstrate that every major commercial domain ranking list can be manipulated at low cost --- a single HTTP request suffices to alter a domain's Alexa rank. A manipulated domain list would bias the DNS measurement results toward adversarially placed domains, compromising the scientific validity of the study. Tranco's multi-source aggregation over a 30-day window requires at least four times more effort to manipulate than single-source lists.
 
-\textbf{Reproductibilité} : Permalinks Tranco (ex: liste \texttt{8QNZ}) permettent de citer précisément la version utilisée, garantissant que d'autres chercheurs peuvent reproduire exactement notre sélection de domaines.
+\textbf{Reproducibility for scientific replication}: Historical Tranco lists are archived and retrievable via a stable URL that includes the list generation parameters, enabling other researchers to obtain the exact domain set used in this study and replicate the measurements. This archivability is a prerequisite for scientific reproducibility that commercial lists --- which overwrite their previous version daily --- cannot provide.
 
-Nous nous concentrons sur le \textbf{Top 10K} pour équilibrer représentativité (capture les sites majeurs) et faisabilité (compatible avec les crédits RIPE Atlas disponibles).
+This thesis focuses on the Tranco Top 10,000 domains, balancing representativeness (capturing the major web services responsible for the largest fraction of Internet traffic) with feasibility within the available RIPE Atlas credit budget.
 
-\subsection{Choix de RIPE Atlas}
+\subsection{Choice of Measurement Platform: RIPE Atlas}
 \label{subsec:1.5.2}
 
-RIPE Atlas est la plateforme de mesures Internet distribuées la plus adaptée à notre projet :
+The thesis uses \textbf{RIPE Atlas} as its distributed measurement infrastructure, a choice that Bortzmeyer~\cite{Bortzmeyer_tutorial} explicitly recommends as the preferred platform for distributed DNS measurements. Four properties make RIPE Atlas uniquely suitable:
 
-\textbf{Distribution géographique} : 12,900 sondes actives dans 178 pays ~\cite{TODO}, offrant une couverture mondiale impossible à obtenir avec une infrastructure propriétaire.
+\textbf{Geographic distribution}: With approximately 12,892 active probes across 178 countries \cite{Nosyk2024}, RIPE Atlas provides a globally distributed vantage point network that cannot be replicated with academic infrastructure. No alternative platform --- CAIDA Archipelago (\textasciitilde{}170 monitors), SamKnows (\textasciitilde{}70,000 probes but ISP-deployed), PlanetLab (\textasciitilde{}300 vantage points) --- offers comparable geographic coverage with built-in DNS measurement support (Bajpai et al., 2017; Cicalese et al., 2015).
 
-\textbf{Mesures DNS natives} : Support complet des mesures DNS (A, AAAA, NS, MX, etc.) avec options avancées (NSID, EDNS, raw DNS answers).
+\textbf{Native DNS measurement support}: RIPE Atlas provides built-in DNS measurement types supporting all standard query types (A, AAAA, NS, MX, SOA), DNSSEC validation flags, and EDNS options including NSID (for anycast instance identification) and ECS (for client-subnet-aware routing analysis). This native support avoids the complexity and potential inconsistency of implementing DNS measurement from scratch.
 
-\textbf{Accessibilité} : Crédits RIPE Atlas alloués au projet, évitant le coût prohibitif d'une infrastructure dédiée comme OpenINTEL.
+\textbf{Community validation}: RIPE Atlas has been used in over 600 academic publications, ensuring that its measurement artefacts, biases, and limitations are well characterised (Nosyk et al., 2024; Holterbach et al., 2015; Bajpai et al., 2017). Results obtained from RIPE Atlas are directly comparable with the existing literature.
 
-\textbf{Communauté scientifique} : 600+ publications académiques utilisent RIPE Atlas, garantissant la validité scientifique de nos mesures et la comparabilité avec d'autres travaux.
+\textbf{Accessible resource model}: RIPE Atlas operates on a credit economy in which probe hosts earn credits that can be shared with the research community. Researchers can obtain measurement credits by describing their study to the RIPE Atlas community, making the platform financially accessible to academic research projects.
 
-\textbf{Limites acceptées} :
-\begin{itemize}
-\item Biais géographique (91\% Europe+NA) -> Mitigation par pondération
-\item Interférence mesures concurrentes -> Mitigation par sélection hardware récent
-\item Crédits limités -> Optimisation stratégie de mesure
-\end{itemize}
-
-\subsection{Architecture du système}
+\subsection{System Architecture Overview}
 \label{subsec:1.5.3}
 
-Notre système s'inspire de l'architecture OpenINTEL (van Rijswijk-Deij et al., 2016) mais l'adapte aux contraintes de RIPE Atlas :
+The measurement system follows an architecture inspired by OpenINTEL \cite{vanRijswijk2016} but adapted to the constraints and capabilities of RIPE Atlas:
 
-\textbf{Étape 1 - Input Data} : Téléchargement hebdomadaire liste Tranco, filtrage domaines invalides/malveillants.
+\textbf{Domain corpus preparation}: The Tranco Top 10,000 list is retrieved via the Tranco API using a fixed version identifier for reproducibility; domains are filtered for validity and pre-resolved to identify their authoritative name servers.
 
-\textbf{Étape 2 - Measurement Scheduling} : Configuration mesures RIPE Atlas (100 sondes, 1x/jour, filtres géographiques et techniques).
+\textbf{Measurement scheduling}: RIPE Atlas user-defined DNS measurements are configured to query each domain's authoritative name servers directly --- bypassing local resolvers to control for resolver centralization effects \cite{Xu2023} --- from a geographically stratified probe set. Measurements include the NSID EDNS option to capture anycast instance information \cite{Bortzmeyer2013,Finnegan2018} and are scheduled as recurring daily campaigns to minimise credit consumption \cite{Holterbach2015}.
 
-\textbf{Étape 3 - Data Collection} : Collecte quotidienne résultats via API RIPE Atlas.
+\textbf{Data collection}: Measurement results are retrieved via the RIPE Atlas REST API and validated. Probes with known system failures (identified via RIPE Atlas system tags following Bajpai et al., 2017) are excluded; in-path proxy signatures (as described by Jones et al., 2016) are flagged.
 
-\textbf{Étape 4 - Storage} : Stockage 2-tiers (Apache Avro pour archivage long terme, Apache Parquet pour analytics).
+\textbf{Storage}: Results are serialised in Apache Avro format for archival and converted to Apache Parquet for efficient columnar analysis, directly following the data architecture of OpenINTEL \cite{vanRijswijk2016}.
 
-\textbf{Étape 5 - Analysis} : Analyses quantitatives répondant aux questions Q1-Q4.
+\textbf{Analysis}: The collected dataset is analysed to answer questions Q1--Q4 using geographic aggregation (by continent, country, and ASN), temporal comparison (daily, weekly, monthly), and mechanism attribution (NSID-based anycast instance mapping, CNAME chain analysis, ECS scope analysis).
 
-Cette architecture modulaire facilite la maintenance, le débogage et l'extension future du système.
-
-\subsection{Conformité éthique et scientifique}
+\subsection{Ethical and Scientific Compliance}
 \label{subsec:1.5.4}
 
-\textbf{Éthique} : Conformité complète aux RIPE Atlas Ethics Guidelines :
-\begin{itemize}
-\item Impact minimal sur serveurs DNS (fréquence modérée)
-\item Transparence mesures (descriptions claires, tags)
-\item Respect vie privée (anonymisation, agrégation)
-\end{itemize}
+\textbf{Ethics}: The measurement design complies with the RIPE Atlas ethical guidelines \cite{Kisteleki2016} and the Menlo Report (2012) framework: all query targets are publicly accessible domains; measurement frequency is set to respect DNS TTLs and avoid server overloading; and no sensitive or politically controversial content is queried.
 
-\textbf{Reproductibilité} : Application stricte des principes FAIR :
-\begin{itemize}
-\item \textbf{Findable} : DOI Zenodo, métadonnées riches
-\item \textbf{Accessible} : Données publiques, formats ouverts
-\item \textbf{Interoperable} : Vocabulaire standard, APIs documentées
-\item \textbf{Reusable} : Licence claire (CC BY 4.0), provenance complète
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\section{Structure du mémoire}
+\textbf{Reproducibility}: The measurement methodology and analysis code are documented and published following FAIR data principles. The specific Tranco list version, RIPE Atlas measurement identifiers, probe selection criteria, and analysis scripts are included in the supplementary materials to enable independent replication.
+\bigskip
+\section{Thesis Structure}
 \label{sec:1.6}
 
-Le présent mémoire s'organise en cinq chapitres complémentaires :
+This thesis is organised in five chapters:
 
-\textbf{Chapitre 1 - Introduction} (présent chapitre)
-Contextualise la problématique, formule les questions de recherche, définit les objectifs et présente l'approche générale.
+\textbf{Chapter 1 --- Introduction} (this chapter): Motivates the research by identifying the gap between existing DNS measurement infrastructure and the geographic variation question; states the research questions; describes the objectives, challenges, and methodological approach; and previews the thesis structure.
 
-\textbf{Chapitre 2 - État de l'art}
-Analyse critique de la littérature scientifique sur :
-\begin{itemize}
-\item Les infrastructures de mesures DNS (OpenINTEL, RIPE Atlas)
-\item Les listes de classement de sites (Tranco)
-\item Les travaux connexes sur CDN, anycast et diversité géographique
-\item La centralisation de l'infrastructure DNS
-\item Les aspects sécurité et détection
-\end{itemize}
+\textbf{Chapter 2 --- State of the Art}: Reviews the existing literature across five technical domains directly relevant to the thesis: (1) DNS measurement paradigms --- active versus passive, and the OpenINTEL infrastructure; (2) the RIPE Atlas distributed measurement platform and its capabilities, biases, and limitations; (3) anycast routing in DNS infrastructure and the NSID-based instance identification methodology; (4) CDN DNS-based geographic routing, the remote DNS problem, and EDNS Client Subnet; (5) domain ranking lists, from the limitations of commercial lists to the Tranco methodology; (6) DNS infrastructure centralisation; and (7) DNS security dimensions that affect measurement validity. The chapter concludes with a gap analysis that formally positions the thesis contribution.
 
-\textbf{Chapitre 3 - Méthodologie}
-Décrit en détail :
-\begin{itemize}
-\item La sélection des domaines (Tranco Top 10K, filtres)
-\item La configuration des mesures RIPE Atlas (sondes, paramètres DNS)
-\item Le pipeline de collecte et traitement (parsing, filtrage, stockage)
-\item Les méthodes d'analyse pour chaque question de recherche (Q1-Q4)
-\item Les considérations éthiques et de reproductibilité
-\end{itemize}
+\textbf{Chapter 3 --- Methodology}: Describes the measurement methodology in full operational detail: domain corpus selection (Tranco Top 10K, version identifier, filtering criteria); RIPE Atlas probe selection (system tag filters, geographic stratification protocol, probe count per region); DNS measurement configuration (query types, EDNS options, target selection --- authoritative versus resolver, scheduling); data collection pipeline (API integration, validation, error handling); storage architecture (Avro schema, Parquet conversion, metadata schema); and analysis methods for each of the four research questions.
 
-\textbf{Chapitre 4 - Résultats} (à rédiger après collecte des données)
-Présentera :
-\begin{itemize}
-\item Les statistiques descriptives du dataset collecté
-\item Les résultats quantitatifs pour Q1-Q4
-\item Les visualisations et analyses statistiques
-\item Les cas d'étude illustratifs
-\end{itemize}
+\textbf{Chapter 4 --- Results} \textit{(to be completed after data collection)}: Presents the empirical findings of the measurement campaign --- descriptive statistics of the collected dataset; quantitative results for Q1 (geographic diversity), Q2 (temporal stability), Q3 (RIPE Atlas bias assessment), and Q4 (resolver impact); geographic and temporal visualisations; and illustrative case studies of domains exhibiting extreme geographic variation or notable temporal dynamics.
 
-\textbf{Chapitre 5 - Discussion et conclusion} (à rédiger après analyse)
-Discutera :
-\begin{itemize}
-\item L'interprétation des résultats
-\item Les limitations de l'étude
-\item Les implications pour la recherche et la pratique
-\item Les perspectives futures
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\section{Contributions et impact attendus}
+\textbf{Chapter 5 --- Discussion and Conclusion} \textit{(to be completed after analysis)}: Interprets the results in the context of the state of the art; discusses the limitations of the study (three-month temporal window, RIPE Atlas geographic bias, authoritative query methodology); evaluates the generalisation of findings beyond the Tranco Top 10K corpus; identifies future research directions; and summarises the thesis's contributions to the measurement community.
+\bigskip
+\section{Expected Contributions and Impact}
 \label{sec:1.7}
 
-\subsection{Contributions scientifiques}
+\subsection{Scientific Contributions}
 \label{subsec:1.7.1}
 
-\textbf{Contribution empirique principale} : Première quantification systématique de la diversité géographique des réponses DNS pour les domaines populaires, validée sur 3 mois de collecte continue avec \textasciitilde{}100 vantage points mondiaux.
+\textbf{Primary empirical contribution}: This thesis will produce the first systematic, population-scale characterisation of geographic DNS response variation for popular domains, validated over a multi-month longitudinal measurement campaign. Where existing literature contains individual case studies of anycast routing (Bortzmeyer, 2013 for d.nic.fr with \textasciitilde{}500 probes; Finnegan, 2018 for UncensoredDNS with 500 probes; Calder et al., 2015 for Microsoft Bing) and individual CDN routing studies (Hours et al., 2016; Li et al., 2025), none has characterised \textbf{what proportion of the popular-domain corpus returns geographically differentiated DNS responses}, which mechanisms account for that differentiation, and how the differentiation distributes across geographic regions. Answering these questions at the scale of 10,000 domains and 100+ global vantage points constitutes the novel empirical contribution.
 
-\textbf{Dataset public} : Publication d'un dataset unique combinant :
-\begin{itemize}
-\item 90 millions de mesures DNS
-\item Couverture Tranco Top 10K
-\item Distribution géographique mondiale
-\item Période longitudinale 3 mois
-\item Format FAIR (Avro + Parquet, métadonnées complètes, DOI Zenodo)
-\end{itemize}
+\textbf{Methodological contribution}: The measurement methodology developed in this thesis --- combining direct authoritative server queries (to bypass resolver centralization), NSID-based anycast tracking, geographically stratified probe selection, and a reproducible Tranco-based domain corpus --- addresses three gaps identified in the existing literature (Section 2.10 of Chapter 2) and can be adopted by future measurement studies as a validated protocol.
 
-\textbf{Méthodologie reproductible} : Documentation complète permettant à d'autres chercheurs de :
-\begin{itemize}
-\item Reproduire exactement notre étude
-\item Étendre à d'autres domaines (Top 100K, domaines spécifiques)
-\item Adapter à d'autres plateformes (M-Lab, PlanetLab)
-\item Comparer avec futures mesures (évolution temporelle)
-\end{itemize}
+\textbf{Dataset contribution}: The collected dataset --- approximately 90 million DNS measurement records covering 10,000 Tranco domains from 100+ globally distributed RIPE Atlas probes over three months, archived in Avro/Parquet format with full metadata --- will be published with a permanent DOI on Zenodo. This makes the dataset the first publicly available longitudinal, geographically distributed DNS dataset for the popular-domain tier, directly addressing the data availability gap motivating this thesis.
 
-\subsection{Impact pour la communauté}
+\subsection{Impact for the Research Community}
 \label{subsec:1.7.2}
 
-\textbf{Recherche en performance réseau} : Les chercheurs étudiant les CDN, l'anycast et l'optimisation de latence disposeront d'un dataset validé pour tester leurs hypothèses et modèles.
+\textbf{Network simulation}: Researchers developing Internet simulators will be able to use the collected dataset to configure realistic DNS responses for simulations representing Internet states from the measurement period and from multiple geographic perspectives.
 
-\textbf{Sécurité et forensics} : Les équipes d'investigation pourront corréler nos données historiques avec des incidents de sécurité passés, cartographiant l'infrastructure de campagnes malveillantes.
+\textbf{CDN and routing research}: Researchers studying CDN performance, anycast routing efficiency, and geographic routing optimisation will have empirical ground truth for the DNS dimension of client routing at population scale.
 
-\textbf{Simulation et émulation} : Les développeurs d'environnements de test réseau pourront utiliser nos données pour configurer des simulations DNS réalistes, reproduisant fidèlement Internet tel qu'il était à une date donnée.
+\textbf{DNS security}: Security researchers investigating large-scale DNS manipulation, geographic censorship patterns, or DNS infrastructure resilience will have a baseline dataset of correct DNS responses from diverse vantage points against which anomalous behaviour can be detected.
 
-\textbf{Politiques publiques} : Les régulateurs et décideurs politiques disposeront de données objectives sur la centralisation géographique de l'infrastructure DNS, informant les débats sur la souveraineté numérique.
-
-\subsection{Perspectives futures}
-\label{subsec:1.7.3}
-
-Ce travail pose les fondations pour des études longitudinales plus ambitieuses :
-
-\textbf{Extension temporelle} : Notre collecte de 3 mois peut être étendue à plusieurs années, révélant des tendances à long terme (migrations cloud, évolution CDN, consolidation providers).
-
-\textbf{Extension spatiale} : L'ajout de sondes RIPE Atlas dans les régions sous-représentées (Afrique, Asie centrale) améliorerait la couverture géographique.
-
-\textbf{Extension thématique} : La méthodologie peut être appliquée à :
-\begin{itemize}
-\item Domaines spécifiques (services gouvernementaux, infrastructure critique)
-\item Types d'enregistrements DNS (AAAA pour IPv6, MX pour email, NS pour délégation)
-\item Protocoles avancés (DNS-over-HTTPS, DNS-over-TLS, DNSSEC)
-\end{itemize}
-
-\textbf{Corrélation avec événements} : Nos données peuvent être corrélées avec :
-\begin{itemize}
-\item Événements géopolitiques (censure DNS, blocages régionaux)
-\item Incidents techniques (pannes CDN, misconfigurations BGP)
-\item Campagnes malveillantes (phishing, DDoS, C\&C)
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\section{Organisation du travail}
+\textbf{DNS infrastructure policy}: Policymakers and regulators addressing digital sovereignty, Internet resilience, and the geographic concentration of critical Internet infrastructure will have empirical data on the geographic structure of DNS dependency at the level of popular domains.
+\bigskip
+\section{Work Organisation}
 \label{sec:1.8}
 
-\subsection{Phases du projet}
+\subsection{Project Phases}
 \label{subsec:1.8.1}
 
-Le projet s'est déroulé en cinq phases successives :
+The work is organised in five successive phases aligned with the thesis chapter structure:
 
-\textbf{Phase 1 - Familiarisation} (4 semaines, janvier-février 2026)
-\begin{itemize}
-\item Lecture articles fondamentaux (OpenINTEL, Tranco, RIPE Atlas)
-\item Recherche bibliographique complémentaire (CDN, anycast, ECS)
-\item Rédaction Chapitre 2 (État de l'art)
-\end{itemize}
+\textbf{Phase 1 --- Literature review and familiarisation} (weeks 1--6, January--February 2026): Reading and annotation of the 22 primary sources; construction of the bibliography and source fiches; drafting of Chapter 2 (State of the Art).
 
-\textbf{Phase 2 - Conception} (3 semaines, février-mars 2026)
-\begin{itemize}
-\item Définition méthodologie détaillée
-\item Développement pipeline collecte/traitement
-\item Tests pilotes (500 domaines, 10 sondes, 7 jours)
-\item Rédaction Chapitre 3 (Méthodologie)
-\end{itemize}
+\textbf{Phase 2 --- Design and pilot} (weeks 7--10, February--March 2026): Design of the measurement methodology; implementation of the data collection pipeline; pilot campaign (500 domains, 10 probes, 7 days) to validate technical parameters and estimate credit consumption; drafting of Chapter 3 (Methodology).
 
-\textbf{Phase 3 - Collecte} (12 semaines, mars-juin 2026)
-\begin{itemize}
-\item Mesures quotidiennes automatisées
-\item Monitoring consommation crédits
-\item Ajustements si nécessaire
-\end{itemize}
+\textbf{Phase 3 --- Full measurement campaign} (weeks 11--22, March--June 2026): Daily automated measurements; monitoring of credit consumption and probe availability; adjustment of measurement parameters if anomalies are detected; incremental validation of collected data.
 
-\textbf{Phase 4 - Analyse} (4 semaines, juin 2026)
-\begin{itemize}
-\item Analyses Q1-Q4
-\item Génération visualisations
-\item Interprétation résultats
-\item Rédaction Chapitre 4 (Résultats)
-\end{itemize}
+\textbf{Phase 4 --- Analysis} (weeks 23--26, June 2026): Complete analysis addressing Q1--Q4; generation of visualisations and statistical results; drafting of Chapter 4 (Results).
 
-\textbf{Phase 5 - Finalisation} (3 semaines, juin-juillet 2026)
-\begin{itemize}
-\item Discussion et conclusion
-\item Révision complète mémoire
-\item Préparation défense
-\item Rédaction Chapitre 5
-\end{itemize}
+\textbf{Phase 5 --- Discussion, revision, and defence} (weeks 27--30, June--July 2026): Drafting Chapter 5 (Discussion and Conclusion); complete thesis revision; dataset and code publication; preparation of the oral defence.
 
-\subsection{Critères de réussite}
+\subsection{Success Criteria}
 \label{subsec:1.8.2}
 
-\textbf{Technique} :
-\begin{itemize}
-\item [OK] Collecte >=85\% résultats valides (taux exclusion <15\%)
-\item [OK] Couverture >=95\% domaines Tranco Top 10K
-\item [OK] Distribution géographique >=4 continents représentés
-\end{itemize}
+The thesis will be considered successful against the following measurable criteria:
 
-\textbf{Scientifique} :
-\begin{itemize}
-\item [OK] Réponses quantitatives aux 4 questions de recherche
-\item [OK] Validation statistique (tests appropriés, p-values)
-\item [OK] Contribution originale (diversité géographique + temporelle)
-\end{itemize}
+\textbf{Technical}: At least 85\% of scheduled measurements produce valid, parseable DNS responses; at least 95\% of Tranco Top 10K domains are covered in the dataset; at least four inhabited continents are represented by RIPE Atlas probes in the final probe selection.
 
-\textbf{Académique} :
-\begin{itemize}
-\item [OK] Mémoire complet et structuré (5 chapitres)
-\item [OK] Dataset public et reproductible (FAIR principles)
-\item [OK] Respect éthique et déontologie
-\item [OK] Défense publique réussie
-\end{itemize}
+\textbf{Scientific}: Quantitative answers to all four research questions (Q1--Q4) are provided with appropriate statistical characterisation (confidence intervals, statistical tests where applicable); the methodological contribution is sufficiently documented to enable independent replication.
 
-\medskip\hrule\medskip
-
-\textbf{Fin du Chapitre 1 - Introduction}
+\textbf{Academic}: A complete five-chapter thesis is submitted in conformance with the University of Namur Master 60 format requirements; the dataset is published with a permanent DOI before the oral defence; ethical guidelines (Kisteleki et al., 2016; Menlo Report, 2012) are demonstrably respected in the measurement design.
+\bigskip

@@ -1,472 +1,139 @@
-# Fiche de lecture - Tranco
+# Reading Note - Tranco: A Research-Oriented Top Sites Ranking Hardened Against Manipulation
 
-**Référence bibliographique** :
-Le Pochat, V., Van Goethem, T., Tajalizadehkhoob, S., Korczynski, M., & Joosen, W. (2019). Tranco: A Research-Oriented Top Sites Ranking Hardened Against Manipulation. *Network and Distributed Systems Security (NDSS) Symposium 2019*. https://doi.org/10.14722/ndss.2019.23386
+**Bibliographic Reference**:
+Le Pochat, V., Van Goethem, T., Tajalizadehkhoob, S., Korczyński, M., & Joosen, W. (2019). Tranco: A research-oriented top sites ranking hardened against manipulation. In *Proceedings of the 26th Annual Network and Distributed System Security Symposium (NDSS 2019)*. Internet Society. https://dx.doi.org/10.14722/ndss.2019.23386
 
-**Thème** : Problèmes des listes de popularité et proposition de solution (Tranco)
+**Theme**:
+This paper systematically analyses the four most widely used website popularity rankings (Alexa, Cisco Umbrella, Majestic, and Quantcast) and demonstrates that all four exhibit serious deficiencies — low inter-list similarity, poor stability, inclusion of non-responsive and malicious domains, and susceptibility to adversarial manipulation. The authors then propose Tranco, a new aggregated ranking designed to be more stable, more representative, and substantially harder to manipulate than any individual list.
 
-**Intérêt pour le mémoire** :
-Article FONDAMENTAL qui démontre les limitations et vulnérabilités des listes de popularité (Alexa, Umbrella, Majestic, Quantcast). Justifie notre choix de Tranco pour la sélection des domaines. Démontre qu'Alexa peut être manipulé avec UNE SEULE requête HTTP. Critique directe des approches existantes.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 20 janvier 2026
-**Section du mémoire** : 2.4 (État de l'art - Liste Tranco)
+**Relevance to thesis**:
+Our thesis uses the Tranco list as the primary domain selection mechanism for DNS measurements, following the recommendation of this paper. Understanding why Tranco was designed, what properties it optimises for, and what residual limitations it carries is essential for justifying our domain selection methodology and for correctly interpreting the representativeness of our measurements relative to the broader Web.
 
 ---
 
-## Contenu de l'article
+## Reading Context
 
-### Objectif(s) / Question(s) de recherche
-
-**Question principale** : Les listes de popularité commerciales (Alexa, Umbrella, Majestic, Quantcast) sont-elles fiables pour la recherche en sécurité ? Peuvent-elles être manipulées ?
-
-**Objectifs** :
-1. Analyser les propriétés des 4 principales listes de popularité
-2. Démontrer empiriquement leur vulnérabilité à la manipulation
-3. Proposer Tranco : une liste améliorée pour la recherche
-
-**Motivation** :
-- 133 études top-tier (CCS, NDSS, S&P, USENIX Security 2015-2018) utilisent ces listes
-- Validité rarement questionnée
-- Méthodes opaques, intérêts commerciaux
-- Vulnérabilité potentielle à la manipulation
-
-### Cadre global d'explication
-
-**Contexte recherche sécurité** :
-- Chercheurs s'appuient sur listes de "sites populaires" pour :
-  - Mesurer prévalence de vulnérabilités
-  - Ensembles d'évaluation (evaluation sets)
-  - Whitelists (domaines "bénins" pour classifiers)
-  - Ranking/binning selon popularité
-- **Impact** : Résultats recherche influencent médias, politiques publiques
-
-**4 listes analysées** :
-
-1. **Alexa** (Amazon)
-   - Source : Extension navigateur (~570K users Chrome) + script tracking "Certify"
-   - Métrique : Unique visitors + page views (propriétaire)
-   - Taille : 1M domaines
-   - Période : 3 mois (site) vs **1 jour** (CSV depuis jan 2018 - NON ANNONCÉ)
-
-2. **Cisco Umbrella** (ex-OpenDNS)
-   - Source : 2 résolveurs DNS (100B requêtes/jour, 65M users)
-   - Métrique : Nombre d'IPs uniques faisant requêtes DNS
-   - Taille : 1M entrées (inclut sous-domaines)
-   - Période : Sampling + normalisation
-
-3. **Majestic**
-   - Source : Crawl web 450B URLs sur 120 jours (depuis avril 2018)
-   - Métrique : Nombre de subnets /24 avec backlinks
-   - Taille : 1M domaines
-   - Période : 120 jours
-
-4. **Quantcast**
-   - Source : Script tracking (sites "quantified") + estimations ISP/toolbar
-   - Métrique : Nombre de visiteurs US sur 1 mois
-   - Taille : ~520K domaines (réduit à ~40K nov 2018)
-   - Focus : US seulement
-
-### Méthodologie
-
-**Type d'étude** : Analyse quantitative + expérimentation manipulation
-
-**Période données** : Janvier 1 - Novembre 30, 2018 (335 jours)
-
-**5 propriétés évaluées** :
-
-1. **Similarity** : Accord entre listes sur domaines populaires
-2. **Stability** : Changements de rang dans le temps
-3. **Representativeness** : Reflet fidèle de la popularité web
-4. **Responsiveness** : Disponibilité des sites listés
-5. **Benignness** : Absence de domaines malicieux
-
-**Crawl validation** :
-- 11 mai 2018, 13:00 UTC
-- 10 machines (4 CPU, 8GB RAM)
-- Chromium 66 headless
-- Réseau universitaire européen
-
-**Expériences manipulation** :
-- Domaines de test enregistrés
-- Trafic forgé selon méthode de chaque liste
-- Mesure rang atteint vs effort requis
-
-### Résultats principaux
-
-#### 1. Propriétés des listes (Section III)
-
-**Similarity - Accord très faible** :
-- Intersection 4 listes : **~70K domaines** (sur 2.82M total)
-- RBO (Rank-Biased Overlap) entre listes :
-  - Alexa-Majestic-Quantcast : 24-33% seulement
-  - Umbrella vs autres : 4.5-15.5% (30% si PLDs seulement)
-  - **Conclusion** : Pas de consensus sur "sites populaires"
-
-**Stability - Volatilité problématique** :
-
-| Liste | Changement quotidien moyen |
-|-------|----------------------------|
-| **Majestic** | <1% |
-| **Quantcast** | <1% |
-| **Umbrella** | ~10% |
-| **Alexa (avant 30 jan 2018)** | <1% |
-| **Alexa (après 30 jan 2018)** | **~50% !!!** |
-
-- **DÉCOUVERTE MAJEURE** : Alexa a changé de moyenne 30 jours → **1 jour** (30 jan 2018)
-  - NON ANNONCÉ publiquement
-  - Confirmé par Alexa après contact des auteurs
-  - **50% de la liste change chaque jour** depuis
-
-**Representativeness** :
-- 10 TLDs capturent >73% de chaque liste
-- .com domine : 50% (Alexa, Majestic), 71% (Quantcast)
-- Cloudflare héberge jusqu'à 10% des sites
-- Google : 15-40% du top 10-100 (sauf Quantcast 4%)
-- **Problème** : Concentration sur quelques entités
-
-**Responsiveness - Sites non accessibles** :
-
-| Liste | Non-accessibles | Status 200 | Page <512 bytes |
-|-------|-----------------|------------|-----------------|
-| Alexa | 5% | 89% | 3% |
-| Quantcast | 5% | 89% | 3% |
-| Majestic | 11% | 78% | 8.7% |
-| **Umbrella** | **28%** | **49% !!!** | **26%** |
-
-- Umbrella : **51% NE SONT PAS des vrais sites** !
-- Beaucoup de domaines invalides, non-configurés
-
-**Benignness - Domaines malicieux présents** :
-
-Google Safe Browsing (31 mai 2018) :
-
-| Liste | Malware | Social Eng. | Unwanted | Total | % |
-|-------|---------|-------------|----------|-------|---|
-| Alexa | 98 | 345 | 104 | **547** | 0.05% |
-| Umbrella | 326 | 393 | 232+60 | **1011** | 0.10% |
-| **Majestic** | **1676** | 359 | 79+48 | **2162** | **0.22%** |
-| Quantcast | 76 | 105 | 41+2 | **224** | 0.04% |
-
-- **Majestic le pire** : 2162 domaines malicieux
-- Alexa top 10K : 4 sites phishing
-- **DANGER** : Quad9 utilise Majestic comme whitelist !
-
-#### 2. Usage en recherche (Section IV)
-
-**133 études de sécurité (2015-2018)** utilisent ces listes :
-
-| Usage | Description | Nombre |
-|-------|-------------|--------|
-| **Prevalence** | Mesurer prévalence de problèmes | 63 |
-| **Evaluation** | Test set pour attaques/défenses | 71 |
-| **Whitelist** | Domaines "bénins" pour classifiers | 19 |
-| **Ranking** | Utilisation des rangs exacts | 28 |
-
-**Problèmes identifiés** :
-- ❌ Rarement de commentaire sur date de download
-- ❌ Rarement mention de la proportion accessible
-- ❌ **Impact non évalué** du choix de liste sur résultats
-- ❌ Validité rarement questionnée
-
-**Case study - Fingerprinting** :
-- Études Acar et al., Englehardt & Narayanan sur Alexa top 100K-1M
-- **Démonstration** : Attaquant peut manipuler pour cacher scripts tracking
-- Exemple : 7032 domaines manipulés → cache 1 provider du top 1M
-- **Impact** : Recherche biaisée, tracking non détecté
-
-#### 3. Manipulation à grande échelle (Section V)
-
-**RÉSULTATS CHOQUANTS** :
-
-**ALEXA - Extension** :
-- **1 SEULE requête HTTP** → entre dans top 1M !
-- 12 requêtes → rang **370,461**
-- 20% des tentatives réussies
-- Modèle estimé : **10^7.5 × r^(-1.125)** requests pour rang r
-- Rang 10,000 : seulement **1000 page views** nécessaires
-- **Coût** : GRATUIT
-- **Effort** : Faible (automatisable)
-- **Temps** : 1 jour (moyenne sur 1 jour)
-
-**ALEXA - Certify** :
-- 16,000 requêtes/jour via Tor
-- Rang atteint : **28,798** (meilleur résultat validé empiriquement)
-- Délai : 21 jours (vérification Alexa)
-- **Coût** : USD 19.99/mois/site
-- **Effort** : Moyen
-- **Temps** : Élevé (21 jours attente)
-
-**UMBRELLA - Cloud providers (AWS)** :
-- 1000 IPs uniques → rang **200,000**
-- Trafic compté pendant 2 jours
-- 12 sous-domaines simultanément rankés
-- **Coût** : <USD 1 pour 10,000 IPs (instance start/stop)
-- **Effort** : Moyen
-- **Temps** : Faible
-- **Domaines fake** : Possible (aucun filtrage)
-
-**MAJESTIC - Backlinks** :
-- 500 backlinks achetés (USD 500)
-- Rang atteint validé
-- Alternative : 1041 URLs reflected (GRATUIT mais effort élevé)
-- **Coût** : Élevé (USD 0.25-plus par backlink/mois)
-- **Effort** : Élevé (curation manuelle)
-- **Temps** : Élevé (120 jours comptage)
-- **Persistance** : 120 jours après arrêt paiement
-
-**QUANTCAST - Quantified** :
-- 479 VPN servers US
-- 400 users générés/jour × 5 requests
-- Rang théorique : ~367,000
-- **Coût** : Faible (VPN)
-- **Effort** : Moyen
-- **Temps** : Élevé (validation lente)
-
-**Tableau récapitulatif** (Table III) :
-
-| Liste | Technique | Coût $ | Effort | Temps |
-|-------|-----------|--------|--------|-------|
-| Alexa | Extension | ★☆☆ | ★★☆ | ★☆☆ |
-| Alexa | Certify | ★★☆ | ★★☆ | ★★★ |
-| Umbrella | Cloud | ★☆☆ | ★★☆ | ★☆☆ |
-| Majestic | Backlinks | ★★★ | ★★★ | ★★★ |
-| Majestic | Reflected URLs | ★☆☆ | ★★★ | ★★☆ |
-| Quantcast | Quantified | ★☆☆ | ★★☆ | ★★★ |
-
-#### 4. Solution : TRANCO (Section VI)
-
-**Design** :
-- Combinaison des 4 listes
-- Méthode : Dowdall rule (1, 1/2, 1/3, ..., 1/N) - reflète Zipf's law
-- Moyenne sur **30 jours** par défaut
-- Normalisation Umbrella (PLDs seulement)
-- Rescaling Quantcast (<1M)
-
-**Filtres disponibles** :
-- TLD filtering
-- Responsiveness (HTTP status, content length)
-- Google Safe Browsing (malware)
-- Chrome UX Report (sites réellement populaires)
-- Apparition minimum (ex: présent sur 2+ listes, 2+ jours)
-
-**Résultats Tranco** :
-- **Stabilité** : 0.6% changement quotidien (vs 50% Alexa !)
-- **RBO avec listes sources** :
-  - Alexa/Majestic : 46.5-53.5%
-  - Quantcast/Umbrella : 31.5-40.5%
-  - Aucune liste ne domine
-- **Résilience manipulation** :
-  - Effort **quadruplé** pour même rang
-  - Rang top 1M : besoin rang 11,091 (1 jour) ou 332,778 (30 jours) dans UNE liste
-  - Rang top 100K : besoin rang 982 (1 jour) ou 29,479 (30 jours)
-
-**Service https://tranco-list.eu** :
-- Listes archivées quotidiennement
-- Permalink + citation pour chaque liste
-- Configuration détaillée visible
-- Reproductibilité garantie
-- Open source : https://github.com/DistriNet/tranco-list
-
-### Conclusion des auteurs
-
-**Contributions** :
-1. ✅ Analyse quantitative 4 listes principales (10 mois)
-2. ✅ Classification 133 études sécurité utilisant ces listes
-3. ✅ **Démonstration empirique** manipulation à grande échelle
-4. ✅ Proposition Tranco : liste améliorée pour recherche
-
-**Limitations des listes existantes** :
-- ❌ Similarity faible (pas d'accord sur popularité)
-- ❌ Instabilité élevée (Alexa 50%/jour, Umbrella 10%/jour)
-- ❌ Non-représentativité (51% Umbrella non-réels, concentration entités)
-- ❌ Domaines malicieux (2162 sur Majestic)
-- ❌ **MANIPULATION TRIVIALE** (1 requête pour Alexa !)
-
-**Recommandations défense** (providers) :
-- Détection fraude individuelle (click inflation techniques)
-- Augmenter effort/ressources manipulation (comptes en ligne, filtrage IP)
-- Vérification disponibilité domaines
-- Reputation scores pour backlinks
-
-**Tranco comme solution** :
-- Combinaison réduit biais individuels
-- Moyenne temporelle améliore stabilité
-- Filtres permettent customisation
-- Service permanent pour reproductibilité
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.6 (Domain lists and their properties — Tranco vs alternatives)
+- Section 3.x (Methodology — domain selection and justification)
+- Section 2.7 (Biases in domain lists and their consequences for DNS measurement studies)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés à réutiliser** :
-- ✅ **Instabilité Alexa** : 50% changement/jour (justifie choix Tranco)
-- ✅ **5 propriétés** : similarity, stability, representativeness, responsiveness, benignness
-- ✅ **Méthodologie Tranco** : Dowdall rule, moyenne 30 jours
-- ✅ **Vulnérabilité manipulation** : argument pour NE PAS utiliser listes brutes
-- ✅ **133 études** utilisent Alexa → usage répandu en recherche
+**Problem**: Security and network measurement researchers rely on website popularity rankings (primarily Alexa) to select representative domain sets for their studies. However, these rankings are commercial products with undisclosed methodologies, are susceptible to manipulation, and may produce significantly different results depending on which list is chosen — undermining the reproducibility and validity of research that relies on them.
 
-**Méthodes applicables** :
-- Dowdall rule pour combinaison rankings (vs Borda count)
-- Filtrage domaines non-disponibles
-- Filtrage malware (Google Safe Browsing)
-- Moyenne temporelle pour stabilité
-- Validation crawl pour vérifier accessibilité
+**Research questions**:
+1. Do the four major website popularity rankings agree on which domains are popular, and are they stable over time?
+2. Are these rankings susceptible to adversarial manipulation, and if so, how easily?
+3. Can an improved, manipulation-resistant ranking be constructed that is more suitable for research purposes?
 
-**Chiffres/statistiques importantes** :
-- **50% Alexa change/jour** (depuis 30 jan 2018)
-- 1 requête HTTP → top 1M Alexa
-- 51% Umbrella ne sont PAS de vrais sites
-- 2162 domaines malicieux sur Majestic
-- 133 études top-tier utilisent ces listes (2015-2018)
-- Tranco : 0.6% changement/jour (vs 50% Alexa)
-- Effort manipulation **×4** avec Tranco
+### Background
 
-**Limites identifiées (notre contexte)** :
-- ⚠️ Tranco combine toutes listes (mais on peut filtrer)
-- ⚠️ Domaines populaires ≠ domaines géographiquement distribués
-- ⚠️ Aucune liste ne mesure diversité géographique réponses DNS
-- ⚠️ Quantcast = US seulement (biais géographique)
-- ⚠️ Umbrella inclut sous-domaines (peut fausser mesures)
+Website popularity rankings are used pervasively in security and network measurement research: 133 top-tier studies over four years relied on at least one of the four main rankings studied in this paper. Alexa (Amazon subsidiary) ranks domains by a proprietary combination of unique visitors and page views collected from a browser extension panel estimated at around 570,000 Chrome users. Cisco Umbrella ranks domains by unique IP addresses issuing DNS queries to its OpenDNS resolvers (claimed 65 million users). Majestic ranks domains by the number of class-C subnets linking to them (backlink-based, 450 billion URLs crawled over 120 days). Quantcast ranks US-traffic websites using a mix of directly instrumented sites and estimates from ISP/toolbar data. All four providers apply undisclosed normalisation procedures. The commercial nature of these rankings means that incentives to manipulate them exist both for individual domain owners (seeking whitelist status) and for adversaries seeking to bias research conclusions.
 
-### Critique personnelle
+### Methodology
 
-**Forces de l'article** :
-- ✅ **Méthodologie rigoureuse** : 10 mois de données, 133 études analysées
-- ✅ **Validation empirique** manipulation (pas juste théorique)
-- ✅ **Impact réel** : rang 28,798 atteint (Alexa Certify)
-- ✅ **Solution concrète** : Tranco + service en ligne
-- ✅ **Open source** : Code + données disponibles
-- ✅ **NDSS 2019** : Conférence top-tier
-- ✅ **Découverte majeure** : Changement Alexa non-annoncé (jan 2018)
-- ✅ **Analyse éthique** : Discussion Menlo Report
-- ✅ **Reproductibilité** : Service permanent avec permalinks
+- **Study type**: Empirical analysis (longitudinal measurement + manipulation experiments)
+- **Tools used**: Daily list downloads (January 1 – November 30, 2018); distributed crawler (10 machines, 4 CPU cores, 8 GB RAM each; Ubuntu 16.04, Chromium 66 headless mode); Google Safe Browsing API; rank-biased overlap (RBO) similarity metric; HTTP status code analysis
+- **Scale**: 10 months of daily snapshots of all four lists; one full crawl of all listed domains on May 11, 2018; analysis of approximately 2.82 million unique domains across all four lists combined; 133 security studies reviewed
+- **Measurement protocol**: Five properties were measured for each list: (1) Similarity — inter-list overlap using rank-biased overlap (RBO); (2) Stability — day-to-day intersection percentage; (3) Representativeness — TLD distribution, ASN concentration, hosting entity diversity; (4) Responsiveness — HTTP status codes and page sizes from live crawl; (5) Benignness — Google Safe Browsing flags. Manipulation experiments involved generating traffic to specific domains through minimal HTTP requests and measuring resulting rank changes.
+- **Data collected**: Daily list snapshots; crawled HTTP responses for all listed domains; Safe Browsing flags; rank changes following manipulation attempts
 
-**Faiblesses identifiées** :
-- ⚠️ Données 2018 (mais principes restent valables)
-- ⚠️ Quantcast a drastiquement changé (nov 2018) - impact sur Tranco ?
-- ⚠️ Pas de comparaison avec SimilarWeb (payant)
-- ⚠️ Pas d'analyse impact changement Alexa sur études publiées 2018+
-- ⚠️ Défenses proposées pour providers pas testées empiriquement
+### Main Results
 
-**Lien avec autres articles lus** :
-- **van Rijswijk-Deij (OpenINTEL)** :
-  - OpenINTEL mesure TOUS domaines .com/.net/.org
-  - Tranco sélectionne "top" domaines selon popularité
-  - **Complémentarité** : OpenINTEL = exhaustivité, Tranco = popularité
-  - Les deux peuvent être combinés pour notre approche
+1. **Low inter-list similarity**: The four lists combined contain approximately 2.82 million unique sites but agree on only about 70,000. Even weighting top ranks heavily with rank-biased overlap (RBO), similarity between any two lists ranges from only 4.5% to 33%, demonstrating that the choice of list fundamentally changes the domain set studied. Switching lists can alter the apparent prevalence of web trackers, security vulnerabilities, or other features by large margins.
+2. **Poor and deteriorating stability**: Until January 30, 2018, Alexa was relatively stable (approximately 1% daily change). After that date, Alexa silently changed to a one-day averaging window, causing approximately 50% of the top million to change every single day. Majestic and Quantcast are most stable (approximately 1% daily change). Umbrella changes on average 10% per day.
+3. **Poor representativeness and responsiveness**: 28% of Umbrella-listed domains could not be reached (name resolution failure, mostly for internal domains like *.ec2.internal). Only 49% of Umbrella-listed domains responded with HTTP 200. 5% of Alexa's and Quantcast's domains were unreachable. For Majestic, 11% were unreachable. Many "popular" domains contain no content (pages under 512 bytes).
+4. **Malicious domains present on all lists**: The Majestic list contained 2,162 domains flagged by Google Safe Browsing as malware, social engineering hosts, or potentially harmful applications (0.22% of the list). Alexa's top 10,000 included 4 social engineering sites. This is particularly dangerous given the widespread practice of whitelisting popular domains in security tools (e.g., Quad9 whitelists all of Majestic's list).
+5. **Trivial manipulation**: An adversary can enter Alexa's top million with a single HTTP request from a browser with the Alexa extension. The authors empirically validated reaching a rank as good as 28,798 through automated means. Tranco, by aggregating multiple lists over a configurable multi-day window using a Dowdall rule scoring function, requires at least four times more effort to achieve the same rank and varies by only 0.6% daily.
 
-**Questions ouvertes** :
-1. **Tranco capture-t-il la diversité géographique ?**
-   → NON : Tranco agrège listes qui mesurent depuis points centralisés
-   → Notre contribution RIPE Atlas reste valable !
+### Authors' Conclusion
 
-2. Quelle taille de liste Tranco utiliser pour notre mémoire ?
-   → Top 1K, 10K, 100K, 1M ?
-
-3. Filtres Tranco à appliquer pour notre cas d'usage ?
-   → Responsiveness (status 200) ? Safe Browsing ? Chrome UX ?
-
-4. Impact de l'instabilité Alexa sur études DNS 2018-2026 ?
-
-5. Est-ce que les listes de popularité sont pertinentes pour mesures DNS géo-distribuées ?
-   → Sites populaires ≠ nécessairement sites avec réponses DNS géo-variées
-
-### Citations importantes
-
-**Sur instabilité Alexa** :
-> "Since January 30, 2018 the [Alexa downloadable] list is based on data for one day; this was confirmed to us by Alexa but was otherwise unannounced." (p. 2)
-
-> "Until January 30, 2018, Alexa's list was almost as stable as Majestic's or Quantcast's. However, since then stability has dropped sharply, with around half of the top million changing every day" (p. 3)
-
-**Sur manipulation** :
-> "We show that for each list there exists at least one technique to manipulate it on a large scale, as e.g. only one HTTP request suffices to enter the widely used Alexa top million." (p. 2)
-
-> "What is most striking, is the very small number of page visits needed to obtain a ranking: as little as one request yielded a rank within the top million" (p. 7)
-
-**Sur impact recherche** :
-> "We found that 133 top-tier studies over the past four years based their experiments and conclusions on the data from these rankings." (p. 1)
-
-> "The validity and representativeness of these rankings are rarely questioned" (p. 1)
-
-**Sur Umbrella** :
-> "For Umbrella, this jumps to 28%; moreover only 49% responded with status code 200" (p. 4)
-
-**Sur solution Tranco** :
-> "Motivated by the discovered limitations of the widely-used lists, we propose TRANCO, an alternative list that is more appropriate for research, as it varies only by 0.6% daily and requires at least the quadrupled manipulation effort" (p. 2)
-
-**Sur diversité géographique** (limitation pertinente pour NOUS) :
-> "Yet, the information returned by DNS can vary depending on the location of the client (for example to minimize latency, to provide a local version of the service)" (p. 1) ← Mentionné mais pas adressé par Tranco !
+The authors conclude that existing website popularity rankings are fundamentally unsuitable as research instruments in their raw form due to instability, low inter-list agreement, inclusion of non-representative and malicious domains, and trivial susceptibility to manipulation. They propose Tranco as a community resource: an aggregated, archived, and reproducible ranking available at https://tranco-list.eu that addresses these limitations. Tranco aggregates Alexa, Umbrella, Majestic, and Quantcast over a configurable time window using rank aggregation (Dowdall rule), resulting in a list that is stable, manipulation-resistant, and identifiable by a permanent URL for reproducibility.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-### Sections concernées
+### Key Takeaways for the Thesis
 
-- **Section 2.4** : Liste Tranco (section dédiée)
-  - Critique des listes existantes (Alexa instable, Umbrella 51% invalide)
-  - Méthodologie Tranco (Dowdall, moyenne 30j)
-  - Justification de notre choix
+**Key concepts to reuse**:
+- The five properties framework for evaluating domain lists (similarity, stability, representativeness, responsiveness, benignness) — useful for justifying our choice of Tranco in the methodology chapter
+- Manipulation susceptibility as a reason why any single commercial list is unsuitable for reproducible research
+- The reproducibility advantage of Tranco: a specific Tranco list can be retrieved by identifier, making study replication possible years after publication
 
-- **Section 3** : Question de recherche
-  - Utiliser limitation "géographique" non adressée par Tranco
-  - Justifier besoin de mesures RIPE distribuées
+**Applicable methods**:
+- When selecting our domain sample, specify the exact Tranco list identifier (date, configuration, number of domains) so that the study is reproducible
+- Consider the TLD distribution and hosting entity concentration in our sampled domains, as these may affect DNS measurement results (e.g., CDN-hosted domains have different DNS resolution patterns than self-hosted ones)
+- Filter unreachable domains before measurements (as approximately 5% of Alexa domains are unresolvable) to avoid polluting DNS measurement statistics with NXDOMAIN and connection-refused results
 
-- **Section 4** : Méthodologie
-  - Justifier choix Tranco top X (1K, 10K, 100K ?)
-  - Expliquer filtres appliqués (responsiveness, malware)
-  - Comparaison avec approche OpenINTEL
+**Important statistics**:
+- 133 top-tier studies over four years relied on at least one of the four main rankings
+- The four lists together contain approximately 2.82 million unique sites but agree on only approximately 70,000 (about 2.5%)
+- Alexa changed approximately 50% of its top million every day after January 30, 2018
+- Majestic contained 2,162 malicious domains (0.22% of its list); Umbrella had 1,011
+- Umbrella: only 49% of domains respond with HTTP 200; 28% fail name resolution
+- Tranco varies by only 0.6% daily, requiring at least 4x manipulation effort compared to Alexa
 
-- **Section 7** : Discussion
-  - Comparer stabilité de nos mesures vs volatilité Alexa
-  - Discuter représentativité domaines choisis
-  - Valider que nos domaines sont accessibles
+**Identified limitations (gaps to fill)**:
+- Tranco itself inherits biases from the component lists it aggregates — including geographic bias towards English-speaking and Western domains, and overrepresentation of CDN-hosted content
+- The aggregation methodology (Dowdall rule, configurable window) introduces its own design choices that affect list composition
+- No ground truth for "true" domain popularity exists, making it impossible to verify how well any list represents actual Internet usage
 
-### Points à développer
+### Personal Critique
 
-**Pour justifier choix Tranco** :
-- Tableau comparatif 4 listes (stabilité, accessibilité, malware)
-- Graphique instabilité Alexa (50%/jour) vs Tranco (0.6%/jour)
-- Argumentation : recherche nécessite stabilité et reproductibilité
+**Strengths**:
+- Rigorous empirical analysis across five distinct properties over a 10-month longitudinal dataset
+- First empirical proof that Alexa rankings can be trivially manipulated (a single HTTP request suffices)
+- Practical contribution: Tranco is publicly available, actively maintained, and has been widely adopted by the research community
 
-**Pour méthodologie** :
-- Quelle taille liste ? (discuter trade-off couverture vs faisabilité)
-- Quels filtres ? (argumenter selon objectif recherche)
-- Validation accessibilité domaines sélectionnés (comme article)
+**Weaknesses**:
+- The paper does not fully characterise how Tranco's geographic and linguistic biases compare to those of its component lists; it improves on stability and manipulation resistance but may not improve representativeness for non-Western domains
+- Quantcast was subsequently dramatically reduced in scope (from approximately 520,000 to approximately 40,000 domains after November 14, 2018); Tranco configurations that include Quantcast after this date may be less representative
+- The manipulation experiments were conducted against commercial lists; Tranco's resistance to manipulation was estimated theoretically rather than empirically validated against active adversaries
 
-**Pour positionnement contribution** :
-- **Gap identifié** : Tranco améliore stabilité/manipulation mais ne résout PAS diversité géographique
-- **Notre contribution** : Ajouter dimension géographique via RIPE Atlas
-- Complémentarité : Tranco (sélection domaines) + RIPE (diversité géo)
+**Links to other papers**:
+- vanRijswijk et al. (2016/2018 OpenINTEL): OpenINTEL uses the Alexa list as its domain selection source — the biases documented here apply to OpenINTEL's historical measurements and should be noted when interpreting OpenINTEL results compared to our Tranco-based measurements
+- Holterbach et al. (2015): Measurement validity concerns — parallel to the domain list validity concerns raised here; both papers argue for explicit awareness of the methodological assumptions underlying measurements
 
-### Références croisées
+**Open questions**:
+- How does the Tranco list's composition evolve over multi-year timescales, and does it adequately capture newly popular domains (e.g., TikTok-era domains versus YouTube-era domains)?
+- Should our thesis use a fixed historical Tranco list (for reproducibility) or a current list (for contemporary relevance), and what is the trade-off between these two choices?
+- Do DNS measurement results (e.g., NXDOMAIN rates, TTL distributions, resolver behaviour) differ systematically between Tranco-listed and Alexa-listed domains, given the different composition of the two lists?
 
-**Articles à lire ensuite** :
-- [X] van Rijswijk-Deij (2016) - OpenINTEL (déjà lu)
-- [ ] Scheitle et al. (2018) - "A long way to the top" (IMC 2018) - cité comme travail connexe
-- [ ] Englehardt & Narayanan (2016) - Tracking (cas d'usage)
-- [ ] Études utilisant RIPE Atlas pour DNS
+### Key Quotes
 
-**Auteurs à suivre** :
-- Victor Le Pochat (auteur principal, KU Leuven)
-- Wouter Joosen (promoteur, KU Leuven)
-- Chercher leurs publications DNS/mesures récentes
+> "We found that 133 top-tier studies over the past four years based their experiments and conclusions on the data from these rankings. Their validity and by extension that of the research that relies on them, should however be questioned."
+
+> "Half of the Alexa list changes every day and the Umbrella list only has 49% real sites, as well as security implementations, e.g. the Majestic list contains 2,162 malicious domains despite being used as a whitelist."
+
+> "We are the first to empirically validate that the ranks of domains in each of the lists are easily altered, in the case of Alexa through as little as a single HTTP request."
+
+> "Tranco [...] varies only by 0.6% daily and requires at least the quadrupled manipulation effort to achieve the same rank as in existing lists."
 
 ---
 
-**Tags** : #tranco #alexa #ranking #manipulation #stability #top-sites #methodology
+## Use in Thesis
 
-**Statut** : [X] Lu / [ ] Relu / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.6 (Domain lists): Cite as the primary reference for understanding the limitations of Alexa and other commercial lists, and the rationale for using Tranco; include key statistics (similarity, stability, benignness)
+- Section 2.7 (Biases in domain lists): Use the five-property framework to discuss residual biases in Tranco, particularly geographic and linguistic overrepresentation of certain regions and the CDN concentration effect
+- Section 3.x (Methodology — domain selection): Cite when justifying the use of Tranco and when specifying the exact list version used (by Tranco identifier and date)
 
-**Prochaines étapes** :
-1. ✅ Fiche complétée
-2. ⏭️ Décider quelle taille de liste Tranco utiliser (discuter avec promoteurs)
-3. ⏭️ Tester accessibilité domaines Tranco top X
-4. ⏭️ Chercher études utilisant Tranco + RIPE Atlas
-5. ⏭️ Lire Scheitle et al. (2018) IMC paper
+**Points to develop**:
+- Discuss the specific Tranco configuration parameters chosen for our study (time window, component lists, number of domains) and their implications for measurement coverage
+- Quantify the potential impact of Tranco's residual biases on our DNS measurement results, particularly for non-Western TLDs and country-code domain names
+
+**Cross-references**:
+- vanRijswijk2016_openintel_infrastructure.md (uses Alexa as domain source — biases documented here apply)
+- vanRijswijk2018_openintel_ongoing.md (longitudinal study using Alexa — same concern applies over time)
+
+---
+
+**Tags**: #tranco #alexa #domain-ranking #measurement-methodology #manipulation #stability #representativeness #reproducibility #security-research
+**Status**: [X] Read / [X] Filed

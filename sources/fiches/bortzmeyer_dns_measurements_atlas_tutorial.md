@@ -1,504 +1,138 @@
-# Fiche de lecture - DNS Measurements with RIPE Atlas (Tutorial)
+# Reading Note - DNS Measurements with RIPE Atlas (Tutorial)
 
-**Référence bibliographique** :
-Bortzmeyer, S. (n.d.). DNS measurements with RIPE Atlas. *AFNIC Presentation*. Retrieved from https://www.ripe.net/media/documents/DNS-Measurements-with-RIPE-Atlas.pdf
+**Bibliographic Reference**:
+Bortzmeyer, S. (2017). *DNS measurements with RIPE Atlas* [Presentation slides, AFNIC]. Retrieved from RIPE NCC documentation. Presented at RIPE Meeting, October 2017.
 
-**Thème** : Tutorial pratique mesures DNS avec RIPE Atlas
+**Theme**:
+This tutorial presentation by Stéphane Bortzmeyer (AFNIC) introduces the practical mechanics of conducting DNS measurements using RIPE Atlas. It covers the web interface, the REST API, the Magellan command-line tool, and JSON result formats, while also cataloguing common traps — such as probes using non-standard resolvers, lying resolvers, or transparent DNS proxies — that can distort DNS measurement results.
 
-**Intérêt pour le mémoire** :
-Tutorial pratique essentiel par un expert DNS français (AFNIC). Guide opérationnel pour utiliser RIPE Atlas pour mesures DNS : interfaces (web, API, CLI), options de configuration, pièges à éviter. Application directe pour implémentation de notre projet.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 janvier 2026
-**Section du mémoire** : 2.5 (État de l'art - RIPE Atlas), 4 (Méthodologie - Implémentation pratique)
+**Relevance to thesis**:
+This tutorial is a foundational practical reference for any thesis using RIPE Atlas to conduct distributed DNS measurements. It explains how to query DNS from geographically distributed vantage points, how to interpret the results programmatically, and crucially, what data quality pitfalls to anticipate. The enumerated "traps" (alternative root servers, DNS interception, transparent proxies) are directly relevant to quality filtering in a large-scale DNS measurement campaign.
 
 ---
 
-## Contenu du tutorial
+## Reading Context
 
-### Objectif(s) / Question(s) de recherche
-
-**Objectif principal** : Fournir un guide pratique pour effectuer des mesures DNS avec RIPE Atlas.
-
-**Public cible** : Chercheurs et opérateurs réseaux souhaitant utiliser RIPE Atlas pour mesures DNS.
-
-**Motivation** :
-- DNS = infrastructure critique mais souvent oubliée dans études résilience/QoS
-- RIPE Atlas permet mesures DNS distribuées géographiquement
-- Besoin de documentation pratique pour utilisation effective
-
-### Cadre global d'explication
-
-**DNS rappel** :
-- Partie infrastructure Internet
-- Aussi nécessaire qu'IP
-- **Souvent oublié dans études résilience/QoS** ← Point important
-
-**RIPE Atlas capabilities** :
-- Sondes peuvent faire mesures DNS
-- Nombreuses options disponibles via API
-- Plusieurs interfaces d'accès
-
-### Méthodologie (Tutorial pratique)
-
-**Type de document** : Tutorial / Guide opérationnel
-
-#### 1. Interface Web
-
-**Étape 1 - Définitions** :
-- **Address Family** : IPv4 ou IPv6
-- **Query Class** : IN (Internet) ou CHAOS
-- **Query Type** : A, AAAA, NS, MX, TXT, etc.
-- **Query Argument** : Nom de domaine à résoudre
-- **Use the Probe's Resolver(s)** : Utiliser resolver local de la sonde
-- **Resolve on Probe** : Forcer résolution sur la sonde
-- **Set NSID bit** : Nameserver Identifier (RFC5001)
-- **Use Macros** : Variables dynamiques ($p=probe ID, $r=random, $t=timestamp)
-
-**Options avancées disponibles** (non détaillées dans slides).
-
-**Étape 2 - Sélection sondes** :
-- Sélection par critères géographiques, AS, tags
-- Tags disponibles : `system-resolves-a-correctly`, `system-r...` (tronqué)
-
-**Résultats interface web** :
-- Tableau avec Probe ID, ASN (IPv4/IPv6), Time, Answer, NSID, Response Time
-- Visualisation graphique temps de réponse (code couleur)
-- Statuts DNS : NOERROR, FORMERR, etc.
-- Drapeaux pays pour localisation géographique
-
-#### 2. Interface API
-
-**Format JSON** :
-```json
-{
-  'definitions': [{
-    'protocol': 'UDP',
-    'description': 'DNS resolution of ns.eu.org',
-    'af': 4,
-    'query_argument': 'ns.eu.org',
-    'query_type': 'AAAA',
-    'query_class': 'IN',
-    'set_rd_bit': True,
-    'type': 'dns',
-    'use_probe_resolver': True
-  }],
-  'is_oneoff': True,
-  'probes': [{
-    'requested': 10,
-    'type': 'area',
-    'value': 'WW',
-    'tags': {
-      'include': ['system-resolves-a-correctly', 'system-r...']
-    }
-  }]
-}
-```
-
-**Paramètres clés** :
-- `protocol` : UDP ou TCP
-- `af` : 4 (IPv4) ou 6 (IPv6)
-- `query_type` : Type d'enregistrement DNS
-- `set_rd_bit` : Recursion Desired flag
-- `use_probe_resolver` : Utiliser resolver de la sonde
-- `is_oneoff` : Mesure ponctuelle (True) ou récurrente (False)
-- `type: 'area', value: 'WW'` : Sélection mondiale
-
-#### 3. Options DNS nombreuses (détaillées slide 8)
-
-**Options UDP/TCP** :
-- `[dns] udp_payload_size (integer)` : Taille payload UDP (512-4096, défaut 512)
-- `[dns] protocol (string)` : ['UDP' or 'TCP'], défaut UDP
-
-**Options resolver** :
-- `[dns] use_probe_resolver (boolean)` : Envoyer query au resolver local sonde
-- `[dns] set_rd_bit (boolean)` : Flag Recursion Desired
-
-**Options query** :
-- `[dns] query_class (string)` : ['IN' or 'CHAOS']
-- `[dns] query_argument (string)` : L'argument (nom de domaine) de la query
-- `[dns] prepend_probe_id (boolean)` : Ajouter probe ID + timestamp pour unicité
-
-**Options retries et raw data** :
-- `[dns] retry (integer)` : Nombre de tentatives retry
-- `[dns] include_qbuf (boolean)` : Inclure raw DNS query data (défaut false)
-- `[dns] include_abuf (boolean)` : Inclure raw DNS answer data (défaut true)
-
-**Options DNSSEC** :
-- `[dns] set_nsid_bit (boolean)` : Flag NSID (RFC5001)
-
-#### 4. Outil CLI : Magellan
-
-**Exemple utilisation** :
-```bash
-% ripe-atlas measure dns --query-argument=lqdn.net
-```
-
-**Output format dig** :
-```
-Probe #29198
-; <<>> RIPE Atlas Tools <<>> lqdn.net.
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 47134
-;; flags: qr ra rd; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 10
-
-;; QUESTION SECTION:
-;lqdn.net.                     IN      A
-
-;; ANSWER SECTION:
-lqdn.net.              600     IN      A       204.12.240.154
-
-;; Query time: 386.869 msec
-;; SERVER: 172.20.7.1#53(172.20.7.1)
-;; WHEN: Mon Oct 02 17:43:55 CEST 2017
-;; MSG SIZE  rcvd: 253
-```
-
-**Avantage** : Format familier pour utilisateurs `dig`.
-
-#### 5. Outil custom de Bortzmeyer
-
-**Exemple** :
-```bash
-% atlas-resolve --nsid --type AAAA --requested 10 \
-  --country FR mamot.fr
-[2a00:99a0:0:1000::7] : 9 occurrences
-Test #9407903 done at 2017-10-02T15:47:28Z
-```
-
-**Features** :
-- Sélection par pays (`--country FR`)
-- Type de query (`--type AAAA`)
-- Nombre de sondes (`--requested 10`)
-- NSID option (`--nsid`)
-- Output agrégé (occurrences d'adresses IP)
-- Test ID et timestamp
-
-#### 6. Résultats en JSON
-
-**Structure** :
-```json
-{
-  "from": "89.142.236.92",
-  "msm_id": 9668778,
-  "msm_name": "Tdig",
-  "prb_id": 16336,
-  "resultset": [
-    {
-      "dst_addr": "192.168.1.1",
-      "result": {
-        "ANCOUNT": 3,
-        "ARCOUNT": 1,
-        "ID": 10350,
-        "abuf": "KG6BgAABAAMA..."
-      }
-    }
-  ]
-}
-```
-
-**Champs importants** :
-- `from` : Adresse IP source (sonde)
-- `msm_id` : ID de la mesure
-- `prb_id` : ID de la sonde
-- `dst_addr` : Adresse du resolver interrogé
-- `ANCOUNT`, `ARCOUNT` : Compteurs sections DNS
-- `abuf` : Raw DNS answer (base64)
-
-### Pièges à éviter (Traps)
-
-**Problème 1 - Resolvers étranges** :
-- Certaines sondes utilisent **resolvers alternatifs** (alternative roots)
-- **Lying resolvers** : Resolvers menteurs (filtrage, redirection)
-- Impact : Résultats DNS incorrects ou biaisés
-
-**Problème 2 - Interception réseau** :
-- Certains réseaux **interceptent et réécrivent trafic DNS**
-- **Proxies transparents** DNS
-- Impact : Mesures ne reflètent pas vraie résolution DNS
-
-**Mitigation suggérée** :
-- Filtrer sondes avec tags `system-resolves-a-correctly`
-- Vérifier cohérence résultats entre sondes
-- Détecter outliers (réponses anormales)
-
-### Cas d'usage (Examples of use)
-
-**1. Mesurer la censure** :
-- Sélectionner sondes par pays
-- Comparer réponses DNS entre pays
-- **⚠️ WARNING : May raise ethical issues**
-- Exemple : Nosyk 2024 montre 69% sondes chinoises bloquées (Meta)
-
-**2. Vérifier instances anycast** :
-- Mesurer depuis multiples localisations
-- Identifier instances serveur anycast
-- Cartographier distribution géographique
-
-**3. Tester résolution globale domaine** :
-- Vérifier que domaine résout partout
-- Détecter problèmes configuration zones
-- Citation : "Many zones have all eggs in the same basket"
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 3.X (Measurement methodology and tooling)
+- Section 2.4 (RIPE Atlas capabilities for DNS measurement)
+- Section 4.X (Data quality and result interpretation)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés à réutiliser** :
-- ✅ 3 interfaces disponibles : Web, API, CLI
-- ✅ Options DNS nombreuses (UDP/TCP, RD bit, NSID, etc.)
-- ✅ Format résultats : JSON structuré + raw DNS (abuf)
-- ✅ Sélection sondes par : pays, AS, area, tags
-- ✅ Tags filtrage : `system-resolves-a-correctly` (essentiel!)
-- ✅ Mesures one-off vs récurrentes
-- ✅ Macros variables ($p, $r, $t)
+**Problem**: RIPE Atlas supports DNS measurements but the platform's DNS-specific measurement options, result formats, and practical pitfalls are not widely documented in accessible form. Researchers need concrete guidance on how to design, launch, and interpret DNS measurements from distributed vantage points.
 
-**Méthodes applicables** :
-- Utiliser API programmatique (Python)
-- Filtrer sondes par tags (éviter resolvers problématiques)
-- Parser résultats JSON (msm_id, prb_id, dst_addr, abuf)
-- Vérifier cohérence résultats (détecter lying resolvers)
-- Sélection géographique ciblée (pays, area:WW)
-- Option NSID pour identifier serveurs
-- Mesures récurrentes pour dimension temporelle
+**Research questions**:
+1. What DNS measurement types and configuration options does RIPE Atlas support?
+2. How can measurements be launched and results retrieved programmatically via the API and command-line tools?
+3. What are the common traps that can invalidate or bias DNS measurement results from RIPE Atlas probes?
 
-**Options DNS critiques pour notre projet** :
-- `use_probe_resolver: True` : Utiliser resolver local (diversité géographique)
-- `set_rd_bit: True` : Recursion Desired
-- `include_abuf: True` : Raw DNS answer (analyse détaillée)
-- `query_type: 'A'` ou `'AAAA'` : Selon besoins
-- `protocol: 'UDP'` : Standard (TCP si truncation)
-- `is_oneoff: False` : Mesures récurrentes (dimension temporelle)
+### Background
 
-**Pièges critiques à éviter** :
-- ⚠️ **Resolvers alternatifs/menteurs** → Filtrer avec tags
-- ⚠️ **Interception DNS réseau** → Détecter via analyse résultats
-- ⚠️ **Proxies transparents** → Comparer dst_addr attendu vs réel
-- ⚠️ **Ethical issues censure** → Considérations éthiques
+The Domain Name System (DNS) is a critical part of Internet infrastructure, as necessary as IP routing yet frequently overlooked in resilience and quality-of-service studies. RIPE Atlas probes can perform DNS measurements as one of their core measurement types, querying arbitrary DNS names using UDP or TCP, for both IPv4 and IPv6 transports. Results are returned in a structured JSON format containing full DNS response information including answer counts, record data, and query timing. The platform's measurement API allows fine-grained control over probe selection, query parameters, and scheduling.
 
-### Critique personnelle
+### Methodology
 
-**Forces du tutorial** :
-- ✅ Exemples concrets et pratiques
-- ✅ Couverture 3 interfaces (Web, API, CLI)
-- ✅ Screenshots interface web (très utile)
-- ✅ Format JSON détaillé
-- ✅ **Section "Traps" cruciale** (pièges à éviter)
-- ✅ Cas d'usage réalistes
-- ✅ Warning éthique (censure)
-- ✅ Par expert reconnu (AFNIC/Bortzmeyer)
+- **Study type**: Tutorial / practitioner presentation
+- **Tools used**: RIPE Atlas web interface, RIPE Atlas REST API v2, Magellan (`ripe-atlas` CLI tool), `atlas-resolve` custom tool
+- **Scale**: Demonstrations use samples of 10 probes; production campaigns can target thousands of probes
+- **Measurement protocol**: DNS measurements configured via JSON API definitions specifying protocol (UDP/TCP), address family (IPv4/IPv6), query name, query type (A, AAAA, etc.), query class (IN), and whether to use the probe's local resolver (`use_probe_resolver`) or a specified target resolver
+- **Data collected**: JSON result objects containing DNS response sections (ANCOUNT, ARCOUNT), raw answer buffer (`abuf`), query timing, source IP, probe ID, and measurement ID
 
-**Faiblesses identifiées** :
-- ⚠️ Pas de date (document non daté)
-- ⚠️ Exemples 2017 (possiblement obsolètes)
-- ⚠️ Options avancées non détaillées (slide 5)
-- ⚠️ Pas de discussion système crédits
-- ⚠️ Pas d'exemples mesures récurrentes
-- ⚠️ Pas d'exemples traitement données volumineuses
-- ⚠️ Pas de stratégies optimisation (nombre sondes vs précision)
-- ⚠️ Tool custom Bortzmeyer non open source (?)
+### Main Results
 
-**Lien avec autres articles lus** :
-- **Nosyk et al. (2024) - RIPE Atlas DITL** :
-  - Nosyk analyse infrastructure, Bortzmeyer montre utilisation pratique
-  - Complémentaires : théorie (Nosyk) vs pratique (Bortzmeyer)
-  - Traps Bortzmeyer = limitations Nosyk (resolvers, interception)
+1. **Measurement configuration flexibility**: RIPE Atlas DNS measurements support a wide range of options, including choice of transport protocol (UDP/TCP), address family (af: 4 or 6), query type, query class, recursive/iterative resolution, and use of the probe's default local resolver or a specified target.
+2. **Probe tag filtering for DNS**: When selecting probes via the API, system tags such as `system-resolves-a-correctly` and `system-resolves-aaaa-correctly` can be included to restrict the probe set to those with known functional DNS resolution.
+3. **Magellan CLI tool**: The `ripe-atlas measure dns` command provides dig-like output from multiple probes simultaneously, making rapid exploratory DNS measurement straightforward from the command line. Example: measuring `lqdn.net` from probe #29198 with full DNS response details including query time (386 ms) and server IP.
+4. **Custom tooling (`atlas-resolve`)**: The `atlas-resolve` tool allows querying specific record types (e.g., AAAA) from a fixed country set (e.g., `--country FR`) and returns grouped results (e.g., 9 occurrences of a single IPv6 answer from 10 French probes).
+5. **Common traps identified**:
+   - Some probes use non-standard resolvers, including alternative DNS roots or "lying resolvers" that return fabricated answers (e.g., for censorship or parental control)
+   - Some networks intercept and rewrite DNS traffic transparently, meaning the probe's query reaches a different resolver than the one the probe believes it is using
+   - Some networks deploy transparent DNS proxies that modify or forward queries in unexpected ways
+6. **Use cases enumerated**: Measuring censorship by country (selecting probes by geographic location), checking different anycast instances of a DNS server, and verifying that a domain resolves correctly worldwide ("many zones have all eggs in the same basket").
 
-- **Holterbach (2015) - Interference** :
-  - Bortzmeyer ne mentionne pas interférence (limitation!)
-  - Besoin combiner : tutorial Bortzmeyer + warnings Holterbach
-  - Ajouter : sélection hardware récent, timestamps réels
+### Authors' Conclusion
 
-- **OpenINTEL (van Rijswijk-Deij 2016)** :
-  - OpenINTEL = infrastructure dédiée (pas de traps resolvers)
-  - RIPE Atlas = infrastructure partagée (traps Bortzmeyer)
-  - Trade-off : contrôle vs diversité géographique
-
-**Questions ouvertes** :
-1. **Outil atlas-resolve de Bortzmeyer est-il open source ?**
-   → Chercher sur GitHub Bortzmeyer
-2. **Comment détecter automatiquement lying resolvers ?**
-   → Comparaison réponses multiples sondes ? Baseline OpenINTEL ?
-3. **Quelle proportion sondes ont resolvers problématiques ?**
-   → Statistiques RIPE Atlas sur tags ?
-4. **Comment gérer interception DNS réseau ?**
-   → Mesures directes vers autoritatifs (pas via resolver) ?
-5. **Ethical considerations pour mesures censure ?**
-   → Consulter guidelines RIPE Atlas éthique
-6. **Format abuf (base64) : comment parser efficacement ?**
-   → Librairie Python dnspython ?
-7. **Macros ($p, $r, $t) : cas d'usage pratiques ?**
-   → Quand utiliser pour notre projet ?
-
-### Citations importantes
-
-> "Domain Name System: A part of the Internet infrastructure, As necessary as IP, **Often forgotten in studies about resilience or quality of service.**" (p. 3)
-
-**Sur les pièges** :
-> "Some probes use strange resolvers (alternative roots, lying resolvers. . . )" (p. 12)
-
-> "Some networks intercept and rewrite DNS traffic, some have transparent proxies." (p. 12)
-
-**Sur cas d'usage censure** :
-> "Measuring censorship (selecting probes by country). **Warning: may raise ethical issues.**" (p. 13)
-
-**Sur anycast** :
-> "Check the different instances of an anycast server." (p. 13)
-
-**Sur résilience** :
-> "Test that your domain name resolves from everywhere. **(Many zones have all eggs in the same basket.)**" (p. 13)
+RIPE Atlas provides a powerful and accessible platform for conducting distributed DNS measurements across a globally distributed set of vantage points. The combination of a web interface, a REST API, and command-line tools (Magellan, custom scripts) enables both exploratory and systematic DNS measurement campaigns. However, researchers must be aware of data quality issues stemming from non-standard resolvers, DNS interception, and transparent proxies — these traps can cause results to misrepresent the actual DNS behaviour of the network path under study.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-### Sections concernées
+### Key Takeaways for the Thesis
 
-- **Section 2.5** : RIPE Atlas et mesures distribuées
-  Description interfaces disponibles (Web, API, CLI)
-  Options DNS measurement
-  Pièges à éviter (resolvers, interception)
+**Key concepts to reuse**:
+- `use_probe_resolver: True` setting causes DNS queries to go through the probe's local ISP resolver — this is the mode most relevant to studying end-user DNS resolution behaviour
+- System tag filtering (`system-resolves-a-correctly`) as a pre-selection step to exclude probes with known DNS resolution failures
+- The JSON `abuf` field contains the raw base64-encoded DNS response buffer, enabling full post-hoc parsing of all DNS sections
 
-- **Section 4** : Méthodologie - Implémentation
-  Choix interface : API programmatique (Python)
-  Configuration mesures DNS :
-  - `use_probe_resolver: True`
-  - Tags filtrage : `system-resolves-a-correctly`
-  - Mesures récurrentes (`is_oneoff: False`)
-  - Options NSID, RD bit, abuf
-  Sélection sondes (pays, area, AS)
-  Parsing résultats JSON
+**Applicable methods**:
+- Using the RIPE Atlas REST API with structured JSON measurement definitions for programmatic DNS measurement campaigns
+- Tag-based probe filtering at measurement launch time to control vantage point quality
+- Combining passive probe-level metadata (from the probe archive) with active DNS measurement results for per-probe quality assessment
 
-- **Section 5** : Résultats
-  Format résultats JSON (msm_id, prb_id, abuf)
-  Traitement données brutes (abuf parsing)
-  Détection anomalies (lying resolvers, interception)
+**Important statistics**:
+- Measurements can be configured with `requested: 10` probes up to thousands; one-off (`is_oneoff: True`) or recurring measurements are both supported
+- Query timing is reported per-probe (e.g., 386 ms observed in the example), enabling latency-based analysis
+- Results include the source IP of the probe, enabling geolocation-based aggregation
 
-- **Section 6** : Validation
-  Filtrage résultats suspects (tags, cohérence)
-  Comparaison avec baseline (OpenINTEL?)
+**Identified limitations (gaps to fill)**:
+- The tutorial does not quantify the prevalence of the identified traps (lying resolvers, interception) across the RIPE Atlas probe population — this is a significant gap for result interpretation
+- No guidance is given on how to detect or filter out affected probes post-measurement; this requires cross-referencing with other datasets or validation queries
 
-- **Section 7** : Discussion
-  Limitations : resolvers alternatifs, interception réseau
-  Considérations éthiques (si mesures censure)
-  Mitigation pièges (filtrage, validation)
+### Personal Critique
 
-### Points à développer
+**Strengths**:
+- Highly practical: provides real API call examples, actual CLI output, and concrete JSON result structures
+- Concisely identifies the most important data quality pitfalls in DNS measurements from RIPE Atlas
+- Useful enumeration of real-world use cases that align directly with thesis measurement scenarios
 
-**Dans état de l'art** :
-- Interfaces RIPE Atlas disponibles :
-  - Web : Accessible, mais pas scalable
-  - API : Programmatique, scalable, format JSON
-  - CLI (Magellan) : Format dig, interactif
-  - Custom tools (atlas-resolve Bortzmeyer)
-- Options DNS measurement exhaustives (tableau)
-- Format résultats JSON structuré
+**Weaknesses**:
+- This is a presentation (slide deck converted to text), not a peer-reviewed paper; it lacks empirical depth and quantitative analysis
+- The trap enumeration is qualitative — no estimates of how many probes are affected by each trap type
+- The tutorial is from 2017; some API details and tool versions may have changed
 
-**Pour notre méthodologie** :
-- **Choix interface** : API REST programmatique (Python)
-- **Configuration mesures** :
-  ```json
-  {
-    'protocol': 'UDP',
-    'af': 4,  // IPv4 priorité, IPv6 si dual-stack
-    'query_type': 'A',  // ou AAAA selon analyse
-    'query_class': 'IN',
-    'set_rd_bit': True,
-    'use_probe_resolver': True,  // CRUCIAL pour diversité géo
-    'set_nsid_bit': True,  // Identifier serveurs
-    'include_abuf': True,  // Raw data pour analyse
-    'is_oneoff': False  // Mesures récurrentes
-  }
-  ```
-- **Sélection sondes** :
-  ```json
-  {
-    'requested': N,  // À définir selon crédits
-    'type': 'area',
-    'value': 'WW',  // Mondial
-    'tags': {
-      'include': ['system-resolves-a-correctly'],  // CRUCIAL
-      // Possiblement: hardware version >= 3
-    }
-  }
-  ```
-- **Parsing résultats** :
-  - Extraire : msm_id, prb_id, dst_addr, timestamp
-  - Décoder abuf (base64 → DNS answer)
-  - Parser réponses DNS (dnspython)
-  - Enrichir métadonnées (GeoIP, ASN)
-- **Détection anomalies** :
-  - Identifier lying resolvers (réponses incohérentes)
-  - Détecter interception (dst_addr unexpected)
-  - Filtrer outliers (response time, errors)
+**Links to other papers**:
+- Bajpai et al. (2017, RIPE Atlas tags): Provides the technical underpinning for the probe tag filtering recommended in this tutorial
+- Holterbach et al. (2015, RIPE Atlas interference): Quantifies one form of measurement quality degradation on RIPE Atlas probes
+- Randall et al. (IMC 2021, DNS interception): Directly studies the home gateway DNS interception trap mentioned in this tutorial
 
-**Pour validation/filtrage** :
-- **Tags obligatoires** : `system-resolves-a-correctly`
-- **Vérification cohérence** :
-  - Comparer réponses multiples sondes même région
-  - Baseline avec OpenINTEL (si même domaines)
-  - Détecter réponses DNS anormales (alternative roots)
-- **Seuils de filtrage** :
-  - Response time > X ms (interférence?)
-  - Taux erreurs > Y% par sonde
-  - Réponses uniques (1 sonde ≠ toutes autres)
+**Open questions**:
+- What fraction of RIPE Atlas probes are affected by transparent DNS proxying or lying resolver behaviour, and does this fraction vary by country or ASN?
+- How can the raw `abuf` DNS response buffer be parsed efficiently at scale to detect anomalous resolver behaviour?
 
-**Pour discussion éthique** :
-- Si mesures incluent censure → Guidelines RIPE Ethics
-- Consulter : https://labs.ripe.net/author/kistel/ethics-of-ripe-atlas-measurements/ (voir recherche.md)
-- Anonymisation données si publication
+### Key Quotes
 
-### Tableau des options DNS (pour méthodologie)
+> "Some probes use strange resolvers (alternative roots, lying resolvers...)."
 
-| Option | Type | Défaut | Notre choix | Raison |
-|--------|------|--------|-------------|--------|
-| `protocol` | UDP/TCP | UDP | **UDP** | Standard, suffisant |
-| `af` | 4/6 | - | **4** | IPv4 priorité |
-| `query_type` | A/AAAA/NS/... | - | **A** | Adresses IPv4 |
-| `query_class` | IN/CHAOS | IN | **IN** | Internet class |
-| `set_rd_bit` | boolean | - | **True** | Recursion désirée |
-| `use_probe_resolver` | boolean | False | **True** | **Diversité géo!** |
-| `set_nsid_bit` | boolean | False | **True** | Identifier serveurs |
-| `include_abuf` | boolean | True | **True** | Raw data analyse |
-| `include_qbuf` | boolean | False | **False** | Pas nécessaire |
-| `udp_payload_size` | 512-4096 | 512 | **512** | Standard |
-| `is_oneoff` | boolean | - | **False** | **Récurrent!** |
-| `retry` | integer | - | **2** | Balance fiabilité/charge |
+> "Some networks intercept and rewrite DNS traffic, some have transparent proxies."
 
-### Références croisées
-
-**Outils à explorer** :
-- [X] Magellan (ripe-atlas CLI) - mentionné dans tutorial
-- [ ] atlas-resolve (tool Bortzmeyer) - chercher GitHub
-- [ ] Cousteau (Python library RIPE Atlas API)
-- [ ] Sagan (Python library parsing résultats)
-- [ ] dnspython (parsing abuf)
-
-**Documentation à consulter** :
-- [X] API Reference : https://atlas.ripe.net/docs/api/v2/reference/#/measurements (mentionné slide 4)
-- [ ] Guide best practices : https://atlas.ripe.net/docs/howtos/best-practices/
-- [ ] Ethics guidelines : https://labs.ripe.net/author/kistel/ethics-of-ripe-atlas-measurements/
-
-**Articles connexes à lire** :
-- [ ] Bortzmeyer blog posts sur RIPE Atlas (https://www.bortzmeyer.org/)
-- [ ] RIPE Labs articles par Bortzmeyer
-- [ ] RFC 5001 (NSID - Nameserver Identifier)
+> "Test that your domain name resolves from everywhere. (Many zones have all eggs in the same basket.)"
 
 ---
 
-**Tags** : #ripe-atlas #dns #tutorial #practical-guide #api #measurement #traps #ethics #bortzmeyer #afnic
+## Use in Thesis
 
-**Statut** : [X] Lu / [ ] Relu / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 3.X (Measurement methodology): Cite as practical reference for RIPE Atlas DNS measurement API usage and result format
+- Section 3.X (Data quality): Reference the enumerated traps when describing result filtering and quality control procedures
+- Section 2.4 (RIPE Atlas capabilities): Cite for the DNS measurement type description and supported configuration options
 
-**Prochaines étapes** :
-1. ✅ Fiche complétée
-2. ⏭️ Chercher tool atlas-resolve (GitHub Bortzmeyer)
-3. ⏭️ Lire documentation Cousteau + Sagan (Python libs)
-4. ⏭️ Consulter ethics guidelines RIPE Atlas
-5. ⏭️ Tester exemples API (créer mesure test)
-6. ⏭️ Analyser format abuf (parser avec dnspython)
-7. ⏭️ Identifier stratégie filtrage lying resolvers
+**Points to develop**:
+- Describe how the thesis measurement campaigns use the RIPE Atlas API, following the JSON measurement definition pattern described here
+- Explain quality control steps taken to detect and exclude probes affected by lying resolvers or transparent DNS proxies
+
+**Cross-references**:
+- `bajpai2017_ripeatlas_tags.md`: Tag-based probe selection methodology
+- `holterbach2015_ripeatlas_interference.md`: Measurement quality on RIPE Atlas probes
+- `nosyk2024_ripeatlas_ditl.md`: Large-scale practical DNS measurement campaign on RIPE Atlas
+
+---
+
+**Tags**: #ripe-atlas #dns #measurement-methodology #tutorial #api #data-quality #transparent-proxy #lying-resolver
+**Status**: [X] Read / [X] Filed

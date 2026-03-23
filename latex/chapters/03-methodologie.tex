@@ -1,1700 +1,529 @@
-% Chapitre 3 - Généré automatiquement depuis chapitre3_methodologie.md
-% Ne pas éditer directement - modifier le fichier Markdown source
+% Chapter 3 — auto-generated from chapter3_methodology.md
+% Edit the Markdown source, not this file.
 
-\chapter{Chapitre 3 - Méthodologie}
+\chapter{Methodology}
 
-\section{Vue d'ensemble de l'approche}
+\begin{quote}
+\textbf{Note on sourcing.} This chapter describes the technical methodology of the thesis measurement campaign. Sources from the bibliography are cited where the methodology is directly informed by or adapted from prior work. General software engineering choices (API usage, data format parameters, statistical tests) are not attributed to sources.
+\end{quote}
+\bigskip
+\section{Overview}
 \label{sec:3.1}
 
-\subsection{Objectif général}
+\subsection{Methodological Objective}
 \label{subsec:3.1.1}
 
-Notre approche vise à concevoir et déployer un système de \textbf{mesures DNS distribuées géographiquement} qui capture la diversité spatiale et temporelle des réponses DNS pour les domaines web les plus populaires. Contrairement aux infrastructures existantes comme OpenINTEL qui mesurent depuis un point unique, notre contribution principale consiste à exploiter la distribution géographique de RIPE Atlas pour observer les variations de réponses DNS selon la localisation du client.
+The overarching methodological objective of this thesis is to capture the \textbf{geographic and temporal diversity of DNS responses} for a representative corpus of popular domains, using geographically distributed active measurements, in a manner that is reproducible, ethically sound, and practically feasible within the available resource budget. The system must answer four empirical research questions:
 
-\textbf{Objectif opérationnel} : Archiver les réponses DNS pour un ensemble représentatif de domaines populaires (Tranco Top 10K), mesurées depuis de multiples vantage points géographiques (sondes RIPE Atlas), sur une période de plusieurs mois, tout en optimisant l'utilisation des crédits RIPE Atlas disponibles.
+\begin{itemize}
+  \item \textbf{Q1}: What proportion of Tranco top-ranked domains return geographically differentiated DNS responses, and what infrastructure mechanisms explain the differentiation?
+  \item \textbf{Q2}: What is the temporal stability of DNS responses for popular domains at day, week, and month timescales?
+  \item \textbf{Q3}: Do the geographic biases of the RIPE Atlas probe distribution significantly limit the ability to observe geographic DNS variation?
+  \item \textbf{Q4}: What is the measurable impact of resolver type --- local ISP resolver versus public DNS service --- on the DNS responses observed?
+\end{itemize}
 
-\subsection{Questions de recherche}
+\subsection{System Architecture}
 \label{subsec:3.1.2}
 
-Nos travaux visent à répondre aux quatre questions de recherche formulées dans le Chapitre 2 (section 2.7.4) :
+The measurement system is organised in five sequential stages, inspired by the architecture of OpenINTEL \cite{vanRijswijk2016} but adapted to the constraints and capabilities of the RIPE Atlas platform:
 
-\textbf{Q1} : Quelle proportion de domaines Tranco Top 10K retourne des réponses DNS différentes selon la localisation géographique ?
+\begin{enumerate}
+  \item \textbf{Domain corpus preparation}: Retrieval and filtering of the Tranco Top 10,000 domain list.
+  \item \textbf{Measurement scheduling}: Configuration and deployment of RIPE Atlas DNS measurement campaigns.
+  \item \textbf{Data collection}: Automated daily retrieval of measurement results via the RIPE Atlas REST API.
+  \item \textbf{Storage and preprocessing}: Parsing, validation, and archival in Avro/Parquet format.
+  \item \textbf{Analysis}: Quantitative analysis addressing Q1--Q4.
+\end{enumerate}
 
-\textbf{Q2} : Quelle est la stabilité temporelle des enregistrements DNS pour ces domaines (variation jour/semaine/mois) ?
-
-\textbf{Q3} : Les biais géographiques RIPE Atlas (91\% RIPE+ARIN) impactent-ils significativement l'observation de la diversité ?
-
-\textbf{Q4} : Quel est l'impact du choix de resolver (ISP local vs DNS public) sur les adresses IP observées ?
-
-\subsection{Architecture globale du système}
-\label{subsec:3.1.3}
-
-Notre système s'articule autour de \textbf{quatre composantes principales} inspirées de l'architecture OpenINTEL (van Rijswijk-Deij et al., 2016) mais adaptées aux contraintes de RIPE Atlas :
-
-
-\begin{verbatim}
-+-------------------------------------------------------------+
-|                   ÉTAPE 1 : INPUT DATA                      |
-|  - Téléchargement liste Tranco (hebdomadaire)              |
-|  - Sélection domaines (Top 10K + filtres)                  |
-|  - Détection domaines ajoutés/supprimés (delta)            |
-+-------------------------------------------------------------+
-                              ↓
-+-------------------------------------------------------------+
-|              ÉTAPE 2 : MEASUREMENT SCHEDULING               |
-|  - Sélection sondes RIPE Atlas (critères géographiques)    |
-|  - Configuration mesures DNS (API RIPE Atlas)              |
-|  - Optimisation utilisation crédits                        |
-|  - Gestion scheduling (tolérance désynchronisation)        |
-+-------------------------------------------------------------+
-                              ↓
-+-------------------------------------------------------------+
-|               ÉTAPE 3 : DATA COLLECTION                     |
-|  - Collecte résultats via API RIPE Atlas                   |
-|  - Parsing JSON -> extraction champs pertinents             |
-|  - Décodage abuf (raw DNS answers)                         |
-|  - Enrichissement métadonnées (GeoIP, AS, tags)            |
-+-------------------------------------------------------------+
-                              ↓
-+-------------------------------------------------------------+
-|          ÉTAPE 4 : STORAGE AND PREPROCESSING                |
-|  - Stockage brut : Apache Avro (archivage)                 |
-|  - Stockage analytics : Apache Parquet (columnar)          |
-|  - Filtrage données invalides (lying resolvers, etc.)      |
-|  - Indexation temporelle et géographique                   |
-+-------------------------------------------------------------+
-                              ↓
-+-------------------------------------------------------------+
-|                 ÉTAPE 5 : ANALYSIS                          |
-|  - Détection variations géographiques (Q1)                 |
-|  - Analyse stabilité temporelle (Q2)                       |
-|  - Évaluation biais géographiques (Q3)                     |
-|  - Impact choix resolver (Q4)                              |
-|  - Génération rapports et visualisations                   |
-+-------------------------------------------------------------+
-
-\end{verbatim}
-
-
-\textbf{Trade-offs assumés} :
-
-
-\% TODO: Convertir ce tableau Markdown en LaTeX
-\% | Dimension | Choix | Raison |
-\% |-----------|-------|--------|
-\% | \textbf{Couverture domaines} | 10K (vs 123M OpenINTEL) | Contrainte crédits RIPE Atlas |
-\% | \textbf{Vantage points} | 12.9K (RIPE Atlas) | Diversité géographique prioritaire |
-\% | \textbf{Fréquence mesures} | Quotidienne | Balance précision temporelle vs crédits |
-\% | \textbf{Contrôle infrastructure} | Limité (plateforme partagée) | Accepté pour accès diversité géographique |
-\%
-
-\medskip\hrule\medskip
-
-\section{Sélection et gestion des domaines}
+The key design trade-off throughout is the three-way tension between \textbf{domain coverage} (how many domains are measured), \textbf{geographic coverage} (how many geographically distributed probes), and \textbf{temporal resolution} (measurement frequency), all bounded by the finite RIPE Atlas credit budget. The configuration described in this chapter targets 10,000 domains $\times$ 100 probes $\times$ once daily as the primary operating point, with a supplementary resolver-comparison campaign for Q4.
+\bigskip
+\section{Domain Corpus Selection}
 \label{sec:3.2}
 
-\subsection{Choix de la liste Tranco}
+\subsection{Tranco List Configuration}
 \label{subsec:3.2.1}
 
-Nous utilisons la \textbf{liste Tranco} (Le Pochat et al., 2019) plutôt que les listes commerciales (Alexa, Umbrella, Majestic, Quantcast) pour les raisons suivantes :
+The domain corpus is the \textbf{Tranco Top 10,000} list, retrieved via the Tranco API at \url{https://tranco-list.eu.} The choice of Tranco over commercial ranking lists (Alexa, Cisco Umbrella, Majestic) is motivated in Chapter 2 (Section 2.7) and rests on three properties established by Le Pochat et al.~\cite{LePochat2019}: stability (0.6\% daily change versus approximately 50\% for post-2018 Alexa), manipulation resistance (quadrupled manipulation effort relative to single-source lists), and archivability (each generated list is assigned a unique identifier --- e.g., \texttt{8QNZ} --- retrievable indefinitely via permalink).
 
-\textbf{Stabilité} : Tranco présente un changement quotidien de seulement \textbf{0.6\%} contre \textbf{50\% pour Alexa} depuis janvier 2018. Cette stabilité est cruciale pour notre analyse longitudinale, car elle permet de suivre les mêmes domaines dans le temps sans bruit dû à l'instabilité de la liste elle-même.
+The Tranco list is generated with the following fixed configuration to ensure reproducibility:
 
-\textbf{Résistance à la manipulation} : Tranco requiert un effort de manipulation \textbf{4x supérieur} aux listes individuelles (Le Pochat et al., 2019, p. 2). Alexa peut être manipulé avec une seule requête HTTP pour entrer dans le top 1M, tandis que Tranco combine quatre sources et utilise une moyenne sur 30 jours, rendant la manipulation beaucoup plus coûteuse.
 
-\textbf{Reproductibilité} : Le service \url{https://tranco-list.eu} fournit des \textbf{permalinks} pour chaque liste générée, garantissant que nos résultats sont reproductibles. Chaque liste a un identifiant unique (ex: \texttt{7DKY}, \texttt{8QNZ}) permettant de citer précisément la version utilisée.
+\begin{verbatim}
+List size:          10,000 domains
+Averaging window:   30 days (Tranco default)
+Aggregation method: Dowdall rule (weights rank as 1/rank_i per source)
+Sources:            Alexa, Cisco Umbrella, Majestic, Quantcast
+Filters:            responsiveness (HTTP 200), safe browsing (Google Safe Browsing API)
 
-\textbf{Adoption scientifique} : Tranco est utilisé dans \textbf{600+ publications} académiques (état 2024) et est devenu le standard de facto pour la recherche en sécurité réseau.
+\end{verbatim}
 
-\subsection{Taille de la liste : Top 10K}
+
+The Dowdall rule was chosen over the Borda count because its 1/rank weighting more closely reflects the Zipfian distribution of Internet traffic: the difference between ranks 1 and 2 is treated as more significant than the difference between ranks 999 and 1,000.
+
+The list is \textbf{updated weekly} (each Monday) to capture the slow evolution of the popular-domain corpus while limiting the rate of change introduced by list updates. The stable 0.6\% daily change rate of Tranco \cite{LePochat2019} means that even weekly updates produce minimal domain set churn. Each weekly update records the exact Tranco list identifier used, the list generation timestamp, and the delta of added and removed domains relative to the previous week's list. Domains that exit the Top 10K during the measurement campaign are retained in active measurement for two additional weeks to capture any transitional DNS behaviour.
+
+\subsection{Domain Corpus Size}
 \label{subsec:3.2.2}
 
-Nous avons choisi d'analyser le \textbf{Tranco Top 10K} après évaluation de trois options :
+The choice of 10,000 domains balances three competing requirements:
 
+\textbf{Representativeness}: The Tranco Top 10K contains the domains responsible for the large majority of global web traffic, including major CDN-backed services (streaming platforms, search engines, social networks, cloud providers) that are expected to exhibit the richest geographic DNS variation. The Top 1K would be sufficient to study the largest infrastructure operators but would miss the diversity of deployment patterns across the broader popular-domain tier.
 
-\% TODO: Convertir ce tableau Markdown en LaTeX
-\% | Option | Domaines | Mesures/jour | Coût crédits | Faisabilité |
-\% |--------|----------|--------------|--------------|-------------|
-\% | \textbf{Top 1K} | 1,000 | \textasciitilde{}1M | Faible | [OK] Facile |
-\% | \textbf{Top 10K} | 10,000 | \textasciitilde{}10M | Modéré | [OK] \textbf{Choisi} |
-\% | \textbf{Top 100K} | 100,000 | \textasciitilde{}100M | Élevé | [!] Critique |
-\%
+\textbf{Feasibility}: At 100 probes per measurement, one measurement type (A record), and one measurement per domain per day, the Top 10K corpus generates approximately one million measurement results per day. This volume is manageable within the available RIPE Atlas credit budget (van Rijswijk-Deij et al., 2016, for budget modelling reference). The Top 100K would be an order of magnitude larger and would require substantially more credits.
 
-\textbf{Calcul estimatif} (pour Top 10K) :
-\begin{itemize}
-\item \textbf{Domaines} : 10,000
-\item \textbf{Sondes par mesure} : 100 (diversité géographique)
-\item \textbf{Types de requêtes} : A (IPv4)
-\item \textbf{Fréquence} : 1x/jour
-\item \textbf{Total} : 10,000 domaines x 100 sondes x 1 query = \textbf{1,000,000 résultats/jour}
-\item \textbf{Sur 3 mois} : 1M x 90 jours = \textbf{90 millions de résultats}
-\end{itemize}
+\textbf{Established precedent}: The Tranco Top 10K is the standard corpus size used in DNS measurement and web measurement studies (Calder et al., 2015; Wang et al., 2018), enabling direct comparison with prior work.
 
-\textbf{Justification du choix Top 10K} :
-\begin{itemize}
-\item \textbf{Représentatif} : Capture les sites web majeurs (Google, Facebook, Amazon, etc.)
-\item \textbf{Faisable} : Compatible avec les crédits RIPE Atlas alloués au projet
-\item \textbf{Scientifique} : Utilisé dans de nombreuses études (Calder et al., 2015; Wang et al., 2018)
-\item \textbf{Analysable} : Volume de données gérable (quelques TB compressés sur 3 mois)
-\end{itemize}
-
-\subsection{Configuration Tranco}
+\subsection{Domain Filtering}
 \label{subsec:3.2.3}
 
-Nous générons une liste Tranco personnalisée avec la configuration suivante :
+Before the measurement campaign begins, each domain in the Tranco Top 10K list is pre-validated in three steps:
 
+\textbf{Technical validity}: A DNS A record query is issued from the local measurement infrastructure. Domains returning \texttt{NXDOMAIN} or \texttt{SERVFAIL} --- indicating unregistered or broken domains --- are excluded. Domains with no A record (e.g., MX-only or NS-only domains) are excluded from A record measurements but retained in the NS record measurement set.
 
-\begin{lstlisting}[style=python]
-# Configuration Tranco via API ou site web
-{
-  "list_size": 10000,
-  "averaging_period": 30,  # 30 jours (par défaut)
-  "providers": ["alexa", "umbrella", "majestic", "quantcast"],  # Toutes
-  "method": "dowdall",  # Dowdall rule (reflète Zipf's law)
-  "filters": {
-    "responsiveness": True,  # Domaines accessibles (HTTP 200)
-    "safe_browsing": True    # Exclure malware (Google Safe Browsing)
-  }
-}
+\textbf{Security filtering}: Domains flagged by the Google Safe Browsing API as hosting malware, phishing, or unwanted software are excluded. This filter protects both the probe hosts (whose connections generate the measurement traffic, per Kisteleki et al., 2016) and the integrity of the corpus as a baseline for legitimate Internet infrastructure.
 
-\end{lstlisting}
+\textbf{Authoritative server pre-resolution}: For the primary campaign (direct authoritative queries, described in Section 3.3.2), the authoritative name servers for each domain are identified by resolving the domain's NS records from a reference resolver. This pre-resolution step maps each domain to its authoritative server set and is repeated weekly in synchrony with the Tranco list update.
 
-
-\textbf{Mise à jour de la liste} : Hebdomadaire (chaque lundi), permettant de :
-\begin{itemize}
-\item Capturer l'évolution lente des domaines populaires
-\item Limiter les changements dus à l'instabilité quotidienne
-\item Réduire la charge de mise à jour du système
-\end{itemize}
-
-\textbf{Gestion des changements} :
-\begin{itemize}
-\item \textbf{Domaines ajoutés} (nouveaux dans top 10K) : Ajoutés immédiatement aux mesures
-\item \textbf{Domaines supprimés} (sortis du top 10K) : Continués pendant 2 semaines (capture transition)
-\item \textbf{Delta tracking} : Fichier CSV historisant les changements hebdomadaires
-\end{itemize}
-
-\subsection{Filtrage et validation des domaines}
-\label{subsec:3.2.4}
-
-\textbf{Étape 1 - Validation technique} :
-\begin{itemize}
-\item Requête A record depuis un point de référence (notre infrastructure locale)
-\item Vérification : NOERROR status (pas NXDOMAIN, SERVFAIL)
-\item Exclusion domaines invalides ou parkés (< 512 bytes content)
-\end{itemize}
-
-\textbf{Étape 2 - Filtrage sécurité} :
-\begin{itemize}
-\item Vérification Google Safe Browsing API (gratuite)
-\item Exclusion domaines classés : malware, phishing, unwanted software
-\item Justification : Éviter mesures fréquentes vers infrastructures malveillantes
-\end{itemize}
-
-\textbf{Étape 3 - Filtrage performance} (optionnel) :
-\begin{itemize}
-\item Chrome UX Report (CrUX) : sites réellement visités par utilisateurs Chrome
-\item Avantage : Garantit que domaines sont activement utilisés (pas juste enregistrés)
-\end{itemize}
-
-\textbf{Taux d'exclusion attendu} (basé sur Le Pochat et al., 2019) :
-\begin{itemize}
-\item \textbf{Responsiveness} : \textasciitilde{}5\% domaines Tranco top 10K non-accessibles
-\item \textbf{Safe Browsing} : \textasciitilde{}0.05\% domaines malveillants
-\item \textbf{Total exclusions} : \textasciitilde{}500-600 domaines sur 10K
-\item \textbf{Résultat final} : \textasciitilde{}9,400-9,500 domaines mesurés
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\section{Configuration des mesures RIPE Atlas}
+Based on the filtering rates reported by Le Pochat et al.~\cite{LePochat2019} for the Tranco Top 10K, approximately 500--600 domains are expected to be excluded (5--6\% of 10K), yielding a final measurement corpus of approximately 9,400--9,500 active domains.
+\bigskip
+\section{RIPE Atlas Measurement Configuration}
 \label{sec:3.3}
 
-\subsection{Sélection des sondes}
+\subsection{Probe Selection}
 \label{subsec:3.3.1}
 
-\textbf{Critères de sélection} :
+Probe selection follows the stratified-sampling protocol recommended by Bajpai et al.~\cite{Bajpai2017} and adapted to the geographic diversity requirements of this thesis:
 
-Nous sélectionnons les sondes RIPE Atlas selon \textbf{quatre critères prioritaires} :
+\textbf{Step 1 --- System tag filtering}: All probes must satisfy the following RIPE Atlas system tags, which are automatically maintained by the platform and refreshed every four hours:
 
-\textbf{Critère 1 - Distribution géographique} :
 \begin{itemize}
-\item Objectif : Maximiser la couverture mondiale
-\item Approche : Sélection équilibrée par continent
-\item Méthode : \texttt{type: 'area', value: 'WW'} (World-Wide)
-\item Contrainte : Accepter biais géographique RIPE Atlas (91\% Europe+Amérique du Nord)
+  \item \texttt{system-ipv4-works}: IPv4 connectivity verified by built-in platform measurements.
+  \item \texttt{system-resolves-a-correctly}: The probe's local resolver returns correct A records (excludes lying resolvers and probes using alternative root servers).
 \end{itemize}
 
-\textbf{Critère 2 - Resolver correctement configuré} :
-\begin{itemize}
-\item Tag obligatoire : \texttt{system-resolves-a-correctly}
-\item Raison : Éviter lying resolvers et alternative roots (Bortzmeyer, tutorial RIPE Atlas)
-\item Impact : Exclusion \textasciitilde{}10-15\% sondes (estimation)
-\end{itemize}
+For the primary campaign (direct authoritative queries), \texttt{system-resolves-a-correctly} is less critical than for resolver-based measurements, but is retained as a general connectivity health indicator. For the supplementary Q4 campaign (Section 3.3.5), this tag is strictly required.
 
-\textbf{Critère 3 - Hardware récent} :
-\begin{itemize}
-\item Version sonde : v3 minimum, v5 préféré
-\item Raison : Limiter interférence timing ~\cite{TODO}
-\item Impact : v1/v2 = +1.10-1.20 ms médiane, +7.30-7.70 ms 95e percentile
-\item v3/v5 = impact minimal (0.06 ms médiane)
-\end{itemize}
+Hardware version v3 or later is required. Holterbach et al.~\cite{Holterbach2015} show that v1 and v2 probes (Lantronix XPort Pro, 167 MHz CPU) experience timing precision degradation of 1.1--1.2 ms in the median and 7.3--7.7 ms at the 95th percentile under concurrent measurement load, while v3 probes (TP-Link TL-MR3020, 400 MHz CPU) experience negligible degradation (0.06 ms median). Since precision is less critical for DNS content analysis (A record IP addresses) than for timing measurements (traceroute), this filter is applied as a preference rather than a hard requirement, with v1/v2 probes excluded when sufficient v3+ alternatives are available in the geographic stratum.
 
-\textbf{Critère 4 - Connectivité dual-stack} (optionnel) :
-\begin{itemize}
-\item Tag : \texttt{system-ipv4-works} ET \texttt{system-ipv6-works}
-\item Avantage : Permet mesures IPv4 + IPv6 depuis mêmes vantage points
-\item Taux : 46.5\% sondes publiques dual-stack ~\cite{TODO}
-\item Décision : Privilégier mais pas exiger (maximiser couverture géographique)
-\end{itemize}
+\textbf{Step 2 --- Geographic stratification}: To compensate for RIPE Atlas's documented geographic concentration (91\% of dual-stacked probes in the RIPE and ARIN regions, per Bajpai et al., 2017), probe allocation is stratified by continent with inverse-weighted over-representation of underrepresented regions:
 
-\textbf{Configuration API RIPE Atlas} :
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Region} & \textbf{Atlas distribution} & \textbf{Allocated probes} & \textbf{Allocation} \\
+\midrule
+Europe & \textasciitilde{}40\% & 30 & 30\% \\
+North America & \textasciitilde{}28\% & 25 & 25\% \\
+Asia-Pacific & \textasciitilde{}16\% & 20 & 20\% \\
+South America & \textasciitilde{}8\% & 10 & 10\% \\
+Africa & \textasciitilde{}5\% & 10 & 10\% \\
+Oceania & \textasciitilde{}3\% & 5 & 5\% \\
+\textbf{Total} & \textbf{100\%} & \textbf{100} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
+Africa and South America are allocated twice their natural share in the Atlas distribution to ensure that under-represented regions contribute sufficient observations for regional analysis. This stratification is implemented by issuing separate probe selection API queries per geographic region, using RIPE Atlas's built-in region filtering.
 
-\begin{lstlisting}[style=json]
-{
-  "probes": [{
-    "requested": 100,           // Nombre de sondes par mesure
-    "type": "area",
-    "value": "WW",               // Sélection mondiale
-    "tags": {
-      "include": [
-        "system-resolves-a-correctly",  // OBLIGATOIRE
-        "system-ipv4-works"             // OBLIGATOIRE (mesures IPv4)
-      ]
-    }
-  }]
-}
+\textbf{Step 3 --- AS diversity}: Within each geographic stratum, probes are selected to maximise the number of distinct Autonomous Systems represented, following the recommendation of Bajpai et al.~\cite{Bajpai2017}. A minimum of one probe per distinct AS is preferred over multiple probes per AS within the same city. This ensures that the measurement dataset captures the network-level diversity of DNS resolution paths within each region, not merely its geographic diversity.
 
-\end{lstlisting}
-
-
-\textbf{Stratégie de répartition géographique} :
-
-Pour compenser le biais géographique RIPE Atlas, nous appliquons une \textbf{pondération inverse} :
-
-
-\% TODO: Convertir ce tableau Markdown en LaTeX
-\% | Région | Sondes RIPE | \% Total | Sondes allouées | \% Allocation |
-\% |--------|-------------|---------|-----------------|--------------|
-\% | \textbf{Europe} | \textasciitilde{}5,000 | 40\% | 30 | 30\% |
-\% | \textbf{Amérique du Nord} | \textasciitilde{}3,500 | 28\% | 25 | 25\% |
-\% | \textbf{Asie} | \textasciitilde{}2,000 | 16\% | 20 | 20\% |
-\% | \textbf{Amérique du Sud} | \textasciitilde{}1,000 | 8\% | 10 | 10\% |
-\% | \textbf{Afrique} | \textasciitilde{}700 | 5\% | 10 | 10\% |
-\% | \textbf{Océanie} | \textasciitilde{}400 | 3\% | 5 | 5\% |
-\% | \textbf{TOTAL} | \textasciitilde{}12,600 | 100\% | \textbf{100} | 100\% |
-\%
-
-\textbf{Objectif} : Sur-représenter les régions sous-représentées (Afrique 10\% allocation vs 5\% disponibilité) pour obtenir des statistiques plus équilibrées géographiquement.
-
-\subsection{Configuration des mesures DNS}
+\subsection{Primary Campaign: Direct Authoritative DNS Queries}
 \label{subsec:3.3.2}
 
-\textbf{Paramètres de mesure} :
+The primary measurement campaign queries authoritative name servers directly, bypassing recursive resolvers. This design choice is motivated by two findings from the literature:
 
-Basé sur le tutorial Bortzmeyer et les best practices RIPE Atlas ~\cite{TODO}, nous configurons les mesures DNS comme suit :
+\begin{enumerate}
+  \item \textbf{Resolver centralization} \cite{Xu2023}: Over 90\% of forwarding resolvers are backed by fewer than 5\% of indirect recursive resolvers. Querying through probe resolvers would collapse the geographic diversity of probe vantage points into a small number of centralised resolution paths, making geographic DNS variation invisible.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Cache state divergence} (Section 2.2.4): Probes using local resolvers have heterogeneous cache states, introducing variation that mimics geographic routing differences but is actually an artefact of cache timing. Direct authoritative queries bypass resolver caches entirely, ensuring that each measurement reflects the current authoritative response to the probe's network location.
+\end{enumerate}
+
+For each domain in the corpus, measurements target the primary authoritative name server identified in the pre-resolution step (Section 3.2.3). The RIPE Atlas DNS measurement is configured as follows:
 
 
 \begin{lstlisting}[style=json]
 {
-  "definitions": [{
-    "type": "dns",
-    "af": 4,                          // IPv4 (priorité)
-    "query_type": "A",                // Type A record (adresses IPv4)
-    "query_class": "IN",              // Internet class
-    "query_argument": "example.com",  // Domaine à résoudre (variable)
-
-    "use_probe_resolver": true,       // *** CRUCIAL : diversité géographique ***
-    "set_rd_bit": true,               // Recursion Desired flag
-    "set_nsid_bit": true,             // NSID (identifier serveurs)
-
-    "protocol": "UDP",                // UDP standard (TCP si truncation)
-    "udp_payload_size": 512,          // Taille standard
-
-    "include_abuf": true,             // Raw DNS answer (analyse détaillée)
-    "include_qbuf": false,            // Query buffer non nécessaire
-
-    "retry": 2,                       // 2 tentatives si échec
-    "timeout": 5000,                  // 5 secondes timeout
-
-    "description": "Thesis DNS geo-diversity - Tranco YYYY-MM-DD",
-    "is_oneoff": false,               // Mesures récurrentes
-    "interval": 86400,                // 1×/jour (24h = 86400s)
-
-    "tags": [
-      "thesis-dns-geo",
-      "tranco-2026-03-21"             // Date de la liste Tranco
-    ]
-  }]
+  "type": "dns",
+  "af": 4,
+  "target": "<authoritative_ns_ip>",
+  "query_type": "A",
+  "query_class": "IN",
+  "query_argument": "<domain>",
+  "use_probe_resolver": false,
+  "set_rd_bit": false,
+  "set_nsid_bit": true,
+  "set_do_bit": false,
+  "set_cd_bit": false,
+  "protocol": "UDP",
+  "udp_payload_size": 1024,
+  "include_abuf": true,
+  "retry": 2,
+  "timeout": 5000,
+  "is_oneoff": false,
+  "interval": 86400,
+  "description": "Thesis DNS geo-diversity - authoritative - <domain> - <YYYY-MM-DD>"
 }
 
 \end{lstlisting}
 
 
-\textbf{Justification des choix} :
+Key parameter justifications:
 
-\textbf{\texttt{use\_probe\_resolver: true}} : C'est le paramètre le plus critique. En utilisant le resolver local de chaque sonde, nous capturons la diversité géographique réelle des réponses DNS :
-\begin{itemize}
-\item Sondes Europe -> Resolvers ISP européens -> Réponses CDN optimisées pour Europe
-\item Sondes Asie -> Resolvers ISP asiatiques -> Réponses CDN optimisées pour Asie
-\item Sans ce paramètre, toutes les sondes interrogeraient le même resolver -> perte de diversité
-\end{itemize}
+\textbf{`use\_probe\_resolver: false` with explicit authoritative target}: Queries are sent directly to the authoritative name server. The \texttt{RD} (Recursion Desired) flag is set to false (\texttt{set\_rd\_bit: false}) because authoritative servers should not recurse; they return the authoritative answer for the queried domain directly.
 
-\textbf{\texttt{set\_nsid\_bit: true}} : Permet d'identifier le serveur DNS autoritaire répondant via l'option NSID (RFC 5001). Utile pour :
-\begin{itemize}
-\item Détecter instances anycast différentes
-\item Identifier providers DNS (Cloudflare, Route53, etc.)
-\item Analyser distribution géographique serveurs autoritaires
-\end{itemize}
+\textbf{`set\_nsid\_bit: true`}: The NSID option (RFC 5001) is included in every query, following the methodology of Bortzmeyer~\cite{Bortzmeyer2013} and Finnegan~\cite{Finnegan2018}. The NSID string returned by the authoritative server identifies which physical anycast instance responded, providing the anycast routing dimension of geographic DNS variation alongside the IP address content dimension.
 
-\textbf{\texttt{include\_abuf: true}} : Le champ \texttt{abuf} contient la réponse DNS complète encodée en base64. Essentiel pour :
-\begin{itemize}
-\item Parser tous les records DNS (pas seulement les A)
-\item Extraire TTL, flags DNS, sections additionnelles
-\item Analyser réponses DNSSEC si présentes
-\end{itemize}
+\textbf{`set\_do\_bit: false`}: The DNSSEC OK flag is not set in the primary campaign, to avoid DNSSEC-induced \texttt{SERVFAIL} responses from domains with broken signing chains being misinterpreted as unavailability (Section 2.9.1). A secondary measurement batch with \texttt{set\_do\_bit: true} is included for DNSSEC characterisation.
 
-\textbf{\texttt{interval: 86400}} : Mesures quotidiennes (24h) permettent de :
-\begin{itemize}
-\item Capturer variations journalières (migrations serveurs, maintenance)
-\item Détecter tendances hebdomadaires/mensuelles
-\item Optimiser crédits (vs mesures horaires trop coûteuses)
-\end{itemize}
+\textbf{`interval: 86400`} (86,400 seconds = 24 hours): Daily measurements provide the temporal resolution needed to detect day-to-day DNS changes while remaining within credit budget. The daily interval also respects the spirit of DNS TTL values: most popular domains have A record TTLs between 60 seconds and 3,600 seconds, making more frequent measurement redundant for content analysis (though not for timing analysis).
 
-\textbf{\texttt{tags}} : Tags systématiques pour :
-\begin{itemize}
-\item Retrouver nos mesures via API (\texttt{thesis-dns-geo})
-\item Tracer version liste Tranco utilisée (\texttt{tranco-2026-03-21})
-\item Faciliter reproductibilité scientifique
-\end{itemize}
+\textbf{`include\_abuf: true`}: The raw DNS response packet (base64-encoded) is included in the result, enabling full parsing of all DNS sections (answer, authority, additional), extraction of TTL values, and NSID option data.
 
-\subsection{Gestion de l'interférence et du scheduling}
+\textbf{Tags}: Each measurement is tagged with \texttt{thesis-dns-geo} (project identifier) and \texttt{tranco-<date>} (Tranco list version date), enabling reliable retrieval via the RIPE Atlas API.
+
+\subsection{Record Types Measured}
 \label{subsec:3.3.3}
 
-\textbf{Problème} : Holterbach et al. (2015) ont démontré deux types d'interférence sur RIPE Atlas :
-1. \textbf{Timing interference} : Augmentation latences (+1-7 ms selon hardware)
-2. \textbf{Scheduling interference} : Désynchronisation jusqu'à \textbf{1 heure}
+In addition to A records (the primary measurement type), the following record types are measured for each domain in weekly batches:
 
-\textbf{Mitigation timing interference} :
 \begin{itemize}
-\item Sélection hardware v3+ (critère déjà appliqué section 3.3.1)
-\item Accepter variance timing dans analyses (pas critique pour DNS vs traceroute)
-\item Mesures DNS = rapides (<100ms typique) -> moins sensibles que traceroute
+  \item \textbf{AAAA records}: IPv6 addresses, to enable parallel analysis of IPv4/IPv6 anycast divergence \cite{Bortzmeyer2013}. These measurements are run with the same probe set and direct authoritative targeting.
+  \item \textbf{NS records}: Identify the authoritative DNS provider for each domain. Essential for server-side centralisation analysis \cite{Xu2023} and for tracking provider migrations over time.
 \end{itemize}
 
-\textbf{Mitigation scheduling interference} :
-\begin{itemize}
-\item \textbf{Ne pas se fier aux timestamps programmés} -> Utiliser \texttt{timestamp} réels dans résultats
-\item Tolérance temporelle : Fenêtre de \textbf{+/-2h} autour de l'horaire prévu
-\item Validation a posteriori : Vérifier distribution temporelle résultats collectés
-\item Filtrage : Exclure résultats >4h de désynchronisation (outliers extrêmes)
-\end{itemize}
+MX and DNSKEY records (included in the OpenINTEL query set of van Rijswijk-Deij et al., 2016) are measured quarterly rather than daily, given their lower expected change rate and the credit cost of including them in the daily campaign.
 
-\textbf{Exemple gestion scheduling} :
-
-
-\begin{lstlisting}[style=python]
-# Horaire programmé : 2026-03-21 00:00:00 UTC
-# Tolérance : ±2h (acceptable: 22:00-02:00)
-# Filtrage : >4h rejeté (avant 20:00 ou après 04:00)
-
-def validate_timing(result_timestamp, scheduled_timestamp):
-    delta = abs(result_timestamp - scheduled_timestamp)
-    if delta <= 2 * 3600:  # ±2h
-        return "VALID"
-    elif delta <= 4 * 3600:  # 2-4h
-        return "WARNING"
-    else:  # >4h
-        return "REJECTED"
-
-\end{lstlisting}
-
-
-\subsection{Optimisation de l'utilisation des crédits}
+\subsection{Managing Measurement Interference and Scheduling}
 \label{subsec:3.3.4}
 
-\textbf{Calcul consommation crédits} :
+Holterbach et al.~\cite{Holterbach2015} demonstrate two forms of interference on the RIPE Atlas platform: timing precision degradation and temporal desynchronisation between probes. Two mitigation strategies are applied:
 
-Les crédits RIPE Atlas sont consommés selon la formule (documentation RIPE Atlas) :
+\textbf{Timing interference mitigation}: As noted above, v3+ probe hardware is preferred \cite{Holterbach2015}. DNS content measurements (which IP address is returned) are not sensitive to sub-millisecond timing differences; only RTT analysis (used for Q4 supplementary comparison) requires high timing precision.
 
+\textbf{Scheduling desynchronisation mitigation}: Since concurrent platform load can desynchronise measurements by up to one hour \cite{Holterbach2015}, results are validated post-collection using a timing window of $\pm$2 hours around the scheduled measurement time. Results arriving more than 4 hours outside the scheduled window are flagged as \texttt{REJECTED} and excluded from temporal analyses that require simultaneous multi-probe observations. The exact result timestamps are used for all temporal analysis --- not the scheduled time.
 
-\begin{verbatim}
-Crédits = base_cost × num_probes × num_measurements × duration_days
+Measurements are scheduled at \textbf{02:00 UTC} daily, which corresponds to off-peak hours across Europe (03:00--04:00 local time) and North America (21:00--22:00 Eastern), reducing the probability of concurrent load from other high-volume RIPE Atlas campaigns.
 
-\end{verbatim}
+\subsection{Supplementary Campaign for Q4: Resolver Comparison}
+\label{subsec:3.3.5}
 
+To address Q4 (impact of resolver choice), a supplementary measurement campaign is conducted in parallel with the primary campaign for a subset of 1,000 domains drawn from the primary corpus (the Tranco Top 1,000, updated weekly). This supplementary campaign uses \texttt{use\_probe\_resolver: true} --- querying through the probe's local ISP resolver --- so that the DNS response reflects the CDN routing decision made based on the resolver's IP rather than the probe's network location.
 
-Pour nos mesures DNS récurrentes (1x/jour) :
-\begin{itemize}
-\item \textbf{Base cost DNS} : 10 crédits/mesure
-\item \textbf{Nombre de sondes} : 100
-\item \textbf{Durée} : 90 jours (3 mois)
-\item \textbf{Nombre de domaines} : 10,000
-\end{itemize}
+A second supplementary set uses an explicit public DNS resolver (Google Public DNS at 8.8.8.8) as the target (\texttt{use\_probe\_resolver: false}, target = 8.8.8.8), enabling a three-way comparison for the same domains, from the same probes, at the same time:
 
-\textbf{Coût total estimé} :
+\begin{enumerate}
+  \item \textbf{Direct authoritative} (primary campaign): Response from authoritative server based on probe's network location.
+  \item \textbf{Local ISP resolver}: Response as CDN sees it for the probe's local resolver.
+  \item \textbf{Google Public DNS (8.8.8.8)}: Response as CDN sees it for a centralised public resolver.
+\end{enumerate}
 
-\begin{verbatim}
-10,000 domaines × 10 crédits × 100 sondes × 90 jours / 10,000 (normalisation API)
-= 900,000 crédits pour 3 mois
+This three-way comparison directly tests the predictions of the remote DNS problem \cite{Wang2018} and the ECS hypothesis \cite{RFC7871}: the local ISP resolver should produce CDN assignments similar to the authoritative response (because the ISP resolver's IP is geographically close to the probe), while Google Public DNS should produce more uniform, geographically neutral assignments --- unless ECS is active, in which case the Google Public DNS response should converge toward the local resolver response.
 
-\end{verbatim}
+For the ECS dimension, a fourth measurement is added: the same domain queried through Google Public DNS with the ECS opt-out option (\texttt{subnet=0/0}), which instructs the resolver to suppress ECS forwarding (Bortzmeyer, n.d., tutorial; Contavalli et al., 2016). The difference between Google DNS with and without ECS measures the pure ECS contribution to geographic routing accuracy.
 
+\subsection{Credit Budget Estimation}
+\label{subsec:3.3.6}
 
-\textbf{Stratégies d'optimisation} :
+The RIPE Atlas credit consumption is estimated as follows. For DNS measurements, the approximate cost is 10 credits per probe per measurement instance (RIPE NCC, credit documentation). For recurring daily measurements:
 
-\textbf{Stratégie 1 - Vérification mesures existantes} :
-\begin{itemize}
-\item Avant de lancer une mesure, vérifier via API RIPE si mesures similaires existent
-\item Réutiliser résultats publics si disponibles (économie crédits)
-\item Justification : Nosyk et al. (2024) recommandent explicitement cette pratique
-\end{itemize}
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l l l}
+\toprule
+\textbf{Campaign} & \textbf{Domains} & \textbf{Probes} & \textbf{Days} & \textbf{Credits/day} & \textbf{Total} \\
+\midrule
+Primary (A, direct) & 9,500 & 100 & 90 & 950,000 & \textasciitilde{}85.5M \\
+Primary (AAAA, direct) & 9,500 & 100 & 90 & 950,000 & \textasciitilde{}85.5M \\
+NS records (weekly) & 9,500 & 100 & 13 weeks & 950,000/week & \textasciitilde{}12.4M \\
+Q4 supplementary (3 types) & 1,000 & 100 & 90 & 300,000 & \textasciitilde{}27M \\
+\textbf{Total} &  &  &  &  & \textbf{\textasciitilde{}210M} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\textbf{Stratégie 2 - Mesures récurrentes vs one-shot} :
-\begin{itemize}
-\item Privilégier mesures récurrentes (1 setup, N jours) vs one-shot quotidiens
-\item Économie : Setup unique vs 90 setups individuels
-\item Trade-off : Moins de flexibilité (modification en cours difficile)
-\end{itemize}
-
-\textbf{Stratégie 3 - Batching intelligent} :
-\begin{itemize}
-\item Grouper domaines par serveurs DNS autoritaires identiques
-\item Exemple : \texttt{google.com}, \texttt{youtube.com}, \texttt{gmail.com} -> même NS records
-\item Potentiel : Réduire redondance mesures vers mêmes serveurs
-\end{itemize}
-
-\textbf{Stratégie 4 - Adaptation dynamique} :
-\begin{itemize}
-\item Monitoring consommation crédits hebdomadaire
-\item Si budget serré : réduire fréquence (1x/2 jours) ou nombre sondes (100->50)
-\item Si budget confortable : étendre à Top 20K ou mesures IPv6
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\section{Collecte et traitement des données}
+This estimate is conservative (assumes all domains are active and all probes respond). In practice, the effective credit consumption will be lower due to probe failures, measurement errors, and the exclusion of filtered domains. The credit budget is monitored weekly, with contingency adjustments: if consumption exceeds budget, the A record campaign takes priority over AAAA and NS campaigns; if under budget, the domain corpus is expanded or the measurement frequency increased.
+\bigskip
+\section{Data Collection and Processing}
 \label{sec:3.4}
 
-\subsection{Collecte via API RIPE Atlas}
+\subsection{Daily Collection Pipeline}
 \label{subsec:3.4.1}
 
-\textbf{Workflow de collecte} :
+Measurement results are collected from the RIPE Atlas REST API on a daily schedule, retrieving results for the previous calendar day. The collection script queries each active measurement identifier (stored in a manifest file), retrieves all results in the specified time window, and writes them to local storage as raw JSON. Error handling includes automatic retry (three attempts with exponential backoff) and an alert if more than 10\% of measurements fail to return results for a given day.
 
 
 \begin{lstlisting}[style=python]
-# Pseudo-code simplifié du pipeline de collecte
-
-import requests
-from datetime import datetime, timedelta
-
-RIPE_API_BASE = "https://atlas.ripe.net/api/v2/"
-API_KEY = "YOUR_API_KEY"
-
-# Étape 1: Récupérer liste des mesures actives
-def fetch_measurements():
-    """Récupère IDs de toutes nos mesures actives"""
-    response = requests.get(
-        f"{RIPE_API_BASE}/measurements/",
-        params={
-            "tags": "thesis-dns-geo",
-            "status": "1"  # Ongoing
-        },
-        headers={"Authorization": f"Key {API_KEY}"}
-    )
-    return [m["id"] for m in response.json()["results"]]
-
-# Étape 2: Collecter résultats pour chaque mesure
-def fetch_results(measurement_id, start_time, end_time):
-    """Récupère résultats entre start_time et end_time"""
-    response = requests.get(
-        f"{RIPE_API_BASE}/measurements/{measurement_id}/results/",
-        params={
-            "start": int(start_time.timestamp()),
-            "stop": int(end_time.timestamp())
-        }
-    )
-    return response.json()
-
-# Étape 3: Collecte quotidienne automatisée
-def daily_collection():
-    """Collecte quotidienne des résultats J-1"""
-    yesterday = datetime.now() - timedelta(days=1)
-    start = yesterday.replace(hour=0, minute=0, second=0)
-    end = yesterday.replace(hour=23, minute=59, second=59)
-
-    measurements = fetch_measurements()
-
-    for msm_id in measurements:
-        results = fetch_results(msm_id, start, end)
-        store_raw_results(results, msm_id, yesterday)
-
-# Étape 4: Stockage brut (JSON)
-def store_raw_results(results, msm_id, date):
-    """Stockage brut JSON avant traitement"""
-    filename = f"data/raw/{date.strftime('%Y-%m-%d')}/{msm_id}.json"
-    with open(filename, 'w') as f:
-        json.dump(results, f)
+# Pseudocode: daily collection
+def collect_daily(msm_ids, target_date):
+    start = target_date.replace(hour=0, minute=0, second=0)
+    stop  = target_date.replace(hour=23, minute=59, second=59)
+    for msm_id in msm_ids:
+        results = atlas_api.get_results(msm_id, start=start, stop=stop)
+        write_raw(results, path=f"data/raw/{target_date}/{msm_id}.json")
 
 \end{lstlisting}
 
 
-\textbf{Fréquence de collecte} : Quotidienne, à J+1 (récupération résultats de la veille).
-
-\textbf{Gestion des erreurs} :
-\begin{itemize}
-\item Retry automatique (3 tentatives) si API timeout
-\item Logging de tous les échecs de collecte
-\item Alerte email si >10\% mesures échouent un jour donné
-\end{itemize}
-
-\subsection{Parsing et extraction des données}
+\subsection{Parsing and Field Extraction}
 \label{subsec:3.4.2}
 
-\textbf{Structure résultat RIPE Atlas (JSON)} :
+Each raw RIPE Atlas DNS result is a JSON object containing measurement metadata, probe metadata, and the raw DNS response (\texttt{abuf} field, base64-encoded). The parsing pipeline extracts the following fields:
 
+\textbf{Measurement metadata}: \texttt{msm\_id}, \texttt{prb\_id}, \texttt{timestamp} (Unix epoch, actual measurement time).
 
-\begin{lstlisting}[style=json]
-{
-  "msm_id": 123456789,
-  "prb_id": 16336,
-  "timestamp": 1710979200,
-  "from": "89.142.236.92",
-  "dst_addr": "192.168.1.1",
-  "af": 4,
-  "result": {
-    "ANCOUNT": 3,
-    "ARCOUNT": 1,
-    "ID": 10350,
-    "NSCOUNT": 0,
-    "QDCOUNT": 1,
-    "abuf": "KG6BgAABAAMA...",  // Base64 encoded DNS answer
-    "rt": 48.5,                  // Response time (ms)
-    "size": 253
-  }
-}
+\textbf{Probe metadata}: \texttt{from} (probe source IP), \texttt{af} (address family, 4 or 6). The probe's country, geographic coordinates, and ASN are retrieved from the RIPE Atlas probe metadata API and joined to the result on \texttt{prb\_id}.
 
-\end{lstlisting}
+\textbf{Resolver metadata} (for resolver-based campaigns only): \texttt{dst\_addr} (resolver IP), enriched with GeoIP country and ASN via the MaxMind GeoLite2 database (or equivalent open-access database).
 
+\textbf{DNS response}: The \texttt{abuf} field is base64-decoded and parsed using the \texttt{dnspython} library to extract:
+\begin{itemize}
+  \item \texttt{rcode}: DNS response code (NOERROR=0, NXDOMAIN=3, SERVFAIL=2, etc.)
+  \item \texttt{flags}: DNS header flags (QR, AA, RD, RA, TC, AD)
+  \item \texttt{answer\_records}: List of resource records in the Answer section, each with \texttt{rdtype}, \texttt{rdataset} (for A records: list of IP addresses), and \texttt{ttl}
+  \item \texttt{nsid}: NSID option value from the OPT record (empty string if not returned)
+  \item \texttt{rt}: Response time in milliseconds (from the RIPE Atlas outer JSON, not from the abuf)
+\end{itemize}
 
-\textbf{Pipeline de parsing} :
-
-\textbf{Étape 1 - Extraction champs directs} :
-
-\begin{lstlisting}[style=python]
-import base64
-import dns.message  # dnspython library
-
-def parse_result(result):
-    """Parse un résultat RIPE Atlas"""
-    parsed = {
-        # Métadonnées mesure
-        "msm_id": result["msm_id"],
-        "prb_id": result["prb_id"],
-        "timestamp": result["timestamp"],
-
-        # Métadonnées sonde
-        "probe_ip": result["from"],
-        "probe_af": result["af"],
-
-        # Métadonnées resolver
-        "resolver_ip": result["dst_addr"],
-
-        # Métriques performance
-        "response_time_ms": result["result"].get("rt"),
-        "response_size": result["result"].get("size"),
-
-        # Compteurs DNS
-        "ancount": result["result"].get("ANCOUNT"),
-        "arcount": result["result"].get("ARCOUNT"),
-        "nscount": result["result"].get("NSCOUNT"),
-    }
-
-    # Étape 2: Décodage abuf (raw DNS)
-    if "abuf" in result["result"]:
-        parsed.update(parse_abuf(result["result"]["abuf"]))
-
-    return parsed
-
-\end{lstlisting}
-
-
-\textbf{Étape 2 - Décodage abuf (raw DNS answer)} :
-
-
-\begin{lstlisting}[style=python]
-def parse_abuf(abuf_b64):
-    """Décode et parse la réponse DNS brute"""
-    # Décoder base64
-    abuf_bytes = base64.b64decode(abuf_b64)
-
-    # Parser avec dnspython
-    dns_msg = dns.message.from_wire(abuf_bytes)
-
-    # Extraire informations
-    parsed = {
-        "dns_rcode": dns_msg.rcode(),     # NOERROR, NXDOMAIN, etc.
-        "dns_flags": dns_msg.flags,       # QR, AA, RD, RA, etc.
-        "dns_id": dns_msg.id,
-
-        # Extraire records A
-        "a_records": [],
-        "ttl": None,
-    }
-
-    # Parser section Answer
-    for rrset in dns_msg.answer:
-        if rrset.rdtype == dns.rdatatype.A:
-            for rdata in rrset:
-                parsed["a_records"].append(str(rdata))
-            parsed["ttl"] = rrset.ttl  # TTL (même pour tous records du rrset)
-
-    return parsed
-
-\end{lstlisting}
-
-
-\textbf{Étape 3 - Enrichissement métadonnées} :
-
-
-\begin{lstlisting}[style=python]
-def enrich_metadata(parsed_result):
-    """Ajoute métadonnées géographiques et réseau"""
-
-    # GeoIP (MaxMind GeoLite2)
-    geo = geoip2.database.Reader('GeoLite2-City.mmdb')
-    probe_geo = geo.city(parsed_result["probe_ip"])
-
-    parsed_result["probe_country"] = probe_geo.country.iso_code
-    parsed_result["probe_city"] = probe_geo.city.name
-    parsed_result["probe_lat"] = probe_geo.location.latitude
-    parsed_result["probe_lon"] = probe_geo.location.longitude
-
-    # AS mapping (pyasn)
-    asn_db = pyasn.pyasn('ipasn.dat')
-    probe_asn, probe_prefix = asn_db.lookup(parsed_result["probe_ip"])
-
-    parsed_result["probe_asn"] = probe_asn
-    parsed_result["probe_prefix"] = probe_prefix
-
-    # Même chose pour resolver_ip
-    # ... (similaire)
-
-    return parsed_result
-
-\end{lstlisting}
-
-
-\subsection{Filtrage et validation}
+\subsection{Data Validation and Filtering}
 \label{subsec:3.4.3}
 
-\textbf{Filtres appliqués} :
+Four validation filters are applied in sequence:
 
-\textbf{Filtre 1 - Résultats DNS valides} :
+\textbf{Filter 1 --- Result completeness}: Results missing the \texttt{abuf} field (no DNS response received within the timeout) are classified as \texttt{TIMEOUT} and excluded from content analysis. They are retained as observations of DNS non-responsiveness for reliability analysis.
 
-\begin{lstlisting}[style=python]
-def is_valid_dns_result(result):
-    """Vérifie validité technique résultat DNS"""
-    # Doit avoir une réponse
-    if "result" not in result:
-        return False, "NO_RESULT"
+\textbf{Filter 2 --- Timing validation}: Results whose actual timestamp deviates from the scheduled measurement time by more than four hours are classified as \texttt{SCHED\_REJECTED}. Timestamps deviating by two to four hours receive a \texttt{SCHED\_WARNING} flag and are retained but annotated \cite{Holterbach2015}.
 
-    # Doit avoir abuf (raw DNS)
-    if "abuf" not in result["result"]:
-        return False, "NO_ABUF"
+\textbf{Filter 3 --- DNS response code}: Results with \texttt{rcode != NOERROR} are classified by their specific error code (\texttt{NXDOMAIN}, \texttt{SERVFAIL}, \texttt{REFUSED}, etc.). For Q1 and Q2, only \texttt{NOERROR} results with at least one answer record are used. \texttt{SERVFAIL} results are separately analysed for DNSSEC correlation (Section 3.5). In the context of Q3 and geographic filtering (Section 2.9.3), \texttt{NXDOMAIN}/\texttt{REFUSED} results from specific countries may represent intentional censorship rather than measurement failure and are handled explicitly.
 
-    # RCODE doit être NOERROR (0)
-    parsed = parse_abuf(result["result"]["abuf"])
-    if parsed["dns_rcode"] != 0:  # 0 = NOERROR
-        return False, f"RCODE_{parsed['dns_rcode']}"
+\textbf{Filter 4 --- Anomalous response detection}: For direct authoritative measurements, results that return IP addresses inconsistent with the queried domain's known address space are flagged for manual inspection. This filter catches cases where an in-path proxy or network appliance intercepts the query and substitutes a synthetic response --- analogous to the proxy detection methodology of Jones et al.~\cite{Jones2016} applied to authoritative queries rather than root server queries. Consistency across multiple probes in the same region is used as a cross-validation signal: if 90\%+ of probes in the same geographic region return the same set of IP addresses but one probe returns a disjoint set, the outlier is flagged as a potential proxy.
 
-    # Doit avoir au moins 1 A record
-    if len(parsed["a_records"]) == 0:
-        return False, "NO_A_RECORDS"
+Expected filter rates based on comparable measurement studies:
 
-    return True, "VALID"
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l}
+\toprule
+\textbf{Filter} & \textbf{Expected exclusion rate} \\
+\midrule
+Timeout (no result) & 1--3\% \\
+Timing deviation >4h & \textasciitilde{}1\% \\
+RCODE $\neq$ NOERROR & 2--5\% \\
+Anomalous response flag & <1\% \\
+\textbf{Usable results} & \textbf{\textasciitilde{}90--95\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\end{lstlisting}
-
-
-\textbf{Filtre 2 - Détection lying resolvers} :
-
-Basé sur les recommandations de Bortzmeyer (tutorial RIPE Atlas), nous détectons les resolvers suspects :
-
-
-\begin{lstlisting}[style=python]
-def detect_lying_resolver(results_for_domain):
-    """Détecte resolvers retournant réponses anormales"""
-
-    # Grouper par resolver IP
-    by_resolver = {}
-    for r in results_for_domain:
-        resolver_ip = r["resolver_ip"]
-        if resolver_ip not in by_resolver:
-            by_resolver[resolver_ip] = []
-        by_resolver[resolver_ip].append(r)
-
-    # Identifier réponses majoritaires
-    all_ips = []
-    for r in results_for_domain:
-        all_ips.extend(r["a_records"])
-
-    ip_counts = Counter(all_ips)
-    majority_ips = {ip for ip, count in ip_counts.items()
-                    if count / len(all_ips) > 0.05}  # >5% fréquence
-
-    # Flaguer resolvers donnant réponses uniques
-    lying_resolvers = set()
-    for resolver_ip, results in by_resolver.items():
-        resolver_ips = set()
-        for r in results:
-            resolver_ips.update(r["a_records"])
-
-        # Si aucune IP en commun avec majoritaires -> suspect
-        if not resolver_ips.intersection(majority_ips):
-            lying_resolvers.add(resolver_ip)
-
-    return lying_resolvers
-
-\end{lstlisting}
-
-
-\textbf{Filtre 3 - Timing et scheduling} :
-
-
-\begin{lstlisting}[style=python]
-def validate_timing(result, scheduled_time):
-    """Valide timing selon critères Holterbach et al. (2015)"""
-    result_time = datetime.fromtimestamp(result["timestamp"])
-    delta = abs((result_time - scheduled_time).total_seconds())
-
-    if delta <= 2 * 3600:  # ±2h
-        return "VALID"
-    elif delta <= 4 * 3600:  # 2-4h
-        return "WARNING"
-    else:  # >4h
-        return "REJECTED"
-
-\end{lstlisting}
-
-
-\textbf{Taux d'exclusion attendus} :
-
-
-\% TODO: Convertir ce tableau Markdown en LaTeX
-\% | Filtre | Taux exclusion | Justification |
-\% |--------|----------------|---------------|
-\% | \textbf{Pas de résultat} | \textasciitilde{}1-2\% | Sondes offline, network issues |
-\% | \textbf{RCODE != NOERROR} | \textasciitilde{}2-3\% | NXDOMAIN, SERVFAIL (DNS errors) |
-\% | \textbf{Lying resolvers} | \textasciitilde{}5-10\% | Resolvers alternatifs, interception |
-\% | \textbf{Timing >4h} | \textasciitilde{}1\% | Scheduling interference extrême |
-\% | \textbf{TOTAL} | \textbf{~10-15\%} | \textbf{Résultats exploitables : 85-90\%} |
-\%
-
-\subsection{Stockage des données}
+\subsection{Metadata Enrichment}
 \label{subsec:3.4.4}
 
-\textbf{Architecture de stockage 2-tiers} (inspirée d'OpenINTEL) :
+Probe metadata (geographic coordinates, country, ASN) is enriched from two sources: the RIPE Atlas probe metadata API (primary source, updated daily) and the MaxMind GeoLite2 City database (secondary cross-validation). Jones et al.~\cite{Jones2016} note that 1.7\% of RIPE Atlas probes have inconsistent geolocation between Atlas metadata and MaxMind, motivating this cross-validation step. Probes with conflicting country assignments between the two sources are flagged and their results excluded from country-level geographic analysis (but retained for AS-level analysis using the RIPE Atlas-provided ASN, which is more reliable than IP geolocation for ASN mapping).
 
-\textbf{Tier 1 - Archivage long terme (Apache Avro)} :
+Authoritative server NSID strings are mapped to physical PoP locations using the naming conventions described by Bortzmeyer~\cite{Bortzmeyer2013} and Finnegan~\cite{Finnegan2018}: IATA airport codes (e.g., \texttt{ams} $\rightarrow$ Amsterdam Schiphol, \texttt{fra} $\rightarrow$ Frankfurt) and city abbreviations (e.g., \texttt{par} $\rightarrow$ Paris, \texttt{sin} $\rightarrow$ Singapore). A lookup table of known NSID strings is maintained and updated as new instances are encountered.
 
+\subsection{Storage Architecture}
+\label{subsec:3.4.5}
 
-\begin{lstlisting}[style=python]
-# Schéma Avro pour résultats DNS
-AVRO_SCHEMA = {
-    "type": "record",
-    "name": "DNSMeasurement",
-    "fields": [
-        {"name": "msm_id", "type": "long"},
-        {"name": "prb_id", "type": "long"},
-        {"name": "timestamp", "type": "long"},
-        {"name": "domain", "type": "string"},
+Results are stored in a two-tier architecture following the design of OpenINTEL \cite{vanRijswijk2016}:
 
-        # Probe metadata
-        {"name": "probe_ip", "type": "string"},
-        {"name": "probe_country", "type": "string"},
-        {"name": "probe_asn", "type": ["null", "long"]},
-        {"name": "probe_lat", "type": ["null", "double"]},
-        {"name": "probe_lon", "type": ["null", "double"]},
+\textbf{Tier 1 --- Long-term archival (Apache Avro)}: Parsed results are serialised in Apache Avro format using a fixed schema that includes all extracted fields plus validation flags. Avro's binary encoding with snappy compression achieves a compression ratio of approximately 7:1 compared to raw JSON \cite{vanRijswijk2016}, reducing daily storage from approximately 2 GB (raw JSON) to approximately 280 MB. Avro's self-describing schema ensures that files remain interpretable without external schema documentation.
 
-        # Resolver metadata
-        {"name": "resolver_ip", "type": "string"},
+The Avro schema captures the following fields per record:
 
-        # DNS response
-        {"name": "a_records", "type": {"type": "array", "items": "string"}},
-        {"name": "ttl", "type": ["null", "long"]},
-        {"name": "rcode", "type": "int"},
-        {"name": "response_time_ms", "type": ["null", "double"]},
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\texttt{msm\_id} & long & RIPE Atlas measurement ID \\
+\texttt{prb\_id} & long & RIPE Atlas probe ID \\
+\texttt{timestamp} & long & Actual measurement time (Unix epoch) \\
+\texttt{domain} & string & Queried domain name \\
+\texttt{query\_type} & string & A, AAAA, or NS \\
+\texttt{campaign\_type} & string & \texttt{auth\_direct}, \texttt{isp\_resolver}, \texttt{public\_dns}, \texttt{public\_dns\_noecs} \\
+\texttt{probe\_country} & string & ISO 3166-1 alpha-2 country code (Atlas metadata) \\
+\texttt{probe\_asn} & long & Autonomous System Number (Atlas metadata) \\
+\texttt{probe\_lat} & double & Probe latitude \\
+\texttt{probe\_lon} & double & Probe longitude \\
+\texttt{resolver\_ip} & string & Resolver IP (null for \texttt{auth\_direct} campaign) \\
+\texttt{target\_ip} & string & Target IP (authoritative server or resolver) \\
+\texttt{rcode} & int & DNS response code \\
+\texttt{answer\_ips} & array[string] & A/AAAA records returned \\
+\texttt{answer\_ttl} & long & TTL of answer records \\
+\texttt{nsid} & string & NSID option value (empty if not present) \\
+\texttt{rt\_ms} & double & Response time in milliseconds \\
+\texttt{valid} & boolean & Passes all validation filters \\
+\texttt{validation\_flag} & string & VALID / TIMEOUT / SCHED\_REJECTED / RCODE\_ERROR / ANOMALOUS \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-        # Validation
-        {"name": "valid", "type": "boolean"},
-        {"name": "validation_reason", "type": "string"}
-    ]
-}
+\textbf{Tier 2 --- Analytics (Apache Parquet)}: Validated Avro records are converted daily to Apache Parquet format, partitioned by year/month/day using Hive-style directory naming (\texttt{year=2026/month=03/day=21/}). Parquet's columnar storage format enables efficient execution of the analytical queries used in the analysis phase (filtering by domain, aggregating over time periods, grouping by probe geography) without reading all fields for all records. The storage overhead of Parquet relative to Avro is minimal (\textasciitilde{}30\% reduction in file size for the DNS result schema, which has many repeated string values amenable to dictionary encoding).
 
-\end{lstlisting}
-
-
-\textbf{Avantages Avro} :
+\textbf{Storage estimate}: For the primary campaign (10K domains $\times$ 100 probes $\times$ 90 days $\times$ 2 address families), the total storage requirement is approximately:
 \begin{itemize}
-\item Compression efficace : \textbf{Ratio 1:7.4} (van Rijswijk-Deij et al., 2016)
-\item Schéma intégré au fichier (auto-documentation)
-\item Évolution schéma compatible (ajout champs futurs)
-\item Splittable (parallélisation Hadoop/Spark)
+  \item Raw JSON: \textasciitilde{}180 GB
+  \item Avro: \textasciitilde{}24 GB
+  \item Parquet: \textasciitilde{}18 GB
+  \item \textbf{Total: \textasciitilde{}220 GB} (of which Avro and Parquet represent the long-term archive at \textasciitilde{}42 GB)
 \end{itemize}
-
-\textbf{Tier 2 - Analytics (Apache Parquet)} :
-
-
-\begin{lstlisting}[style=python]
-import pyarrow.parquet as pq
-import pandas as pd
-
-# Conversion Avro -> Parquet quotidienne
-def avro_to_parquet(avro_file, parquet_file):
-    """Convertit Avro vers Parquet pour analytics"""
-    # Lire Avro
-    records = read_avro(avro_file)
-
-    # Convertir en DataFrame
-    df = pd.DataFrame(records)
-
-    # Écrire Parquet (columnar, optimisé requêtes)
-    df.to_parquet(
-        parquet_file,
-        engine='pyarrow',
-        compression='snappy',  # Balance compression/vitesse
-        index=False
-    )
-
-\end{lstlisting}
-
-
-\textbf{Avantages Parquet} :
-\begin{itemize}
-\item Stockage columnar (lecture colonnes sélectives)
-\item Compatible SQL (Impala, Presto, Athena)
-\item Compression par colonne (types homogènes)
-\item Prédicats pushdown (filtrage efficace)
-\end{itemize}
-
-\textbf{Organisation fichiers} :
-
-
-\begin{verbatim}
-data/
-+-- raw/                          # JSON bruts RIPE Atlas
-|   +-- 2026-03-21/
-|       +-- 123456789.json
-|
-+-- avro/                         # Archives long terme
-|   +-- 2026-03/
-|       +-- dns_measurements_2026-03-21.avro
-|
-+-- parquet/                      # Analytics
-|   +-- year=2026/
-|       +-- month=03/
-|           +-- day=21/
-|               +-- measurements.parquet
-|
-+-- metadata/                     # Métadonnées
-    +-- tranco_lists/
-    |   +-- tranco_2026-03-21_10K.csv
-    +-- probe_inventory/
-        +-- probes_2026-03-21.json
-
-\end{verbatim}
-
-
-\textbf{Partitionnement} : Parquet partitionné par date (Hive-style) pour :
-\begin{itemize}
-\item Requêtes temporelles efficaces (filtrage par date)
-\item Gestion incrémentale (ajout journalier)
-\item Suppression sélective (GDPR, retention policies)
-\end{itemize}
-
-\textbf{Estimation volumes} (Top 10K, 100 sondes, 90 jours) :
-
-
-\% TODO: Convertir ce tableau Markdown en LaTeX
-\% | Format | Taille/jour | Taille 90j | Compression |
-\% |--------|-------------|------------|-------------|
-\% | \textbf{JSON brut} | \textasciitilde{}2 GB | \textasciitilde{}180 GB | 1:1 (baseline) |
-\% | \textbf{Avro} | \textasciitilde{}270 MB | \textasciitilde{}24 GB | \textbf{1:7.4} |
-\% | \textbf{Parquet} | \textasciitilde{}200 MB | \textasciitilde{}18 GB | \textbf{1:10} |
-\%
-
-\textbf{Total stockage requis} : \textasciitilde{}220 GB (JSON + Avro + Parquet) pour 3 mois de données.
-
-\medskip\hrule\medskip
-
-\section{Analyse des données}
+\bigskip
+\section{Analysis Methods}
 \label{sec:3.5}
 
-\subsection{Question Q1 : Diversité géographique des réponses}
+\subsection{Q1 --- Geographic Diversity of DNS Responses}
 \label{subsec:3.5.1}
 
-\textbf{Objectif} : Quantifier la proportion de domaines Tranco Top 10K retournant des réponses DNS différentes selon la localisation géographique.
+\textbf{Objective}: For each domain in the corpus, determine whether the set of IP addresses returned varies systematically by the geographic location of the querying probe, and characterise the pattern of variation.
 
-\textbf{Méthode d'analyse} :
+\textbf{Step 1 --- Compute per-domain IP diversity}: For each domain and each measurement day, the set of unique IP addresses returned across all probes is computed. The \textbf{number of distinct IP addresses} observed provides a first-order diversity index: a domain returning a single IP address from all probes globally exhibits no geographic variation; a domain returning 50 distinct IPs exhibits substantial variation.
 
-\textbf{Étape 1 - Groupement par domaine et par jour} :
+\textbf{Step 2 --- Compute inter-region diversity}: For each domain, the probe set is partitioned by geographic region (using the continent-level grouping from Section 3.3.1). For each pair of regions, the Jaccard similarity between their respective IP address sets is computed:
 
+\[
+J(A, B) = \frac{|A \cap B|}{|A \cup B|}
+\]
 
-\begin{lstlisting}[style=python]
-import pandas as pd
+A Jaccard similarity of 1.0 indicates identical IP sets across regions (no geographic differentiation); a Jaccard similarity of 0 indicates fully disjoint IP sets (complete geographic differentiation). The \textbf{median pairwise Jaccard similarity across all region pairs} serves as the primary geographic diversity metric per domain per day.
 
-# Charger données Parquet
-df = pd.read_parquet('data/parquet/year=2026/month=03/')
+\textbf{Step 3 --- Classification}: Domains are classified into four geographic diversity categories:
 
-# Grouper par domaine + jour
-daily_diversity = df.groupby(['domain', 'date']).agg({
-    'a_records': lambda x: len(set(flatten(x))),  # Nombre IPs uniques
-    'probe_country': 'nunique',                    # Nombre pays uniques
-    'probe_asn': 'nunique',                        # Nombre AS uniques
-    'prb_id': 'count'                              # Nombre sondes
-}).reset_index()
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Category} & \textbf{Criterion} & \textbf{Interpretation} \\
+\midrule
+\texttt{UNIFORM} & Single IP across all probes & No geographic routing \\
+\texttt{LOW\_DIVERSITY} & Median pairwise Jaccard > 0.8 & Minimal variation (round-robin or load balancing) \\
+\texttt{MEDIUM\_DIVERSITY} & Median pairwise Jaccard 0.4--0.8 & Moderate geographic routing \\
+\texttt{HIGH\_DIVERSITY} & Median pairwise Jaccard < 0.4 & Strong geographic routing \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-daily_diversity.columns = [
-    'domain', 'date',
-    'unique_ips', 'unique_countries', 'unique_asns', 'num_probes'
-]
+\textbf{Step 4 --- Mechanism attribution}: For domains in the \texttt{HIGH\_DIVERSITY} category, the NSID strings returned by the authoritative server across probes are analysed to determine whether geographic IP variation is driven by anycast instance selection (different NSID per region $\rightarrow$ different anycast PoP routing) or by DNS-based CDN routing (same NSID but different IP addresses $\rightarrow$ CDN geographic database lookup). The two mechanisms are distinguishable because anycast instance variation is visible in the NSID field, while CDN routing variation is visible in the A record content with a constant NSID.
 
-\end{lstlisting}
-
-
-\textbf{Étape 2 - Classification domaines} :
-
-
-\begin{lstlisting}[style=python]
-def classify_domain_diversity(row):
-    """Classifie domaine selon diversité géographique"""
-    if row['unique_ips'] == 1:
-        return "SINGLE_IP"       # Pas de diversité (1 seule IP globalement)
-
-    elif row['unique_ips'] <= 5:
-        return "LOW_DIVERSITY"   # Diversité faible (2-5 IPs)
-
-    elif row['unique_ips'] <= 20:
-        return "MEDIUM_DIVERSITY"  # Diversité moyenne (6-20 IPs)
-
-    else:
-        return "HIGH_DIVERSITY"  # Diversité élevée (>20 IPs)
-
-daily_diversity['diversity_class'] = daily_diversity.apply(
-    classify_domain_diversity, axis=1
-)
-
-\end{lstlisting}
-
-
-\textbf{Étape 3 - Analyse statistique} :
-
-
-\begin{lstlisting}[style=python]
-# Distribution par catégorie
-diversity_distribution = daily_diversity.groupby('diversity_class').agg({
-    'domain': 'nunique'
-}).reset_index()
-
-diversity_distribution['percentage'] = (
-    diversity_distribution['domain'] / 10000 * 100
-)
-
-print(diversity_distribution)
-# Résultat attendu (hypothétique) :
-# diversity_class     | domain | percentage
-# --------------------|--------|------------
-# SINGLE_IP           | 3500   | 35%
-# LOW_DIVERSITY       | 2500   | 25%
-# MEDIUM_DIVERSITY    | 2000   | 20%
-# HIGH_DIVERSITY      | 2000   | 20%
-
-\end{lstlisting}
-
-
-\textbf{Étape 4 - Corrélation géographique} :
-
-Pour chaque domaine classifié "diversité élevée", analyser si les IPs différentes correspondent à des localisations géographiques différentes :
-
-
-\begin{lstlisting}[style=python]
-def analyze_geo_correlation(domain_data):
-    """Analyse corrélation géographie <-> IP retournée"""
-
-    # Grouper par pays
-    by_country = domain_data.groupby('probe_country')['a_records'].apply(
-        lambda x: set(flatten(x))
-    )
-
-    # Calculer diversité inter-pays vs intra-pays
-    inter_country_diversity = len(set.union(*by_country.values))
-    intra_country_diversity = by_country.apply(len).mean()
-
-    # Ratio : élevé = diversité principalement inter-pays (CDN géo-distribué)
-    #         faible = diversité même au sein d'un pays (round-robin, anycast)
-    ratio = inter_country_diversity / max(intra_country_diversity, 1)
-
-    return {
-        'inter_country_ips': inter_country_diversity,
-        'avg_intra_country_ips': intra_country_diversity,
-        'geo_correlation_ratio': ratio
-    }
-
-\end{lstlisting}
-
-
-\textbf{Hypothèse} : Domaines avec CDN géo-distribués (Akamai, Cloudflare) auront ratio élevé (>5), domaines avec anycast auront ratio faible (<2).
-
-\textbf{Métriques finales Q1} :
+\textbf{Key metrics}:
 \begin{itemize}
-\item \textbf{\% domaines SINGLE_IP} (pas de diversité géographique)
-\item \textbf{\% domaines HIGH_DIVERSITY} (forte diversité géographique)
-\item \textbf{Corrélation géographie <-> IP} (CDN vs anycast)
-\item \textbf{Providers dominants} (Cloudflare, Akamai, AWS, Google, etc.)
+  \item Distribution of domains across the four diversity categories
+  \item Proportion of \texttt{HIGH\_DIVERSITY} domains attributable to anycast versus DNS-based CDN routing
+  \item Geographic diversity as a function of Tranco rank (do top-100 domains show more or less diversity than top-5K?)
 \end{itemize}
 
-\subsection{Question Q2 : Stabilité temporelle}
+\subsection{Q2 --- Temporal Stability}
 \label{subsec:3.5.2}
 
-\textbf{Objectif} : Quantifier la stabilité temporelle des enregistrements DNS sur différentes échelles (jour, semaine, mois).
+\textbf{Objective}: Quantify the temporal stability of DNS responses for each domain, characterising the rate and timescale of IP address change.
 
-\textbf{Méthode d'analyse} :
+\textbf{Step 1 --- Compute per-probe temporal stability}: For each domain and each probe, the time series of A record IP address sets is extracted over the measurement period. Consecutive daily observations are compared using Jaccard similarity; the \textbf{mean Jaccard similarity across consecutive days} is the probe-level daily stability index. A stability index of 1.0 indicates no change; 0.5 indicates that half the IP addresses change each day.
 
-\textbf{Étape 1 - Calcul taux de changement} :
+\textbf{Step 2 --- Aggregate across probes}: The domain-level stability index is the median of probe-level stability indices across all probes. This aggregation uses the median (rather than mean) to reduce the influence of individual probe failures that produce artificially low stability scores.
 
+\textbf{Step 3 --- Multi-scale analysis}: The stability analysis is repeated at weekly and monthly timescales, comparing the IP address set observed in one week (the union of all A records seen in that week across all probes) with the set observed in the following week. This captures the difference between high-frequency CDN routing fluctuations (visible at daily timescale) and genuine infrastructure changes such as server migrations (visible at weekly or monthly timescale).
 
-\begin{lstlisting}[style=python]
-def compute_change_rate(domain_data, timeframe='day'):
-    """Calcule taux changement IPs pour un domaine"""
+\textbf{Step 4 --- TTL correlation}: The TTL values of A records are extracted for each domain. A Spearman rank correlation is computed between each domain's median A record TTL and its daily stability index. The hypothesis (motivated by CDN operators' use of short TTLs to enable rapid traffic redirection) is that domains with shorter TTLs exhibit lower daily stability --- more frequent IP address changes.
 
-    # Trier par timestamp
-    domain_data = domain_data.sort_values('timestamp')
-
-    # Grouper par timeframe
-    if timeframe == 'day':
-        domain_data['period'] = domain_data['timestamp'].dt.date
-    elif timeframe == 'week':
-        domain_data['period'] = domain_data['timestamp'].dt.isocalendar().week
-    elif timeframe == 'month':
-        domain_data['period'] = domain_data['timestamp'].dt.month
-
-    # Pour chaque période, extraire set d'IPs uniques
-    period_ips = domain_data.groupby('period')['a_records'].apply(
-        lambda x: set(flatten(x))
-    )
-
-    # Calculer Jaccard similarity entre périodes consécutives
-    similarities = []
-    for i in range(len(period_ips) - 1):
-        ips_t = period_ips.iloc[i]
-        ips_t1 = period_ips.iloc[i + 1]
-
-        jaccard = len(ips_t & ips_t1) / len(ips_t | ips_t1)
-        similarities.append(jaccard)
-
-    # Taux changement = 1 - similarité moyenne
-    change_rate = 1 - (sum(similarities) / len(similarities))
-
-    return {
-        'change_rate': change_rate,
-        'avg_jaccard_similarity': 1 - change_rate,
-        'num_periods': len(period_ips)
-    }
-
-\end{lstlisting}
-
-
-\textbf{Étape 2 - Classification stabilité} :
-
-
-\begin{lstlisting}[style=python]
-def classify_stability(change_rate):
-    """Classifie stabilité selon taux de changement"""
-    if change_rate < 0.05:
-        return "VERY_STABLE"      # <5% changement
-    elif change_rate < 0.20:
-        return "STABLE"           # 5-20% changement
-    elif change_rate < 0.50:
-        return "MODERATE"         # 20-50% changement
-    else:
-        return "VOLATILE"         # >50% changement
-
-\end{lstlisting}
-
-
-\textbf{Étape 3 - Analyse par échelle temporelle} :
-
-
-\begin{lstlisting}[style=python]
-# Analyser chaque domaine sur 3 échelles
-results = []
-
-for domain in df['domain'].unique():
-    domain_data = df[df['domain'] == domain]
-
-    daily = compute_change_rate(domain_data, timeframe='day')
-    weekly = compute_change_rate(domain_data, timeframe='week')
-    monthly = compute_change_rate(domain_data, timeframe='month')
-
-    results.append({
-        'domain': domain,
-        'daily_change_rate': daily['change_rate'],
-        'weekly_change_rate': weekly['change_rate'],
-        'monthly_change_rate': monthly['change_rate'],
-        'daily_stability': classify_stability(daily['change_rate']),
-        'weekly_stability': classify_stability(weekly['change_rate']),
-        'monthly_stability': classify_stability(monthly['change_rate'])
-    })
-
-stability_df = pd.DataFrame(results)
-
-\end{lstlisting}
-
-
-\textbf{Étape 4 - Corrélation avec TTL} :
-
-Analyser si les domaines avec TTL courts changent plus fréquemment (hypothèse : TTL court = anticipation de changements) :
-
-
-\begin{lstlisting}[style=python]
-# Calculer TTL moyen par domaine
-ttl_by_domain = df.groupby('domain')['ttl'].median()
-
-# Merger avec taux changement
-stability_ttl = stability_df.merge(
-    ttl_by_domain,
-    left_on='domain',
-    right_index=True
-)
-
-# Corrélation Spearman (non-paramétrique)
-from scipy.stats import spearmanr
-
-corr, pvalue = spearmanr(
-    stability_ttl['ttl'],
-    stability_ttl['daily_change_rate']
-)
-
-print(f"Corrélation TTL <-> Change Rate: {corr:.3f} (p={pvalue:.3e})")
-
-\end{lstlisting}
-
-
-\textbf{Hypothèse} : Corrélation négative attendue (TTL court -> changements fréquents).
-
-\textbf{Métriques finales Q2} :
+\textbf{Key metrics}:
 \begin{itemize}
-\item \textbf{Distribution stabilité} (\% domaines very stable, stable, moderate, volatile)
-\item \textbf{Taux de changement moyen} par échelle temporelle (jour, semaine, mois)
-\item \textbf{Corrélation TTL <-> changement} (coefficient Spearman + p-value)
-\item \textbf{Top 10 domaines les plus volatiles} (cas d'étude)
+  \item Distribution of daily stability indices across the domain corpus
+  \item Proportion of domains that are \texttt{VERY\_STABLE} (<5\% change rate), \texttt{STABLE} (5--20\%), \texttt{MODERATE} (20--50\%), or \texttt{VOLATILE} (>50\%)
+  \item Spearman correlation between median TTL and daily stability (with 95\% confidence interval)
+  \item Top-20 most volatile domains (case studies)
 \end{itemize}
 
-\subsection{Question Q3 : Impact biais géographiques RIPE Atlas}
+\subsection{Q3 --- Assessment of RIPE Atlas Geographic Bias}
 \label{subsec:3.5.3}
 
-\textbf{Objectif} : Évaluer si le biais géographique RIPE Atlas (91\% sondes en Europe + Amérique du Nord) impacte significativement l'observation de la diversité.
+\textbf{Objective}: Evaluate whether the geographic concentration of RIPE Atlas probes in Europe and North America significantly limits the ability to observe geographic DNS variation.
 
-\textbf{Méthode d'analyse} :
+\textbf{Method}: The geographic bias assessment uses a \textbf{controlled subsampling experiment}. Three virtual probe sets are constructed from the full measurement dataset:
 
-\textbf{Étape 1 - Sous-échantillonnage contrôlé} :
+\begin{enumerate}
+  \item \textbf{ACTUAL}: The full probe set as deployed (with natural RIPE Atlas geographic distribution).
+  \item \textbf{EUROPE\_NA\_ONLY}: Only probes in Europe and North America (simulating a measurement campaign without geographic stratification --- the scenario that would arise if a researcher used the RIPE Atlas default worldwide selection without stratification).
+  \item \textbf{UNIFORM}: A resampled probe set with equal numbers of probes per continent (simulating perfect geographic balance).
+\end{enumerate}
 
+For each virtual probe set, the domain-level geographic diversity metric (Section 3.5.1) is recomputed. The distribution of diversity categories under ACTUAL, EUROPE\_NA\_ONLY, and UNIFORM are compared using the Wilcoxon signed-rank test (a non-parametric paired test appropriate for distributions that may not be normal). A statistically significant difference between ACTUAL and EUROPE\_NA\_ONLY indicates that the geographic stratification strategy meaningfully improves diversity observation; a significant difference between ACTUAL and UNIFORM identifies domains whose diversity classification changes when underrepresented regions are included.
 
-\begin{lstlisting}[style=python]
-def subsample_by_region(df, sampling_strategy):
-    """Sous-échantillonne sondes selon stratégie"""
+Additionally, the \textbf{unique IP contribution} of each region is computed: for each domain, the fraction of observed IP addresses that are seen only from probes in a specific region (and not from any other region's probes) quantifies how much unique information that region provides. A high unique contribution from underrepresented regions (Africa, South America, Southeast Asia) would indicate that the geographic bias materially limits the completeness of the diversity picture.
 
-    if sampling_strategy == "ACTUAL":
-        # Distribution actuelle RIPE Atlas (baseline)
-        return df
-
-    elif sampling_strategy == "UNIFORM":
-        # Distribution uniforme entre régions
-        regions = df['probe_region'].unique()
-        n_per_region = len(df) // len(regions)
-
-        sampled = []
-        for region in regions:
-            region_data = df[df['probe_region'] == region]
-            sampled.append(region_data.sample(n=min(n_per_region, len(region_data))))
-
-        return pd.concat(sampled)
-
-    elif sampling_strategy == "EUROPE_NA_ONLY":
-        # Seulement Europe + Amérique du Nord (91%)
-        return df[df['probe_region'].isin(['Europe', 'North America'])]
-
-\end{lstlisting}
-
-
-\textbf{Étape 2 - Comparaison diversité observée} :
-
-
-\begin{lstlisting}[style=python]
-# Trois stratégies de sampling
-strategies = ["ACTUAL", "UNIFORM", "EUROPE_NA_ONLY"]
-
-comparison_results = []
-
-for strategy in strategies:
-    sampled_df = subsample_by_region(df, strategy)
-
-    # Recalculer diversité pour chaque domaine
-    diversity = sampled_df.groupby('domain').agg({
-        'a_records': lambda x: len(set(flatten(x)))
-    }).reset_index()
-
-    diversity.columns = ['domain', 'unique_ips']
-    diversity['strategy'] = strategy
-
-    comparison_results.append(diversity)
-
-comparison_df = pd.concat(comparison_results)
-
-\end{lstlisting}
-
-
-\textbf{Étape 3 - Test statistique} :
-
-
-\begin{lstlisting}[style=python]
-from scipy.stats import wilcoxon
-
-# Comparer distributions ACTUAL vs UNIFORM
-actual = comparison_df[comparison_df['strategy'] == 'ACTUAL']['unique_ips']
-uniform = comparison_df[comparison_df['strategy'] == 'UNIFORM']['unique_ips']
-
-# Test Wilcoxon (données appariées)
-statistic, pvalue = wilcoxon(actual, uniform)
-
-print(f"Wilcoxon test ACTUAL vs UNIFORM: p={pvalue:.3e}")
-if pvalue < 0.05:
-    print("-> Différence SIGNIFICATIVE (biais impact la diversité)")
-else:
-    print("-> Différence NON significative (biais négligeable)")
-
-\end{lstlisting}
-
-
-\textbf{Étape 4 - Analyse par région} :
-
-Identifier quelles régions apportent le plus de diversité unique :
-
-
-\begin{lstlisting}[style=python]
-def region_contribution(df):
-    """Calcule contribution unique de chaque région"""
-
-    results = []
-
-    for domain in df['domain'].unique():
-        domain_data = df[df['domain'] == domain]
-
-        # IPs totales
-        all_ips = set(flatten(domain_data['a_records']))
-
-        # Pour chaque région
-        for region in domain_data['probe_region'].unique():
-            region_data = domain_data[domain_data['probe_region'] == region]
-            region_ips = set(flatten(region_data['a_records']))
-
-            # IPs uniques à cette région (pas vues ailleurs)
-            other_regions = domain_data[domain_data['probe_region'] != region]
-            other_ips = set(flatten(other_regions['a_records']))
-            unique_ips = region_ips - other_ips
-
-            results.append({
-                'domain': domain,
-                'region': region,
-                'total_ips': len(region_ips),
-                'unique_ips': len(unique_ips),
-                'contribution_ratio': len(unique_ips) / len(all_ips)
-            })
-
-    return pd.DataFrame(results)
-
-region_contrib = region_contribution(df)
-
-# Moyenne par région
-region_avg = region_contrib.groupby('region').agg({
-    'contribution_ratio': 'mean',
-    'unique_ips': 'sum'
-}).sort_values('contribution_ratio', ascending=False)
-
-print(region_avg)
-
-\end{lstlisting}
-
-
-\textbf{Hypothèse} : Si Asie/Afrique/Am. Sud apportent >10\% IPs uniques malgré <10\% sondes -> biais significatif.
-
-\textbf{Métriques finales Q3} :
+\textbf{Key metrics}:
 \begin{itemize}
-\item \textbf{Test Wilcoxon p-value} (ACTUAL vs UNIFORM)
-\item \textbf{Contribution unique par région} (\% IPs uniques apportées)
-\item \textbf{Domaines affectés} (\% domaines où biais change classification diversité)
-\item \textbf{Recommandations} (régions prioritaires pour futures sondes)
+  \item Wilcoxon test p-value for ACTUAL vs EUROPE\_NA\_ONLY (significance of stratification)
+  \item Fraction of domains whose diversity category changes between EUROPE\_NA\_ONLY and ACTUAL
+  \item Per-region unique IP contribution (\% of observed IPs seen only from that region)
 \end{itemize}
 
-\subsection{Question Q4 : Impact du choix de resolver}
+\subsection{Q4 --- Impact of Resolver Choice}
 \label{subsec:3.5.4}
 
-\textbf{Objectif} : Quantifier l'impact du choix de resolver (ISP local vs DNS public) sur les adresses IP observées.
+\textbf{Objective}: Quantify the impact of resolver type on CDN-assigned IP addresses, and empirically test the ECS hypothesis.
 
-\textbf{Méthode d'analyse} :
+This analysis uses the supplementary Q4 measurement campaign (Section 3.3.5), which provides four simultaneous observations for the Top 1,000 Tranco domains from the same set of probes:
 
-\textbf{Étape 1 - Classification des resolvers} :
+\begin{enumerate}
+  \item \texttt{auth\_direct}: Direct authoritative query (probe network location determines response)
+  \item \texttt{isp\_resolver}: Local ISP resolver (resolver IP determines CDN assignment)
+  \item \texttt{public\_dns}: Google Public DNS (8.8.8.8) without explicit ECS opt-out
+  \item \texttt{public\_dns\_noecs}: Google Public DNS with ECS opt-out (\texttt{+subnet=0/0})
+\end{enumerate}
 
-
-\begin{lstlisting}[style=python]
-# Définir DNS publics connus
-PUBLIC_DNS_PROVIDERS = {
-    '8.8.8.8': 'Google DNS',
-    '8.8.4.4': 'Google DNS',
-    '1.1.1.1': 'Cloudflare DNS',
-    '1.0.0.1': 'Cloudflare DNS',
-    '9.9.9.9': 'Quad9',
-    '208.67.222.222': 'OpenDNS',
-    # ... (liste complète)
-}
-
-def classify_resolver(resolver_ip):
-    """Classifie resolver comme public ou ISP local"""
-    if resolver_ip in PUBLIC_DNS_PROVIDERS:
-        return "PUBLIC", PUBLIC_DNS_PROVIDERS[resolver_ip]
-    else:
-        return "ISP_LOCAL", None
-
-df['resolver_type'], df['resolver_provider'] = zip(
-    *df['resolver_ip'].apply(classify_resolver)
-)
-
-\end{lstlisting}
-
-
-\textbf{Étape 2 - Comparaison IPs retournées} :
-
-
-\begin{lstlisting}[style=python]
-def compare_resolver_responses(domain_data):
-    """Compare IPs retournées selon type resolver"""
-
-    # Grouper par type resolver
-    by_resolver_type = domain_data.groupby('resolver_type')['a_records'].apply(
-        lambda x: set(flatten(x))
-    )
-
-    if len(by_resolver_type) < 2:
-        return None  # Pas assez de types pour comparer
-
-    public_ips = by_resolver_type.get('PUBLIC', set())
-    isp_ips = by_resolver_type.get('ISP_LOCAL', set())
-
-    # Métriques
-    overlap = len(public_ips & isp_ips)
-    public_only = len(public_ips - isp_ips)
-    isp_only = len(isp_ips - public_ips)
-
-    jaccard = overlap / len(public_ips | isp_ips) if len(public_ips | isp_ips) > 0 else 0
-
-    return {
-        'overlap': overlap,
-        'public_only': public_only,
-        'isp_only': isp_only,
-        'jaccard_similarity': jaccard,
-        'total_public_ips': len(public_ips),
-        'total_isp_ips': len(isp_ips)
-    }
-
-# Analyser chaque domaine
-resolver_impact = []
-
-for domain in df['domain'].unique():
-    domain_data = df[df['domain'] == domain]
-    result = compare_resolver_responses(domain_data)
-
-    if result:
-        result['domain'] = domain
-        resolver_impact.append(result)
-
-resolver_impact_df = pd.DataFrame(resolver_impact)
-
-\end{lstlisting}
-
-
-\textbf{Étape 3 - Analyse ECS (EDNS Client Subnet)} :
-
-Les DNS publics supportant ECS (Google, Cloudflare) devraient retourner IPs similaires aux ISP locaux. Vérifier cette hypothèse :
-
-
-\begin{lstlisting}[style=python]
-# Classifier resolvers selon support ECS
-ECS_PROVIDERS = {'Google DNS', 'Cloudflare DNS', 'OpenDNS'}
-
-df['resolver_supports_ecs'] = df['resolver_provider'].isin(ECS_PROVIDERS)
-
-# Comparer similitude selon support ECS
-ecs_analysis = df.groupby(['domain', 'resolver_supports_ecs']).apply(
-    lambda x: set(flatten(x['a_records']))
-).reset_index()
-
-ecs_analysis.columns = ['domain', 'ecs_support', 'ips']
-
-# Calculer Jaccard entre ECS=True et ISP local
-# ...
-
-\end{lstlisting}
-
-
-\textbf{Hypothèse} : Resolvers ECS devraient avoir Jaccard similarity >0.8 avec ISP local ~\cite{TODO}.
-
-\textbf{Étape 4 - Impact performance} :
-
-Comparer RTT (response time) selon type resolver :
-
-
-\begin{lstlisting}[style=python]
-# Comparaison RTT
-rtt_comparison = df.groupby('resolver_type')['response_time_ms'].agg([
-    'mean', 'median', 'std',
-    ('p95', lambda x: x.quantile(0.95))
-])
-
-print(rtt_comparison)
-
-# Test Mann-Whitney U (non-paramétrique)
-from scipy.stats import mannwhitneyu
-
-public_rtt = df[df['resolver_type'] == 'PUBLIC']['response_time_ms']
-isp_rtt = df[df['resolver_type'] == 'ISP_LOCAL']['response_time_ms']
-
-statistic, pvalue = mannwhitneyu(public_rtt, isp_rtt)
-
-print(f"Mann-Whitney U test RTT: p={pvalue:.3e}")
-
-\end{lstlisting}
-
-
-\textbf{Métriques finales Q4} :
+\textbf{Step 1 --- Pairwise IP set comparison}: For each domain and each probe, the four IP address sets are compared using Jaccard similarity. The critical comparisons are:
 \begin{itemize}
-\item \textbf{Jaccard similarity moyenne} (public vs ISP local)
-\item \textbf{\% domaines divergence significative} (Jaccard <0.5)
-\item \textbf{Impact ECS} (similitude ECS-enabled vs ISP local)
-\item \textbf{RTT comparison} (public vs ISP local, test statistique)
-\item \textbf{Providers CDN affectés} (Akamai, Cloudflare, AWS, etc.)
+  \item \texttt{isp\_resolver} vs \texttt{auth\_direct}: Measures whether the ISP resolver correctly reflects the probe's geographic location (expected: high Jaccard similarity if resolver is geographically close to the probe)
+  \item \texttt{public\_dns} vs \texttt{auth\_direct}: Measures the remote DNS problem (expected: lower Jaccard similarity, especially for probes in regions where Google's resolver clusters are distant)
+  \item \texttt{public\_dns} vs \texttt{public\_dns\_noecs}: Measures the ECS contribution (expected: lower Jaccard when ECS is active, as ECS-based routing should better match the probe location)
+  \item \texttt{isp\_resolver} vs \texttt{public\_dns\_noecs}: Measures pure resolver-location effect without ECS
 \end{itemize}
 
-\medskip\hrule\medskip
+\textbf{Step 2 --- Geographic disaggregation}: The pairwise Jaccard similarities are disaggregated by continent. The remote DNS problem prediction \cite{Wang2018} is that Google DNS performance relative to ISP DNS should be worst in regions where Google's resolver clusters are geographically concentrated, and best in regions where Google has dense resolver infrastructure.
 
-\section{Éthique et reproductibilité}
+\textbf{Step 3 --- Statistical validation}: For each comparison pair, the distribution of per-domain Jaccard similarities across all probes is compared using the Mann-Whitney U test (non-parametric, for independent samples). A Bonferroni correction is applied for the six pairwise comparisons.
+
+\textbf{Key metrics}:
+\begin{itemize}
+  \item Mean and median pairwise Jaccard similarity for each comparison (global and per continent)
+  \item Proportion of domains where \texttt{public\_dns} diverges significantly from \texttt{isp\_resolver} (Jaccard < 0.5)
+  \item ECS contribution: fraction of the divergence between \texttt{public\_dns} and \texttt{isp\_resolver} that is reduced when ECS is enabled
+\end{itemize}
+\bigskip
+\section{Ethical Considerations and Reproducibility}
 \label{sec:3.6}
 
-\subsection{Considérations éthiques}
+\subsection{Ethical Design}
 \label{subsec:3.6.1}
 
-\textbf{Conformité RIPE Atlas Ethics Guidelines} :
+The measurement design follows the ethical framework of Kisteleki et al.~\cite{Kisteleki2016} and the principles of the Menlo Report (2012):
 
-Nous suivons les recommandations officielles (\url{https://labs.ripe.net/author/kistel/ethics-of-ripe-atlas-measurements/}) :
+\textbf{Probe host protection}: All query targets are publicly accessible domains from the Tranco Top 10K corpus. No politically sensitive, censored, or jurisdictionally restricted domains are included. Direct authoritative queries for A records are indistinguishable from normal client DNS traffic; they do not create legal or social risk for probe hosts in any jurisdiction.
 
-\textbf{1. Minimiser l'impact sur les serveurs DNS cibles} :
-\begin{itemize}
-\item Fréquence mesures : 1x/jour maximum (vs horaire ou minute)
-\item Pas de mesures vers domaines sensibles sans consentement
-\item Respecter TTL : pas de requêtes plus fréquentes que 1/TTL
-\end{itemize}
+\textbf{Infrastructure impact}: The measurement frequency (once per domain per day) is orders of magnitude below the threshold that would constitute an undue burden on authoritative DNS servers, as established by van Rijswijk-Deij et al.~\cite{vanRijswijk2016}, who show that OpenINTEL's 1.85 billion queries per day represent only 0.3--1.6\% of total authoritative server traffic. This thesis's campaign generates approximately one million queries per day --- roughly 1,000$\times$ fewer.
 
-\textbf{2. Transparence et consentement} :
-\begin{itemize}
-\item Descriptions mesures claires (tags, descriptions)
-\item Publication méthodologie complète (ce chapitre)
-\item Measurement IDs inclus dans publications (reproductibilité)
-\end{itemize}
+\textbf{Transparency}: All measurements are tagged with \texttt{thesis-dns-geo} in RIPE Atlas, allowing authoritative server operators to identify and contact the measurement operator if needed. The measurement description includes a reference to the thesis and its public documentation.
 
-\textbf{3. Respect de la vie privée} :
-\begin{itemize}
-\item Anonymisation données si publication publique
-\item Pas de corrélation sondes <-> utilisateurs individuels
-\item Agrégation statistique (pas de données par sonde individuellement)
-\end{itemize}
+\textbf{Data minimisation}: Raw results include probe IP addresses, which are not published. The public dataset uses only aggregated per-country and per-ASN statistics. Individual probe results are retained internally for the duration of the analysis and then anonymised.
 
-\textbf{4. Utilisation responsable crédits} :
-\begin{itemize}
-\item Vérification mesures existantes avant lancement
-\item Arrêt mesures si objectif atteint avant terme
-\item Partage données collectées avec communauté (contribution)
-\end{itemize}
-
-\subsection{Reproductibilité scientifique}
+\subsection{Scientific Reproducibility}
 \label{subsec:3.6.2}
 
-\textbf{Mesures garantissant la reproductibilité} :
+\textbf{Fixed domain corpus}: The Tranco list identifier (e.g., \texttt{8QNZ}) used for each measurement week is recorded in the dataset metadata, enabling exact reproduction of the domain corpus.
 
-\textbf{1. Versioning complet} :
+\textbf{Measurement traceability}: All RIPE Atlas measurement IDs are recorded in the dataset manifest. Any researcher with a RIPE Atlas account can retrieve the original raw results using these IDs, providing primary source access to the underlying data.
 
-\begin{lstlisting}[style=python]
-# Métadonnées enregistrées pour chaque collecte
-metadata = {
-    "project": "thesis-dns-geo-diversity",
-    "author": "Olivier Gautier",
-    "date_start": "2026-03-21",
-    "date_end": "2026-06-21",
+\textbf{Software versioning}: The analysis pipeline is published on GitHub with a fixed release tag corresponding to each submitted thesis version. The requirements file specifies exact package versions (Python 3.11, dnspython 2.4.x, pandas 2.1.x, pyarrow 14.x, scipy 1.11.x) to eliminate software version ambiguity.
 
-    # Paramètres mesures
-    "tranco_list_id": "8QNZ",  # Permalink Tranco
-    "tranco_size": 10000,
-    "num_probes": 100,
-    "measurement_frequency": "daily",
+\textbf{Dataset publication}: The final dataset (Avro + Parquet format, with full metadata) is published on Zenodo with a permanent DOI before the oral thesis defence, following the FAIR principles (Findable, Accessible, Interoperable, Reusable) advocated by van Rijswijk-Deij et al.~\cite{vanRijswijk2016}.
 
-    # RIPE Atlas measurement IDs
-    "msm_ids": [123456789, 123456790, ...],
-
-    # Software versions
-    "python_version": "3.11.5",
-    "dnspython_version": "2.4.2",
-    "pandas_version": "2.1.3",
-
-    # Code repository
-    "github_repo": "https://github.com/ogautier1980/dns-measures",
-    "commit_sha": "e879f1d8a4b2..."
-}
-
-\end{lstlisting}
-
-
-\textbf{2. Documentation complète} :
-\begin{itemize}
-\item README.md détaillé (instructions reproduction)
-\item Notebooks Jupyter annotés (analyses intermédiaires)
-\item Code commenté (docstrings Python)
-\item Schémas Avro versionnés
-\end{itemize}
-
-\textbf{3. Données archivées} :
-\begin{itemize}
-\item Format Avro (auto-documenté, schéma intégré)
-\item Métadonnées préservées (provenance, versioning)
-\item Checksums SHA-256 (intégrité données)
-\end{itemize}
-
-\textbf{4. Partage données} :
-\begin{itemize}
-\item Zenodo DOI (archivage permanent)
-\item Licence Creative Commons BY 4.0
-\item Formats ouverts (Avro, Parquet, CSV)
-\end{itemize}
-
-\subsection{Conformité FAIR principles}
-\label{subsec:3.6.3}
-
-Les données collectées respectent les principes FAIR :
-
-\textbf{Findable} :
-\begin{itemize}
-\item DOI Zenodo permanent
-\item Métadonnées riches (Dublin Core)
-\item Indexation dans registres scientifiques
-\end{itemize}
-
-\textbf{Accessible} :
-\begin{itemize}
-\item Accès public gratuit (après publication mémoire)
-\item Protocole standard HTTP/HTTPS
-\item Formats ouverts non-propriétaires
-\end{itemize}
-
-\textbf{Interoperable} :
-\begin{itemize}
-\item Vocabulaire standard (RFC DNS)
-\item Formats standardisés (Avro, Parquet)
-\item APIs RESTful (documentation OpenAPI)
-\end{itemize}
-
-\textbf{Reusable} :
-\begin{itemize}
-\item Licence claire (CC BY 4.0)
-\item Provenance documentée (métadonnées)
-\item Qualité garantie (validation, filtres)
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\section{Timeline et jalons du projet}
-\label{sec:3.7}
-
-\subsection{Phases du projet}
-\label{subsec:3.7.1}
-
-\textbf{Phase 1 : Familiarisation et conception} (4 semaines)
-\begin{itemize}
-\item [OK] Lecture articles fondamentaux (2 semaines)
-\item [OK] Conception système et méthodologie (2 semaines)
-\item \textbf{Livrable} : Chapitre 2 (État de l'art) + Chapitre 3 (Méthodologie)
-\end{itemize}
-
-\textbf{Phase 2 : Développement et tests} (3 semaines)
-\begin{itemize}
-\item Implémentation pipeline collecte (1 semaine)
-\item Tests pilotes RIPE Atlas (500 domaines, 10 sondes, 7 jours)
-\item Développement pipeline parsing/stockage (1 semaine)
-\item Validation qualité données (1 semaine)
-\item \textbf{Livrable} : Code fonctionnel + validation technique
-\end{itemize}
-
-\textbf{Phase 3 : Collecte données} (12 semaines = 3 mois)
-\begin{itemize}
-\item Mesures quotidiennes automatisées
-\item Monitoring consommation crédits
-\item Ajustements si nécessaire
-\item \textbf{Livrable} : Dataset complet (90M résultats)
-\end{itemize}
-
-\textbf{Phase 4 : Analyse et interprétation} (4 semaines)
-\begin{itemize}
-\item Analyses Q1-Q4 (2 semaines)
-\item Génération visualisations (1 semaine)
-\item Interprétation résultats (1 semaine)
-\item \textbf{Livrable} : Chapitre 4 (Résultats)
-\end{itemize}
-
-\textbf{Phase 5 : Rédaction et finalisation} (3 semaines)
-\begin{itemize}
-\item Discussion et conclusion (1 semaine)
-\item Révision complète mémoire (1 semaine)
-\item Préparation défense (1 semaine)
-\item \textbf{Livrable} : Mémoire final + présentation
-\end{itemize}
-
-\textbf{Durée totale} : \textasciitilde{}26 semaines (6 mois)
-
-\subsection{Critères de succès}
-\label{subsec:3.7.2}
-
-\textbf{Technique} :
-\begin{itemize}
-\item [OK] Collecte >=85\% résultats valides (filtrage <15\%)
-\item [OK] Couverture >=95\% domaines Tranco Top 10K
-\item [OK] Distribution géographique >=4 continents
-\item [OK] Données conformes FAIR principles
-\end{itemize}
-
-\textbf{Scientifique} :
-\begin{itemize}
-\item [OK] Réponses aux 4 questions de recherche (Q1-Q4)
-\item [OK] Contribution originale (diversité géographique + temporelle)
-\item [OK] Validation statistique (p-values, tests robustes)
-\item [OK] Comparaison littérature existante
-\end{itemize}
-
-\textbf{Académique} :
-\begin{itemize}
-\item [OK] Mémoire complet (5 chapitres)
-\item [OK] Reproductibilité garantie (code + données)
-\item [OK] Respect éthique et déontologie
-\item [OK] Défense publique réussie
-\end{itemize}
-
-\medskip\hrule\medskip
-
-\textbf{Fin du Chapitre 3 - Méthodologie}
+\textbf{Pilot validation}: Before the three-month production campaign, a seven-day pilot campaign is conducted on a 500-domain subset with 10 probes to validate the measurement configuration, estimate actual credit consumption, and verify the data pipeline end-to-end. The pilot results are included in the public dataset as a separate partition, providing a compact reproducible example of the full methodology.
+\bigskip

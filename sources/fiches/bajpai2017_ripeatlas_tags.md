@@ -1,493 +1,137 @@
-# Fiche de lecture - Vantage Point Selection for IPv6 Measurements
+# Reading Note - Vantage Point Selection for IPv6 Measurements: Benefits and Limitations of RIPE Atlas Tags
 
-**Référence bibliographique** :
-Bajpai, V., Eravuchira, S. J., Schönwälder, J., Kisteleki, R., & Aben, E. (2017). *Vantage Point Selection for IPv6 Measurements: Benefits and Limitations of RIPE Atlas Tags*. Proceedings of the Applied Networking Research Workshop (ANRW '17), 1-7. https://doi.org/10.1145/3106328.3106334
+**Bibliographic Reference**:
+Bajpai, V., Eravuchira, S. J., Schönwälder, J., Kisteleki, R., & Aben, E. (2017). Vantage point selection for IPv6 measurements: Benefits and limitations of RIPE Atlas tags. *Proceedings of the Applied Networking Research Workshop (ANRW '17)*, 1–7. https://doi.org/10.1145/3106328.3106334
 
-**Thème** :
-Mécanisme tagging RIPE Atlas (system tags + user tags) pour sélection fine vantage points, focus IPv6 dual-stack probes profiling
+**Theme**:
+This paper evaluates the RIPE Atlas tagging mechanism — introduced in July 2014 — as a tool for fine-grained vantage point selection in Internet measurement studies. It distinguishes between automatically generated system tags and manually assigned user tags, assessing their stability and accuracy. A case study applies system tags to identify and profile dual-stacked (IPv4 + IPv6) probes across geographic regions and autonomous systems.
 
-**Intérêt pour le mémoire** :
-Quantification précise dual-stack probes RIPE Atlas (2017) : 2.3K probes (26%), 88 pays, 822 ASNs, 83% access networks, 782 homes. Révèle biais géographiques (91% RIPE+ARIN), sous-représentation IPv6 (BE 57.4% users mais 2.8% probes, JP 19.8% users mais 1.4% probes). User tags stales (2.8% hosts update) vs system tags automatiques (updated every 4h). Méthodologie sélection vantage points applicable pour notre étude géographique DNS.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 mars 2026
-**Section du mémoire** :
-- Section 2.5 (RIPE Atlas - tagging mechanism, vantage points selection)
-- Section 7 (Discussion - geographic bias, probe distribution)
+**Relevance to thesis**:
+This paper is directly relevant to any distributed DNS measurement study using RIPE Atlas, as it characterises the tagging mechanisms available for selecting probes with specific connectivity and DNS-resolution capabilities. Understanding which system tags (e.g., `system-resolves-a-correctly`, `system-ipv6-works`) are reliable is essential for designing valid DNS measurement campaigns. The analysis of geographic and network-level probe bias also informs how to contextualise spatial variation in DNS resolution results.
 
 ---
 
-## Contenu de l'article
-
-### Objectif(s) / Question(s) de recherche
-
-**Problème** : Sélection vantage points RIPE Atlas **limitée** avant tags :
-- Geographic filters (lat/lon) : coarse-grained
-- Network prefix filters (AS, IP) : pas de capacité fine-grained (IPv4 vs IPv6, access technology, etc.)
-- **Challenge** : profiler probes selon capacités réseau (dual-stack, IPv6 works, etc.)
-
-**Innovation RIPE Atlas** (July 2014) : **Tagging mechanism**
-- **System tags** : automatiques, basés sur mesures built-in (updated every 4h)
-- **User tags** : manuels, dépendent participation hosts
-
-**Questions de recherche** :
-1. System tags vs user tags : **stabilité, précision** ?
-2. **Dual-stack probes** : combien, où (regions), quels networks ?
-3. **Geographic bias** : distribution reflète-t-elle IPv6 user population ?
-4. **Access technology** : DSL vs cable vs fiber ?
-5. **IPv6 performance** : comparable IPv4 ?
-
-**Objectif paper** :
-- Profile **ALL dual-stacked RIPE Atlas probes** (2017)
-- Quantify **region-based** and **network-based** diversity
-- Identify **underrepresented** countries (IPv6 users vs probes)
-- Validate system tags usefulness vs user tags limitations
-
-### Méthodologie
-
-- **Type d'étude** : Analyse platform-wide RIPE Atlas metadata + active measurements
-- **Échelle** :
-  - **9.1K probes** connected (January 2017), 20.7K registered total
-  - **2.3K dual-stacked probes** (25.99% connected non-anchored)
-  - **88 countries**, **822 ASNs**
-
-- **Outils utilisés** :
-  - **RIPE Atlas Probe Archive API** [1] : probe metadata since March 2014
-  - **RIPE Atlas Probe API** [4] : current probe status, tags, geolocation
-  - **RIPE Data API** [25] : RIR mapping (WHOIS lookups)
-  - **PeeringDB** [30] : AS network type classification
-  - **APNIC dataset** [28] : IPv6 user population estimates
-
-- **Protocole** :
-
-**1. System tags analysis** (Section III) :
-- Extract probe archive API (Mar 2014 - Jan 2017)
-- Timeseries top 10 system tags
-- Distribution all system tags across connected probes
-
-**2. Dual-stack definition** :
-- Probes tagged `system-ipv4-works` **AND** `system-ipv6-works`
-- **Same ASN** over IPv4 and IPv6 (filters out 6in4 tunnels like Hurricane Electric)
-- Ensures **native connectivity** both protocols
-
-**3. Region-based analysis** (Section IV) :
-- Map IP endpoint → RIR allocation (RIPE Data API + WHOIS)
-- Cluster probes by RIR region
-- Split by country (probe host registration + auto-geolocation)
-- Correlation: % dual-stack probes vs % IPv6 users (APNIC dataset)
-
-**4. Network-based analysis** (Section V) :
-- Cluster probes by origin AS
-- Map ASN → network type (PeeringDB) : ISP, content, university, IXP, NIC
-- **Residential probes identification** :
-  - Provision one-off traceroutes to RIPE Atlas anchors (ICMP Paris probing)
-  - Residential = hop1 private IPv4 (RFC1918), hop2 public IPv4
-  - Eliminates business lines (multiple NAT hops)
-
-**5. Access technology classification** :
-- DSL, cable, fiber
-- Heuristic : UPnP discovery (WAN interface gateway)
-- Validation : known ISP deployment patterns
-
-**6. IPv6 performance** :
-- Latencies IPv6 vs IPv4 to RIPE Atlas anchors
-- Comparison RTT distributions
-
-**7. User tags analysis** (Section VI) :
-- Extract user tags updates history
-- % probe hosts updating tags
-- Staleness assessment
-
-### Résultats principaux
-
-#### 1. System tags overview (Section III, Figures 2-3)
-
-**Top 10 system tags** (Jan 2017, sorted by # connected probes) :
-
-| System tag | # Probes | Description |
-|------------|----------|-------------|
-| `system-ipv4-capable` | 9,045 | IPv4 interface exists |
-| `system-ipv4-works` | 8,743 | IPv4 connectivity works |
-| `system-resolves-a-correctly` | 8,305 | DNS A records resolved |
-| `system-resolves-aaaa-correctly` | 8,236 | DNS AAAA records resolved |
-| `system-ipv4-rfc1918` | 6,715 | Behind NAT (private IPv4) |
-| `system-v3` | 6,660 | Hardware version 3 |
-| `system-ipv6-capable` | 3,640 | IPv6 interface exists |
-| `system-ipv6-works` | 3,050 | IPv6 connectivity works |
-| `system-v2` | 1,427 | Hardware version 2 |
-| `system-v1` | 767 | Hardware version 1 |
-
-**Other tags** :
-- `system-ipv6-doesnt-work` : 501
-- `system-ipv6-ula` : 433 (ULA addresses)
-- `system-resolver-mangles-case` : 407 (DNS case mangling for security)
-- `system-doesnt-resolve-aaaa` : 142
-- `system-ipv4-doesnt-work` : 63
-- `system-dns-problem-suspected` : 1
-- `system-firewall-problem-suspected` : (mentioned, count not shown)
-
-**Insights** :
-- **IPv6 capable** (3,640) > **IPv6 works** (3,050) : gap = 590 probes
-  - Bortzmeyer 2013 : 10% probes believe IPv6 but fail measurements
-  - Tags `*-works` = more accurate than `*-capable`
-- **IPv4 works** (8,743) >> **IPv6 works** (3,050) : 2.9× difference
-- Hardware versions : v3 (6,660) > v2 (1,427) > v1 (767)
-  - Previous study [19, 20] : v1/v2 load issues (hardware limitations)
-
-#### 2. Dual-stack probes evolution (Section III, Figure 4)
-
-**Definition** : `system-ipv4-works` AND `system-ipv6-works` AND same ASN IPv4/IPv6
-
-**Evolution** (August 2014 - January 2017) :
-- **Aug 2014** : ~500 dual-stack probes
-- **Jan 2017** : **2,301 dual-stack probes** (25.99% of 8,855 connected non-anchored)
-
-**Growth** : ~4.6× en 2.5 ans
-
-**Comparison** :
-- RIPE Atlas dual-stack : **2,301** (Jan 2017)
-- CAIDA Ark dual-stack : **77** out of 170 total (Jan 2017)
-- → RIPE Atlas = **30× more** dual-stack vantage points than Ark
-
-#### 3. Region-based analysis (Section IV)
-
-**RIR distribution** (Figure 5) :
-
-| RIR | # Probes | % |
-|-----|----------|---|
-| **RIPE** | 1,489 | 64.7% |
-| **ARIN** | 606 | 26.3% |
-| APNIC | 106 | 4.6% |
-| LACNIC | 30 | 1.3% |
-| AFRINIC | 30 | 1.3% |
-
-**Insight** : **91%** dual-stack probes dans RIPE + ARIN (Europe + North America)
-
-**Country distribution** (Figure 6, top 20) :
-
-| Country | # Probes | % |
-|---------|----------|---|
-| **DE** (Germany) | 489 | 21.3% |
-| **US** (United States) | 343 | 13.2% |
-| **FR** (France) | 304 | 10.8% |
-| **GB** (United Kingdom) | 248 | 7.0% |
-| **NL** (Netherlands) | 161 | 6.6% |
-| **CH** (Switzerland) | 151 | 3.8% |
-| **BE** (Belgium) | 88 | 2.8% |
-| **CZ** (Czech Republic) | 65 | 2.3% |
-| **RU** (Russia) | 53 | 2.2% |
-| **CA** (Canada) | 51 | 1.9% |
-| NO (Norway) | 44 | 1.8% |
-| AT (Austria) | 42 | 1.4% |
-| FI (Finland) | 33 | 1.4% |
-| GR (Greece) | 32 | 1.4% |
-| **JP** (Japan) | 32 | 1.4% |
-| SE (Sweden) | 31 | 1.3% |
-| IT (Italy) | 31 | 1.3% |
-| AU (Australia) | 31 | ... |
-| DK (Denmark) | 25 | ... |
-| SI (Slovenia) | 24 | ... |
-| **OTHERS** | 23 | 14.9% |
-
-**Total** : **88 countries**
-
-**Geographic bias identification** (Figure 7) :
-
-**Correlation % IPv6 users (APNIC) vs % dual-stack probes** :
-
-**Top 10 underrepresented countries** :
-
-| Country | IPv6 users % | Probes % | Delta | # IPv6 users (est.) |
-|---------|--------------|----------|-------|---------------------|
-| **BE** (Belgium) | **57.4%** | **2.8%** | **-54.6 pp** | ~6M |
-| LU (Luxembourg) | 34.2% | 0.6% | -33.6 pp | ~200K |
-| **GR** (Greece) | 33.7% | 1.4% | -32.3 pp | ~3.7M |
-| CH (Switzerland) | 34.3% | 3.8% | -30.5 pp | ~2.9M |
-| PT (Portugal) | 29.2% | 0.7% | -28.5 pp | ~3.1M |
-| **IN** (India) | 22.0% | 0.1% | **-21.9 pp** | **~290M** |
-| US (United States) | 33.2% | 13.2% | -20.0 pp | ~108M |
-| EC (Ecuador) | 18.8% | 0.1% | -18.7 pp | ~3.2M |
-| DE (Germany) | 39.9% | 21.3% | -18.6 pp | ~33M |
-| **JP** (Japan) | **19.8%** | **1.4%** | **-18.4 pp** | **~22M** |
-
-**Insight majeur** :
-- **BE** : leader IPv6 adoption (57.4%, Google stats Jan 2017), mais seulement 88 probes (2.8%)
-- **JP** : 22M IPv6 users (19.8% penetration), mais seulement 32 probes (1.4%)
-- **IN** : 290M IPv6 users (largest absolute number), mais seulement ~2-3 probes (0.1%)
-- → **Severe geographic bias** : probe deployment ≠ IPv6 user population
-
-#### 4. Network-based analysis (Section V)
-
-**AS distribution** (Figure 8, top 20) :
-
-| ASN | Name | # Probes | % |
-|-----|------|----------|---|
-| AS3320 | DTAG (Deutsche Telekom) | 181 | 8.3% |
-| AS7922 | COMCAST | 169 | 7.7% |
-| AS12322 | PROXAD (Free, France) | 96 | 4.4% |
-| AS3265 | XS4ALL (Netherlands) | 71 | 3.2% |
-| AS3215 | Orange France | 71 | 3.2% |
-| AS6830 | LGI (Liberty Global) | 32 | 1.5% |
-| AS31334 | Kabel Deutschland | 32 | 1.5% |
-| AS20712 | ... | 28 | 1.3% |
-| AS5607 | BSKYB (UK) | 27 | 1.2% |
-| AS5432 | BELGACOM (Belgium) | 25 | 1.1% |
-| AS3303 | SWISSCOM | 23 | 1.1% |
-| AS6848 | TELENET (Belgium) | 21 | 1.0% |
-| AS7018 | AT&T | 19 | 0.9% |
-| **OTHERS** | (many) | 49.6% | ... |
-
-**Total** : **822 ASNs**
-
-**Network type classification** (Figure 9, via PeeringDB) :
-
-| Network type | # Probes | % (of mapped) |
-|--------------|----------|---------------|
-| **ISP/NSP** | **1,540** | **83%** |
-| Content providers | ... | ... |
-| Universities | ... | ... |
-| IXPs | ... | ... |
-
-**Mapping coverage** : 80.7% probes mapped (19.3% missing in PeeringDB)
-
-**Insight** : **83% dual-stack probes in ISP/NSP** → ideal for measuring native IPv6 ISP performance
-
-**Residential probes identification** (Figure 10) :
-
-**Heuristic** : hop1 = private IPv4 (RFC1918), hop2 = public IPv4
-
-**Results** :
-- **782 residential dual-stack probes** (60.5% of ISP-hosted 1,540)
-- 782 homes avec native IPv6 connectivity
-
-**Access technology breakdown** :
-
-| Technology | # Probes | % |
-|------------|----------|---|
-| **DSL** | ~260 | ~33% |
-| **Cable** | ~260 | ~33% |
-| **Fiber** | ~260 | ~33% |
-
-**Even split** across DSL, cable, fiber
-
-**IPv6 vs IPv4 latency** :
-- Traceroutes to RIPE Atlas anchors
-- **IPv6 latencies comparable to IPv4**
-- **IPv4 marginally better** (few ms)
-- No significant inflation IPv6
-
-#### 5. User tags analysis (Section VI)
-
-**Key finding** :
-- **Only 2.8% probe hosts** ever update their user tags
-- **Manual process** = dependency on host proactive participation
-- → **Staleness problem** : user tags do not reflect current network situation
-
-**System tags advantages** :
-- **Automatically assigned** (no host action needed)
-- **Frequently updated** (every 4 hours)
-- **Stable and accurate** (derived from continuous built-in measurements)
-
-**Implication** :
-- **System tags >> user tags** for vantage point selection
-- User tags may be outdated, unreliable
-- Future studies should prioritize system tags
-
-### Conclusion des auteurs
-
-**Contributions** :
-1. ✅ **First comprehensive profiling** all dual-stacked RIPE Atlas probes (2017)
-2. ✅ **Quantification** : 2.3K probes (26%), 88 countries, 822 ASNs
-3. ✅ **Geographic bias identified** : 91% RIPE+ARIN, underrepresentation BE/JP/IN
-4. ✅ **Network diversity** : 83% ISP, 782 homes, even split DSL/cable/fiber
-5. ✅ **IPv6 performance** : comparable IPv4 (marginally better IPv4)
-6. ✅ **System tags validation** : stable, accurate, updated every 4h
-7. ✅ **User tags limitation** : only 2.8% hosts update → staleness
-
-**Key findings** :
-
-**RIPE Atlas = richest IPv6 measurement platform** :
-- 2.3K dual-stack > CAIDA Ark 77 dual-stack (30×)
-- 88 countries, 822 ASNs
-- 782 residential probes native IPv6
-
-**Geographic bias severe** :
-- 91% probes Europe + North America
-- BE 57.4% IPv6 users but 2.8% probes
-- JP 22M IPv6 users but 1.4% probes
-- Need more probes underrepresented countries
-
-**Network diversity good** :
-- 83% ISP-hosted
-- 60.5% residential (782 homes)
-- Even split access technologies (DSL/cable/fiber)
-
-**System tags >> user tags** :
-- Auto-assigned, updated 4h
-- User tags stale (2.8% hosts update)
-
-**Implications** :
-- **Researchers** : use system tags for vantage point selection
-- **RIPE Atlas** : deploy more probes BE, JP, IN (underrepresented)
-- **IPv6 studies** : RIPE Atlas = best platform (2.3K dual-stack)
-
-**Limitations** :
-- Snapshot Jan 2017 (évolution since ?)
-- PeeringDB mapping 80.7% (19.3% missing)
-- Residential heuristic excludes multi-NAT, no-NAT homes (coverage vs accuracy trade-off)
+## Reading Context
+
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.4 (RIPE Atlas infrastructure and capabilities)
+- Section 3.X (Probe selection methodology)
+- Section 4.X (Bias analysis and geographic representativeness)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés** :
-- **System tags** = vantage point selection fine-grained (IPv4-works, IPv6-works, etc.)
-- **Dual-stack definition** : same ASN IPv4/IPv6 (filters tunnels)
-- **Geographic bias** : probe deployment ≠ IPv6 user population
-- **Residential probes** : hop1 private, hop2 public (782 homes native IPv6)
-- **User tags staleness** : 2.8% hosts update (manual process unreliable)
+**Problem**: Before 2014, RIPE Atlas probe selection was limited to geographic (latitude/longitude) or network-origin (ASN/prefix) filters. The tagging system introduced in July 2014 offers finer-grained selection, but the reliability and practical value of these tags — particularly user-assigned ones — was unknown.
 
-**Chiffres essentiels** :
-- **2,301 dual-stack probes** (25.99% connected, Jan 2017)
-- **88 countries**, **822 ASNs**
-- **91%** probes RIPE + ARIN regions
-- **83%** probes ISP/NSP networks
-- **782 residential** dual-stack (DSL/cable/fiber even split)
-- **BE** : 57.4% IPv6 users, 2.8% probes (-54.6 pp)
-- **JP** : 19.8% IPv6 users, 1.4% probes (22M users, 32 probes)
-- **IN** : 22% IPv6 users, 0.1% probes (290M users, ~2-3 probes)
-- **2.8%** probe hosts update user tags
-- System tags updated **every 4 hours**
-- RIPE Atlas **30×** more dual-stack than CAIDA Ark (2,301 vs 77)
+**Research questions**:
+1. Are RIPE Atlas system tags reliable and stable enough to support rigorous vantage point selection?
+2. How geographically and topologically diverse are the dual-stacked probes identified using system tags, and which regions are underrepresented?
+3. How stale are user-assigned tags, and can they be trusted for measurement design?
 
-**Méthodes applicables** :
-- System tags vantage point selection (filter by capabilities)
-- RIR/country mapping via RIPE Data API + WHOIS
-- AS classification via PeeringDB
-- Residential probes identification (traceroute heuristic)
-- IPv6 user population correlation (APNIC dataset)
+### Background
 
-**Limites pour nous** :
-- Étude Jan 2017 (7 ans) → RIPE Atlas now 12.9K probes (Nosyk 2024)
-- Dual-stack % evolved ? (26% → ?)
-- Geographic bias improved ? (BE, JP, IN more probes ?)
-- User tags still stale ?
+RIPE Atlas is the largest open Internet measurement platform, with approximately 9,100 connected hardware probes as of January 2017 out of 20,785 registered. Probes perform built-in measurements including ping, traceroute, DNS queries (for all root servers), SSL certificate checks, and HTTP tests. The tagging mechanism, introduced in July 2014, enables filtering probes on connectivity characteristics. System tags are derived automatically from built-in measurements and refreshed every 4 hours, while user tags require volunteers to maintain them proactively. Competing platforms (SamKnows, BISmark, Archipelago/Ark, DIMES, iPlane) have between 170 and 70,000 vantage points but are less open or geographically diverse.
 
-### Critique personnelle
+### Methodology
 
-**Forces** :
-- ✅ **Comprehensive profiling** : ALL dual-stack probes analyzed (not sample)
-- ✅ **Multi-dimensional** : region + network + access technology
-- ✅ **Actionable** : identifies underrepresented countries (BE, JP, IN)
-- ✅ **Validation** system tags (vs user tags staleness)
-- ✅ **Rigorous heuristics** : residential probes, access technology
-- ✅ **Correlation external data** : APNIC IPv6 users, PeeringDB
-- ✅ **Honest limitations** : PeeringDB coverage, heuristic trade-offs
+- **Study type**: Empirical measurement / longitudinal analysis
+- **Tools used**: RIPE Atlas probe archive API, RIPE Atlas measurement API, APNIC IPv6 user population dataset
+- **Scale**: 9,100 connected probes; 2,301 dual-stacked probes; 88 countries; 822 ASNs
+- **Measurement protocol**: System tags assessed via the probe metadata archive (covering March 2014 to January 2017); dual-stacked probes defined as those tagged with both `system-ipv4-works` and `system-ipv6-works` and sharing the same ASN on both protocol versions (to exclude tunnel-based IPv6); user tag update frequency estimated from historical probe metadata
+- **Data collected**: System tag time series; ASN and country distribution of dual-stacked probes; latency measurements (IPv4 vs IPv6) from dual-stacked probes to RIPE Atlas anchors; user tag update histories
 
-**Faiblesses** :
-- ⚠️ **Snapshot Jan 2017** : no temporal evolution (how bias changed ?)
-- ⚠️ **Residential heuristic** : excludes multi-NAT, no-NAT (accuracy vs coverage)
-- ⚠️ **PeeringDB mapping** : 19.3% probes unmapped (missing AS data)
-- ⚠️ **IPv6 performance light** : latency comparison brief (no deep analysis)
-- ⚠️ **No user tags deep dive** : mentions 2.8% but no staleness examples
-- ⚠️ **No recommendations** : how to incentivize probes underrepresented countries ?
+### Main Results
 
-**Lien avec autres articles** :
+1. **System tag reliability**: System tags are updated every 4 hours from live built-in measurement results, making them stable and accurate. Key DNS-relevant tags include `system-resolves-a-correctly` (8,305 probes), `system-resolves-aaaa-correctly` (8,236 probes), and `system-ipv6-works` (3,050 probes) as of January 2017.
+2. **User tag staleness**: Only approximately 2.8% of probe hosts ever update their user tags, so user tags tend to become stale and cannot be reliably used for precise vantage point selection.
+3. **Dual-stacked probe share**: Approximately 25.99% (2,301 out of 8,855) of connected non-anchored probes are dual-stacked, spanning 88 countries and 822 ASNs.
+4. **Regional concentration**: Approximately 91% of dual-stacked probes are concentrated in the RIPE (Europe/Middle East) and ARIN (North America) regions; Africa, Latin America, and most of Asia are severely underrepresented.
+5. **Home network deployments**: Approximately 83% of dual-stacked probes are in access networks; 782 probes are in home networks, evenly split across DSL, cable, and fibre connections.
+6. **Geographic gaps identified**: Correlation against APNIC IPv6 user population estimates shows that Belgium (BE) and Japan (JP) are significantly underrepresented relative to their actual IPv6 user populations, pointing to structural sampling bias.
 
-- **Nosyk 2024 (RIPE Atlas DITL)** :
-  - Bajpai 2017 : 9.1K probes total, 2.3K dual-stack (26%)
-  - Nosyk 2024 : 12.9K probes total, dual-stack % not reported
-  - Geographic bias persistent ? (Nosyk : DE+US = 28% vantage points)
-  - Validation : geographic bias still exists 2024
+### Authors' Conclusion
 
-- **Holterbach 2015 (Interference)** :
-  - Holterbach : hardware v1/v2 load issues (timing delays)
-  - Bajpai : confirms v1 (767), v2 (1,427) < v3 (6,660)
-  - System tags enable hardware-based calibration (filter old probes)
-
-- **Boswell 2024 (Internal Names)** :
-  - Boswell : FRITZ!Box dominates Europe (geographic bias)
-  - Bajpai : DE 21.3% probes (Deutsche Telekom, Kabel Deutschland)
-  - Cohérence : Germany over-represented RIPE Atlas
-
-- **Johnson 2016 (DNS Root)** :
-  - Johnson : ~8K probes (2014), 189 countries
-  - Bajpai : 9.1K probes (2017), 88 countries dual-stack
-  - Evolution : total probes +14%, but dual-stack coverage < total
-
-**Questions ouvertes** :
-1. **Evolution 2017-2024** : Dual-stack % now ? (26% → ?)
-2. **Geographic bias improved** : BE, JP, IN more probes deployed ?
-3. **User tags 2024** : Still 2.8% update rate ? Staleness worse ?
-4. **IPv6 performance** : Deeper analysis latency, reachability ?
-5. **System tags new** : Additional tags since 2017 ?
-6. **Incentives** : How to attract probe hosts underrepresented countries ?
-
-### Citations importantes
-
-> "RIPE Atlas with ∼9.1K hardware probes (as of Jan 2017) is the largest open platform today. It plays a critical role in not only providing operational support to network operators but also facilitating measurement-based research." (Section II)
-
-> "Around 25.99% (2301 / 8855) of all connected non-anchored probes are dual-stacked as of Jan 2017. To put numbers into perspective, this is more than the number of CAIDA Ark dual-stacked probes (77 out of 170 as of Jan 2017) with native IPv6 connectivity." (Section III)
-
-> "∼91% of the dual-stacked probes are connected within the RIPE and ARIN region." (Section IV)
-
-**Sur geographic bias** :
-> "For instance, we know that Belgium with ∼48.5% penetration is currently leading IPv6 adoption rates (as of Jan 2017) according to Google IPv6 adoption statistics. However, it does not even fall within the top 5 countries with the largest number of dual-stacked probes. As such, the probe deployment likely does not reflect the dual-stacked user population across the globe." (Section IV)
-
-> "It can be seen that JP with ∼19% IPv6 usage ratio and ∼22M IPv6 users serve only ∼1.4% (31/2301) dual-stacked probes. We hope this analysis will help improve the deployment of probes in such underrepresented countries with a large IPv6 userbase." (Section IV)
-
-**Sur user tags** :
-> "The accuracy of user tags on the other hand is largely dependent on the proactive participation of hosts to not only tag, but also update their tags as and when network environments around the probe change. This may therefore lead to stale user tags that do not reflect the current network situation of the probe. [...] We show that only ∼2.8% of probe hosts ever update their user tags." (Abstract + Section VI)
+System tags have substantially improved vantage point selection by providing stable, automatically updated, and accurate labels for probe DNS resolution and IP connectivity characteristics. User tags are largely unreliable due to infrequent maintenance. The dual-stacked probe dataset is the richest available for IPv6 measurement studies but remains concentrated in Europe and North America. The authors call for greater probe deployment in underrepresented regions and recommend using system tags — specifically the `-works` variants — for measurement design rather than the less-reliable `-capable` variants.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-**Sections concernées** :
-- **Section 2.5 (RIPE Atlas)** : Tagging mechanism, system tags, vantage point selection
-- **Section 7 (Discussion)** : Geographic bias, probe distribution, limitations
+### Key Takeaways for the Thesis
 
-**Points à développer** :
+**Key concepts to reuse**:
+- System tags as a reliable, auto-updated mechanism for selecting probes with specific DNS/connectivity characteristics
+- The distinction between `system-ipvX-capable` and `system-ipvX-works`: always prefer `-works` for DNS measurement studies, since capability does not guarantee functional connectivity
+- Geographic and ASN-level bias inherent in RIPE Atlas probe distribution must be acknowledged and mitigated in DNS measurement design
 
-**État de l'art** :
-- RIPE Atlas tags = fine-grained vantage point selection (beyond geo + AS filters)
-- System tags automated (4h updates) >> user tags manual (2.8% hosts update)
-- 2.3K dual-stack probes (2017) = richest IPv6 measurement source (30× CAIDA Ark)
-- Geographic bias severe : 91% RIPE+ARIN, underrepresentation BE/JP/IN
+**Applicable methods**:
+- Using `system-resolves-a-correctly` and `system-resolves-aaaa-correctly` tags to filter probes for DNS measurement campaigns targeting authoritative or recursive resolvers
+- Correlation of measurement results against external population or usage statistics (e.g., APNIC data) to contextualise geographic underrepresentation
+- Stratified probe selection by ASN and country to mitigate regional bias
 
-**Notre contribution** :
-- Bajpai 2017 : profiling dual-stack probes, identifies bias
-- Notre approche : use system tags for DNS measurements vantage point selection
-- Filter probes by capabilities (IPv4-works, IPv6-works, resolves-AAAA, etc.)
-- Acknowledge geographic bias in results interpretation
+**Important statistics**:
+- 9,100 connected probes as of January 2017 (out of 20,785 registered); note that this has grown to ~12,000+ by 2024
+- 25.99% of connected probes are dual-stacked — relevant for IPv6 DNS resolution measurement studies
+- Only 2.8% of probe hosts ever update their user tags
+- System tags are refreshed every 4 hours
+- 88 countries and 822 ASNs covered by dual-stacked probes, but ~91% are in Europe and North America
 
-**Discussion** :
-- Geographic diversity DNS responses may reflect probe distribution bias
-- 91% probes Europe+North America → results may not generalize globally
-- Underrepresentation BE/JP/IN → limited coverage high-IPv6-adoption countries
-- Trade-off : RIPE Atlas largest platform but geographic bias exists
-- Compare Nosyk 2024 (12.9K probes) : bias improved or persistent ?
+**Identified limitations (gaps to fill)**:
+- RIPE Atlas is heavily concentrated in Europe and North America; DNS measurement campaigns targeting global diversity need explicit mitigation strategies
+- The paper focuses on IPv6 connectivity; direct analysis of DNS resolver behaviour quality (e.g., NXDOMAIN handling, TTL compliance, EDNS support) beyond tag classification is not addressed
 
-**Méthodologie** :
-- Use system tags for probe selection (avoid user tags staleness)
-- Document probe distribution (countries, ASNs) for transparency
-- Acknowledge limitations geographic coverage
-- Consider weighting results by IPv6 user population (APNIC)
+### Personal Critique
 
-**Limitations** :
-- Geographic bias inherent RIPE Atlas (not our fault, but must acknowledge)
-- 91% probes RIPE+ARIN → limited global representativeness
-- Underrepresented countries results less reliable
+**Strengths**:
+- Rigorous longitudinal analysis of tag reliability using the full probe archive since March 2014
+- Clear and actionable guidance: prefer system tags over user tags; use `-works` over `-capable`
+- Cross-validation against APNIC IPv6 adoption data gives the geographic bias analysis empirical grounding
+
+**Weaknesses**:
+- The paper focuses on IPv6 connectivity; DNS-specific measurement quality (resolver fidelity, caching behaviour, EDNS compliance) is not analysed beyond tag classification
+- Probe counts from 2017 are outdated; the RIPE Atlas infrastructure has grown substantially since
+- User tag staleness is identified but no remediation mechanism is proposed
+
+**Links to other papers**:
+- Bortzmeyer (DNS measurements with RIPE Atlas tutorial): Provides practical DNS measurement design guidance on the same platform
+- Nosyk et al. (RIPE Atlas DITL): Uses RIPE Atlas at scale for DNS measurements — tag-based probe filtering described here is directly applicable
+- Holterbach et al. (RIPE Atlas interference): Addresses a complementary concern: when concurrent measurements on the same probe degrade result quality
+
+**Open questions**:
+- How has the geographic distribution of probes evolved since 2017, particularly in underrepresented regions?
+- For DNS-specific measurements, what additional per-probe quality indicators (beyond the system tags described) could be derived from historical measurement results to filter out noisy vantage points?
+
+### Key Quotes
+
+> "Only ~2.8% of probe hosts ever update their user tags which may lead to user tags that tend to become stale over time."
+
+> "System tags on the other hand being automatically assigned and frequently updated (every 4 hours) are stable and accurate."
+
+> "By applying a correlation against APNIC IPv6 user population estimate, we further reveal underrepresented countries (such as BE and JP) which would benefit from deployment of more probes for IPv6 measurement studies."
 
 ---
 
-**Tags** : #ripe-atlas #system-tags #user-tags #vantage-points #ipv6 #dual-stack #geographic-bias #residential-probes #access-technology #probe-selection
+## Use in Thesis
 
-**Statut** : [X] Lu (PDF via MD) / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.4 (RIPE Atlas infrastructure): Cite for probe count statistics, tag system description, built-in measurement types, and comparison with competing platforms
+- Section 3.X (Methodology): Use to justify probe selection strategy based on system tags; explicitly warn against user tag reliance
+- Section 4.X (Results/bias analysis): Reference when discussing geographic and topological bias in DNS measurement results
 
-**Date fiche** : 21 mars 2026
+**Points to develop**:
+- Explain why DNS measurement campaigns in the thesis use system tags (`system-resolves-a-correctly`, `system-ipv6-works`) and not user tags
+- Discuss how the European concentration of probes may affect spatial representativeness of DNS resolution latency or NXDOMAIN behaviour results
+
+**Cross-references**:
+- `bortzmeyer_dns_measurements_atlas_tutorial.md`: Practical complement for DNS measurement API usage
+- `nosyk2024_ripeatlas_ditl.md`: Large-scale DNS measurement campaign benefiting from tag-based probe selection
+- `holterbach2015_ripeatlas_interference.md`: Probe-level measurement quality concerns complementing this paper
+
+---
+
+**Tags**: #ripe-atlas #vantage-points #ipv6 #probe-selection #system-tags #measurement-bias #dns #methodology
+**Status**: [X] Read / [X] Filed

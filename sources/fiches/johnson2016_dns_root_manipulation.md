@@ -1,344 +1,136 @@
-# Fiche de lecture - Detecting DNS Root Manipulation
+# Reading Note - Detecting DNS Root Manipulation
 
-**Référence bibliographique** :
-Jones, B., Feamster, N., Paxson, V., Weaver, N., & Allman, M. (2016). *Detecting DNS Root Manipulation*. International Computer Science Institute (ICIR). Princeton University & UC Berkeley.
+**Bibliographic Reference**:
+Jones, B., Feamster, N., Paxson, V., Weaver, N., & Allman, M. (2016). Detecting DNS root manipulation. In *Passive and Active Measurement (PAM 2016)*, Lecture Notes in Computer Science. Springer. [Princeton University / International Computer Science Institute / University of California, Berkeley]
 
-**Thème** :
-Détection de serveurs DNS root non-autorisés via mesures RIPE Atlas et analyse BGP
+**Theme**:
+This paper develops and validates techniques to detect unauthorised manipulation of DNS root server traffic — including transparent in-path proxies, DNS response injection, and BGP route hijacking — using a combination of large-scale RIPE Atlas measurements and BGP routing table analysis. The authors focus on the B root server (the only non-anycasted root) as a ground-truth reference and identify a small but significant number of ISPs that intercept or redirect root DNS queries.
 
-**Intérêt pour le mémoire** :
-Démontre l'utilisation RIPE Atlas (~8,000 sondes, 2014) pour détecter manipulation infrastructure DNS critique. Combine mesures endpoint (latence, HOSTNAME.BIND) avec analyse BGP. Illustre menace contrôle DNS et techniques détection via mesures distribuées.
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 mars 2026
-**Section du mémoire** :
-- Section 2.5 (RIPE Atlas - use case sécurité)
-- Section 2.6 (Sécurité DNS - manipulation root servers)
+**Relevance to thesis**:
+Our thesis uses RIPE Atlas to make active DNS measurements across geographic locations and relies on the integrity of DNS resolution for valid results. This paper demonstrates that DNS responses observed at probe locations may not originate from the expected authoritative servers, which is a direct threat to measurement validity. The detection methodology — comparing ping RTT to DNS query RTT — is relevant to our own work on DNS latency measurement and serves as a reference for the security dimension of our state-of-the-art chapter.
 
 ---
 
-## Contenu de l'article
+## Reading Context
 
-### Objectif(s) / Question(s) de recherche
-
-**Problème** : Entités opérant **serveurs DNS root non-autorisés** peuvent :
-- Contrôler complètement namespace Internet pour systèmes sous leur influence
-- Bloquer accès sites (disruption name resolution)
-- Interposer man-in-the-middle (redirection proxies)
-
-**Menace réelle** : Pays (Chine, Pakistan, Turquie) manipulent déjà DNS pour censure, parfois impact international.
-
-**Question** : Comment détecter serveurs root non-autorisés à grande échelle ?
-
-**Focus** : Attaquants manipulant **tous les 13 DNS root servers** (contrôle total), pas subset.
-
-### Cadre global d'explication
-
-**DNS root infrastructure** :
-- 13 adresses serveurs (a-m.root-servers.net)
-- Run par 12 organisations
-- 12/13 utilisent **anycast** (2-150 replicas par serveur)
-- **B root (b.root-servers.net)** = seul **non-anycast** (Los Angeles, USA)
-  → Utilisé comme baseline détection
-
-**Threat model - 3 méthodes manipulation** (Figure 1) :
-1. **In-path DNS proxy** : middlebox intercepte trafic DNS root
-   - Transparent proxy pour cache + contrôle
-   - Facile (UDP = connectionless, peu d'état)
-2. **DNS injection** : attaquant observe requêtes + injecte réponses avant légitimes
-3. **Route hijack** : compromission routing IP → redirige trafic vers fake root replica
-   - Analogique à anycast légitime
-
-**Assumption** : Attaquant manipule **13 serveurs** simultanément pour contrôle total + ne sélectionne pas quelles queries manipuler.
-
-### Méthodologie
-
-- **Type d'étude** : Mesures actives + analyse BGP
-- **Outils utilisés** :
-  - **RIPE Atlas** : ~8,000 sondes, 2,755 AS, 189 pays (juillet 2014)
-  - **BGP monitoring** : RouteViews + RIPE RIS
-- **Échelle** :
-  - 6,546 sondes Atlas avec pings (~2,500 pings/sonde)
-  - 6,135 sondes avec HOSTNAME.BIND queries
-  - 5,929 sondes fournissant les deux mesures
-- **Période** : 6-13 juillet 2014 (1 semaine)
-- **Protocole de mesure** :
-
-**Table 1 - Sources de données** :
-
-| Measurement | Dates | Détecte |
-|-------------|-------|---------|
-| Ping (ICMP) | 6-13 juillet 2014 | Root mirrors |
-| HOSTNAME.BIND (DNS) | 22 juillet 2014 | Proxies + mirrors |
-| Traceroutes (UDP) | 6 juillet 2014 | Proxies + mirrors |
-| RIPE RIS (BGP) | 6-13 juillet 2014 | Root mirrors |
-| RouteViews (BGP) | 7 juillet 2014 | Root mirrors |
-
-**Méthodes détection** :
-
-**1. Anomalous Response-Time Latency** :
-- Atlas = pings ICMP vers roots chaque 240s (4 minutes)
-- Compare RTT ping vs RTT HOSTNAME.BIND query
-- Proxy → DNS response beaucoup plus rapide (local vs Los Angeles)
-- Latency difference = évidente, difficile masquer
-- Validation : pings minimum < speed-of-light propagation delay
-
-**2. Anomalous Server Identity** :
-
-a) **HOSTNAME.BIND Queries** :
-- DNS query spéciale demande serveur s'identifier
-- B root légitime → pattern `bx` (x=0-9)
-- Invalid/null response → suspect
-- Proxy difficile à fake (custom per root, non-default software)
-
-b) **Traceroutes** :
-- UDP traceroutes vers B + L roots chaque 1800s (30 min)
-- Check penultimate hop ASN avant B root
-- Compare paths B vs L roots
-- Assumption : attaquant difficilement falsifie tous hops
-
-c) **BGP Routing Tables** :
-- Analyse RouteViews + RIPE RIS
-- Check B root prefix dans RIBs
-- Detect AS path modifications ou more-specific prefix announcements
-- Détecte route leaks (ex: Pakistan YouTube 2008)
-
-### Résultats principaux
-
-#### 1. DNS Proxies détectés
-
-**HOSTNAME.BIND analysis** :
-- **11 réponses** non-conformes au pattern `bx`
-- 1 = DNS mirror Chine (voir section 2)
-- **10 = DNS proxies**
-- 1 seul ISP avec multiple probes (3/4 correctes → config utilisateur, pas ISP)
-- 9 autres = décision intentionnelle ISP (nom ISP dans réponse)
-
-**Exemple Wananchi (Kenya)** :
-- Réponse : `dns3.wnanchi.com` en 14 ms
-- vs ping légitime B root : 318 ms
-- **Amélioration performance** (23× plus rapide)
-
-**Validation latency** :
-- Geolocate probes, filter Americas (B root = Los Angeles)
-- 1,388 probes (22.6%) = location cohérente
-- 106 probes (1.7%) = location inconsistente (exclus)
-- Technique détecte **mêmes 10 proxies** que HOSTNAME.BIND
-- **Confidence élevée** (2 méthodes indépendantes convergent)
-
-**Figure 2** : Afrique representative sample
-- Difference (ping - HOSTNAME.BIND) times
-- DNS proxy Kenya = outlier clair (DNS response << ping)
-- Autres pays : DNS ≈ ping (légitime)
-
-**Comparaison Netalyzr** :
-- Weaver et al. : 1.4% clients derrière hidden proxies
-- Cette étude : 0.16% (~1/10 taux précédent)
-- Possible évolution 2014 vs études antérieures
-
-#### 2. Rogue DNS Root Mirror
-
-**China Education and Research Network (CERNET)** :
-- **1 probe Chine** = unauthorized root replica
-- Ping B root : 1.2 ms (impossible depuis Los Angeles!)
-- HOSTNAME.BIND : réponse invalide, 16 ms
-- Geolocation : confirmed Chine (Atlas + MaxMind)
-- Traceroute : tous hops = même ASN
-- Network issues : 8/2519 pings (0.11%) > 100 ms (Figure 4)
-- **Consistency** : 2,519 pings impossibly low, consistently
-
-**Figure 3** : Asia probes B vs L roots
-- L root (150 anycast) vs B root (unicast LA)
-- DNS mirror = clear outlier (très faible RTT B root)
-
-**Validation** :
-- Atlas probe peut contacter directement authoritative DNS sous contrôle auteurs
-- → Pas derrière proxy, vraiment root mirror
-- Consistance mesures (2,519 pings) → haute confiance
-
-**Outliers analysis** :
-- 4 outliers initiaux
-- 1 = DNS mirror Chine (confirmé)
-- 3 = measurement errors :
-  - 1 probe New York geolocated Switzerland (erreur geolocation)
-  - 2 probes ICMP error messages mal interprétés (TTL 255 = first hop ICMP error, pas echo reply)
-
-#### 3. Traceroutes analysis
-
-**Penultimate hop verification** (4,333 traceroutes, 1,948 probes) :
-- AS 226 (Los Nettos) : 1,647 probes (3,488 tr) ✅ Légitime (BGP neighbor ISI)
-- AS 2153/2152 (Cal State Univ) : 295 probes (814 tr) ✅ Légitime (USC location)
-- AS 4 (ISI) : 2 probes (22 tr) ✅ Légitime (B root admins)
-- AS 8121 (Layer 42) : 1 probe (5 tr) ✅ Légitime (different AS)
-- AS 34168 (Rostelecom) : 1 probe (2 tr) ✅ Légitime (230 ms latency)
-- AS 2914 (NTT Comm) : 1 probe (1 tr) ✅ Légitime (different AS)
-
-→ **Aucun root mirror détecté via traceroutes**
-
-**B vs L paths comparison** (4,342 pairs, 1,292 probes) :
-- Hypothèse : attaquant redirige multiples roots vers 1 instance (éviter duplication)
-- Matching hops fraction : max 0.85 (12/14 hops)
-- Si manipulation → expect 100% match
-- Probes behind DNS proxies : max 0.8 matching (12/15 hops)
-- **Conclusion : pas de root manipulation détectée via traceroutes**
-
-#### 4. BGP analysis
-
-**RouteViews + RIPE RIS** :
-- Analyse AS paths + prefix announcements pour B root
-- **Aucune anomalie détectée**
-- Pas de hijack, pas de more-specific prefix, pas de AS path injection
-
-### Conclusion des auteurs
-
-**Contributions** :
-1. ✅ **Techniques détection** manipulation DNS root (latency + identity)
-2. ✅ **Validation empirique** sur ~8,000 sondes RIPE Atlas
-3. ✅ **Discoveries** : 10 DNS proxies + 1 unauthorized root mirror (Chine)
-4. ✅ **Confidence** : 2 méthodes indépendantes (latency + HOSTNAME.BIND) convergent
-
-**Implications** :
-- DNS root manipulation = **rare mais réelle** (2014)
-- Proxies souvent légitimes (performance ISP), pas nécessairement malveillants
-- Root mirror Chine = unauthorized, contrôle potentiel namespace
-- Techniques détectent **most if not all** mirrors depuis vantage points
-- Coverage limité : pas tous AS, potentiellement sous-estime proxies
-
-**Limitations** :
-- Attaquant sophistiqué peut masquer latency (transformer replies au lieu répondre)
-- Coverage géographique = dépend distribution sondes Atlas
-- BGP analysis = only detects leaks to public Internet
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.9 (DNS security: DNSSEC, manipulation, censorship)
+- Section 2.4 (RIPE Atlas measurement capabilities and limitations)
+- Section 3.x (Methodology: measurement validity and data quality)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés** :
-- **DNS root manipulation** = menace réelle infrastructure critique
-- **Multi-method validation** : latency + identity + BGP → robustesse
-- **Side-channel detection** : latency anomalies reveal hidden infrastructure
-- **RIPE Atlas versatility** : sécurité + performance + infrastructure analysis
-- **Geographic distribution** : 189 pays = coverage globale, mais biais
+**Problem**: Entities operating unauthorised DNS root servers can completely control name resolution for any client within their network, enabling censorship, redirection, and man-in-the-middle attacks. The prevalence of such manipulation in the wild is poorly understood, and systematic methods to detect it at Internet scale are lacking.
 
-**Méthodes applicables** :
-- Comparaison RTT ICMP vs DNS queries (detect proxies)
-- HOSTNAME.BIND fingerprinting
-- Traceroute AS path validation
-- BGP monitoring pour route hijacks
-- Geographic filtering (exclude Americas pour B root LA)
-- Multi-source geolocation (Atlas + MaxMind)
+**Research questions**:
+1. Can we detect in-path DNS proxies and unauthorised root mirrors using latency anomalies observable from RIPE Atlas probes?
+2. How prevalent is DNS root manipulation across the global Internet, and what forms does it take?
 
-**Chiffres importants** :
-- **~8,000 sondes**, 2,755 AS, 189 pays (2014)
-- **10 DNS proxies** détectés (0.16% sondes)
-- **1 unauthorized root mirror** (Chine)
-- **1.2 ms ping** B root depuis Chine (vs ~300 ms attendu)
-- **2,519 pings** consistently low (high confidence mirror)
+### Background
 
-**Limites pour nous** :
-- Étude 2014 (10 ans) → évolution depuis ?
-- Focus B root (non-anycast) → méthode moins applicable autres roots
-- Assume attaquant manipule tous 13 roots (restrictif)
-- Pas de quantification impact utilisateurs (combien affectés ?)
+The DNS root comprises 13 server addresses (a through m root-servers.net) run by 12 organisations. All but one (B root, operated by the University of Southern California from Los Angeles, USA) use IP anycast to distribute their service globally. Resolvers hardwire the IP addresses of these 13 servers. An attacker can manipulate root DNS resolution through three mechanisms: (1) deploying an in-path transparent proxy that intercepts DNS root queries, (2) injecting fake DNS responses before legitimate replies arrive, or (3) hijacking BGP routes to redirect traffic for root server IP prefixes to unauthorised replicas. Countries such as China, Pakistan, and Turkey have historically manipulated DNS to impose censorship, sometimes inadvertently affecting resolution for other countries. The paper focuses on network-level manipulation, not host-level malware.
 
-### Critique personnelle
+### Methodology
 
-**Forces** :
-- ✅ **Multi-method convergence** : latency + HOSTNAME.BIND détectent mêmes proxies
-- ✅ **Large scale** : 8,000 sondes, 189 pays (2014 = déjà impressive)
-- ✅ **Real threat** : China mirror = unauthorized, pas juste theoretical
-- ✅ **Practical validation** : traceroutes + BGP confirm findings
-- ✅ **Clear methodology** : reproducible, well-documented
+- **Study type**: Active measurement + control-plane analysis (observational/empirical)
+- **Tools used**: RIPE Atlas (approximately 8,000 probes in 2,755 ASes across 189 countries), RIPE RIS (Routing Information Service), RouteViews BGP data, MaxMind geolocation
+- **Scale**: 6,546 Atlas probes providing ping measurements to B root; 6,135 probes providing HOSTNAME.BIND DNS queries; 5,929 probes providing both; one week of data (July 6–13, 2014)
+- **Measurement protocol**: Three complementary detection techniques were employed: (1) Anomalous latency detection — comparing ICMP ping RTT to the singular B root versus DNS query RTT; a DNS response arriving significantly faster than the ping suggests an in-path proxy. (2) Server identity verification — issuing HOSTNAME.BIND DNS queries (special queries that ask a server to identify itself) from Atlas probes; replies not matching the pattern "bx" (b0–b9) indicate proxy or mirror presence. (3) BGP routing analysis — checking RouteViews and RIPE RIS RIBs for anomalous AS paths or more-specific prefixes for B root's IP prefix. Traceroutes from probes to B and L roots were also analysed to detect shared infrastructure.
+- **Data collected**: ICMP ping RTTs to B root (continuous, every 4 minutes per probe); one HOSTNAME.BIND response per probe; traceroutes to B and L root (every 30 minutes per probe); BGP routing tables and updates from RouteViews and RIPE RIS
 
-**Faiblesses** :
-- ⚠️ **Old study** (2014) → RIPE Atlas now 12.9K sondes (2024)
-- ⚠️ **Limited scope** : B root uniquement (non-anycast)
-- ⚠️ **No temporal analysis** : snapshot, pas évolution
-- ⚠️ **Geographic bias** : dépend distribution sondes
-- ⚠️ **Underestimate** : authors acknowledge may miss proxies
-- ⚠️ **No impact quantification** : combien users affected ?
+### Main Results
 
-**Lien avec autres articles** :
+1. **In-path DNS proxies detected**: Eleven HOSTNAME.BIND responses did not match the expected "bx" pattern. Ten of these coincide with ISPs deliberately intercepting DNS root queries — confirmed by the HOSTNAME.BIND response naming the ISP's own server (e.g., "dns3.wnanchi.com" for a Kenyan ISP). This indicates intentional interposition for performance or policy reasons.
+2. **Latency anomaly confirms proxy presence**: For the Kenyan ISP example, DNS query RTT to "B root" was 14 ms, while ping RTT to the actual B root in Los Angeles was 318 ms — an implausible difference (factor of ~23x) that confirms a local proxy answers DNS queries rather than the real root.
+3. **DNS root mirror discovered**: Analysis of RTT distributions from Asian probes to B root versus L root (150 anycast sites) revealed a clear outlier — a probe with anomalously low B root RTT that matches L root RTT, indicating the probe's queries are answered by a local root mirror rather than the authentic B root in Los Angeles.
+4. **BGP hijacking not observed**: No evidence of BGP route hijacking affecting the B root prefix was found in the RouteViews or RIPE RIS data during the measurement period, though the method's coverage is limited to publicly visible BGP advertisements.
+5. **Geolocation inconsistency as a confounder**: 1.7% of Atlas probes (106 probes) showed inconsistent geolocation information between Atlas's own data and MaxMind, complicating the latency-based detection for those probes.
 
-- **Nosyk 2024 (RIPE Atlas DITL)** :
-  - 2014 : ~8,000 sondes
-  - 2024 : 12,892 sondes (+60%)
-  - Coverage improved mais biais géographique persiste
+### Authors' Conclusion
 
-- **Holterbach 2015 (Interference)** :
-  - Concurrent measurements → timing interference
-  - Jones 2014 : pings + DNS queries OK (simples, peu CPU)
-  - Validation : mesures DNS robustes à interference
-
-- **Boswell 2024 (Internal Names)** :
-  - Jones : external (root servers)
-  - Boswell : internal (home gateways)
-  - Complémentarité : threats externes + internes
-
-**Questions ouvertes** :
-1. **Évolution 2014-2024** : Plus/moins proxies/mirrors maintenant ?
-2. **Anycast roots** : Techniques applicables L root (150 replicas) ?
-3. **IPv6** : Manipulation différente IPv6 vs IPv4 ?
-4. **Attaque sophistiquée** : Latency masking possible ?
-5. **Motivations** : Proxies = performance ou malveillant ?
-
-### Citations importantes
-
-> "Entities operating unauthorized root servers can completely control the entire Internet name space for any systems within their sphere, including blocking access to sites by disrupting their name resolution, or arbitrarily interposing on communication by redirecting through man-in-the-middle proxies." (Introduction)
-
-> "Countries such as China, Pakistan, and Turkey already manipulate DNS to impose censorship, sometimes incidentally affecting DNS resolution for other countries." (Introduction)
-
-> "We found that overlapping measurements do interfere with each other in at least two ways." (Section 3)
-
-**Sur détection proxies** :
-> "Using two independent techniques, we identified eleven HOSTNAME.BIND responses that did not match the expected bx pattern [...] ten DNS proxies. The fact that two independent techniques detected the same ten DNS proxies increases our confidence in the result." (Section 4.1)
-
-**Sur China mirror** :
-> "We determined that the fourth outlier was an unauthorized root mirror in the China Education and Research Network. The Atlas probe could ping B root in 1.2 ms and a HOSTNAME.BIND query produced an invalid response with a response time of 16 ms." (Section 4.2)
-
-**Sur traceroutes validation** :
-> "These methods revealed no evidence of root manipulation. The closest traceroute pair had a matching hop fraction of 0.85 (12/14 hops matched). If manipulation were taking place, we would have expected the traceroutes to match exactly." (Section 4.3)
+The authors conclude that DNS root manipulation is present but not widespread; they find ten ISPs using in-path DNS proxies (possibly for performance improvement or censorship) and one DNS root mirror. They emphasise that their two independent detection techniques (latency anomaly and HOSTNAME.BIND identity) agree on all findings, increasing confidence in the results. They acknowledge that their methods may underestimate DNS proxies (since proxies can correctly forward HOSTNAME.BIND responses) and note that future work should extend coverage to all DNS root letters and all ASes.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-**Sections concernées** :
-- **Section 2.5 (RIPE Atlas)** : Use case sécurité, détection infrastructure compromise
-- **Section 2.6 (Sécurité DNS)** : Manipulation root servers, censure, proxies
+### Key Takeaways for the Thesis
 
-**Points à développer** :
+**Key concepts to reuse**:
+- DNS root manipulation as a threat to measurement validity — RIPE Atlas probes may be behind proxies that intercept and answer DNS queries before they reach authoritative servers
+- Latency-comparison technique (ping vs DNS query) as a tool to detect proxy presence — applicable in our thesis when validating measurement integrity
+- HOSTNAME.BIND queries as a lightweight server identity check for DNS measurement validation
 
-**État de l'art** :
-- RIPE Atlas = outil sécurité (pas juste performance/monitoring)
-- Multi-method validation = robustesse (latency + identity + BGP)
-- DNS root manipulation = rare (10 proxies, 1 mirror / 8,000 sondes) mais réel
-- Geographic distribution = clé détection (B root LA → filter Americas)
+**Applicable methods**:
+- Cross-check DNS response times against ICMP ping times in our dataset to flag probes potentially behind transparent DNS proxies
+- Use HOSTNAME.BIND or similar identity probes to validate that DNS responses originate from expected authoritative infrastructure
+- Complement RIPE Atlas measurements with BGP data from RIPE RIS to contextualise routing anomalies
 
-**Méthodologie** :
-- Side-channel detection applicable (anomalies reveal infrastructure)
-- Latency baseline = geographic distance
-- Multiple data sources (Atlas + BGP) = cross-validation
+**Important statistics**:
+- 10 ISPs found to operate in-path DNS proxies across approximately 6,000 probes surveyed (~0.2% of probes affected)
+- 1 DNS root mirror identified in Asia
+- Latency gap between proxy-answered DNS query (14 ms) and legitimate ping to B root (318 ms) — a factor of approximately 23x
+- 5,929 Atlas probes provided both ping and HOSTNAME.BIND data, covering 2,755 ASes in 189 countries
 
-**Discussion** :
-- Coverage depends on probe distribution (our study aussi)
-- Threat model : assume manipulation visible (sophisticated attacker peut masquer)
-- Trade-off : coverage vs attacker capabilities
+**Identified limitations (gaps to fill)**:
+- Coverage limited to probes already in the RIPE Atlas network; ASes without Atlas probes are unobservable
+- The study focuses exclusively on B root; manipulation affecting other (anycasted) root letters is harder to detect
+- Results are from 2014; the landscape of DNS manipulation may have changed significantly, especially in countries with documented censorship regimes
 
-**Références croisées** :
-- Nosyk 2024 : Evolution RIPE Atlas 2014→2024
-- Boswell 2024 : Client-side manipulation (internal names)
-- Holterbach 2015 : Platform limitations (interference)
+### Personal Critique
+
+**Strengths**:
+- Two independent detection techniques that cross-validate each other, increasing result reliability
+- Broad geographic coverage (189 countries, 2,755 ASes) using RIPE Atlas
+- Methodology is transparent and reproducible; the specific queries and thresholds are clearly described
+
+**Weaknesses**:
+- The paper studies only the B root; the method cannot be directly applied to anycasted root letters without modification
+- DNS proxy detection via HOSTNAME.BIND is evadable — a sophisticated proxy could forward or spoof HOSTNAME.BIND responses
+- Measurement period is one week in July 2014; longitudinal analysis is absent
+- BGP analysis is limited to publicly visible routes; internal hijacking within an ISP would be invisible
+
+**Links to other papers**:
+- Holterbach et al. (2015): The synchrony and precision issues on RIPE Atlas could affect the latency-comparison technique used here — probe delays could be mistaken for proxying
+- Koch et al. (2021): Anycast routing to root servers is the normal case; this paper identifies deviations from expected anycast routing as a manipulation signal
+- Hours et al. (2016): DNS proxies at the ISP level, as detected here, would affect CDN resolver-location mapping in ways similar to public resolver use
+
+**Open questions**:
+- How has the prevalence of in-path DNS proxies evolved since 2014, particularly with the spread of DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT)?
+- Can the latency-comparison technique be adapted to detect manipulation of TLD or second-level domain name servers, not just the root?
+- Do any of the Atlas probes in our thesis dataset show evidence of being behind DNS proxies?
+
+### Key Quotes
+
+> "Entities operating unauthorized root servers can completely control the entire Internet name space for any systems within their sphere, including blocking access to sites by disrupting their name resolution, or arbitrarily interposing on communication by redirecting through man-in-the-middle proxies."
+
+> "We find one ISP that redirects clients at the IP layer to an unauthorized root replica. Further, we find several ISPs prevent direct access to the authorized root servers by interposing on DNS lookup with proxies."
+
+> "The fact that two independent techniques detected the same ten DNS proxies increases our confidence in the result."
 
 ---
 
-**Tags** : #dns-root #security #manipulation #ripe-atlas #censorship #proxies #mirrors #china #detection #latency #bgp
+## Use in Thesis
 
-**Statut** : [X] Lu (PDF via MD) / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.9 (DNS security): Cite as a key empirical study of DNS root manipulation prevalence; describes both the threat model and detection methodology
+- Section 2.4 (RIPE Atlas as a measurement platform): Reference as evidence that Atlas probes can be behind DNS proxies, which is a measurement validity concern
+- Section 3.x (Methodology — data quality): Reference the latency-comparison technique as a validation step we can apply to our own dataset
 
-**Date fiche** : 21 mars 2026
+**Points to develop**:
+- Assess whether the probes selected for our thesis measurements show any signs of proxy presence, using the latency-comparison heuristic
+- Discuss the broader implication: even "active" DNS measurements may not reach the intended authoritative server if the probe is behind a transparent proxy
+
+**Cross-references**:
+- holterbach2015_ripeatlas_interference.md (RIPE Atlas measurement validity — complementary concern)
+- koch2021_anycast_context.md (anycast root DNS routing — what "normal" looks like, enabling detection of deviations)
+
+---
+
+**Tags**: #dns-security #dns-root #manipulation #ripe-atlas #anycast #bgp-hijacking #transparent-proxy #censorship #measurement-validity
+**Status**: [X] Read / [X] Filed

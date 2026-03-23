@@ -1,213 +1,140 @@
-# Fiche de lecture - Anycast in Context: Root DNS vs CDN
+# Reading Note - Anycast in Context: A Tale of Two Systems
 
-**Référence bibliographique** :
-Koch, T., Li, K., Ardi, C., Katz-Bassett, E., Calder, M., & Heidemann, J. (2021). *Anycast in Context: A Tale of Two Systems*. Proceedings of the 2021 ACM SIGCOMM Conference, 398-417. https://doi.org/10.1145/3452296.3472891
+**Bibliographic Reference**:
+Koch, T., Li, K., Ardi, C., Katz-Bassett, E., Calder, M., & Heidemann, J. (2021). Anycast in context: A tale of two systems. In *Proceedings of the 2021 ACM SIGCOMM Conference (SIGCOMM '21)* (pp. 398–417). ACM. https://doi.org/10.1145/3452296.3472891
 
-**Thème** :
-Comparaison inflation anycast dans root DNS vs Microsoft CDN - contexte applicatif crucial
+**Theme**:
+This paper provides the largest comparative study of anycast latency and routing inflation to date, examining two contrasting use cases: the DNS root server system and Microsoft's global anycast CDN. The authors demonstrate that while routing inflation affects more than 95% of users reaching root DNS, aggressive caching makes this largely imperceptible to end users; conversely, Microsoft's CDN experiences much less inflation (only 35% of users) because latency directly affects user experience and motivates extensive engineering investment.
 
-**Intérêt pour le mémoire** :
-Montre que inflation anycast dépend fortement du contexte : root DNS (>95% users inflated mais caching = impact minimal) vs CDN (35% inflated, peering extensif limite impact). Pertinent pour comprendre que diversité géographique DNS queries dépend routing anycast + économie service.
-
----
-
-## Contexte de lecture
-**Date** : 21 mars 2026
-**Sections** : 2.6 (Anycast, CDN), 2.1 (Root DNS)
+**Relevance to thesis**:
+Anycast is the dominant deployment strategy for DNS root and TLD servers, and understanding anycast inflation is essential for interpreting geographic variability in DNS response times in our thesis. The paper's finding that root DNS inflation is widespread but practically irrelevant (due to caching) provides important context for evaluating whether DNS round-trip time variation across RIPE Atlas probes reflects real geographic routing differences or merely anycast routing inefficiency.
 
 ---
 
-## Contenu
+## Reading Context
 
-### Objectifs
-
-**Paradoxe** : Anycast criticized (SIGCOMM 2018 "hundreds of ms inflation") mais adoption croissante production
-
-**Questions** :
-1. Inflation anycast = inhérente ou dépend contexte ?
-2. Impact réel inflation sur users (pas juste recursive resolvers) ?
-3. Pourquoi anycast continue expansion malgré inefficiency ?
-
-**Systèmes comparés** :
-- **Root DNS** : 13 letters, 6-254 sites/letter, diverse deployments
-- **Microsoft CDN** : >100 sites, multiple rings, latency-sensitive content
-
-### Méthodologie
-
-**Échelle exceptionnelle** :
-- **Root DNS** : 51.9B queries/jour (DITL 2018), millions recursives, tous users worldwide
-- **Microsoft CDN** : >1B users, 15K ⟨region,AS⟩ locations, hundreds countries
-- **RIPE Atlas** : 7K pings, 1K probes, 500+ ASes (calibration)
-
-**Datasets** :
-- DITL 2018 (48h captures, 11/13 root letters)
-- Microsoft proprietary (TCP RTT logs, client-side measurements)
-- ISI packet captures (100M queries)
-- APNIC user population estimates (reproducibility)
-
-**Preprocessing DITL** :
-- Remove 31B NXDOMAIN (28% Chromium hijack detection)
-- Remove 2B PTR queries
-- Remove private IPs (7%)
-- IPv4 only (exclude 12% v6)
-- Final: ~19B queries
-- Join with Microsoft user counts (DITL∩CDN dataset)
-
-**Metrics** :
-- **Geographic Inflation (GI)** : distance vs closest site (speed of light in fiber)
-- **Latency Inflation (LI)** : measured RTT vs optimal
-- User-weighted (pas juste recursive-weighted comme prior work)
-
-### Résultats Root DNS
-
-**Inflation très répandue** :
-- **>95% users** experience some inflation to individual root letters
-- **40% users** : >100ms inflation to some letters
-- **But** : per-query average inflation lower (recursives prefer best letters)
-- **10% users** : >100ms inflation average across queries
-
-**Context crucial** :
-- Users interact with root **once per day** (median)
-- Caching DNS records (long TTLs) = delay minimal
-- Root DNS latency **hardly matters** to users
-- Preferential querying by recursives reduces impact
-
-### Résultats Microsoft CDN
-
-**Inflation limitée** :
-- **35% users** experience any inflation
-- Inflation amount **smaller** than root DNS
-- Extensive **peering + engineering** investment control inflation
-- Latency **matters** : several RTTs per page load (vs root 1/day)
-
-**Economic incentives** :
-- CDN: latency = competitive advantage → optimize
-- Root DNS: latency doesn't matter (caching) → focus DDoS resilience, availability
-
-**Engineering differences** :
-- CDN: extensive AS-level connectivity, peering agreements
-- Root DNS: expansion driven by DDoS mitigation, geographic diversity (not latency)
-
-### Conclusions
-
-**Key finding** : **Context matters**
-- Anycast inflation ≠ inherent technical limitation
-- Depends on **economic incentives** + **engineering investment**
-- Root DNS: high inflation acceptable (caching mitigates)
-- CDN: low inflation achievable (when latency matters)
-
-**Takeaway** :
-- Prior claims "anycast inefficient" = **single application**, not anycast potential
-- Where latency counts, anycast performance **can be quite good**
-- Cannot generalize anycast performance across services
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.4 (Anycast and DNS infrastructure)
+- Section 2.4.4 (Alternatives and limitations of RIPE Atlas for anycast studies)
+- Section 4.x (Interpretation of geographic DNS latency variation)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Pour le mémoire
+### Research Objective(s)
 
-**Concepts clés** :
-- **Context-dependent performance** : anycast = pas bon/mauvais absolu
-- **Economic incentives** drive optimization (CDN) or not (root DNS)
-- **Caching** crucial DNS performance (amortizes latency)
-- **User vs recursive** metrics = different conclusions
-- **AS-level connectivity** + peering = control inflation
+**Problem**: Prior work, notably the SIGCOMM 2018 paper "Internet Anycast: Performance, Problems & Potential", argued that anycast inflates latency by hundreds of milliseconds and is therefore inefficient. However, those conclusions were drawn primarily from measurements of root DNS — a system where caching means users rarely wait for DNS responses. The question of whether inflation is inherent to anycast, or is a consequence of the specific application context, remained unanswered.
 
-**Chiffres** :
-- **>95%** users inflated (root DNS individual letters)
-- **35%** users inflated (Microsoft CDN)
-- **>1B** users analyzed (CDN)
-- **51.9B** queries/day (root DNS)
-- **100+** CDN sites, **6-254** root sites/letter
-- **1/day** median user root DNS interaction
+**Research questions**:
+1. How prevalent is anycast routing inflation in the root DNS system, and does it translate into actual user-perceived latency overhead?
+2. Is anycast inflation reduced or eliminated in a latency-sensitive CDN application (Microsoft's CDN), and if so, how?
 
-**Méthodes** :
-- User-weighted analysis (pas juste recursive-weighted)
-- Join passive (DITL) + proprietary (Microsoft users)
-- Geographic + latency inflation metrics
-- AS-level connectivity analysis
+### Background
 
-**Limites** :
-- Microsoft CDN = proprietary (reproducibility limitée)
-- APNIC data = approximation (public resolvers problem)
-- Cannot generalize to all anycast services
+IP anycast assigns the same IP address to geographically distributed servers. Border Gateway Protocol (BGP) routing determines which physical server a client reaches, based on route preference and topology — not necessarily the geographically or topologically closest site. The DNS root comprises 13 letter servers operated by 12 organisations; as of July 2021, each letter deploys between 6 and 254 anycast sites worldwide. Root DNS records have long TTLs (typically 518,400 seconds / 6 days), enabling recursive resolvers to cache results and serve user queries without contacting the root for extended periods. Microsoft's CDN serves web content (latency-sensitive) to over a billion users from more than 100 front-end sites organised into "rings" of different sizes. Unlike root DNS, every CDN miss involves multiple RTTs to the front-end, making latency directly relevant to user experience.
 
-### Critique
+### Methodology
 
-**Forces** :
-- ✅ **Largest anycast study** to date (billions queries, billion users)
-- ✅ **Fair comparison** : same methodology root DNS vs CDN
-- ✅ **User-centric** : weight by users, not recursives
-- ✅ **Context emphasis** : demonstrates importance application characteristics
-- ✅ **Complete root DNS** : 11/13 letters (prior work = 1 letter)
-- ✅ **Economic angle** : explains why inflation differs
+- **Study type**: Large-scale measurement study (combining packet captures, server logs, client-side instrumentation, and RIPE Atlas supplementary probing)
+- **Tools used**: DNS-OARC DITL (Day in the Life of the Internet) packet captures at root servers; Microsoft server-side front-end logs (TCP handshake RTTs); Microsoft client-side measurement system (HTTP image fetch latency); RIPE Atlas (7,000 pings from 1,000 probes to CDN rings for calibration); APNIC Internet population data; ISI/USC local packet captures (approximately 100 million queries, 2018)
+- **Scale**: 51.9 billion daily root DNS queries (after filtering); over one billion Microsoft CDN users; 22,243 ASes covered; 224 countries/regions; 2018 DITL captures (48 hours, 12 of 13 root letters)
+- **Measurement protocol**: Inflation was measured in two ways: (1) geographic inflation — comparing the distance to the actually assigned root letter site against the distance to the closest deployed site; (2) latency inflation — comparing measured TCP handshake RTTs (from TCP DNS queries) against a lower bound derived from the closest known site. Root DNS query volumes were joined with Microsoft user counts at the recursive resolver /24 level to estimate per-user root DNS query rates. CDN latency was measured directly from server logs and client instrumentation.
+- **Data collected**: Root DNS query volumes per recursive (/24); TCP handshake RTTs for DNS-over-TCP queries to root servers; client-to-CDN HTTP latency; RIPE Atlas ping RTTs to CDN rings
 
-**Faiblesses** :
-- ⚠️ **Proprietary data** : Microsoft CDN not reproducible
-- ⚠️ **Temporal snapshot** : 2018 DITL, 2019-2021 CDN
-- ⚠️ **Single CDN** : Microsoft only (generalization ?)
-- ⚠️ **IPv4 bias** : excludes 12% v6 traffic
-- ⚠️ **Preprocessing** : removes 60%+ queries (justified but aggressive)
+### Main Results
 
-### Liens
+1. **Root DNS inflation is nearly universal**: More than 95% of users experience some geographic inflation when querying at least one root letter, and up to 40% of users experience more than 100 ms of inflation to some root letters. When averaged across all root letters (exploiting the fact that recursives preferentially query their best-performing letter), only 10% of users experience more than 100 ms of inflation.
+2. **Root DNS inflation is practically irrelevant to users**: Because root DNS records are cached at recursive resolvers with TTLs measured in days, most users interact with the root DNS approximately once per day. The additional latency from inflation is amortised over thousands of cached responses, making its per-query cost negligible.
+3. **CDN anycast inflation is much lower**: Only 35% of Microsoft CDN users experience any inflation, and the amounts are smaller than for root DNS. This is attributed to extensive peering agreements and deliberate engineering by Microsoft to minimise BGP path length.
+4. **Hypothetical CDN inflation would be catastrophic for UX**: The paper estimates that if Microsoft's CDN were as inflated as individual root letters, each page load would incur hundreds of milliseconds of additional latency — confirming that the low CDN inflation is the product of active optimisation, not a coincidence.
+5. **Deployment size and inflation trade-off**: Inflation increases with the number of anycast sites in a deployment — larger deployments are harder to optimise through peering alone. This creates a tension between geographic coverage (which requires more sites) and routing efficiency.
 
-**vs Calder 2015** :
-- Calder : 20% Bing CDN users suboptimal
-- Koch : 35% Microsoft CDN inflated (consistent)
-- Both : anycast works for majority, problems minority
+### Authors' Conclusion
 
-**vs Nosyk 2024 (RIPE Atlas)** :
-- Koch : RIPE Atlas coverage not representative (3.7K ASes)
-- Nosyk : 12.9K probes, 178 countries
-- Koch dataset : 22K ASes, 224 countries (DITL >> RIPE Atlas)
-
-**vs Xu 2023 (Centralization)** :
-- Xu : backend infrastructure centralisé
-- Koch : frontend routing (anycast) context-dependent
-- Complémentarité : centralisation + routing = multi-layer challenges
-
-**Notre mémoire** :
-- Koch : geographic routing matters, context crucial
-- Nous : RIPE Atlas distributed measurements reveal geographic variations
-- Lien : anycast routing geography-dependent → distributed vantage points essential
-
-### Citations
-
-> "We reassess anycast performance [...] We show that inflation is very common in root DNS, affecting more than 95% of users. However, we then show root DNS latency hardly matters to users because caching is so effective." (Abstract)
-
-> "Only 35% of CDN users experience any inflation, and the amount they experience is smaller than for root DNS. We show that CDN anycast latency has little inflation due to extensive peering and engineering." (Abstract)
-
-> "These results suggest prior claims of anycast inefficiency reflect experiments on a single application rather than anycast's technical potential, and they demonstrate the importance of context when measuring system performance." (Abstract)
-
-> "Most users interact with the root DNS once per day [...] Delay is minimal due to caching of root DNS records with long TTLs at recursive resolvers." (§4)
-
-> "Microsoft is able to control inflation through extensive peering and engineering investment, even though inefficiency increases with larger deployments." (§7.1)
+The authors conclude that prior claims of anycast inefficiency reflect measurements of a single application (root DNS) in a context where inflation barely matters to users (due to caching), rather than a fundamental limitation of anycast technology. When anycast is used for latency-sensitive applications (CDNs), economically incentivised operators invest in peering and engineering to reduce inflation to acceptable levels. The key lesson is that anycast performance must be evaluated in the context of the specific application and service model — abstract measurements of routing inflation are insufficient without understanding user interaction patterns and caching behaviour.
 
 ---
 
-## Utilisation mémoire
+## Personal Analysis
 
-**Sections** :
-- **2.1 (Root DNS)** : Anycast deployment, inflation acceptable (caching)
-- **2.6 (CDN/Anycast)** : Context-dependent performance, engineering matters
-- **7 (Discussion)** : Geographic diversity + economic incentives
+### Key Takeaways for the Thesis
 
-**Points** :
-- Anycast routing = geography-dependent (Koch confirme)
-- Context crucial : root DNS (1/day) vs CDN (several RTTs/page)
-- RIPE Atlas (12.9K points) complements DITL global view
-- Distributed measurements reveal variations anycast routing
+**Key concepts to reuse**:
+- Distinction between geographic inflation (site assignment vs closest site) and latency inflation (measured RTT vs lower bound)
+- Caching as the dominant factor that decouples root DNS latency from user-perceived performance — highly relevant to interpreting DNS timing measurements from Atlas probes
+- The dependence of anycast routing quality on the operator's peering investment and deployment size
 
-**Notre contribution** :
-- Koch : context matters (application characteristics)
-- Nous : geographic context matters (vantage point location)
-- RIPE Atlas = distributed context for observing anycast behavior
+**Applicable methods**:
+- When analysing geographic variation in DNS response times from RIPE Atlas probes, compute both geographic and latency inflation relative to known anycast site locations
+- Supplement RIPE Atlas measurements with DITL data or server-side captures for ground-truth comparison, as the authors do
+- Account for caching TTLs when estimating the user-perceived impact of DNS timing differences across probe locations
+
+**Important statistics**:
+- More than 95% of users experience some geographic inflation in root DNS queries
+- Up to 40% of users experience more than 100 ms inflation to some individual root letters
+- Only 10% of users experience more than 100 ms when averaged across all root letters (best-letter selection)
+- Only 35% of Microsoft CDN users experience any inflation
+- 51.9 billion daily root DNS queries, of which approximately 31 billion are to non-existent domains (discarded)
+- 7,000 RIPE Atlas ping measurements used for CDN calibration (1,000 probes, 3 measurements each to each ring)
+
+**Identified limitations (gaps to fill)**:
+- RIPE Atlas coverage is approximately 3,700 ASes as of July 2021, versus 22,243 ASes covered by DITL — Atlas substantially underrepresents the global Internet, which is a key limitation for anycast studies
+- CDN data is proprietary (Microsoft); results cannot be independently reproduced for other CDNs
+- The 2018 DITL data may not reflect current anycast deployments; root DNS has expanded significantly since then
+
+### Personal Critique
+
+**Strengths**:
+- The largest anycast study to date in terms of query volume and user coverage
+- The comparison between two very different anycast applications (root DNS vs CDN) provides a unique methodological contribution
+- Reconciles apparently contradictory prior results by introducing application context as the key variable
+
+**Weaknesses**:
+- Relies on proprietary Microsoft CDN data; the CDN findings cannot be independently verified or reproduced
+- The 2018 DITL data is used for a 2021 paper; more recent data would be more representative of current deployments
+- RIPE Atlas is used only for calibration (7,000 pings) rather than as a primary measurement source — Atlas coverage limitations are acknowledged but not mitigated
+
+**Links to other papers**:
+- Holterbach et al. (2015): RIPE Atlas measurement interference — relevant because the 7,000 Atlas pings used here could be affected by concurrent probe load
+- Johnson et al. (2016): Detects unauthorised anycast-like mirrors of root DNS — complements this paper's analysis of legitimate root anycast routing
+- Hours et al. (2016): CDN routing is affected by DNS resolver choice; this paper examines the anycast routing layer, while Hours et al. examine the DNS resolver layer
+
+**Open questions**:
+- How does the anycast inflation picture change for TLD servers (e.g., .com, .org), which are between root DNS and CDNs in terms of latency sensitivity and caching behaviour?
+- Does the inflation reduction in Microsoft's CDN hold for other CDNs (Cloudflare, Akamai, Fastly) with similar engineering resources?
+- How does IPv6 anycast routing inflation compare to IPv4, given the different routing topology?
+
+### Key Quotes
+
+> "Anycast is used to serve content including web pages and DNS, and anycast deployments are growing. However, prior work examining root DNS suggests anycast deployments incur significant inflation, with users often routed to suboptimal sites."
+
+> "We find that inflation is very common in root DNS, affecting more than 95% of users. However, we then show root DNS latency hardly matters to users because caching is so effective."
+
+> "Perhaps because of this need [latency sensitivity], only 35% of CDN users experience any inflation, and the amount they experience is smaller than for root DNS."
+
+> "A key takeaway from our work is that anycast must be analyzed in the context of the service in which it is used."
 
 ---
 
-**Tags** : #anycast #root-dns #cdn #inflation #latency #context #economic-incentives #peering #microsoft #ditl #sigcomm2021
+## Use in Thesis
 
-**Statut** : [X] Lu / [X] Fiché / [ ] Intégré
+**Relevant sections**:
+- Section 2.4 (Anycast in DNS infrastructure): Cite as the definitive reference on anycast inflation in root DNS; use statistics on the prevalence and magnitude of inflation
+- Section 2.4.4 (RIPE Atlas limitations for anycast studies): Cite the acknowledgment that Atlas covers only approximately 3,700 ASes versus 22,000+ in DITL, motivating the use of complementary data sources
+- Section 4.x (Results — geographic DNS latency): Use the inflation framework to contextualise geographic variability in observed DNS response times
 
-**Date** : 21 mars 2026
+**Points to develop**:
+- Discuss how caching TTLs at recursive resolvers affect the relevance of root DNS latency measurements from RIPE Atlas — and how this differs for TLD and authoritative server queries (shorter TTLs, more direct user impact)
+- Use the inflation framework to ask whether geographic RTT differences observed in our measurements reflect true routing inefficiency or legitimate anycast routing behaviour
+
+**Cross-references**:
+- johnson2016_dns_root_manipulation.md (what "abnormal" anycast routing to root servers looks like)
+- holterbach2015_ripeatlas_interference.md (limitations of RIPE Atlas as a measurement platform)
+- cicalese2015_anycast_census.md (anycast census methodology — complements inflation analysis)
+
+---
+
+**Tags**: #anycast #dns-root #cdn #routing-inflation #latency #caching #ripe-atlas #microsoft-cdn #sigcomm
+**Status**: [X] Read / [X] Filed

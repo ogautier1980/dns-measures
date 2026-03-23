@@ -1,344 +1,142 @@
-# Fiche de lecture - Internal Domain Names Survey via RIPE Atlas
+# Reading Note - RIPEn at Home: Surveying Internal Domain Names using RIPE Atlas
 
-**Référence bibliographique** :
-Boswell, E., & Perkins, C. (2024). *RIPEn at Home – Surveying Internal Domain Names using RIPE Atlas*. TMA 2024 - Network Traffic Measurement and Analysis Conference. 978-3-903176-64-5 ©2024 IFIP
+**Bibliographic Reference**:
+Boswell, E., & Perkins, C. (2024). RIPEn at home – Surveying internal domain names using RIPE Atlas. *Proceedings of the Network Traffic Measurement and Analysis Conference (TMA 2024)*. IFIP. ISBN: 978-3-903176-64-5.
 
-**Thème** :
-Mesures actives RIPE Atlas pour détecter noms de domaines internes dans réseaux domestiques
+**Theme**:
+This paper uses active DNS measurements on RIPE Atlas to survey the internal domain names used by home network gateways. It develops a methodology for detecting internal names — those resolved locally and not by the global DNS — using traceroute-based gateway discovery, reverse DNS queries, and BIND CHAOS TXT fingerprinting. The study determines which of these internal names are at risk of DNS name collision if their top-level domains are or become delegated in the public DNS.
 
-**Intérêt pour le mémoire** :
-Méthodologie originale d'utilisation RIPE Atlas pour mesures client-side (pas server-side). Démontre capacité plateforme à détecter configurations locales DNS. Illustre risques sécurité liés aux name collisions et variations géographiques (FRITZ!Box dominant en Europe).
-
----
-
-## Contexte de lecture
-
-**Date de lecture** : 21 mars 2026
-**Section du mémoire** :
-- Section 2.5 (RIPE Atlas - méthodologie mesures client-side)
-- Section 2.6 (Sécurité DNS - name collisions)
+**Relevance to thesis**:
+This paper is relevant to a thesis on distributed DNS measurements because it demonstrates a sophisticated active measurement methodology on RIPE Atlas that combines multiple DNS query types (rDNS, CHAOS TXT, A records) to characterise per-probe network environments. It also illustrates how the home-network concentration of RIPE Atlas probes — a well-known property of the platform — can be leveraged as a feature rather than treated only as a bias. The name collision risk analysis connects to broader DNS infrastructure security and stability concerns.
 
 ---
 
-## Contenu de l'article
+## Reading Context
 
-### Objectif(s) / Question(s) de recherche
-
-**Problème** : Noms de domaines internes (resolus localement, pas par DNS global) créent risque **name collision** si :
-1. TLD interne est délégué dans DNS global (ex: `.box` délégué août 2023)
-2. Queries accidentellement envoyées à résolveur public
-3. Attaquant enregistre le domaine → spoof gateway (vol credentials, malware)
-
-**Cas réel - FRITZ!Box** :
-- Gateway populaire Allemagne utilise `fritz.box` comme nom interne
-- `.box` ajouté DNS root août 2023, annoncé janvier 2024
-- AVM n'a pas enregistré `fritz.box` → squatters l'ont récupéré
-- Risque sécurité : spoof page config gateway
-
-**Question de recherche** :
-1. Quels noms internes sont utilisés par gateways domestiques ?
-2. Lesquels sont vulnérables à name collision ?
-3. Combien de probes RIPE Atlas utilisent des noms à risque ?
-
-**Originalité** :
-- Études précédentes = passive DNS (logs root servers, resolvers)
-- Cette étude = **active DNS via RIPE Atlas** (client-side measurements)
-- Avantage : capture noms internes qui n'apparaissent pas dans logs (résolus localement)
-
-### Cadre global d'explication
-
-**Name collisions** :
-- Nom interne existe aussi dans DNS global
-- Résolution accidentelle via DNS global au lieu de local resolver
-- Si réponses différentes et entités différentes → spoof local resource
-
-**Contexte ICANN** :
-- Introduction nouveaux gTLDs depuis octobre 2013 (1,241 en novembre 2023)
-- Risque : TLDs internes couramment utilisés soient délégués
-- Exemple : `.home` utilisé si fréquemment qu'ICANN a **indéfiniment repoussé** sa délégation
-
-**RIPE Atlas pour home networks** :
-- ~12,000 sondes, beaucoup dans réseaux domestiques
-- Vantage points client-side idéaux
-- Permettent mesures actives depuis perspective utilisateurs
-
-### Méthodologie
-
-- **Type d'étude** : Mesures actives DNS, fingerprinting gateways
-- **Outils utilisés** :
-  - RIPE Atlas measurement API
-  - Traceroutes IPv4
-  - DNS queries (CHAOS TXT, reverse DNS, A records)
-  - Gateway profile fingerprinting
-- **Échelle** :
-  - **Toutes sondes IPv4 disponibles** (début 2024)
-  - **~8,500 sondes testées** (chiffre implicite: 7441+6045 détections)
-  - **4,305 sondes** utilisent noms internes (50.86% des testées)
-- **Protocole de mesure** (Figure 1) :
-
-**Étape 1 : Détecter adresse gateway**
-Deux méthodes parallèles :
-- a) **Traceroute** : dernière adresse privée dans traceroute IPv4 = gateway (7,441 probes)
-- b) **Local resolver** : adresse DNS resolver = gateway si privée non-loopback (6,045 probes)
-
-**Étape 2 : BIND queries**
-- Queries CHAOS TXT pour `version.bind` et `hostname.bind`
-- Fingerprinting gateway via response codes (NXDOMAIN, SERVFAIL, etc.)
-- Gateway profile = mêmes réponses + même adresse locale → même modèle gateway
-
-**Étape 3 : rDNS queries**
-- Reverse DNS query pour adresse gateway
-- Si réponse = nom interne
-- Traceroute gateways : 2,573 réponses / 7,441 (35%)
-- Resolver gateways : 3,872 réponses / 6,045 (64%)
-
-**Étape 4 : Gateway profile fingerprinting**
-- Si probe sans réponse rDNS : utiliser noms d'autres probes avec même gateway profile
-- Query A records pour ces noms
-- Si réponse = adresse locale différente du DNS global → nom interne
-- +102 probes détectés via cette méthode
-
-**Limitation** : multicast DNS (mDNS) non détectable (RIPE Atlas ne supporte pas mDNS queries)
-
-### Résultats principaux
-
-#### 1. Noms internes découverts
-
-**Nombres clés** :
-- **3,092 noms internes uniques** découverts
-- **4,305 probes** (50.86% des testées) utilisent noms internes
-- **1,146 noms** (37.06%) n'apparaissent qu'une seule fois (uniques au réseau)
-
-**Top 10 full domain names** :
-1. fritz.box (dominant)
-2. myfritz.box
-3. www.fritz.box
-4. www.myfritz.box
-5. wpad.fritz.box
-6. wpad.box
-7. fritz.nas
-8. fritz-nas.fritz.box
-9. www.fritz.nas
-10. fritz-nas.box
-
-→ **FRITZ!Box domine** (popularité Europe + multiples noms par rDNS query)
-
-**Top 10 second+top-level domains** :
-- fritz.box, myfritz.box, wpad.box (FRITZ!Box)
-- fritz.nas, fritz-nas.box (FRITZ!Box NAS)
-- pi.hole (PiHole ad blocker)
-- router.lan, OpenWrt.lan (routeurs génériques)
-- unifi.localdomain (Ubiquiti UniFi)
-- livebox.home (Orange Livebox France)
-
-**Top 5 TLDs** :
-1. `.box` (dominant, ~700 probes)
-2. `.lan` (~400 probes)
-3. `.nas` (~200 probes)
-4. `.hole` (~150 probes)
-5. `.home` (~100 probes)
-
-Autres TLDs publics utilisés : `.com`, `.net`, `.org` (utilisateurs techniques RIPE Atlas)
-
-#### 2. Risque collision actuel
-
-**Noms avec TLD public** : 1,766 / 3,092 (57.12%)
-
-**Vulnérables actuellement** :
-- **66 noms** (3.74% des noms TLD public, **2.13% de tous les noms**)
-- Subdomain public suffix non-résolvant → enregistrable par attaquant
-- Risque immédiat de collision/spoof
-
-**Non-vulnérables actuellement** : 1,687 (95.53% noms TLD public)
-- Public suffix subdomain résout → domaine enregistré (propriétaire légitime ?)
-
-**Non-évalués** : 13 noms (couldn't assess)
-
-#### 3. Risque collision futur
-
-**Noms avec TLD non-délégué** : 1,326 / 3,092 (42.88%)
-
-**Vulnérables si TLD délégué** :
-- **1,067 noms** (**34.51%** de tous les noms)
-- Si ICANN délègue leur TLD → collision potentielle
-
-**TLDs à risque retardé/réservé** :
-- `.home` : 96 noms, **délégation indéfiniment reportée** par ICANN (collision risk trop élevé)
-- `.internal` : 26 noms, **proposé réservation** pour usage interne (RFC en cours ?)
-- `.local` : usage mDNS (special-use name)
-- `home.arpa` : 24 probes (special-use alternative à `.home`, peu adopté)
-
-### Conclusion des auteurs
-
-**Contributions** :
-1. ✅ **Première survey active (vs passive)** noms internes via RIPE Atlas
-2. ✅ **3,092 noms découverts** sur 4,305 probes (50.86%)
-3. ✅ **Quantification risque collision** :
-   - 2.13% vulnérables actuellement
-   - 34.51% vulnérables si TLD délégué
-4. ✅ **Update post-gTLD** (10 ans après introduction nouveaux gTLDs)
-
-**Implications sécurité** :
-- Name collisions = risque réel (cas FRITZ!Box 2024)
-- Delegation TLDs nécessite analyse risque collision
-- Special-use TLDs peu adoptés (home.arpa = 24 probes seulement)
-
-**Limitations reconnues** :
-- ⚠️ mDNS non détectable (limitation RIPE Atlas)
-- ⚠️ Biais population RIPE Atlas (utilisateurs techniques)
-- ⚠️ Detection home gateways = heuristique (non fine-grained)
-- ⚠️ Pas de vérification que réponse vient effectivement du gateway (source spoofing possible)
+**Date**: 22 March 2026
+**Thesis sections**:
+- Section 2.4 (RIPE Atlas infrastructure and measurement capabilities)
+- Section 3.X (Active DNS measurement methodology using RIPE Atlas)
+- Section 2.1 (DNS fundamentals: internal names, TLDs, name collisions)
 
 ---
 
-## Analyse personnelle
+## Article Content
 
-### Que garder pour le mémoire
+### Research Objective(s)
 
-**Concepts clés à réutiliser** :
-- **Active vs passive measurements** : active capture noms résolus localement (invisibles dans logs)
-- **Client-side measurements** : RIPE Atlas mesure depuis perspective utilisateur final
-- **Gateway profile fingerprinting** : inférer modèle équipement via DNS responses patterns
-- **Name collisions** : risque sécurité réel, pas juste théorique (FRITZ!Box 2024)
-- **Geographic bias** : FRITZ!Box domine car populaire Europe (où RIPE Atlas concentré)
+**Problem**: Many home network gateways use internal domain names (e.g., `fritz.box`) resolved locally rather than by the global DNS. If a top-level domain used internally is later delegated in the public DNS, queries accidentally sent to a public resolver can resolve to a different (potentially malicious) address — a "name collision." There is no comprehensive survey of which internal names are used in home networks, and which are at collision risk.
 
-**Méthodes applicables** :
-- Utilisation traceroute + DNS queries pour inférer topologie locale
-- CHAOS TXT queries pour fingerprinting équipements
-- Reverse DNS pour découvrir noms locaux
-- Gateway profile clustering pour extrapolation
-- Combinaison méthodes multiples (traceroute + resolver) pour robustesse
+**Research questions**:
+1. What internal domain names are used by RIPE Atlas probes' home gateway networks, and which top-level domains do they use?
+2. Which of these internal names are currently at risk of name collision (i.e., the name is unregistered but registrable in the public DNS)?
+3. Which names could become vulnerable if their currently-undelegated TLD is added to the public DNS?
 
-**Chiffres/statistiques importantes** :
-- **50.86%** probes RIPE Atlas utilisent noms internes
-- **3,092 noms** uniques découverts
-- **37.06%** noms uniques (1× occurrence) → diversity
-- **2.13%** vulnérables actuellement (collision immédiate)
-- **34.51%** vulnérables si TLD délégué (collision future)
-- **FRITZ!Box** = 10/10 top full domain names (dominance Europe)
-- **Special-use names** peu adoptés (24 probes home.arpa vs 96 .home)
+### Background
 
-**Limites identifiées (pertinentes pour nous)** :
-- ⚠️ **Geographic bias** : résultats biaisés vers Europe (FRITZ!Box)
-- ⚠️ **RIPE Atlas bias** : utilisateurs techniques ≠ population générale
-- ⚠️ **Detection heuristics** : assumptions (last private address = gateway) imparfaites
-- ⚠️ **Incomplete coverage** : mDNS non détectable, probes IPv6-only non testées
+The Domain Name System (DNS) is globally distributed and hierarchically organised, managed at the root by ICANN/IANA. Internal domain names are resolved by local nameservers and typically use TLDs not present in the public DNS. Name collisions occur when an internal name is also resolved in the global DNS, potentially spoofing local resources. The expansion of new generic TLDs (starting in 2013) dramatically increased the risk: ICANN added 1,241 new gTLDs by November 2023, and the delegation of the `.box` TLD in August 2023 created a concrete collision risk for AVM FRITZ!Box home gateways (the most popular gateway model in Germany), since `fritz.box` was not pre-registered by AVM and was acquired by domain speculators in January–February 2024. RIPE Atlas, with approximately 12,000 probes as of early 2024, many located in home networks, is well suited for client-side measurement of internal names.
 
-### Critique personnelle
+### Methodology
 
-**Forces de l'article** :
-- ✅ **Méthodologie originale** : première survey active (vs passive prior studies)
-- ✅ **RIPE Atlas usage créatif** : client-side measurements (pas juste server-side)
-- ✅ **Dual detection** : traceroute + resolver (robustesse)
-- ✅ **Fingerprinting intelligent** : gateway profile pour extrapolation
-- ✅ **Timing pertinent** : post-FRITZ!Box incident (2024) = validation risque
-- ✅ **Quantification risque** : 2.13% actuel + 34.51% futur (chiffres clairs)
-- ✅ **Update longitud** : 10 ans post-gTLD introduction
+- **Study type**: Active measurement / empirical survey
+- **Tools used**: RIPE Atlas measurement API; traceroute, DNS (rDNS, CHAOS TXT, A record queries)
+- **Scale**: All available IPv4 RIPE Atlas probes tested in early 2024; gateway addresses found for 7,441 probes (traceroute method) and 6,045 probes (local resolver method); 4,305 probes with internal names detected; 3,092 distinct internal names discovered
+- **Measurement protocol**: Four-step procedure:
+  1. Detect gateway address: via traceroute (last private address in the path) or local DNS resolver address
+  2. BIND fingerprinting: CHAOS TXT queries for `hostname.bind` and `version.bind` to classify gateway models by response code pattern (gateway profile)
+  3. Reverse DNS (rDNS) queries: probes query their resolver for the PTR record of the gateway IP; any response resolving to a private address is classified as an internal name
+  4. Gateway profile fingerprinting: aggregate rDNS results from probes with the same gateway profile to increase coverage
+- **Data collected**: Internal domain names per probe; TLD distribution; name collision risk (unregistered-but-registrable vs undelegated TLDs)
 
-**Faiblesses identifiées** :
-- ⚠️ **Short paper** (TMA poster) → manque détails méthodologiques
-- ⚠️ **Geographic analysis manquant** : pas de breakdown par pays/région (pertinent pour notre mémoire!)
-- ⚠️ **Temporal aspect absent** : snapshot unique, pas évolution temporelle
-- ⚠️ **Validation limitée** : pas de vérification manuelle sample
-- ⚠️ **Root cause analysis manquant** : pourquoi certain gateways répondent rDNS, d'autres non ?
-- ⚠️ **Security impact non quantifié** : combien d'utilisateurs réellement impactés par collisions ?
+### Main Results
 
-**Lien avec autres articles lus** :
+1. **Scale of internal name usage**: 3,092 distinct internal names were found, used by 4,305 probes (50.86% of probes tested). 1,146 names (37.06%) occur only once, suggesting they are unique to individual networks.
+2. **Top internal names**: All top 10 full domain names are FRITZ!Box-related (e.g., `fritz.box`, `myfritz.box`, `wpad.fritz.box`), reflecting the gateway's popularity in Europe and the tendency of a single rDNS query to a FRITZ!Box to return multiple names.
+3. **Top TLDs**: The most common undelegated TLDs are `box`, `lan`, and `nas`, followed by `hole` (PiHole ad blocker) and `home`. `local` (mDNS) and `localdomain` also appear.
+4. **Current collision risk**: Of 1,766 names with a public TLD, 1,687 (95.53%) have a resolvable public-suffix subdomain (i.e., cannot be independently registered). 66 names (3.74% of names with public TLD; 2.13% of all names) are unregistered and registrable — these are currently at collision risk.
+5. **Future collision risk from undelegated TLDs**: 1,326 names (42.88%) use a TLD not currently in the public DNS. Of these, 1,067 (34.51% of all names) use a TLD that is neither delegated nor a special-use domain name — these would be at collision risk if their TLD is delegated in future.
+6. **Special-use name adoption is low**: Only 24 probes use `home.arpa` (the IETF-standardised special-use alternative to `home`), and only one top-10 TLD (`local`, for mDNS) is a recognised special-use name.
 
-- **Nosyk 2024 (RIPE Atlas DITL)** :
-  - Nosyk : 12,892 sondes février 2024
-  - Boswell : ~8,500 testées (65%)
-  - Nosyk : biais Europe/NA (28% DE+US)
-  - Boswell : FRITZ!Box domine (populaire Allemagne) → confirme biais géographique
+### Authors' Conclusion
 
-- **Holterbach 2015 (Interference)** :
-  - Holterbach : timing/scheduling interference
-  - Boswell : mesures DNS simples (peu impact CPU?)
-  - Validation : méthodologie RIPE Atlas robuste pour queries DNS simples
-
-- **van Rijswijk-Deij 2016 (OpenINTEL)** :
-  - OpenINTEL : server-side, mesures autoritatives
-  - Boswell : client-side, mesures résolveurs locaux
-  - Complémentarité : server view (OpenINTEL) vs client view (RIPE)
-
-- **Notre mémoire** :
-  - Diversité géographique DNS : Boswell montre variations régionales (FRITZ!Box EU)
-  - Client-side measurements : méthodologie applicable à nos queries
-  - Geographic bias : besoin considérer distribution sondes RIPE Atlas
-
-**Questions ouvertes** :
-1. **Breakdown géographique** : Quels pays utilisent quels noms internes ?
-2. **Temporal evolution** : Usage noms internes évolue comment (pre/post gTLD delegation) ?
-3. **ISP influence** : Box providers (Orange Livebox, etc.) influencent noms locaux ?
-4. **IPv6 impact** : Probes IPv6-only ont-elles patterns différents ?
-5. **Security incidents** : Combien collisions réelles (pas juste potentielles) ?
-6. **Mitigation** : Effectiveness special-use TLDs pour réduire risque ?
-
-### Citations importantes
-
-> "Internal domain names are domain names that are resolved locally and not by the global DNS. Name collisions occur if an internal name is resolved in the global DNS, e.g. if queries are accidentally sent to a public resolver. This can lead to security issues." (Abstract)
-
-> "While previous studies of name collisions used passive measurement data, we use active measurements on RIPE Atlas to survey the use of internal names in home networks." (Abstract)
-
-> "We find 3092 internal names used by 4305 RIPE Atlas probes. Of these, 2.13% are currently vulnerable to collision (e.g. unregistered subdomains of existing TLDs), and 34.51% use an undelegated TLD and could be vulnerable if it is delegated." (Abstract)
-
-**Sur FRITZ!Box incident** :
-> "AVM did not appear to register fritz.box and other related names, and for several weeks in January and February 2024, several such names were owned by likely domain speculators. This is a security risk, as queries for fritz.box could accidentally be sent to the public DNS, e.g. when using a public resolver. The public fritz.box domain could spoof the home gateway, e.g. to steal login credentials, misguide users to install malicious software, or otherwise interfere with the home network." (p. 1)
-
-**Sur active vs passive** :
-> "We perform active client-side measurements, as they can capture internal names that don't frequently appear in root server logs because the queries are usually answered by the local resolver." (p. 1)
-
-**Sur geographic bias** :
-> "All top 10 full domain names appear to be related to the FRITZ!Box. This is likely due to its popularity in Europe (where many RIPE Atlas probes are located), and because a single rDNS query to a FRITZ!Box often returns multiple names." (p. 2)
+RIPE Atlas active measurements can effectively detect internal domain names used in home network environments, revealing a substantial and diverse ecosystem of internally-used names. The dominant presence of FRITZ!Box-related names reflects both the gateway's market share and the richness of names it exposes via rDNS. A significant fraction of these internal names — 34.51% — could face name collision risk if their TLD is delegated, while 2.13% face current collision risk. The low adoption of standardised special-use names (like `home.arpa`) suggests that the industry has not converged on safe internal naming practices. The authors plan to expand gateway fingerprinting coverage and improve representativeness in future work.
 
 ---
 
-## Utilisation dans le mémoire
+## Personal Analysis
 
-**Sections concernées** :
-- **Section 2.5 (RIPE Atlas)** : Méthodologie client-side measurements, capacités plateforme
-- **Section 2.6 (Sécurité DNS)** : Name collisions, risques réels (FRITZ!Box case study)
-- **Section 4 (Méthodologie)** : Inspiration traceroute + DNS queries, fingerprinting
+### Key Takeaways for the Thesis
 
-**Points à développer** :
+**Key concepts to reuse**:
+- Active measurement methodology combining traceroute, rDNS, and CHAOS TXT queries as a multi-step DNS fingerprinting pipeline
+- RIPE Atlas's high concentration of home network probes is a feature for studying end-user DNS behaviour, not just a sampling bias
+- Name collision risk as a security consequence of the mismatch between internal DNS namespaces and evolving public TLD delegations
 
-**Dans état de l'art (2.5)** :
-- RIPE Atlas = versatile : server-side ET client-side measurements
-- Client-side capture phénomènes invisibles à server-side (noms internes)
-- Geographic bias plateforme → impact résultats (FRITZ!Box dominance EU)
+**Applicable methods**:
+- CHAOS TXT queries (`hostname.bind`, `version.bind`) as a lightweight probe-level fingerprinting technique to classify resolver/gateway types without requiring full DNS resolution testing
+- Gateway profile clustering to aggregate results across probes with similar network environments — a form of stratified analysis applicable to broader DNS measurement studies
+- Combining traceroute results with DNS queries to construct a richer picture of the per-probe network environment
 
-**Dans état de l'art (2.6)** :
-- Name collisions = risque sécurité réel, pas théorique
-- FRITZ!Box 2024 : proof of concept attack réel (domain squatting)
-- Délégation TLDs nécessite analyse collision risk (ICANN delays .home)
+**Important statistics**:
+- 50.86% of RIPE Atlas probes tested had detectable internal names in early 2024
+- 34.51% of discovered internal names use an undelegated TLD at risk of future collision
+- 2.13% of internal names are currently registrable (immediate collision risk)
+- RIPE Atlas has ~12,000 probes as of early 2024
+- 37.06% of discovered names appear at only one probe — suggesting high diversity of home network configurations
 
-**Pour notre méthodologie** :
-- Active measurements révèlent patterns invisibles à passive
-- Geographic distribution sondes RIPE → bias résultats (considérer dans analyses)
-- Fingerprinting techniques applicables (patterns DNS responses)
+**Identified limitations (gaps to fill)**:
+- mDNS names (`local` TLD) cannot be detected as RIPE Atlas does not support mDNS queries, creating a systematic blind spot
+- RIPE Atlas probes are operated by technically sophisticated users; results may not be representative of average home networks
+- The study cannot detect ongoing vs potential name collisions (it cannot determine if the internal and public names are controlled by the same entity)
 
-**Pour discussion** :
-- **Complémentarité approches** :
-  - OpenINTEL : server-side, autoritatives, 1 point
-  - RIPE Atlas : client-side, resolvers, 12K points
-  - Notre focus : variations géographiques réponses autoritatives
-- **Geographic bias** :
-  - Boswell : FRITZ!Box domine (Europe bias)
-  - Nous : besoin équilibrer sélection sondes par région ?
-- **Limites active measurements** :
-  - Depend on probe distribution
-  - Platform capabilities (ex: no mDNS)
-  - Ethical considerations (passive = moins intrusif)
+### Personal Critique
 
-**Références croisées** :
-- Nosyk 2024 : Contexte RIPE Atlas 2024
-- Holterbach 2015 : Limitations plateforme
-- OpenINTEL : Approche complémentaire server-side
+**Strengths**:
+- Novel and well-designed active measurement methodology that creatively uses multiple DNS query types in combination
+- Concrete security-relevant findings (the fritz.box collision case) ground the abstract collision risk in a real recent incident
+- Thorough comparison with prior passive measurement studies (root server logs, resolver logs) identifies what client-side active measurement adds
+
+**Weaknesses**:
+- Sample representativeness is limited by the technically-skewed RIPE Atlas user base; the authors acknowledge this
+- mDNS (the `local` TLD) is excluded by platform limitations, underestimating one important category of internal name
+- Results are a one-time snapshot (early 2024) with no longitudinal comparison; internal name usage patterns may evolve
+
+**Links to other papers**:
+- Bajpai et al. (2017, RIPE Atlas tags): This paper's home-network probe concentration is characterised quantitatively in that work
+- Bortzmeyer (DNS tutorial): CHAOS TXT and rDNS query techniques described here are variants of the DNS measurement types described in the tutorial
+- Randall et al. (IMC 2021, DNS interception): Uses CHAOS TXT queries similarly to detect DNS interception by home gateways
+
+**Open questions**:
+- What is the longitudinal trend in internal name usage? Have new gateway models introduced new TLDs since the FRITZ!Box-era studies?
+- Can machine learning on CHAOS TXT response fingerprints be used to automatically classify gateway models at scale across RIPE Atlas probes?
+
+### Key Quotes
+
+> "We find 3092 internal names used by 4305 probes. Of these, 2.13% are currently vulnerable to collision (e.g. unregistered subdomains of existing TLDs), and 34.51% use an undelegated TLD and could be vulnerable if it is delegated."
+
+> "All top 10 full domain names appear to be related to the FRITZ!Box. This is likely due to its popularity in Europe (where many RIPE Atlas probes are located), and because a single rDNS query to a FRITZ!Box often returns multiple names."
+
+> "Only 24 probes use the special-use alternative to home (home.arpa), and only one top 10 TLD (local, for multicast DNS) is a special-use name."
 
 ---
 
-**Tags** : #ripe-atlas #internal-names #name-collisions #security #client-side #home-networks #fritbox #tld-delegation #active-measurement
+## Use in Thesis
 
-**Statut** : [X] Lu (PDF via MD) / [X] Fiché / [ ] Intégré mémoire
+**Relevant sections**:
+- Section 2.1/2.2 (DNS fundamentals and name collision security): Cite as motivation for understanding how local DNS resolution differs from global DNS behaviour
+- Section 2.4 (RIPE Atlas capabilities): Reference the use of CHAOS TXT and rDNS measurement types as examples of non-standard DNS measurement approaches on RIPE Atlas
+- Section 3.X (Methodology): The multi-step measurement pipeline is a methodological model for combining different DNS query types in a single campaign
 
-**Date fiche** : 21 mars 2026
+**Points to develop**:
+- Discuss how the presence of internal names and non-standard resolvers in home networks constitutes a source of noise in DNS measurement campaigns targeting public DNS infrastructure
+- Use the FRITZ!Box prevalence finding to illustrate how gateway model distribution affects the DNS measurement environment on RIPE Atlas
+
+**Cross-references**:
+- `bajpai2017_ripeatlas_tags.md`: Home network probe characterisation on RIPE Atlas
+- `bortzmeyer_dns_measurements_atlas_tutorial.md`: DNS query types available on RIPE Atlas
+- `holterbach2015_ripeatlas_interference.md`: Data quality issues on RIPE Atlas probes
+
+---
+
+**Tags**: #ripe-atlas #dns #home-network #internal-names #name-collision #security #measurement-methodology #chaos-txt #rdns
+**Status**: [X] Read / [X] Filed
