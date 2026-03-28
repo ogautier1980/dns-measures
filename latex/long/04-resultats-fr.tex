@@ -1,0 +1,663 @@
+% Chapter 4 — auto-generated from chapitre4_resultats.md
+% Edit the Markdown source, not this file.
+
+\chapter{Chapitre 4 - Résultats}
+
+\section{Vue d'ensemble du dataset collecté}
+\label{sec:4.1}
+
+\subsection{Statistiques générales de collecte}
+\label{subsec:4.1.1}
+
+\textbf{Période de collecte} : [DATE\_DEBUT] - [DATE\_FIN] (X jours)
+
+\textbf{Domaines mesurés} :
+\begin{itemize}
+  \item Nombre total de domaines Tranco : 10,000
+  \item Domaines après filtrage (responsiveness + safe browsing) : X,XXX
+  \item Domaines avec $\geq$85\% résultats valides : X,XXX
+\end{itemize}
+
+\textbf{Mesures effectuées} :
+\begin{itemize}
+  \item Nombre total de mesures lancées : X,XXX,XXX
+  \item Nombre total de résultats collectés : XX,XXX,XXX
+  \item Taux de succès global : XX.X\%
+\end{itemize}
+
+\textbf{Distribution temporelle} :
+\begin{itemize}
+  \item Mesures quotidiennes réussies : XX/XX jours
+  \item Interruptions : [Aucune / X jours avec collecte partielle]
+  \item Décalage scheduling moyen : $\pm$XX minutes
+\end{itemize}
+
+\textbf{Sondes RIPE Atlas utilisées} :
+\begin{itemize}
+  \item Nombre de sondes uniques : XXX
+  \item Distribution géographique :
+  \item Europe : XX sondes (XX\%)
+  \item Amérique du Nord : XX sondes (XX\%)
+  \item Asie : XX sondes (XX\%)
+  \item Amérique du Sud : XX sondes (XX\%)
+  \item Afrique : XX sondes (XX\%)
+  \item Océanie : XX sondes (XX\%)
+\end{itemize}
+
+\subsection{Qualité des données}
+\label{subsec:4.1.2}
+
+\textbf{Filtrage et validation} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Filtre appliqué} & \textbf{Résultats exclus} & \textbf{Pourcentage} & \textbf{Raison} \\
+\midrule
+Pas de résultat & XXX,XXX & X.X\% & Sonde offline, network issue \\
+RCODE $\neq$ NOERROR & XXX,XXX & X.X\% & NXDOMAIN, SERVFAIL \\
+Lying resolvers & XXX,XXX & X.X\% & Réponses anormales \\
+Timing >4h & XXX,XXX & X.X\% & Scheduling interference extrême \\
+\textbf{Total exclusions} & \textbf{XXX,XXX} & \textbf{XX.X\%} & - \\
+\textbf{Résultats valides} & \textbf{XX,XXX,XXX} & \textbf{XX.X\%} & Utilisés dans analyses \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Distribution des codes de réponse DNS} :
+
+
+\begin{verbatim}
+NOERROR (0):     XX.X%
+NXDOMAIN (3):    X.X%
+SERVFAIL (2):    X.X%
+REFUSED (5):     X.X%
+Autres:          X.X%
+
+\end{verbatim}
+
+
+\subsection{Volume de données stockées}
+\label{subsec:4.1.3}
+
+\textbf{Stockage} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Format} & \textbf{Taille brute} & \textbf{Taille compressée} & \textbf{Ratio compression} \\
+\midrule
+JSON (raw RIPE Atlas) & XXX GB & - & - \\
+Apache Avro & XXX GB & XX GB & 1:X.X \\
+Apache Parquet & XXX GB & XX GB & 1:X.X \\
+\textbf{Total} & \textbf{XXX GB} & \textbf{XX GB} & \textbf{1:X.X} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\bigskip
+\section{Résultats Question Q1 : Diversité géographique}
+\label{sec:4.2}
+
+\subsection{Distribution globale de la diversité}
+\label{subsec:4.2.1}
+
+\textbf{Question} : Quelle proportion de domaines Tranco Top 10K retourne des réponses DNS différentes selon la localisation géographique ?
+
+\textbf{Méthode} : Classification de chaque domaine selon le nombre d'adresses IP uniques observées à travers tous les vantage points.
+
+\textbf{Résultats} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Catégorie} & \textbf{Nombre domaines} & \textbf{Pourcentage} & \textbf{Nombre IPs moyen} \\
+\midrule
+SINGLE\_IP (1 IP unique) & X,XXX & XX.X\% & 1.0 \\
+LOW\_DIVERSITY (2-5 IPs) & X,XXX & XX.X\% & X.X \\
+MEDIUM\_DIVERSITY (6-20 IPs) & X,XXX & XX.X\% & XX.X \\
+HIGH\_DIVERSITY (>20 IPs) & X,XXX & XX.X\% & XX.X \\
+\textbf{TOTAL} & \textbf{X,XXX} & \textbf{100\%} & \textbf{X.X} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.1} : Distribution de la diversité géographique DNS
+[TODO: Graphique en barres - Catégories vs Nombre de domaines]
+
+\textbf{Interprétation} :
+\begin{itemize}
+  \item XX.X\% des domaines populaires présentent une diversité géographique ($\geq$2 IPs)
+  \item XX.X\% utilisent CDN ou infrastructure distribuée (MEDIUM + HIGH)
+  \item XX.X\% n'ont aucune diversité géographique observable
+\end{itemize}
+
+\subsection{Corrélation géographie $\leftrightarrow$ IP retournée}
+\label{subsec:4.2.2}
+
+\textbf{Méthode} : Pour chaque domaine HIGH\_DIVERSITY, calcul du ratio de corrélation géographique (inter-country diversity / intra-country diversity).
+
+\textbf{Résultats} :
+
+\textbf{Figure 4.2} : Distribution ratio corrélation géographique
+[TODO: Histogramme - Ratio géo-corrélation (0-10)]
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Catégorie} & \textbf{Nombre domaines} & \textbf{Interprétation} \\
+\midrule
+Ratio <2 (faible) & XXX & Anycast ou round-robin global \\
+Ratio 2-5 (moyen) & XXX & CDN partiel ou régional \\
+Ratio >5 (élevé) & XXX & CDN géo-distribué complet \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Cas d'étude - Domaines HIGH\_DIVERSITY} :
+
+\textbf{Exemple 1 : [domaine-cdn.com]}
+\begin{itemize}
+  \item Nombre IPs uniques : XX
+  \item Ratio géo-corrélation : X.X
+  \item Provider CDN : [Cloudflare / Akamai / AWS / etc.]
+  \item Interprétation : [CDN géo-distribué classique]
+\end{itemize}
+
+\textbf{Exemple 2 : [domaine-anycast.com]}
+\begin{itemize}
+  \item Nombre IPs uniques : XX
+  \item Ratio géo-corrélation : X.X
+  \item Provider : [...]
+  \item Interprétation : [Anycast avec inflation géographique]
+\end{itemize}
+
+\subsection{Providers CDN et infrastructure}
+\label{subsec:4.2.3}
+
+\textbf{Distribution des providers} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Provider} & \textbf{Domaines} & \textbf{Pourcentage} & \textbf{IPs moyennes} \\
+\midrule
+Cloudflare & XXX & XX.X\% & XX.X \\
+Akamai & XXX & XX.X\% & XX.X \\
+Amazon CloudFront & XXX & XX.X\% & XX.X \\
+Google Cloud CDN & XXX & XX.X\% & XX.X \\
+Fastly & XXX & XX.X\% & XX.X \\
+Autres & XXX & XX.X\% & XX.X \\
+Non-identifié & XXX & XX.X\% & X.X \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.3} : Part de marché CDN (domaines Tranco Top 10K)
+[TODO: Camembert - Distribution providers]
+
+\textbf{Observation} : [Les X providers dominants capturent XX\% des domaines avec diversité géographique]
+\bigskip
+\section{Résultats Question Q2 : Stabilité temporelle}
+\label{sec:4.3}
+
+\subsection{Taux de changement par échelle temporelle}
+\label{subsec:4.3.1}
+
+\textbf{Question} : Quelle est la stabilité temporelle des enregistrements DNS pour les domaines Tranco Top 10K ?
+
+\textbf{Méthode} : Calcul du taux de changement (1 - similarité Jaccard) entre périodes consécutives (jour, semaine, mois).
+
+\textbf{Résultats globaux} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Échelle temporelle} & \textbf{Taux changement moyen} & \textbf{Écart-type} & \textbf{Médiane} \\
+\midrule
+Quotidienne (J $\rightarrow$ J+1) & X.X\% & X.X\% & X.X\% \\
+Hebdomadaire (S $\rightarrow$ S+1) & XX.X\% & XX.X\% & X.X\% \\
+Mensuelle (M $\rightarrow$ M+1) & XX.X\% & XX.X\% & XX.X\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.4} : Distribution taux de changement quotidien
+[TODO: Histogramme - Taux changement (0-100\%)]
+
+\subsection{Classification stabilité des domaines}
+\label{subsec:4.3.2}
+
+\textbf{Distribution par catégorie de stabilité} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Stabilité} & \textbf{Taux changement} & \textbf{Nombre domaines} & \textbf{Pourcentage} \\
+\midrule
+VERY\_STABLE & <5\% & X,XXX & XX.X\% \\
+STABLE & 5-20\% & X,XXX & XX.X\% \\
+MODERATE & 20-50\% & X,XXX & XX.X\% \\
+VOLATILE & >50\% & XXX & X.X\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.5} : Stabilité temporelle des domaines
+[TODO: Barres empilées - Catégories stabilité par échelle temporelle]
+
+\textbf{Observations} :
+\begin{itemize}
+  \item XX.X\% des domaines sont (very) stable (changements <20\%)
+  \item X.X\% des domaines sont volatiles (changements >50\%)
+  \item La stabilité [augmente / diminue] avec l'échelle temporelle
+\end{itemize}
+
+\subsection{Corrélation TTL $\leftrightarrow$ changement}
+\label{subsec:4.3.3}
+
+\textbf{Hypothèse} : Les domaines avec TTL court changent plus fréquemment.
+
+\textbf{Méthode} : Corrélation Spearman entre TTL médian et taux de changement quotidien.
+
+\textbf{Résultats} :
+
+
+\begin{verbatim}
+Corrélation Spearman (TTL <-> Taux changement quotidien):
+  rho = -X.XXX
+  p-value = X.XXe-XX
+  Interprétation: [Corrélation négative significative / non-significative]
+
+\end{verbatim}
+
+
+\textbf{Figure 4.6} : Scatter plot TTL vs Taux de changement
+[TODO: Nuage de points - TTL (log scale) vs Taux changement]
+
+\textbf{Interprétation} : [Les domaines avec TTL court (<300s) changent effectivement plus fréquemment, confirmant l'hypothèse / Pas de corrélation significative]
+
+\subsection{Top 10 domaines les plus volatiles}
+\label{subsec:4.3.4}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l l}
+\toprule
+\textbf{Rang} & \textbf{Domaine} & \textbf{Taux changement} & \textbf{TTL moyen} & \textbf{Catégorie} \\
+\midrule
+1 & [exemple1.com] & XX.X\% & XXXs & [Gaming / Streaming / etc.] \\
+2 & [exemple2.com] & XX.X\% & XXXs & [...] \\
+... & ... & ... & ... & ... \\
+10 & [exemple10.com] & XX.X\% & XXXs & [...] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Analyse qualitative} : [Les domaines les plus volatiles sont principalement des services de streaming, gaming ou infrastructures CDN avec load balancing dynamique]
+\bigskip
+\section{Résultats Question Q3 : Impact biais géographiques}
+\label{sec:4.4}
+
+\subsection{Comparaison stratégies de sampling}
+\label{subsec:4.4.1}
+
+\textbf{Question} : Le biais géographique RIPE Atlas (91\% Europe+NA) impacte-t-il significativement l'observation de la diversité ?
+
+\textbf{Méthode} : Sous-échantillonnage contrôlé selon 3 stratégies, comparaison diversité observée.
+
+\textbf{Résultats - Nombre IPs uniques moyen par domaine} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Stratégie} & \textbf{IPs uniques moyen} & \textbf{Écart-type} & \textbf{Médiane} \\
+\midrule
+ACTUAL (baseline) & XX.X & XX.X & X \\
+UNIFORM (équilibré) & XX.X & XX.X & X \\
+EUROPE\_NA\_ONLY (91\%) & XX.X & XX.X & X \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.7} : Comparaison distributions diversité (3 stratégies)
+[TODO: Box plots - Nombre IPs uniques par stratégie]
+
+\subsection{Test statistique}
+\label{subsec:4.4.2}
+
+\textbf{Test Wilcoxon (données appariées)} :
+
+\textbf{ACTUAL vs UNIFORM} :
+
+\begin{verbatim}
+Statistic: XXXXX
+p-value: X.XXXe-XX
+Conclusion: [Différence significative / non-significative] (alpha=0.05)
+
+\end{verbatim}
+
+
+\textbf{ACTUAL vs EUROPE\_NA\_ONLY} :
+
+\begin{verbatim}
+Statistic: XXXXX
+p-value: X.XXXe-XX
+Conclusion: [Différence significative / non-significative] (alpha=0.05)
+
+\end{verbatim}
+
+
+\textbf{Interprétation} : [Le biais géographique RIPE Atlas impacte / n'impacte pas significativement la diversité observée]
+
+\subsection{Contribution unique par région}
+\label{subsec:4.4.3}
+
+\textbf{Méthode} : Pour chaque région, calcul des IPs uniques non observées depuis autres régions.
+
+\textbf{Résultats} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Région} & \textbf{Sondes (\%)} & \textbf{IPs uniques apportées} & \textbf{Contribution (\%)} \\
+\midrule
+Europe & XX\% & XXX,XXX & XX.X\% \\
+Amérique du Nord & XX\% & XXX,XXX & XX.X\% \\
+Asie & XX\% & XXX,XXX & XX.X\% \\
+Amérique du Sud & X\% & XX,XXX & XX.X\% \\
+Afrique & X\% & XX,XXX & XX.X\% \\
+Océanie & X\% & XX,XXX & XX.X\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.8} : Contribution unique par région
+[TODO: Barres - Contribution IPs uniques vs \% sondes disponibles]
+
+\textbf{Observations clés} :
+\begin{itemize}
+  \item [Asie / Afrique / Am. Sud] apportent XX.X\% d'IPs uniques malgré seulement XX\% des sondes
+  \item Ratio contribution/disponibilité le plus élevé : [Région]
+  \item [Interprétation impact biais]
+\end{itemize}
+
+\subsection{Domaines affectés par le biais}
+\label{subsec:4.4.4}
+
+\textbf{Nombre de domaines changeant de catégorie} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Changement catégorie} & \textbf{ACTUAL $\rightarrow$ UNIFORM} & \textbf{ACTUAL $\rightarrow$ EUROPE\_NA} \\
+\midrule
+SINGLE $\rightarrow$ LOW/MEDIUM & XXX & XXX \\
+LOW $\rightarrow$ MEDIUM/HIGH & XXX & XXX \\
+MEDIUM $\rightarrow$ HIGH & XXX & XXX \\
+\textbf{Total domaines affectés} & \textbf{XXX (X.X\%)} & \textbf{XXX (X.X\%)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interprétation} : [Le biais affecte la classification de X.X\% des domaines, ce qui est acceptable / significatif]
+\bigskip
+\section{Résultats Question Q4 : Impact du choix de resolver}
+\label{sec:4.5}
+
+\subsection{Classification des resolvers observés}
+\label{subsec:4.5.1}
+
+\textbf{Question} : Quel est l'impact du choix de resolver (ISP local vs DNS public) sur les adresses IP observées ?
+
+\textbf{Distribution des types de resolvers} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Type resolver} & \textbf{Sondes} & \textbf{Pourcentage} & \textbf{Providers principaux} \\
+\midrule
+ISP local & XXX & XX.X\% & [Divers] \\
+DNS public & XXX & XX.X\% & Google (XX\%), Cloudflare (XX\%), Quad9 (XX\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.9} : Distribution types de resolvers
+[TODO: Camembert - ISP local vs DNS publics]
+
+\subsection{Similarité IPs retournées (Public vs ISP)}
+\label{subsec:4.5.2}
+
+\textbf{Méthode} : Pour chaque domaine, calcul similarité Jaccard entre IPs retournées par resolvers publics vs ISP locaux.
+
+\textbf{Résultats globaux} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Métrique} & \textbf{Valeur} & \textbf{Interprétation} \\
+\midrule
+Jaccard moyen & X.XXX & [Similarité élevée / moyenne / faible] \\
+Médiane & X.XXX & [...] \\
+Écart-type & X.XXX & [...] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.10} : Distribution similarité Public vs ISP
+[TODO: Histogramme - Jaccard similarity (0-1)]
+
+\textbf{Distribution par seuil} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Similarité Jaccard} & \textbf{Nombre domaines} & \textbf{Pourcentage} & \textbf{Interprétation} \\
+\midrule
+>0.8 (très similaire) & X,XXX & XX.X\% & Pas de divergence \\
+0.5-0.8 (similaire) & X,XXX & XX.X\% & Divergence modérée \\
+<0.5 (divergent) & XXX & X.X\% & Divergence significative \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Impact EDNS Client Subnet (ECS)}
+\label{subsec:4.5.3}
+
+\textbf{Hypothèse} : Resolvers supportant ECS (Google, Cloudflare) retournent IPs similaires aux ISP locaux.
+
+\textbf{Méthode} : Comparaison similarité Jaccard selon support ECS du resolver.
+
+\textbf{Résultats} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Resolver} & \textbf{Support ECS} & \textbf{Jaccard moyen (vs ISP)} & \textbf{p-value (vs non-ECS)} \\
+\midrule
+Google DNS & Oui & X.XXX & X.XXXe-XX \\
+Cloudflare DNS & Oui & X.XXX & X.XXXe-XX \\
+Quad9 & Non & X.XXX & - \\
+Autres publics & Variable & X.XXX & - \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.11} : Similarité selon support ECS
+[TODO: Box plots - Jaccard similarity (ECS-enabled vs non-ECS)]
+
+\textbf{Test Mann-Whitney U} :
+
+\begin{verbatim}
+ECS-enabled vs non-ECS (similarité avec ISP):
+  Statistic: XXXXX
+  p-value: X.XXXe-XX
+  Conclusion: [ECS améliore / n'améliore pas] significativement la similarité
+
+\end{verbatim}
+
+
+\textbf{Interprétation} : [L'hypothèse selon laquelle ECS permet aux DNS publics de retourner des IPs similaires aux ISP locaux est validée / invalidée]
+
+\subsection{Comparaison RTT (temps de réponse)}
+\label{subsec:4.5.4}
+
+\textbf{Méthode} : Comparaison RTT (response time) DNS selon type de resolver.
+
+\textbf{Résultats} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l l}
+\toprule
+\textbf{Resolver type} & \textbf{RTT moyen (ms)} & \textbf{Médiane (ms)} & \textbf{P95 (ms)} & \textbf{Écart-type} \\
+\midrule
+ISP local & XX.X & XX.X & XXX.X & XX.X \\
+DNS public & XX.X & XX.X & XXX.X & XX.X \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Figure 4.12} : Distribution RTT selon type resolver
+[TODO: Violin plots - RTT (ms) ISP vs Public]
+
+\textbf{Test Mann-Whitney U} :
+
+\begin{verbatim}
+ISP local vs DNS public (RTT):
+  Statistic: XXXXX
+  p-value: X.XXXe-XX
+  Conclusion: [Différence significative / non-significative]
+  Effet: Les DNS publics sont [plus rapides / plus lents] de XX.X ms en moyenne
+
+\end{verbatim}
+
+
+\subsection{Providers CDN affectés}
+\label{subsec:4.5.5}
+
+\textbf{Domaines avec divergence significative (Jaccard <0.5) par provider} :
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l l}
+\toprule
+\textbf{Provider CDN} & \textbf{Domaines divergents} & \textbf{\% du total provider} & \textbf{IPs moyennes (ISP)} & \textbf{IPs moyennes (Public)} \\
+\midrule
+Cloudflare & XXX & XX.X\% & XX.X & XX.X \\
+Akamai & XXX & XX.X\% & XX.X & XX.X \\
+Amazon CloudFront & XXX & XX.X\% & XX.X & XX.X \\
+Google Cloud CDN & XXX & XX.X\% & XX.X & XX.X \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interprétation} : [Certains providers CDN sont plus sensibles au choix de resolver que d'autres, suggérant des stratégies de redirection DNS différentes]
+\bigskip
+\section{Synthèse des résultats}
+\label{sec:4.6}
+
+\subsection{Réponses aux questions de recherche}
+\label{subsec:4.6.1}
+
+\textbf{Q1 : Diversité géographique}
+\begin{itemize}
+  \item \textbf{Résultat} : XX.X\% des domaines Tranco Top 10K présentent une diversité géographique
+  \item \textbf{Détail} : XX.X\% utilisent CDN géo-distribué, XX.X\% anycast, XX.X\% pas de diversité
+  \item \textbf{Implication} : [Mesurer DNS depuis un point unique perd XX\% de l'information]
+\end{itemize}
+
+\textbf{Q2 : Stabilité temporelle}
+\begin{itemize}
+  \item \textbf{Résultat} : Taux de changement moyen quotidien = X.X\%
+  \item \textbf{Détail} : XX.X\% domaines (very) stable, X.X\% volatiles
+  \item \textbf{Implication} : [Mesures quotidiennes suffisantes / nécessaires pour la majorité des domaines]
+\end{itemize}
+
+\textbf{Q3 : Biais géographiques}
+\begin{itemize}
+  \item \textbf{Résultat} : [Biais RIPE Atlas impacte / n'impacte pas significativement] (p=X.XXe-XX)
+  \item \textbf{Détail} : XX.X\% domaines changent de catégorie avec sampling uniforme
+  \item \textbf{Implication} : [Résultats généralisables / nécessitent prudence interprétation]
+\end{itemize}
+
+\textbf{Q4 : Impact resolver}
+\begin{itemize}
+  \item \textbf{Résultat} : Similarité moyenne Public vs ISP = X.XXX
+  \item \textbf{Détail} : ECS [améliore / n'améliore pas] significativement similarité (p=X.XXe-XX)
+  \item \textbf{Implication} : [Choix resolver impacte modérément / fortement les observations]
+\end{itemize}
+
+\subsection{Résultats inattendus}
+\label{subsec:4.6.2}
+
+[À compléter après analyse des données réelles]
+
+\textbf{Résultat inattendu 1} : [Description]
+\begin{itemize}
+  \item \textbf{Observation} : [...]
+  \item \textbf{Interprétation} : [...]
+\end{itemize}
+
+\textbf{Résultat inattendu 2} : [Description]
+\begin{itemize}
+  \item \textbf{Observation} : [...]
+  \item \textbf{Interprétation} : [...]
+\end{itemize}
+
+\subsection{Limitations des résultats}
+\label{subsec:4.6.3}
+
+\textbf{Limitations méthodologiques} :
+\begin{itemize}
+  \item Période de collecte limitée (X mois) vs tendances long-terme
+  \item Biais géographique RIPE Atlas (91\% Europe+NA)
+  \item Couverture limitée (Top 10K vs millions de domaines)
+\end{itemize}
+
+\textbf{Limitations techniques} :
+\begin{itemize}
+  \item Interférence mesures RIPE Atlas (désynchronisation $\pm$1h possible)
+  \item Filtrage lying resolvers peut exclure comportements légitimes
+  \item Granularité temporelle quotidienne (pas horaire)
+\end{itemize}
+
+\textbf{Limitations d'interprétation} :
+\begin{itemize}
+  \item Corrélation $\neq$ causalité (TTL vs changement)
+  \item Providers CDN non tous identifiés
+  \item Effet ECS difficile à isoler complètement
+\end{itemize}
+\bigskip
+\textbf{Fin du Chapitre 4 - Résultats}

@@ -1,0 +1,42 @@
+@startuml fig5_ecs_schema
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderThickness 1.5
+skinparam participantBackgroundColor #FFFFFF
+skinparam noteBorderColor #888888
+skinparam noteBackgroundColor #F8F8F8
+skinparam sequenceLifeLineBorderColor #555555
+
+actor       "Client\n(Brussels, 192.51.100.42)" as C
+participant "Recursive resolver\n(Google 8.8.8.8, US)" as R
+participant "CDN Authoritative server\n(Akamai / Cloudflare)" as AUTH
+
+== Without ECS ==
+
+C  -> R    : Query: A cdn.example.com ?
+R  -> AUTH : Query: A cdn.example.com ?\n[no ECS — source IP: 8.8.8.8]
+note right of AUTH : CDN infers location\nfrom resolver IP (US)\n→ assigns US edge server
+AUTH --> R : Answer: A 104.17.200.1  (US PoP,  TTL = 60 s)
+R  --> C   : A 104.17.200.1  [suboptimal: +35 ms vs EU PoP]
+
+== With ECS (RFC 7871) ==
+
+C  -> R    : Query: A cdn.example.com ?
+note right of R : Resolver embeds\nclient prefix /24\nin ECS EDNS option
+R  -> AUTH : Query: A cdn.example.com ?\n[ECS option: 192.51.100.0/24]
+note right of AUTH : CDN infers location\nfrom client prefix (BE)\n→ assigns EU edge server
+AUTH --> R : Answer: A 198.41.128.1  (EU PoP,  TTL = 60 s)\n[ECS scope: /24]
+R  --> C   : A 198.41.128.1  [optimal EU PoP]
+
+== ECS opt-out (subnet=0/0) ==
+
+C  -> R    : Query: A cdn.example.com ?\n[dig +subnet=0/0]
+note right of R : ECS suppressed\n(privacy mode)
+R  -> AUTH : Query: A cdn.example.com ?\n[ECS prefix: 0.0.0.0/0]
+AUTH --> R : Answer: A 104.17.200.1  (anycast default,  TTL = 60 s)
+R  --> C   : A 104.17.200.1
+
+@enduml

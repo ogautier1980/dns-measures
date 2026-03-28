@@ -1,0 +1,46 @@
+@startuml fig1_dns_resolution
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam sequenceArrowThickness 1.5
+skinparam participantBorderThickness 1.5
+skinparam participantBackgroundColor #FFFFFF
+skinparam noteBorderColor #888888
+skinparam noteBackgroundColor #F8F8F8
+skinparam sequenceLifeLineBorderColor #555555
+skinparam sequenceGroupBorderThickness 1
+
+actor       "Client\napplication" as C
+participant "Stub resolver\n(OS)" as S
+participant "Recursive resolver\n(ISP / Public DNS)" as R
+participant "Root server\n(e.g. a.root-servers.net)" as ROOT
+participant "TLD server\n(e.g. a.gtld-servers.net)" as TLD
+participant "Authoritative server\n(e.g. ns1.example.com)" as AUTH
+
+C -> S    : Query: A www.example.com ?
+activate S
+
+S -> R    : Query: A www.example.com ?  [RD=1]
+activate R
+
+note over R : Cache miss\n→ iterative resolution begins
+
+R -> ROOT : Query: A www.example.com ?  [RD=0]
+ROOT --> R : Referral: NS .com → a.gtld-servers.net
+
+R -> TLD  : Query: A www.example.com ?  [RD=0]
+TLD --> R : Referral: NS example.com → ns1.example.com
+
+R -> AUTH : Query: A www.example.com ?  [RD=0]
+AUTH --> R : Answer: A 93.184.216.34  (TTL = 86400 s)
+
+note over R : Cache result for TTL duration
+
+R --> S   : Answer: A 93.184.216.34
+deactivate R
+
+S --> C   : 93.184.216.34
+deactivate S
+
+@enduml

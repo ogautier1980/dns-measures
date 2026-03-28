@@ -1,0 +1,65 @@
+@startuml fig7_pipeline_collecte
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 11
+skinparam activityBorderThickness 1.5
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #333333
+skinparam arrowColor #333333
+skinparam noteBorderColor #888888
+skinparam noteBackgroundColor #F8F8F8
+skinparam rectangleBorderThickness 1.5
+
+!define STAGE(x,y) rectangle x as y
+
+' Use component diagram for pipeline overview
+
+left to right direction
+
+package "Stage 1 — Domain corpus" {
+  [Tranco API\ntranco-list.eu] as TRANCO
+  [Filtering\n(NXDOMAIN, malware,\npre-resolution)] as FILTER
+  database "Domain corpus\n~9,400 active domains\n(JSON manifest)" as CORPUS
+}
+
+package "Stage 2 — Measurement scheduling" {
+  [RIPE Atlas API\natlas.ripe.net/api/v2] as ATLAS_API
+  [Probe selection\n(100 probes,\nstratified by continent)] as PROBES
+  [Campaign config\n(A / AAAA / NS records,\nNSID, 86400s interval)] as CAMPAIGN
+}
+
+package "Stage 3 — Daily collection" {
+  [Collection script\n(Python, daily cron 02:00 UTC)] as COLLECT
+  database "Raw results\ndata/raw/YYYY-MM-DD/\n*.json  (~2 GB/day)" as RAW
+}
+
+package "Stage 4 — Processing & storage" {
+  [Parsing & validation\n(dnspython, 4 filters)] as PARSE
+  database "Avro archive\n(snappy, ~280 MB/day)" as AVRO
+  database "Parquet\n(columnar, analysis)" as PARQUET
+}
+
+package "Stage 5 — Analysis" {
+  [Q1: Geographic diversity\n(IP set entropy per domain)] as Q1
+  [Q2: Temporal stability\n(Jaccard similarity)] as Q2
+  [Q3: Atlas bias correction\n(bootstrap resampling)] as Q3
+  [Q4: Resolver comparison\n(direct / ISP / Google DNS)] as Q4
+}
+
+TRANCO   --> FILTER
+FILTER   --> CORPUS
+CORPUS   --> CAMPAIGN
+ATLAS_API --> PROBES
+PROBES   --> CAMPAIGN
+CAMPAIGN --> COLLECT
+COLLECT  --> RAW
+RAW      --> PARSE
+PARSE    --> AVRO
+AVRO     --> PARQUET
+PARQUET  --> Q1
+PARQUET  --> Q2
+PARQUET  --> Q3
+PARQUET  --> Q4
+
+@enduml

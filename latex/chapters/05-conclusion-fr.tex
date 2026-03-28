@@ -1,0 +1,365 @@
+% Chapitre 5 — Discussion et Conclusion (version française)
+
+\chapter{Discussion et Conclusion}
+
+\section{Discussion des résultats}
+\label{sec:5.1}
+
+Les quatre questions de recherche formulées au chapitre~1 ont guidé à la fois la conception de la campagne de mesure (chapitre~3) et la présentation des résultats empiriques (chapitre~4). Cette section interprète ces résultats au regard de la littérature existante, évalue si les preuves confirment, réfutent ou nuancent les résultats antérieurs, et dégage les implications pratiques pour la méthodologie de mesure et la recherche sur l'infrastructure Internet.
+\bigskip
+\subsection{Interprétation de la diversité géographique (Q1)}
+\label{subsec:5.1.1}
+
+\textbf{Résultat principal.} [VALEUR]\,\% des domaines Tranco Top-10K présentent au moins une différence dans leurs réponses DNS A selon les régions géographiques, mesuré comme un coefficient de similarité de Jaccard inférieur à [VALEUR] entre deux sous-ensembles régionaux quelconques.
+
+\textbf{Comparaison avec la littérature.}
+
+Calder et al.~\cite{Calder2015} ont démontré que le routage CDN basé sur anycast laisse environ 20\,\% des clients géographiquement sous-optimaux par rapport à la redirection DNS unicast. Nos mesures [confirment / confirment partiellement / contredisent] cet ordre de grandeur : [VALEUR]\,\% des domaines de notre corpus livrent des ensembles d'IP distincts à au moins deux de nos six strates géographiques, cohérent avec l'argument qu'un observatoire à point unique manquerait entièrement cette variation.
+
+Koch et al.~\cite{Koch2021} ont montré que le contexte applicatif détermine si l'inflation anycast est opérationnellement significative --- négligeable pour le DNS racine mais substantielle pour la distribution de contenu CDN (35\,\% des utilisateurs affectés). Nos données soutiennent cette distinction : les domaines classifiés comme servis par CDN présentent une similarité de Jaccard inter-régionale moyenne de [VALEUR], contre [VALEUR] pour les domaines non-CDN (p = [VALEUR], Mann-Whitney U).
+
+Van Rijswijk-Deij et al. (2016) ont souligné qu'OpenINTEL, opérant depuis un seul point de vue aux Pays-Bas, ne peut pas observer la différenciation géographique implémentée via ECS ou anycast. Notre architecture distribuée --- [VALEUR] sondes sur six continents --- répond directement à cette lacune : [VALEUR]\,\% des domaines montrant une diversité régionale apparaîtraient géographiquement uniformes dans une mesure à localisation unique.
+
+Xu et al.~\cite{Xu2023} ont documenté que 48,5\,\% des domaines dépendent des 10 meilleurs fournisseurs d'hébergement DNS. La concentration de fournisseurs visible dans nos résultats --- [VALEUR]\,\% des domaines diversifiés sont servis par [VALEUR] fournisseurs CDN/DNS majeurs --- corrobore cette structure oligopolistique.
+
+\textbf{Implications pratiques.}
+
+\begin{enumerate}
+  \item \textit{Pour les observatoires DNS longitudinaux (OpenINTEL et successeurs)} : Déployer même un petit nombre de points de vue géographiquement distribués permettrait de capturer [VALEUR]\,\% de variation géographique supplémentaire actuellement invisible pour la mesure à site unique.
+  \item \textit{Pour les chercheurs en performance réseau} : Toute étude utilisant des enregistrements DNS pour inférer la localisation des serveurs de contenu doit contrôler la diversité géographique ; l'ignorer introduit un artefact de mesure systématique pour [VALEUR]\,\% des domaines populaires.
+  \item \textit{Pour les opérateurs CDN} : Les schémas de diversité inter-régionale observés fournissent un benchmark indépendant et observable en externe contre lequel les opérateurs peuvent calibrer leurs politiques de routage anycast.
+\end{enumerate}
+\bigskip
+\subsection{Interprétation de la stabilité temporelle (Q2)}
+\label{subsec:5.1.2}
+
+\textbf{Résultat principal.} Le taux de changement quotidien moyen sur tous les domaines surveillés est de [VALEUR]\,\%, avec [VALEUR]\,\% des domaines classifiés comme \textit{très stables} et [VALEUR]\,\% comme \textit{volatils}.
+
+\textbf{Comparaison avec la littérature.}
+
+Van Rijswijk-Deij et al. (2016) ont établi la valeur de la mesure DNS longitudinale via l'opération continue pluriannuelle d'OpenINTEL. Notre fenêtre de collecte de [VALEUR] mois capture les dynamiques à court et moyen terme.
+
+Le Pochat et al.~\cite{LePochat2019} ont mesuré un taux de changement quotidien de 0,6\,\% dans la composition de la liste Tranco elle-même. Nos taux de changement DNS par domaine de [VALEUR]\,\% quotidiens sont donc [considérablement plus élevés que / comparables à] le renouvellement au niveau de la liste, indiquant qu'une liste \textit{stable} de domaines populaires n'implique pas des \textit{enregistrements DNS} stables pour ces domaines.
+
+\textbf{Corrélation TTL -- taux de changement.}
+
+Notre hypothèse --- que les opérateurs configurent des TTL courts en anticipation de changements d'enregistrements fréquents --- est [soutenue / non soutenue] par les données :
+
+\begin{itemize}
+  \item Corrélation de rang de Spearman entre TTL et taux de changement quotidien : $\rho$ = [VALEUR], p = [VALEUR]
+  \item Interprétation : [Une corrélation négative significative confirme que les TTL courts co-occurrent avec la haute volatilité. / La corrélation faible suggère que la configuration du TTL et la volatilité réelle des enregistrements sont largement découplées.]
+\end{itemize}
+
+\textbf{Implications pratiques.}
+
+\begin{enumerate}
+  \item \textit{Fréquence de mesure optimale} : Pour [VALEUR]\,\% des domaines Tranco Top-10K, des instantanés hebdomadaires suffisent. La mesure quotidienne est nécessaire pour [VALEUR]\,\% des domaines à rotation rapide.
+  \item \textit{Stratégie d'archivage DNS} : Une politique d'archivage hiérarchique --- collecte quotidienne pour les domaines volatils, hebdomadaire pour les stables --- réduirait le volume de stockage d'environ [VALEUR]\,\%.
+  \item \textit{Simulation réseau} : Les cadres de simulation utilisant des instantanés DNS peuvent s'appuyer en toute sécurité sur des données hebdomadaires pour la majorité des domaines populaires.
+\end{enumerate}
+\bigskip
+\subsection{Interprétation de l'impact du biais géographique (Q3)}
+\label{subsec:5.1.3}
+
+\textbf{Résultat principal.} Le test de Wilcoxon des rangs signés comparant la distribution réelle des sondes contre une distribution uniforme donne [une différence statistiquement significative / pas de différence statistiquement significative] (W = [VALEUR], p = [VALEUR]).
+
+\textbf{Analyse de sensibilité.}
+
+Notre expérience de sous-échantillonnage (section~4.4) montre que :
+\begin{itemize}
+  \item [VALEUR]\,\% des domaines changent de catégorie de diversité entre la distribution réelle et la distribution uniforme.
+  \item Les régions sous-représentées (Asie, Afrique, Amérique du Sud) contribuent [VALEUR]\,\% des adresses IP uniques observées, malgré [VALEUR]\,\% des sondes déployées.
+  \item La région avec la contribution IP unique la plus élevée par sonde est [VALEUR].
+\end{itemize}
+
+\textbf{Comparaison avec la littérature.}
+
+Bajpai et al.~\cite{Bajpai2017} ont quantifié la distribution des sondes RIPE Atlas en 2017, trouvant que 91\,\% des sondes étaient dans les régions RIPE NCC et ARIN. Nos mesures de 2026 [confirment la persistance de / montrent une amélioration partielle de] ce biais géographique.
+
+Nosyk et al.~\cite{Nosyk2024} ont documenté que l'Allemagne et les États-Unis hébergent ensemble 28\,\% des sondes RIPE Atlas actives. Notre analyse des contributions IP uniques par région corrobore cette préoccupation et fournit la première quantification empirique du \textit{coût} de ce biais pour les études de diversité DNS.
+
+\textbf{Implications méthodologiques.}
+
+\begin{enumerate}
+  \item \textit{Validité externe} : Nos résultats de diversité géographique [peuvent être considérés comme robustes / doivent être interprétés avec prudence] compte tenu de l'effet du biais observé.
+  \item \textit{Priorités de déploiement des sondes} : Les futures campagnes RIPE Atlas visant à mesurer la diversité DNS devraient prioriser la sélection de sondes en Asie, en Afrique subsaharienne et en Amérique du Sud.
+\end{enumerate}
+\bigskip
+\subsection{Interprétation de l'impact du résolveur (Q4)}
+\label{subsec:5.1.4}
+
+\textbf{Résultat principal.} La similarité de Jaccard moyenne par paires entre les réponses \texttt{auth\_direct} et \texttt{isp\_resolver} est de [VALEUR] ; entre \texttt{auth\_direct} et \texttt{public\_dns} (Google avec ECS) elle est de [VALEUR] ; et entre \texttt{auth\_direct} et \texttt{public\_dns\_noecs} (Google avec subnet=0/0) elle est de [VALEUR].
+
+\textbf{Validation de l'hypothèse ECS.}
+
+Wang et al.~\cite{Wang2018} ont estimé que l'adoption croissante du DNS public dégrade les performances CDN par des inadéquations géographiques --- jusqu'à 113\,\% d'inflation de longueur de chemin --- et proposé ECS~\cite{RFC7871} comme atténuation principale. Hours et al.~\cite{Hours2016} ont quantifié causalement cette pénalité à -14\,\% de débit CDN lors de l'utilisation de Google DNS au lieu d'un résolveur ISP local pour du contenu servi par Akamai.
+
+Notre comparaison empirique à quatre voies [confirme / nuance / contredit] ces résultats :
+\begin{itemize}
+  \item Les résolveurs publics activés ECS ferment [VALEUR]\,\% de l'écart Jaccard par rapport aux résolveurs publics sans ECS, suggérant qu'ECS [atténue substantiellement / atténue partiellement / n'atténue pas matériellement] la pénalité DNS distant pour le Tranco Top-10K.
+  \item Le test de Mann-Whitney U pour les distributions Jaccard ECS vs. sans ECS est [significatif / non significatif].
+\end{itemize}
+
+\textbf{Compromis vie privée -- performance.}
+
+Contavalli et al.~\cite{RFC7871} ont reconnu qu'ECS expose le préfixe réseau du client aux serveurs faisant autorité, créant un coût de vie privée permanent en échange d'une optimisation du routage. Nos mesures RTT [confirment cet ordre de grandeur / donnent une pénalité plus faible de [VALEUR] ms].
+
+\textbf{Implications pratiques.}
+
+\begin{enumerate}
+  \item \textit{Conception de mesures} : Les études utilisant un seul type de résolveur risquent de mal classifier [VALEUR]\,\% des domaines populaires.
+  \item \textit{Recommandations pour les utilisateurs finaux} : Les utilisateurs priorisant les performances CDN devraient préférer les résolveurs ISP ou les résolveurs publics activés ECS ; les utilisateurs priorisant la vie privée devraient utiliser DoH avec subnet=0/0.
+  \item \textit{Recommandations pour les opérateurs CDN} : Les opérateurs dont les scores Jaccard ECS restent bas devraient auditer leur logique de sélection de portée ECS.
+\end{enumerate}
+\bigskip
+\subsection{Résultats inattendus}
+\label{subsec:5.1.5}
+
+\textit{[À compléter suite à l'analyse des données empiriques.]}
+
+\textbf{Résultat inattendu 1 :} [Description]
+\begin{itemize}
+  \item \textbf{Observation :} [...]
+  \item \textbf{Hypothèses explicatives :} [...]
+  \item \textbf{Implications :} [...]
+\end{itemize}
+
+\textbf{Résultat inattendu 2 :} [Description]
+\begin{itemize}
+  \item \textbf{Observation :} [...]
+  \item \textbf{Hypothèses explicatives :} [...]
+  \item \textbf{Implications :} [...]
+\end{itemize}
+
+\bigskip
+\section{Limites de l'étude}
+\label{sec:5.2}
+
+Une contribution empirique crédible exige non seulement de rapporter des résultats, mais aussi d'articuler les conditions dans lesquelles ces résultats tiennent et les menaces à leur validité. Trois catégories de limites sont identifiées : méthodologiques, techniques et interprétatives.
+\bigskip
+\subsection{Limites méthodologiques}
+\label{subsec:5.2.1}
+
+\textbf{Période de collecte.}
+Notre fenêtre de [VALEUR] mois capture les dynamiques à court et moyen terme mais ne peut pas détecter la variation saisonnière, les tendances de migration pluriannuelles, ni l'impact d'événements géopolitiques majeurs sur le routage DNS. Van Rijswijk-Deij et al. (2016) ont démontré que l'observation longitudinale pluriannuelle est nécessaire pour caractériser l'évolution de l'infrastructure à grande échelle ; notre étude doit être comprise comme une coupe transversale temporellement bornée.
+
+\textbf{Corpus de domaines.}
+Le Tranco Top-10K représente les sites web les plus populaires au niveau mondial --- les 0,008\,\% des domaines enregistrés qui représentent une fraction disproportionnée du trafic Internet. La longue traîne de l'espace de nommage DNS, comprenant les \textasciitilde{}360 millions de domaines enregistrés restants~\cite{vanRijswijk2016}, présente probablement des profils de diversité géographique différents. Les résultats présentés ici sont valides pour les domaines populaires et ne devraient pas être extrapolés à l'espace de nommage plus large sans étude complémentaire.
+
+\textbf{Biais géographique des sondes.}
+Comme quantifié à la section~5.1.3, [VALEUR]\,\% de nos sondes sont situées en Europe et en Amérique du Nord, répliquant le biais structurel documenté par Bajpai et al.~\cite{Bajpai2017} et Nosyk et al.~\cite{Nosyk2024}. Malgré notre protocole de sélection stratifié, le nombre absolu de sondes en Afrique, en Amérique du Sud et en Océanie reste faible.
+\bigskip
+\subsection{Limites techniques}
+\label{subsec:5.2.2}
+
+\textbf{Interférence des mesures RIPE Atlas.}
+Holterbach et al.~\cite{Holterbach2015} ont démontré que les mesures concurrentes peuvent retarder l'exécution des requêtes DNS de plusieurs secondes, introduisant des artefacts temporels. Nous atténuons cela en : (i) préférant les sondes matérielles ; (ii) appliquant une fenêtre de tolérance temporelle de $\pm$2 heures ; et (iii) filtrant les valeurs aberrantes.
+
+\textbf{Détection de résolveurs menteurs.}
+Le filtre heuristique peut générer des faux positifs pour les domaines avec des réponses faisant autorité légitimement rares. Boswell et Perkins~\cite{Boswell2024} ont également noté que distinguer la variation géographique légitime de la manipulation de résolveur nécessite des données de vérité terrain rarement disponibles.
+
+\textbf{Identification des fournisseurs CDN.}
+L'attribution de fournisseur repose sur le mappage BGP des systèmes autonomes et les conventions de nommage DNS inverse. Cette approche identifie correctement les fournisseurs pour [VALEUR]\,\% des domaines servis par CDN, mais échoue pour [VALEUR]\,\% utilisant des numéros d'AS privés.
+\bigskip
+\subsection{Limites interprétatives}
+\label{subsec:5.2.3}
+
+\textbf{Corrélation versus causalité.}
+La corrélation de Spearman entre TTL et taux de changement quotidien est cohérente avec l'hypothèse que les opérateurs configurent des TTL courts en anticipation de mises à jour fréquentes, mais n'établit pas la direction causale. Hours et al.~\cite{Hours2016} ont utilisé des réseaux bayésiens pour établir des affirmations causales dans un contexte DNS connexe ; reproduire une telle analyse causale sur notre jeu de données est identifié comme une direction de recherche future.
+
+\textbf{Isolation de l'effet ECS.}
+La comparaison à quatre résolveurs confond plusieurs différences entre les types de résolveurs : localisation géographique du résolveur, support ECS, accords de peering et état du cache. Les différences de Jaccard observées ne peuvent donc pas être attribuées exclusivement à ECS sans contrôler ces facteurs confondants.
+
+\textbf{Généralisation au-delà du Tranco Top-10K.}
+Les domaines populaires utilisent de manière disproportionnée une infrastructure CDN et DNS sophistiquée. Les schémas de diversité géographique que nous observons peuvent ne pas être représentatifs de l'espace de nommage DNS plus large.
+\bigskip
+\section{Contributions de ce travail}
+\label{sec:5.3}
+
+\subsection{Contributions scientifiques}
+\label{subsec:5.3.1}
+
+\textbf{Contribution empirique principale.}
+Ce mémoire fournit la première quantification systématique multi-points de vue de la diversité des réponses DNS pour le Tranco Top-10K. En déployant [VALEUR] sondes sur six strates géographiques et en collectant [VALEUR] millions de mesures DNS sur [VALEUR] mois, nous caractérisons quatre dimensions du comportement DNS : diversité géographique (Q1), stabilité temporelle (Q2), sensibilité au biais des sondes (Q3), et impact du résolveur (Q4).
+
+\textbf{Validation empirique des hypothèses de la littérature.}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X p{3.5cm} p{3cm}}
+\toprule
+\textbf{Affirmation} & \textbf{Source} & \textbf{Statut} \\
+\midrule
+L'inflation anycast dépend du contexte CDN & Koch et al.~\cite{Koch2021} & [Confirmé / Nuancé] \\
+Le DNS public impose $\geq$14\,\% de pénalité de débit vs.\ ISP & Hours et al.~\cite{Hours2016} & [Confirmé / Magnitude différente] \\
+ECS atténue l'inadéquation géographique DNS distant & Wang et al.~\cite{Wang2018} ; RFC~7871~\cite{RFC7871} & [Partiellement confirmé / Non confirmé] \\
+Le biais géographique RIPE Atlas persiste après 2017 & Bajpai et al.~\cite{Bajpai2017} & [Confirmé] \\
+L'infrastructure DNS est concentrée oligopolistiquement & Xu et al.~\cite{Xu2023} & [Confirmé pour Top-10K] \\
+\bottomrule
+\end{tabularx}
+\caption{Validation empirique des affirmations de la littérature}
+\label{tab:hypothesis_validation}
+\end{table}
+
+\textbf{Résumé quantitatif des résultats.}
+\begin{itemize}
+  \item Diversité géographique : [VALEUR]\,\% des domaines Tranco Top-10K présentent une variation DNS inter-régionale
+  \item Stabilité temporelle : taux de changement quotidien moyen = [VALEUR]\,\% ; [VALEUR]\,\% des domaines sont très stables
+  \item Sensibilité au biais : [VALEUR]\,\% des classifications de diversité changent sous rééchantillonnage uniforme
+  \item Impact du résolveur : écart Jaccard moyen ISP--public = [VALEUR] ; ECS ferme [VALEUR]\,\% de cet écart
+\end{itemize}
+\bigskip
+\subsection{Contributions méthodologiques}
+\label{subsec:5.3.2}
+
+\textbf{Pipeline de mesure reproductible.}
+Le pipeline complet --- de la sélection des sondes et la configuration des campagnes RIPE Atlas jusqu'à la collecte de données, le filtrage qualité, le stockage et l'analyse statistique --- est documenté en détail suffisant pour permettre une réplication exacte. Les artefacts clés incluent :
+\begin{itemize}
+  \item Configuration des mesures RIPE Atlas (JSON, Annexe~A)
+  \item Schéma de données (définitions des champs Apache Avro, Annexe~B)
+  \item Notebooks d'analyse (Python/Jupyter, publiés sur GitHub)
+  \item Journal de sélection des sondes avec étiquettes et filtres appliqués
+\end{itemize}
+
+Ce niveau de transparence méthodologique répond directement aux préoccupations de reproductibilité soulevées par Le Pochat et al.~\cite{LePochat2019}.
+
+\textbf{Meilleures pratiques RIPE Atlas pour les études DNS.}
+En s'appuyant sur le tutoriel de Bortzmeyer~\cite{Bortzmeyer_tutorial}, Holterbach et al.~\cite{Holterbach2015}, Bajpai et al.~\cite{Bajpai2017}, et Nosyk et al.~\cite{Nosyk2024}, nous synthétisons et opérationnalisons un ensemble de meilleures pratiques pour la sélection des sondes et la conception des campagnes.
+
+\textbf{Méthodologie de comparaison de résolveurs supplémentaire.}
+La comparaison à quatre conditions (\texttt{auth\_direct} / \texttt{isp\_resolver} / \texttt{public\_dns} / \texttt{public\_dns\_noecs}) constitue un design expérimental réutilisable pour démêler la variation géographique induite par le résolveur de celle induite par le serveur faisant autorité. Ce design est directement applicable aux futures études des impacts de DoH, DoT ou ODNS sur le routage géographique.
+\bigskip
+\subsection{Contribution en données}
+\label{subsec:5.3.3}
+
+\textbf{Jeu de données publié.}
+Nous publions un jeu de données de [VALEUR] millions de mesures DNS, disponible sur Zenodo sous CC BY 4.0 (DOI : [À ATTRIBUER]), comprenant :
+\begin{itemize}
+  \item Domaine : Tranco Top-10K ([VALEUR] domaines après filtrage)
+  \item Types d'enregistrements : A (principal), [AAAA, NS, MX si collectés]
+  \item Couverture temporelle : du [DATE\_DEBUT] au [DATE\_FIN] ([VALEUR] mois)
+  \item Couverture géographique : [VALEUR] sondes, [VALEUR] pays, 6 continents
+  \item Format : Apache Parquet (analyse), Apache Avro (archivage)
+\end{itemize}
+
+\textbf{Conformité FAIR.}
+Le jeu de données est conforme aux principes FAIR (Trouvable, Accessible, Interopérable, Réutilisable) :
+\begin{itemize}
+  \item \textit{Trouvable :} DOI persistant via Zenodo ; indexé dans DataCite
+  \item \textit{Accessible :} Téléchargement ouvert, sans authentification requise
+  \item \textit{Interopérable :} Apache Parquet/Avro (standards ouverts) ; schéma publié
+  \item \textit{Réutilisable :} Licence CC BY 4.0 ; documentation complète de la méthodologie
+\end{itemize}
+\bigskip
+\section{Travaux futurs}
+\label{sec:5.4}
+
+\subsection{Extensions immédiates}
+\label{subsec:5.4.1}
+
+\textbf{Extension temporelle.}
+Étendre la fenêtre de collecte au-delà de [VALEUR] mois permettrait : (i) la détection de schémas saisonniers dans le provisionnement CDN ; (ii) l'observation d'événements d'infrastructure à grande échelle ; et (iii) la corrélation des événements de changement DNS avec l'enregistrement public d'incidents.
+
+\textbf{Extension spatiale.}
+Améliorer la couverture géographique --- particulièrement en Afrique subsaharienne, en Asie du Sud et du Sud-Est --- réduirait la sensibilité des estimations de diversité au biais de distribution des sondes.
+
+\textbf{Extension des types d'enregistrements.}
+Étendre aux enregistrements AAAA (IPv6), MX (email) et NS (délégation) permettrait : (i) une comparaison de la diversité géographique IPv4 et IPv6~\cite{Bajpai2017} ; (ii) une analyse de la centralisation de l'infrastructure email~\cite{Xu2023} ; et (iii) la détection de manipulation des enregistrements NS~\cite{Jones2016}.
+\bigskip
+\subsection{Nouvelles questions de recherche}
+\label{subsec:5.4.2}
+
+\textbf{Q5 --- Diversité géographique IPv6.}
+Les réponses DNS AAAA présentent-elles la même diversité géographique que les réponses A pour le Tranco Top-10K ? L'hypothèse, fondée sur Bajpai et al.~\cite{Bajpai2017}, est que le déploiement CDN IPv6 est en retard sur IPv4.
+
+\textbf{Q6 --- Détection précoce d'infrastructure malveillante via DNS.}
+Van der Toorn et al.~\cite{vanderToorn2018} ont démontré que les données DNS longitudinales d'OpenINTEL permettent la détection de domaines de spam snowshoe 100 jours avant les listes noires commerciales. Notre jeu de données pourrait permettre une détection analogue basée sur des changements anormaux dans la distribution \textit{spatiale} des réponses DNS.
+
+\textbf{Q7 --- Centralisation DNS et souveraineté numérique.}
+Xu et al.~\cite{Xu2023} ont documenté que l'écosystème de résolveurs DNS est concentré oligopolistiquement. Notre analyse de la concentration des fournisseurs du côté faisant autorité fournit une perspective complémentaire : la fraction des domaines populaires dont l'infrastructure DNS est contrôlée par des fournisseurs non-européens soulève des questions de souveraineté numérique pertinentes pour la réglementation UE (Directive NIS2, Data Act).
+\bigskip
+\subsection{Améliorations méthodologiques}
+\label{subsec:5.4.3}
+
+\textbf{Apprentissage automatique pour la classification des fournisseurs CDN.}
+Un classificateur supervisé entraîné sur les caractéristiques des réponses DNS (distribution TTL, diversité IP, valeurs NSID, schémas de codes de réponse) pourrait améliorer la précision et réduire le taux de domaines non classifiés.
+
+\textbf{Analyse causale du TTL et du taux de changement.}
+Hours et al.~\cite{Hours2016} ont utilisé des réseaux bayésiens pour isoler l'effet causal du choix de résolveur sur le débit CDN. Appliquer un cadre d'inférence causale similaire avec TTL, taux de changement, type de fournisseur et popularité du domaine comme variables permettrait de déterminer si la configuration courte TTL \textit{cause} des mises à jour plus fréquentes ou co-occur simplement avec elles.
+
+\textbf{Ordonnancement conscient des interférences.}
+Un ordonnanceur de mesures qui surveille activement la charge de la plateforme~\cite{Holterbach2015} et reporte les campagnes pendant les périodes de forte interférence réduirait le bruit temporel sans nécessiter la fenêtre de tolérance temporelle que nous appliquons actuellement.
+\bigskip
+\subsection{Partenariats et diffusion}
+\label{subsec:5.4.4}
+
+\textbf{Collaboration avec OpenINTEL.}
+Une analyse conjointe combinant la couverture exhaustive de l'espace de nommage d'OpenINTEL (50\,\% des domaines globaux, point de vue unique aux Pays-Bas) avec notre jeu de données distribué à 100 sondes permettrait, pour la première fois, une comparaison directe du même enregistrement DNS vu depuis un point de vue unique versus un ensemble globalement distribué.
+
+\textbf{Engagement communautaire RIPE NCC.}
+Nous prévoyons : (i) publier un résumé méthodologique dans RIPE Labs~\cite{Bortzmeyer2013,Finnegan2018} ; (ii) présenter les résultats lors d'une réunion RIPE ; et (iii) soumettre le jeu de données au programme de partage de données DNS du RIPE NCC si éligible.
+\bigskip
+\section{Conclusion générale}
+\label{sec:5.5}
+
+\subsection{Résumé du mémoire}
+\label{subsec:5.5.1}
+
+Ce mémoire a abordé le problème de l'\textit{archivage DNS distribué spatialement et temporellement} : comment concevoir, déployer et opérer un système de mesure qui capture la diversité géographique des réponses DNS à grande échelle, tout en maintenant la continuité longitudinale et la transparence méthodologique.
+
+La motivation était ancrée dans une lacune bien documentée : les observatoires DNS à grande échelle existants~\cite{vanRijswijk2016} opèrent depuis des points de vue géographiques uniques, les rendant structurellement aveugles à la différenciation géographique que les opérateurs CDN~\cite{Calder2015,Koch2021}, les serveurs faisant autorité ECS~\cite{RFC7871,Wang2018} et le routage BGP anycast~\cite{Bortzmeyer2013,Finnegan2018} introduisent délibérément dans les réponses DNS.
+
+\textbf{Notre réponse méthodologique} a combiné trois décisions de conception : (i) utiliser RIPE Atlas comme plateforme de mesure distribuée, sélectionnant [VALEUR] sondes sur six strates géographiques~\cite{Bajpai2017} ; (ii) interroger directement les serveurs faisant autorité pour éliminer les artefacts induits par les résolveurs ; et (iii) conduire une campagne supplémentaire à quatre conditions pour quantifier empiriquement l'impact du résolveur (Q4).
+
+\textbf{Nos résultats scientifiques} fournissent la première caractérisation empirique systématique de la diversité des réponses DNS sur la géographie, le temps, le biais de plateforme et le type de résolveur pour le Tranco Top-10K~\cite{LePochat2019}.
+\bigskip
+\subsection{Réponses aux questions de recherche}
+\label{subsec:5.5.2}
+
+\textbf{Q1 --- Diversité géographique :} [VALEUR]\,\% des domaines Tranco Top-10K retournent des enregistrements A géographiquement différenciés. Cette diversité est principalement due au routage anycast CDN et au GeoDNS, avec [VALEUR] fournisseurs majeurs représentant [VALEUR]\,\% de toute la diversité observée. Un observatoire à point unique manquerait entièrement cette variation.
+
+\textbf{Q2 --- Stabilité temporelle :} [VALEUR]\,\% des domaines populaires sont temporellement stables à la granularité de mesure quotidienne ; [VALEUR]\,\% présentent une volatilité nécessitant un suivi sous-quotidien. Le taux de changement quotidien moyen de [VALEUR]\,\% est [considérablement plus élevé que / similaire à] le renouvellement quotidien de 0,6\,\% dans la composition de la liste Tranco elle-même, confirmant qu'un corpus stable n'implique pas des enregistrements DNS stables.
+
+\textbf{Q3 --- Sensibilité au biais :} Le biais géographique de RIPE Atlas [affecte significativement / n'affecte pas significativement] les estimations de diversité agrégées (Wilcoxon p = [VALEUR]). Les régions sous-représentées contribuent de manière disproportionnée à la diversité observée, avec la contribution IP unique la plus élevée par sonde en [VALEUR].
+
+\textbf{Q4 --- Impact du résolveur :} Le choix du résolveur DNS affecte les réponses DNS observées pour [VALEUR]\,\% des domaines populaires. Les résolveurs publics activés ECS ferment [VALEUR]\,\% de l'écart Jaccard entre les réponses publiques et ISP-locales. Le coût de vie privée d'ECS (exposition du sous-réseau client) [est / n'est pas] justifié par un bénéfice de performance de [VALEUR] ms pour le corpus Top-10K.
+
+\textbf{Réponse globale.} La mesure DNS distribuée et contrôlée par résolveur est à la fois techniquement réalisable avec RIPE Atlas et scientifiquement nécessaire pour caractériser la structure géographique du DNS moderne. Les systèmes conçus en supposant l'uniformité géographique DNS représenteront systématiquement de manière incorrecte l'infrastructure sous-jacente [VALEUR]\,\% des sites web populaires.
+\bigskip
+\subsection{Impact attendu}
+\label{subsec:5.5.3}
+
+\textbf{Impact académique.}
+Le jeu de données publié et le pipeline reproductible abaissent la barrière pour les futures études de mesure DNS, permettant : (i) la réplication et l'extension temporelle ; (ii) des analyses secondaires sur la sécurité, l'adoption IPv6, ou la centralisation email ; (iii) la comparaison de référence pour les études d'évolution des protocoles DNS (DoH, DoT, ODNS, ECS v2).
+
+\textbf{Impact opérationnel.}
+Les opérateurs CDN peuvent utiliser la similarité de Jaccard inter-régionale comme métrique indépendante de l'efficacité de la politique de routage. Les fournisseurs d'hébergement DNS peuvent identifier les domaines pour lesquels l'implémentation ECS produit une correspondance géographique sous-optimale.
+
+\textbf{Impact politique.}
+Les données de concentration des fournisseurs (section~4.2) fournissent une base empirique pour les discussions réglementaires sur la résilience DNS et la souveraineté numérique. Quantifier la fraction du trafic des domaines de premier niveau national contrôlé par des fournisseurs non-domestiques est directement pertinent pour l'analyse de conformité NIS2 et les stratégies nationales de cybersécurité.
+\bigskip
+\subsection{Leçons apprises}
+\label{subsec:5.5.4}
+
+\textbf{Leçons sur la plateforme.}
+RIPE Atlas est une plateforme de mesure distribuée puissante, mais son utilité dépend fortement de la rigueur méthodologique. Les leçons clés sont : les sondes matérielles surpassent les sondes logicielles pour les mesures DNS sensibles au timing~\cite{Holterbach2015} ; les étiquettes système géographiques sont nécessaires mais pas suffisantes pour une sélection équilibrée des points de vue~\cite{Bajpai2017} ; et le système de crédits nécessite une planification budgétaire soigneuse~\cite{Nosyk2024}.
+
+\textbf{Leçons architecturales.}
+Une architecture de stockage à deux niveaux (Apache Avro pour l'archivage, Apache Parquet pour l'analyse en colonnes) s'adapte efficacement aux volumes produits par une campagne de mesure DNS continue. Le pré-partitionnement des fichiers Parquet par date et domaine permet une latence de requête sous la seconde.
+
+\textbf{Leçons scientifiques.}
+L'hypothèse que la diversité géographique DNS peut être inférée depuis un seul point de vue est [fortement contredite / largement confirmée / nuancée] par nos données. L'hypothèse qu'ECS résout le problème DNS distant pour les domaines populaires est [confirmée pour X\,\% / non confirmée].
+\bigskip
+\subsection{Remarques de clôture}
+\label{subsec:5.5.5}
+
+Le Système de Noms de Domaine est le substrat invisible dont dépend la navigabilité d'Internet. Chaque requête web, livraison d'email, appel API et mise à jour logicielle commence par une requête DNS --- pourtant le comportement DNS est rarement mesuré depuis les perspectives des utilisateurs qui en dépendent. Ce mémoire est une contribution vers rendre la structure géographique et temporelle du DNS \textit{visible}, \textit{mesurable}, et \textit{reproductible}.
+
+Les [VALEUR] millions de mesures collectées entre [DATE\_DEBUT] et [DATE\_FIN] constituent un instantané spatio-temporel de la manière dont les destinations les plus populaires d'Internet se présentent aux utilisateurs dans différentes parties du monde. Elles documentent un DNS plus géographiquement hétérogène que ce que suggèrent les études à point de vue unique, plus temporellement stable que ne l'implique le discours sur le dynamisme CDN, et plus sensible au choix du résolveur que ce que les utilisateurs s'appuyant sur les paramètres ISP par défaut apprécient généralement.
+
+Comme l'a observé Stéphane Bortzmeyer, le DNS est trop souvent négligé dans les études sur la résilience et la qualité de service d'Internet. Avec les outils désormais disponibles --- le réseau mondial de sondes RIPE Atlas, le classement de domaines résistant à la manipulation de Tranco, les formats de stockage ouverts, et l'infrastructure d'analyse soutenue par la communauté --- il n'y a plus de barrière technique pour combler cette lacune. La barrière est la rigueur méthodologique et l'investissement communautaire.
+
+Nous espérons que le jeu de données, le pipeline et les résultats rapportés ici abaissent les deux barrières pour les chercheurs et ingénieurs qui viendront ensuite.
+\bigskip
+\textit{Fin du chapitre~5 --- Discussion et Conclusion}

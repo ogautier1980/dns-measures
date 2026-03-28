@@ -1,0 +1,487 @@
+% Chapitre 4 — Résultats (version française)
+
+\chapter{Résultats}
+
+\begin{quote}
+\textbf{Note.} Ce chapitre présente les résultats empiriques de la campagne de mesure décrite au chapitre~3. Toutes les valeurs quantitatives apparaissent comme des espaces réservés \texttt{[VALEUR]} à remplir une fois la collecte et l'analyse des données terminées. Les références aux figures indiquent des visualisations planifiées. Le cadrage interprétatif de chaque section anticipe les résultats attendus sur la base de la littérature examinée au chapitre~2 ; lorsque les résultats réels divergent des attentes, les espaces réservés sont accompagnés d'un indicateur \texttt{[NOTE : inattendu --- discuter en Ch.~5]}.
+\end{quote}
+\bigskip
+\section{Vue d'ensemble du jeu de données}
+\label{sec:4.1}
+
+\subsection{Statistiques de collecte}
+\label{subsec:4.1.1}
+
+La campagne de mesure s'est déroulée du [DATE\_DEBUT] au [DATE\_FIN], couvrant [VALEUR] jours calendaires de collecte active. Le tableau~\ref{tab:campaign_summary} résume les statistiques générales de collecte.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{l X}
+\toprule
+\textbf{Métrique} & \textbf{Valeur} \\
+\midrule
+Période de mesure & [DATE\_DEBUT] -- [DATE\_FIN] ([VALEUR] jours) \\
+Version de la liste Tranco & [TRANCO\_ID] (récupérée le [DATE]) \\
+Domaines dans le Tranco Top 10K & 10\,000 \\
+Domaines après pré-filtrage & [VALEUR] ($\approx$[VALEUR]\,\% des 10K) \\
+Domaines avec $\geq$85\,\% de résultats valides & [VALEUR] \\
+Total d'instances de mesure planifiées & [VALEUR] \\
+Total de résultats récupérés depuis l'API RIPE Atlas & [VALEUR] \\
+Résultats passant tous les filtres de validation & [VALEUR] ([VALEUR]\,\%) \\
+Jours avec collecte complète & [VALEUR] / [VALEUR] \\
+Jours avec collecte partielle & [VALEUR] \\
+\bottomrule
+\end{tabularx}
+\caption{Statistiques récapitulatives de la campagne}
+\label{tab:campaign_summary}
+\end{table}
+
+Les [VALEUR] domaines exclus au stade du pré-filtrage (section~3.2.3) consistaient principalement en domaines retournant \texttt{NXDOMAIN} au résolveur de référence ([VALEUR] domaines, [VALEUR]\,\%) et domaines signalés par l'API Google Safe Browsing ([VALEUR] domaines, [VALEUR]\,\%).
+
+\subsection{Distribution des sondes}
+\label{subsec:4.1.2}
+
+La campagne de mesure a utilisé [VALEUR] sondes RIPE Atlas uniques distribuées dans [VALEUR] pays et [VALEUR] systèmes autonomes. Le tableau~\ref{tab:probe_distribution} résume la distribution géographique.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r r}
+\toprule
+\textbf{Région} & \textbf{Cible} & \textbf{Réel} & \textbf{Pays} & \textbf{AS} \\
+\midrule
+Europe & 30 & [VALEUR] & [VALEUR] & [VALEUR] \\
+Amérique du Nord & 25 & [VALEUR] & [VALEUR] & [VALEUR] \\
+Asie-Pacifique & 20 & [VALEUR] & [VALEUR] & [VALEUR] \\
+Amérique du Sud & 10 & [VALEUR] & [VALEUR] & [VALEUR] \\
+Afrique & 10 & [VALEUR] & [VALEUR] & [VALEUR] \\
+Océanie & 5 & [VALEUR] & [VALEUR] & [VALEUR] \\
+\textbf{Total} & \textbf{100} & \textbf{[VALEUR]} & \textbf{[VALEUR]} & \textbf{[VALEUR]} \\
+\bottomrule
+\end{tabularx}
+\caption{Distribution géographique des sondes : cible vs.\ réel}
+\label{tab:probe_distribution}
+\end{table}
+
+\subsection{Qualité des données}
+\label{subsec:4.1.3}
+
+Le tableau~\ref{tab:res_filter_rates} résume l'application des quatre filtres de validation décrits à la section~3.4.3.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{p{3.5cm} r r X}
+\toprule
+\textbf{Filtre} & \textbf{Exclus} & \textbf{\%} & \textbf{Causes principales} \\
+\midrule
+Timeout (pas d'abuf) & [VALEUR] & [VALEUR]\,\% & Sonde hors ligne, timeout réseau \\
+Déviation de planification >4h & [VALEUR] & [VALEUR]\,\% & Charge concurrente de la plateforme~\cite{Holterbach2015} \\
+RCODE $\neq$ NOERROR & [VALEUR] & [VALEUR]\,\% & NXDOMAIN / SERVFAIL / REFUSED \\
+Indicateur de réponse anormale & [VALEUR] & [VALEUR]\,\% & Proxy en chemin suspecté ou cache local \\
+\textbf{Total exclu} & \textbf{[VALEUR]} & \textbf{[VALEUR]\,\%} & \\
+\textbf{Résultats valides} & \textbf{[VALEUR]} & \textbf{[VALEUR]\,\%} & Utilisés dans toutes les analyses \\
+\bottomrule
+\end{tabularx}
+\caption{Résultats des filtres de validation sur les résultats de mesure bruts}
+\label{tab:res_filter_rates}
+\end{table}
+
+\subsection{Stockage}
+\label{subsec:4.1.4}
+
+Le tableau~\ref{tab:storage_volumes} rapporte les volumes de stockage atteints par chaque format.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r}
+\toprule
+\textbf{Format} & \textbf{Taille} & \textbf{Taux de compression vs.\ JSON brut} \\
+\midrule
+JSON brut (sortie API RIPE Atlas) & [VALEUR] Go & 1:1 (référence) \\
+Apache Avro (niveau archivage) & [VALEUR] Go & 1:[VALEUR] \\
+Apache Parquet (niveau analytique) & [VALEUR] Go & 1:[VALEUR] \\
+\textbf{Total} & \textbf{[VALEUR] Go} & \\
+\bottomrule
+\end{tabularx}
+\caption{Volumes de stockage par format}
+\label{tab:storage_volumes}
+\end{table}
+
+\bigskip
+\section{Résultats pour Q1 : diversité géographique des réponses DNS}
+\label{sec:4.2}
+
+\subsection{Distribution globale de la diversité géographique}
+\label{subsec:4.2.1}
+
+\textbf{Question de recherche} : Quelle proportion des domaines Tranco Top 10K retourne des réponses DNS géographiquement différenciées, et quels mécanismes d'infrastructure expliquent la différenciation ?
+
+Pour chaque domaine du corpus actif, la métrique de diversité géographique --- la similarité de Jaccard médiane par paires entre les groupes de sondes continentaux (section~3.5.1) --- a été calculée sur toute la période de mesure. Le tableau~\ref{tab:diversity_categories} rapporte la distribution des domaines dans les quatre catégories de diversité.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{l X r r}
+\toprule
+\textbf{Catégorie} & \textbf{Critère} & \textbf{Domaines} & \textbf{\%} \\
+\midrule
+\texttt{UNIFORM} & Une seule IP pour toutes les sondes & [VALEUR] & [VALEUR]\,\% \\
+\texttt{LOW\_DIVERSITY} & Jaccard médian par paires > 0,8 & [VALEUR] & [VALEUR]\,\% \\
+\texttt{MEDIUM\_DIVERSITY} & Jaccard médian par paires 0,4--0,8 & [VALEUR] & [VALEUR]\,\% \\
+\texttt{HIGH\_DIVERSITY} & Jaccard médian par paires < 0,4 & [VALEUR] & [VALEUR]\,\% \\
+\textbf{Total} & & \textbf{[VALEUR]} & \textbf{100\,\%} \\
+\bottomrule
+\end{tabularx}
+\caption{Distribution des domaines par catégorie de diversité géographique}
+\label{tab:diversity_categories}
+\end{table}
+
+\textbf{Figure 4.1} --- Diagramme en barres : nombre de domaines par catégorie de diversité, avec le nombre moyen d'adresses IP distinctes par catégorie sur l'axe secondaire. [TODO : générer depuis la sortie d'analyse]
+
+[VALEUR]\,\% des domaines mesurés présentent au moins une variation géographique dans leurs réponses DNS (catégories \texttt{LOW\_DIVERSITY} à \texttt{HIGH\_DIVERSITY}). Le niveau de diversité géographique est corrélé avec le rang Tranco : les 100 premiers domaines montrent un Jaccard médian par paires de [VALEUR], contre [VALEUR] pour la tranche de rang 5\,000--10\,000.
+
+\subsection{Attribution du mécanisme : anycast vs. routage CDN DNS}
+\label{subsec:4.2.2}
+
+Pour les domaines de la catégorie \texttt{HIGH\_DIVERSITY}, les chaînes NSID collectées depuis les serveurs faisant autorité permettent d'identifier le mécanisme principal de variation géographique :
+
+\textbf{Variation due à l'anycast} : [VALEUR] domaines ([VALEUR]\,\% des \texttt{HIGH\_DIVERSITY}) montrent des adresses IP cohérentes au sein de chaque groupe de sondes continental, mais des chaînes NSID différentes entre groupes. Ce schéma indique que le même espace d'adressage IP est servi depuis différentes instances anycast physiques.
+
+\textbf{Variation due au routage CDN} : [VALEUR] domaines ([VALEUR]\,\% des \texttt{HIGH\_DIVERSITY}) montrent des adresses IP variables entre groupes continentaux mais une chaîne NSID cohérente. Ce schéma indique qu'un serveur faisant autorité unique retourne des adresses IP différentes selon la localisation inférée de la sonde --- le mécanisme de routage CDN DNS décrit par Wang et al.~\cite{Wang2018}.
+
+[VALEUR] domaines ([VALEUR]\,\% des \texttt{HIGH\_DIVERSITY}) présentent les deux mécanismes simultanément.
+
+\textbf{Figure 4.2} --- Diagramme en barres empilées : attribution des mécanismes (anycast, routage CDN, les deux, indéterminé) par catégorie de diversité. [TODO : générer depuis l'analyse NSID]
+
+\subsection{Distribution des fournisseurs d'infrastructure DNS}
+\label{subsec:4.2.3}
+
+Les fournisseurs d'infrastructure DNS faisant autorité ont été identifiés en mappant les enregistrements NS aux plages d'AS et aux patterns de noms d'hôtes. Le tableau~\ref{tab:provider_distribution} résume la distribution.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r}
+\toprule
+\textbf{Fournisseur} & \textbf{Domaines} & \textbf{\% des diversifiés} & \textbf{IP moyennes} \\
+\midrule
+Cloudflare & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+Amazon Route 53 & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+Akamai & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+Google Cloud DNS & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+Fastly & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+Autres identifiés & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+Non identifiés & [VALEUR] & [VALEUR]\,\% & [VALEUR] \\
+\bottomrule
+\end{tabularx}
+\caption{Distribution des fournisseurs d'infrastructure DNS pour les domaines géographiquement diversifiés}
+\label{tab:provider_distribution}
+\end{table}
+
+Les [VALEUR] premiers fournisseurs représentent [VALEUR]\,\% de tous les domaines avec diversité géographique, cohérent avec les niveaux de concentration documentés par Xu et al.~\cite{Xu2023}.
+
+\bigskip
+\section{Résultats pour Q2 : stabilité temporelle}
+\label{sec:4.3}
+
+\subsection{Taux de changement agrégés par échelle temporelle}
+\label{subsec:4.3.1}
+
+\textbf{Question de recherche} : Quelle est la stabilité temporelle des réponses DNS pour les domaines populaires aux échelles jour, semaine et mois ?
+
+Le tableau~\ref{tab:change_rates} rapporte la distribution des taux de changement au niveau du domaine à trois échelles temporelles.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r r}
+\toprule
+\textbf{Échelle temporelle} & \textbf{Moyenne} & \textbf{Médiane} & \textbf{Écart-type} & \textbf{P95} \\
+\midrule
+Quotidien (jours consécutifs) & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR]\,\% \\
+Hebdomadaire (semaines consécutives) & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR]\,\% \\
+Mensuel (mois consécutifs) & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR]\,\% \\
+\bottomrule
+\end{tabularx}
+\caption{Taux de changement des réponses DNS par échelle temporelle}
+\label{tab:change_rates}
+\end{table}
+
+\textbf{Figure 4.4} --- Histogrammes des taux de changement quotidiens, hebdomadaires et mensuels. [TODO : graphique à trois panneaux depuis l'analyse temporelle]
+
+\subsection{Classification de la stabilité des domaines}
+\label{subsec:4.3.2}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{l l r r}
+\toprule
+\textbf{Classe de stabilité} & \textbf{Taux de changement} & \textbf{Domaines} & \textbf{\%} \\
+\midrule
+\texttt{VERY\_STABLE} & < 5\,\% & [VALEUR] & [VALEUR]\,\% \\
+\texttt{STABLE} & 5--20\,\% & [VALEUR] & [VALEUR]\,\% \\
+\texttt{MODERATE} & 20--50\,\% & [VALEUR] & [VALEUR]\,\% \\
+\texttt{VOLATILE} & > 50\,\% & [VALEUR] & [VALEUR]\,\% \\
+\bottomrule
+\end{tabularx}
+\caption{Classification de la stabilité des domaines à l'échelle quotidienne}
+\label{tab:stability_classes}
+\end{table}
+
+[VALEUR]\,\% des domaines mesurés sont soit \texttt{VERY\_STABLE} soit \texttt{STABLE}, indiquant que leurs réponses DNS changent de moins de 20\,\% des adresses IP par jour. \textbf{Figure 4.5} illustre la distribution de stabilité aux trois échelles temporelles. [TODO : diagramme en barres empilées]
+
+\subsection{Corrélation TTL et taux de changement}
+\label{subsec:4.3.3}
+
+La corrélation de rang de Spearman entre le TTL médian des enregistrements A de chaque domaine et son taux de changement quotidien est :
+
+\[
+\rho = \text{[VALEUR]}, \quad p = \text{[VALEUR]}
+\]
+
+Ce résultat [confirme / ne confirme pas] l'hypothèse que les domaines avec des TTL courts présentent des changements d'adresses IP plus fréquents.
+
+\textbf{Figure 4.6} --- Nuage de points (axe x en échelle log) : TTL médian vs. taux de changement quotidien par domaine, coloré par catégorie de diversité. [TODO : générer depuis l'analyse de corrélation]
+
+\subsection{Domaines les plus volatils}
+\label{subsec:4.3.4}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{r X r r l l}
+\toprule
+\textbf{Rang} & \textbf{Domaine} & \textbf{Taux de changement} & \textbf{TTL (s)} & \textbf{Fournisseur} & \textbf{Catégorie} \\
+\midrule
+1 & [DOMAINE] & [VALEUR]\,\% & [VALEUR] & [VALEUR] & [VALEUR] \\
+2 & [DOMAINE] & [VALEUR]\,\% & [VALEUR] & [VALEUR] & [VALEUR] \\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots \\
+10 & [DOMAINE] & [VALEUR]\,\% & [VALEUR] & [VALEUR] & [VALEUR] \\
+\bottomrule
+\end{tabularx}
+\caption{Les dix domaines les plus volatils par taux de changement quotidien}
+\label{tab:volatile_domains}
+\end{table}
+
+\bigskip
+\section{Résultats pour Q3 : évaluation du biais géographique de RIPE Atlas}
+\label{sec:4.4}
+
+\subsection{Résultats de l'expérience de sous-échantillonnage}
+\label{subsec:4.4.1}
+
+\textbf{Question de recherche} : Les biais géographiques de la distribution des sondes RIPE Atlas limitent-ils significativement la capacité à observer la variation DNS géographique ?
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r}
+\toprule
+\textbf{Stratégie d'échantillonnage} & \textbf{IP moyennes} & \textbf{Jaccard médian} & \textbf{Domaines HIGH\_DIVERSITY} \\
+\midrule
+\texttt{ACTUAL} (ensemble de sondes déployé) & [VALEUR] & [VALEUR] & [VALEUR] ([VALEUR]\,\%) \\
+\texttt{UNIFORM} (sondes égales par continent) & [VALEUR] & [VALEUR] & [VALEUR] ([VALEUR]\,\%) \\
+\texttt{EUROPE\_NA\_ONLY} (91\,\% naturel) & [VALEUR] & [VALEUR] & [VALEUR] ([VALEUR]\,\%) \\
+\bottomrule
+\end{tabularx}
+\caption{Diversité géographique observée selon trois stratégies d'échantillonnage de sondes}
+\label{tab:sampling_strategies}
+\end{table}
+
+\textbf{Figure 4.7} --- Boîtes à moustaches : distribution du nombre d'IP distinctes par domaine selon les trois stratégies d'échantillonnage. [TODO : générer depuis l'analyse de sous-échantillonnage]
+
+\subsection{Tests de signification statistique}
+\label{subsec:4.4.2}
+
+Le test de Wilcoxon des rangs signés (par paires, non paramétrique) comparant les distributions du nombre d'IP distinctes par domaine donne les résultats suivants :
+
+\textbf{ACTUAL vs. UNIFORM} :
+
+\[
+W = \text{[VALEUR]}, \quad p = \text{[VALEUR]}
+\]
+
+\textbf{ACTUAL vs. EUROPE\_NA\_ONLY} :
+
+\[
+W = \text{[VALEUR]}, \quad p = \text{[VALEUR]}
+\]
+
+\subsection{Contribution unique en IP par région}
+\label{subsec:4.4.3}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r}
+\toprule
+\textbf{Région} & \textbf{Part de sondes} & \textbf{Contrib. IP unique} & \textbf{Ratio} \\
+\midrule
+Europe & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR] \\
+Amérique du Nord & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR] \\
+Asie-Pacifique & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR] \\
+Amérique du Sud & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR] \\
+Afrique & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR] \\
+Océanie & [VALEUR]\,\% & [VALEUR]\,\% & [VALEUR] \\
+\bottomrule
+\end{tabularx}
+\caption{Contribution unique en adresses IP par région}
+\label{tab:ip_contribution}
+\end{table}
+
+\textbf{Figure 4.8} --- Diagramme en barres : contribution IP unique vs. part de sondes, par région. [TODO : générer depuis l'analyse de contribution régionale]
+
+\subsection{Changements de classification induits par la stratégie d'échantillonnage}
+\label{subsec:4.4.4}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r}
+\toprule
+\textbf{Changement de classification} & \textbf{ACTUAL$\to$UNIFORM} & \textbf{ACTUAL$\to$EU/NA} \\
+\midrule
+\texttt{UNIFORM} $\to$ \texttt{LOW\_DIVERSITY} ou supérieur & [VALEUR] & [VALEUR] \\
+\texttt{LOW\_DIVERSITY} $\to$ \texttt{MEDIUM\_DIVERSITY} ou supérieur & [VALEUR] & [VALEUR] \\
+\texttt{MEDIUM\_DIVERSITY} $\to$ \texttt{HIGH\_DIVERSITY} & [VALEUR] & [VALEUR] \\
+\textbf{Total reclassifié} & \textbf{[VALEUR] ([VALEUR]\,\%)} & \textbf{[VALEUR] ([VALEUR]\,\%)} \\
+\bottomrule
+\end{tabularx}
+\caption{Reclassifications de domaines induites par le changement de stratégie d'échantillonnage}
+\label{tab:reclassifications}
+\end{table}
+
+\bigskip
+\section{Résultats pour Q4 : impact du choix de résolveur}
+\label{sec:4.5}
+
+\subsection{Distribution des résolveurs dans la campagne supplémentaire}
+\label{subsec:4.5.1}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r}
+\toprule
+\textbf{Type de résolveur} & \textbf{Sondes} & \textbf{\%} \\
+\midrule
+Résolveur ISP local (inféré) & [VALEUR] & [VALEUR]\,\% \\
+Google Public DNS (8.8.8.8 / 8.8.4.4) & [VALEUR] & [VALEUR]\,\% \\
+Cloudflare (1.1.1.1 / 1.0.0.1) & [VALEUR] & [VALEUR]\,\% \\
+Quad9 (9.9.9.9) & [VALEUR] & [VALEUR]\,\% \\
+Autre résolveur public identifié & [VALEUR] & [VALEUR]\,\% \\
+\bottomrule
+\end{tabularx}
+\caption{Classification des résolveurs dans le bras de campagne ISP}
+\label{tab:resolver_classification}
+\end{table}
+
+\subsection{Comparaison par paires des adresses IP}
+\label{subsec:4.5.2}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{p{5cm} r X}
+\toprule
+\textbf{Comparaison} & \textbf{Jaccard moyen} & \textbf{Interprétation} \\
+\midrule
+\texttt{auth\_direct} vs \texttt{isp\_resolver} & [VALEUR] & Le résolveur ISP reflète la localisation réseau de la sonde \\
+\texttt{auth\_direct} vs \texttt{public\_dns} & [VALEUR] & Ampleur du problème DNS distant \\
+\texttt{auth\_direct} vs \texttt{public\_dns\_noecs} & [VALEUR] & Divergence DNS public pur sans ECS \\
+\texttt{isp\_resolver} vs \texttt{public\_dns} & [VALEUR] & Impact d'ECS sur la précision du routage \\
+\texttt{isp\_resolver} vs \texttt{public\_dns\_noecs} & [VALEUR] & Effet de la localisation du résolveur sans ECS \\
+\texttt{public\_dns} vs \texttt{public\_dns\_noecs} & [VALEUR] & Contribution ECS isolée \\
+\bottomrule
+\end{tabularx}
+\caption{Similarité de Jaccard moyenne par paires entre les bras de campagne}
+\label{tab:pairwise_jaccard}
+\end{table}
+
+\textbf{Figure 4.9} --- Histogrammes de la similarité de Jaccard par domaine pour chaque paire de comparaison. [TODO : figure à six panneaux depuis l'analyse Q4]
+
+\subsection{Désagrégation géographique de l'impact du résolveur}
+\label{subsec:4.5.3}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r}
+\toprule
+\textbf{Continent} & \textbf{Jaccard moyen} & \textbf{Écart-type} & \textbf{Domaines Jaccard < 0,5} \\
+\midrule
+Europe & [VALEUR] & [VALEUR] & [VALEUR]\,\% \\
+Amérique du Nord & [VALEUR] & [VALEUR] & [VALEUR]\,\% \\
+Asie-Pacifique & [VALEUR] & [VALEUR] & [VALEUR]\,\% \\
+Amérique du Sud & [VALEUR] & [VALEUR] & [VALEUR]\,\% \\
+Afrique & [VALEUR] & [VALEUR] & [VALEUR]\,\% \\
+Océanie & [VALEUR] & [VALEUR] & [VALEUR]\,\% \\
+\bottomrule
+\end{tabularx}
+\caption{Similarité de Jaccard moyenne ISP vs.\ Google DNS (sans ECS) par continent}
+\label{tab:jaccard_by_continent}
+\end{table}
+
+\textbf{Figure 4.10} --- Carte choroplèthe : similarité de Jaccard moyenne \texttt{isp\_resolver} vs. \texttt{public\_dns\_noecs} par pays. [TODO : générer depuis la désagrégation géographique]
+
+\subsection{Tests statistiques}
+\label{subsec:4.5.4}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X r r r}
+\toprule
+\textbf{Comparaison} & \textbf{Stat. U} & \textbf{p-valeur corr.} & \textbf{Sig.\ ($\alpha$=0,05/6)} \\
+\midrule
+\texttt{auth\_direct} vs \texttt{isp\_resolver} & [VALEUR] & [VALEUR] & [OUI/NON] \\
+\texttt{auth\_direct} vs \texttt{public\_dns} & [VALEUR] & [VALEUR] & [OUI/NON] \\
+\texttt{auth\_direct} vs \texttt{public\_dns\_noecs} & [VALEUR] & [VALEUR] & [OUI/NON] \\
+\texttt{isp\_resolver} vs \texttt{public\_dns} & [VALEUR] & [VALEUR] & [OUI/NON] \\
+\texttt{isp\_resolver} vs \texttt{public\_dns\_noecs} & [VALEUR] & [VALEUR] & [OUI/NON] \\
+\texttt{public\_dns} vs \texttt{public\_dns\_noecs} & [VALEUR] & [VALEUR] & [OUI/NON] \\
+\bottomrule
+\end{tabularx}
+\caption{Tests statistiques pour les paires de comparaison de résolveurs (Mann-Whitney U, correction de Bonferroni)}
+\label{tab:statistical_tests}
+\end{table}
+
+\bigskip
+\section{Synthèse des résultats}
+\label{sec:4.6}
+
+\subsection{Réponses aux questions de recherche}
+\label{subsec:4.6.1}
+
+\textbf{Q1 --- Diversité géographique} : [VALEUR]\,\% des domaines Tranco Top 10K mesurés retournent des réponses DNS géographiquement différenciées (au moins \texttt{LOW\_DIVERSITY}), et [VALEUR]\,\% présentent une forte différenciation géographique (\texttt{MEDIUM} ou \texttt{HIGH}). Parmi les domaines très diversifiés, [VALEUR]\,\% sont principalement dus au routage CDN DNS et [VALEUR]\,\% à la sélection d'instance anycast.
+
+\textbf{Q2 --- Stabilité temporelle} : Le taux de changement DNS quotidien moyen est de [VALEUR]\,\%, avec [VALEUR]\,\% des domaines classifiés \texttt{VERY\_STABLE} ou \texttt{STABLE} (taux de changement quotidien < 20\,\%). La stabilité temporelle [est / n'est pas] significativement corrélée avec le TTL des enregistrements A (Spearman $\rho$ = [VALEUR], p = [VALEUR]).
+
+\textbf{Q3 --- Biais géographique RIPE Atlas} : La stratégie de stratification géographique employée dans ce mémoire [augmente significativement / n'augmente pas significativement] la diversité observée par rapport à un déploiement naïf Europe/Amérique du Nord uniquement (Wilcoxon p = [VALEUR]). [RÉGION] présente la contribution unique en IP la plus élevée par sonde ([VALEUR]).
+
+\textbf{Q4 --- Impact du résolveur} : La similarité de Jaccard moyenne résolveur ISP vs. Google Public DNS de [VALEUR] confirme [des preuves modérées / fortes / faibles] du problème DNS distant dans la population de sondes RIPE Atlas. ECS représente [VALEUR]\,\% de la correction de divergence entre Google DNS et les résolveurs ISP locaux.
+
+\subsection{Résultats inattendus}
+\label{subsec:4.6.2}
+
+\textbf{Résultat inattendu 1} : [DESCRIPTION --- à compléter après analyse.] Ce résultat contraste avec [ATTENTE ANTÉRIEURE basée sur la littérature] et peut indiquer [HYPOTHÈSE].
+
+\textbf{Résultat inattendu 2} : [DESCRIPTION --- à compléter après analyse.] [Contexte supplémentaire.]
+
+\subsection{Limites des résultats}
+\label{subsec:4.6.3}
+
+Les résultats présentés dans ce chapitre sont soumis aux contraintes suivantes, discutées plus en détail au chapitre~5 :
+
+\begin{itemize}
+  \item \textbf{Période de mesure} : Trois mois de collecte capturent les dynamiques quotidiennes et hebdomadaires mais ne peuvent pas détecter la saisonnalité annuelle ni les tendances d'évolution d'infrastructure sur plusieurs années.
+  \item \textbf{Corpus de domaines} : Les résultats sont représentatifs des domaines populaires Tranco Top 10\,000 ; l'extrapolation à la longue traîne des domaines moins populaires nécessiterait une étude séparée.
+  \item \textbf{Biais de la plateforme} : Malgré la stratification géographique, la couverture des sondes RIPE Atlas reste inégale entre les continents.
+  \item \textbf{Précision temporelle} : La désynchronisation des mesures jusqu'à une heure~\cite{Holterbach2015} affecte la précision des comparaisons multi-sondes simultanées.
+\end{itemize}
+\bigskip
+\textit{Le chapitre~5 interprète ces résultats au regard de la littérature existante, discute les limites de l'étude, et identifie des directions pour des recherches futures.}

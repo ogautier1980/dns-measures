@@ -49,22 +49,26 @@ Ce document contient toutes les requêtes et stratégies de recherche pour const
   - Fiche : [sources/fiches/bortzmeyer_dns_measurements_atlas.md](../sources/fiches/bortzmeyer_dns_measurements_atlas.md)
   - Intérêt : Tutorial pratique mesures DNS avec Atlas, interfaces API/Web/CLI, pièges
 
-- [ ] Bajpai & Schönwälder - "Benefits and Limitations of RIPE Atlas Tags" (IM 2017)
+- [X] Bajpai & Schönwälder - "Vantage Point Selection for IPv6 Measurements" (IM 2017)
   - URL : https://vaibhavbajpai.com/documents/papers/proceedings/ripeatlas-im-2017.pdf
-  - Intérêt : Organisation et tags mesures RIPE Atlas
+  - Fiche : [sources/fiches/bajpai2017_ripeatlas_tags.md](../sources/fiches/bajpai2017_ripeatlas_tags.md)
+  - Intérêt : Sélection vantage points, tags système/utilisateur, biais IPv6/dual-stack
 
-- [ ] "Quantifying Interference between Measurements on the RIPE Atlas Platform" (IMC 2015)
+- [X] "Quantifying Interference between Measurements on the RIPE Atlas Platform" (IMC 2015)
   - URL : https://conferences2.sigcomm.org/imc/2015/papers/p437.pdf
-  - Intérêt : Impact mesures simultanées, DNS delays
+  - Fiche : [sources/fiches/holterbach2015_ripeatlas_interference.md](../sources/fiches/holterbach2015_ripeatlas_interference.md)
+  - Intérêt : Impact mesures simultanées, DNS delays (→ voir aussi entrée Holterbach ci-dessous)
 
-- [ ] "Detecting DNS Root Manipulation" (ICIR)
+- [X] "Detecting DNS Root Manipulation" (ICIR/IEEE S&P 2016)
   - URL : https://www.icir.org/mallman/pubs/JFP+16/JFP+16.pdf
-  - Intérêt : Détection manipulation DNS via RIPE Atlas
+  - Fiche : [sources/fiches/johnson2016_dns_root_manipulation.md](../sources/fiches/johnson2016_dns_root_manipulation.md)
+  - Intérêt : Détection manipulation DNS via RIPE Atlas, censure, proxies
 
 **Applications RIPE Atlas** :
-- [ ] "RIPEn at Home – Surveying Internal Domain Names using RIPE Atlas" (TMA 2024)
+- [X] "RIPEn at Home – Surveying Internal Domain Names using RIPE Atlas" (TMA 2024)
   - URL : https://dl.ifip.org/db/conf/tma/tma2024/tma2024poster-final1.pdf
-  - Intérêt : Mesures DNS internes avec Atlas
+  - Fiche : [sources/fiches/boswell2024_internal_names_ripeatlas.md](../sources/fiches/boswell2024_internal_names_ripeatlas.md)
+  - Intérêt : Mesures DNS noms internes avec Atlas, collisions TLD, réseaux domestiques
 
 **Anycast et DNS** :
 - [ ] Finnegan, K. - "Measuring Anycast DNS Services Using RIPE Atlas" (RIPE Labs)
@@ -78,6 +82,32 @@ Ce document contient toutes les requêtes et stratégies de recherche pour const
 - [ ] "Seeing the World with RIPE Atlas" (RIPE Labs - Verizon Digital)
   - URL : https://labs.ripe.net/author/verizon_digital/seeing-the-world-with-ripe-atlas/
   - Intérêt : Use case CDN/DNS global perspective
+
+**CDN et anycast** :
+- [X] Calder et al. (2015) - "Analyzing the Performance of an Anycast CDN" (IMC)
+  - Fiche : [sources/fiches/calder2015_anycast_cdn_performance.md](../sources/fiches/calder2015_anycast_cdn_performance.md)
+  - Intérêt : Performance anycast CDN, BGP routing, diversité géographique, Microsoft Bing
+
+- [X] Koch et al. (2021) - "Anycast in Context: Root DNS vs CDN" (SIGCOMM)
+  - Fiche : [sources/fiches/koch2021_anycast_context.md](../sources/fiches/koch2021_anycast_context.md)
+  - Intérêt : Comparaison anycast root DNS vs CDN, inflation latence, incitations économiques
+
+- [X] Hours et al. (2016) - "Impact of DNS Resolvers on CDN Performance"
+  - Fiche : [sources/fiches/hours2016_dns_resolvers_cdn_impact.md](../sources/fiches/hours2016_dns_resolvers_cdn_impact.md)
+  - Intérêt : Causalité résolveurs DNS / performance CDN, Akamai, Google DNS, Bayesian networks
+
+- [X] Wang et al. (2018) - "Evolution and Challenges of DNS-based CDNs" (survey)
+  - Fiche : [sources/fiches/wang2018_dns_cdn_challenges.md](../sources/fiches/wang2018_dns_cdn_challenges.md)
+  - Intérêt : ECS/EDNS Client Subnet, remote DNS, vie privée, redirection géographique
+
+**Sécurité et abus DNS** :
+- [X] van der Toorn et al. (2018) - "Snowshoe Spam Detection via Active DNS Measurement" (OpenINTEL)
+  - Fiche : [sources/fiches/vanderToorn2018_snowshoe_spam_dns.md](../sources/fiches/vanderToorn2018_snowshoe_spam_dns.md)
+  - Intérêt : Application OpenINTEL à la détection spam, machine learning sur données DNS
+
+- [X] Xu et al. (2023) - "Measuring DNS Infrastructure Centrality"
+  - Fiche : [sources/fiches/xu2023_dns_infrastructure_centrality.md](../sources/fiches/xu2023_dns_infrastructure_centrality.md)
+  - Intérêt : Centralisation infrastructure DNS, oligopole résolveurs, single point of failure
 
 **Interférence mesures** :
 - [X] Holterbach et al. (2015) - "Quantifying Interference between Measurements on RIPE Atlas" (IMC)

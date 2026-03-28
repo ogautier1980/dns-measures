@@ -61,6 +61,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     net-tools \
     # Pour les graphiques
     graphviz \
+    plantuml \
     # Bibliotheques pour Python packages
     libffi-dev \
     libssl-dev \

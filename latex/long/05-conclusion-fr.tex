@@ -1,0 +1,578 @@
+% Chapter 5 — auto-generated from chapitre5_conclusion.md
+% Edit the Markdown source, not this file.
+
+\chapter{Chapitre 5 - Discussion et conclusion}
+
+\section{Discussion des résultats}
+\label{sec:5.1}
+
+\subsection{Interprétation de la diversité géographique (Q1)}
+\label{subsec:5.1.1}
+
+\textbf{Observation principale} : XX.X\% des domaines Tranco Top 10K présentent une diversité géographique des réponses DNS.
+
+\textbf{Comparaison avec la littérature} :
+
+Nos résultats [confirment / contredisent / nuancent] les observations de la littérature existante :
+
+\begin{itemize}
+  \item \textbf{Calder et al.___P0_CMD___} ont montré que 80\% des clients anycast CDN sont bien servis géographiquement, 20\% suboptimal. Nos mesures révèlent que [XX\% des domaines utilisent effectivement anycast, cohérent avec / différent de ces proportions].
+\end{itemize}
+
+\begin{itemize}
+  \item \textbf{Koch et al.___P1_CMD___} ont démontré que le contexte applicatif détermine l'importance de l'inflation anycast (root DNS >95\% inflation acceptable vs CDN 35\%). Nos données confirment cette distinction : [les domaines CDN présentent un ratio géo-corrélation moyen de X.X, suggérant...].
+\end{itemize}
+
+\begin{itemize}
+  \item \textbf{Wang et al.___P2_CMD___} ont quantifié l'impact des DNS publics distants : 2$\times$ latency vs ISP local. Notre analyse RTT [confirme / infirme] cet ordre de grandeur avec [XX.X ms ISP vs XX.X ms public].
+\end{itemize}
+
+\textbf{Implications pratiques} :
+
+\begin{enumerate}
+  \item \textbf{Pour OpenINTEL et infrastructures similaires} : Mesurer depuis un point unique perd [XX\%] de la diversité géographique. Une extension multi-points améliorerait significativement la complétude.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Pour les chercheurs en performance réseau} : [XX\%] des domaines populaires nécessitent des mesures distribuées pour comprendre leur infrastructure réelle.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Pour les opérateurs CDN} : [Nos observations suggèrent que X providers dominent, avec des stratégies de distribution géographique différentes].
+\end{enumerate}
+
+\subsection{Interprétation de la stabilité temporelle (Q2)}
+\label{subsec:5.1.2}
+
+\textbf{Observation principale} : Taux de changement quotidien moyen = X.X\%, avec XX.X\% de domaines (very) stable.
+
+\textbf{Comparaison avec la littérature} :
+
+\begin{itemize}
+  \item \textbf{van Rijswijk-Deij et al.___P3_CMD___} ont mesuré OpenINTEL sur plusieurs années, démontrant la valeur des mesures longitudinales. Notre période de X mois révèle [des tendances similaires / des patterns différents à court terme].
+\end{itemize}
+
+\begin{itemize}
+  \item \textbf{Le Pochat et al.___P4_CMD___} ont observé 0.6\% de changement quotidien dans Tranco (liste elle-même), tandis que les enregistrements DNS changent [beaucoup plus / similairement] à X.X\%.
+\end{itemize}
+
+\textbf{Corrélation TTL ___P66_MATH___ changement} :
+
+Notre hypothèse selon laquelle les domaines avec TTL court changent plus fréquemment est [validée / invalidée] :
+\begin{itemize}
+  \item Corrélation Spearman $\rho$ = -X.XXX (p=X.XXe-XX)
+  \item Interprétation : [Les administrateurs DNS configurent effectivement des TTL courts en anticipation de changements fréquents / Le TTL ne reflète pas la volatilité réelle]
+\end{itemize}
+
+\textbf{Implications pratiques} :
+
+\begin{enumerate}
+  \item \textbf{Fréquence de mesure optimale} : Pour [XX\%] des domaines, mesures [quotidiennes / hebdomadaires] suffisent à capturer les changements.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Archivage DNS} : [X jours] de rétention suffiraient pour [XX\%] des domaines stables, mais les [X\%] volatiles nécessitent archivage quasi-temps-réel.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Simulation réseau} : Les simulateurs peuvent utiliser snapshots [quotidiens / hebdomadaires] pour la majorité des domaines.
+\end{enumerate}
+
+\subsection{Interprétation de l'impact du biais (Q3)}
+\label{subsec:5.1.3}
+
+\textbf{Observation principale} : Le biais géographique RIPE Atlas [impacte / n'impacte pas] significativement la diversité observée (p=X.XXe-XX).
+
+\textbf{Analyse de sensibilité} :
+
+Notre test Wilcoxon comparant ACTUAL vs UNIFORM révèle :
+\begin{itemize}
+  \item [Différence significative / non-significative] entre distributions
+  \item [XX\%] des domaines changent de catégorie de diversité
+  \item Régions sous-représentées (Asie, Afrique) apportent [XX\%] d'IPs uniques malgré [X\%] des sondes
+\end{itemize}
+
+\textbf{Implications méthodologiques} :
+
+\begin{enumerate}
+  \item \textbf{Validité externe} : Nos résultats [sont généralisables / doivent être interprétés avec prudence] car [le biais n'affecte pas significativement les tendances globales / certaines régions sont critiquement sous-échantillonnées].
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Futures études} : Priorité au déploiement de sondes en [Asie / Afrique / Am. Sud] où ratio contribution/disponibilité est le plus élevé (X.X).
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Pondération statistique} : [Nécessaire / Non nécessaire] d'appliquer une pondération inverse pour compenser le biais dans les analyses agrégées.
+\end{enumerate}
+
+\textbf{Comparaison avec Bajpai et al.___P5_CMD___} :
+
+Bajpai et al. avaient identifié le biais 91\% RIPE+ARIN en 2017. Notre analyse de 2026 [confirme la persistance / montre une amélioration] de ce biais. Leur recommandation d'utiliser des tags de sélection géographique est [validée / insuffisante] par nos résultats.
+
+\subsection{Interprétation de l'impact du resolver (Q4)}
+\label{subsec:5.1.4}
+
+\textbf{Observation principale} : Similarité moyenne Public vs ISP = X.XXX, ECS [améliore / n'améliore pas] significativement (p=X.XXe-XX).
+
+\textbf{Validation hypothèse ECS} :
+
+Wang et al.~\cite{Wang2018} ont proposé qu'ECS résout le problème des DNS publics distants. Nos mesures empiriques [confirment / infirment] cette hypothèse :
+\begin{itemize}
+  \item Resolvers ECS-enabled : Jaccard moyen = X.XXX vs ISP local
+  \item Resolvers non-ECS : Jaccard moyen = X.XXX vs ISP local
+  \item Différence [statistiquement significative / non-significative]
+\end{itemize}
+
+\textbf{Cas des providers CDN} :
+
+[XX\%] des domaines montrent une divergence significative (Jaccard <0.5) selon le resolver. Cette divergence est particulièrement marquée pour :
+\begin{itemize}
+  \item [Provider 1] : [XX\%] domaines divergents
+  \item [Provider 2] : [XX\%] domaines divergents
+\end{itemize}
+
+Suggérant que [certains CDN ne supportent pas bien ECS / implémentent des stratégies de redirection DNS spécifiques au resolver].
+
+\textbf{Privacy vs Performance trade-off} :
+
+Hours et al.~\cite{Hours2016} ont montré l'impact causal des resolvers sur la performance CDN. Notre analyse RTT [confirme / nuance] leurs résultats :
+\begin{itemize}
+  \item Resolvers publics : [XX.X ms] plus [lents / rapides] que ISP local
+  \item Mais avec ECS : [réduction / augmentation] de [X\%] de cet écart
+\end{itemize}
+
+Le trade-off privacy (ECS expose préfixe IP client) vs performance (optimisation CDN) reste [pertinent / atténué dans nos observations].
+
+\subsection{Résultats inattendus et implications}
+\label{subsec:5.1.5}
+
+[À compléter après analyse des données réelles]
+
+\textbf{Résultat inattendu 1} : [Description]
+\begin{itemize}
+  \item \textbf{Observation} : [...]
+  \item \textbf{Hypothèses explicatives} : [...]
+  \item \textbf{Implications} : [...]
+  \item \textbf{Validation nécessaire} : [...]
+\end{itemize}
+
+\textbf{Résultat inattendu 2} : [Description]
+\begin{itemize}
+  \item \textbf{Observation} : [...]
+  \item \textbf{Hypothèses explicatives} : [...]
+  \item \textbf{Implications} : [...]
+  \item \textbf{Validation nécessaire} : [...]
+\end{itemize}
+\bigskip
+\section{Limitations de l'étude}
+\label{sec:5.2}
+
+\subsection{Limitations méthodologiques}
+\label{subsec:5.2.1}
+
+\textbf{Période de collecte} :
+\begin{itemize}
+  \item \textbf{Limitation} : X mois de collecte vs plusieurs années pour OpenINTEL
+  \item \textbf{Impact} : Tendances saisonnières, événements ponctuels (migrations CDN) potentiellement manqués
+  \item \textbf{Mitigation} : Analyse focused sur patterns court-terme, reproductibilité permet extension future
+\end{itemize}
+
+\textbf{Couverture domaines} :
+\begin{itemize}
+  \item \textbf{Limitation} : Top 10K Tranco vs 123M domaines OpenINTEL
+  \item \textbf{Impact} : Résultats valides pour domaines populaires, généralisation limitée à long tail
+  \item \textbf{Mitigation} : Tranco Top 10K représente les sites critiques (Google, Facebook, Amazon, etc.)
+\end{itemize}
+
+\textbf{Biais géographique} :
+\begin{itemize}
+  \item \textbf{Limitation} : 91\% sondes Europe+NA, sous-représentation Asie/Afrique/Am. Sud
+  \item \textbf{Impact} : [Modéré / Significatif] selon résultats Q3
+  \item \textbf{Mitigation} : Analyse de sensibilité, pondération statistique, transparence sur limitation
+\end{itemize}
+
+\subsection{Limitations techniques}
+\label{subsec:5.2.2}
+
+\textbf{Interférence RIPE Atlas} :
+\begin{itemize}
+  \item \textbf{Limitation} : Holterbach et al.~\cite{Holterbach2015} ont montré désynchronisation jusqu'à 1h
+  \item \textbf{Impact} : Timing measurements potentiellement biaisés, fenêtre temporelle imprécise
+  \item \textbf{Mitigation} : Utilisation timestamps réels, tolérance $\pm$2h, filtrage outliers >4h
+\end{itemize}
+
+\textbf{Filtrage lying resolvers} :
+\begin{itemize}
+  \item \textbf{Limitation} : Méthode heuristique (détection réponses minoritaires)
+  \item \textbf{Impact} : Faux positifs possibles (réponses légitimes mais rares)
+  \item \textbf{Mitigation} : Seuils conservateurs (5\% fréquence minimum), validation manuelle échantillon
+\end{itemize}
+
+\textbf{Identification providers CDN} :
+\begin{itemize}
+  \item \textbf{Limitation} : Inférence basée sur AS mapping et patterns DNS, pas toujours fiable
+  \item \textbf{Impact} : [XX\%] domaines non-identifiés, classifications possiblement erronées
+  \item \textbf{Mitigation} : Validation croisée avec WHOIS, reverse DNS, documentation publique
+\end{itemize}
+
+\subsection{Limitations d'interprétation}
+\label{subsec:5.2.3}
+
+\textbf{Corrélation vs causalité} :
+\begin{itemize}
+  \item \textbf{Exemple} : TTL court $\leftrightarrow$ changements fréquents
+  \item \textbf{Problème} : Corrélation ne prouve pas que TTL court \textit{cause} changements (causalité inverse possible)
+  \item \textbf{Mitigation} : Prudence interprétation, proposition hypothèses alternatives
+\end{itemize}
+
+\textbf{Effet ECS difficile à isoler} :
+\begin{itemize}
+  \item \textbf{Problème} : Resolvers ECS-enabled (Google, Cloudflare) $\neq$ seule différence avec ISP local
+  \item \textbf{Confounders} : Infrastructure resolver, peering agreements, géolocalisation resolver
+  \item \textbf{Mitigation} : Tests statistiques multivariés, analyse de sensibilité
+\end{itemize}
+
+\textbf{Généralisation au-delà de Tranco Top 10K} :
+\begin{itemize}
+  \item \textbf{Problème} : Domaines populaires $\neq$ tous domaines (long tail très différente)
+  \item \textbf{Impact} : Résultats valides pour 10K sites majeurs, extrapolation risquée
+  \item \textbf{Mitigation} : Transparence sur scope, suggestions études complémentaires
+\end{itemize}
+\bigskip
+\section{Contributions de ce travail}
+\label{sec:5.3}
+
+\subsection{Contributions scientifiques}
+\label{subsec:5.3.1}
+
+\textbf{Contribution empirique principale} :
+
+Première quantification systématique de la diversité géographique des réponses DNS pour les domaines populaires, validée sur [X mois] de collecte continue avec \textasciitilde{}100 vantage points mondiaux.
+
+\textbf{Résultats quantitatifs} :
+\begin{itemize}
+  \item XX.X\% des domaines Tranco Top 10K présentent diversité géographique
+  \item Taux changement quotidien moyen = X.X\%
+  \item Impact biais RIPE Atlas [significatif / modéré / négligeable]
+  \item ECS [améliore / n'améliore pas] significativement similarité Public vs ISP
+\end{itemize}
+
+\textbf{Validation empirique} :
+
+Nos résultats [confirment / infirment / nuancent] plusieurs hypothèses de la littérature :
+\begin{itemize}
+  \item [OK] Anycast inflation \cite{Koch2021} : [Confirmé avec...]
+  \item [OK] Impact remote DNS \cite{Wang2018} : [Confirmé avec...]
+  \item [OK] ECS mitigation (RFC\textasciitilde{}7871~\cite{RFC7871}) : [Confirmé partiellement avec...]
+\end{itemize}
+
+\subsection{Contributions méthodologiques}
+\label{subsec:5.3.2}
+
+\textbf{Méthodologie reproductible} :
+
+Documentation complète permettant reproduction exacte de l'étude :
+\begin{itemize}
+  \item Configuration RIPE Atlas détaillée (JSON complet)
+  \item Pipeline de traitement open source (GitHub)
+  \item Schémas de données (Avro, Parquet)
+  \item Analyses statistiques reproductibles (notebooks Jupyter)
+\end{itemize}
+
+\textbf{Best practices RIPE Atlas} :
+
+Méthodologie réutilisable pour futures études DNS distribuées :
+\begin{itemize}
+  \item Stratégie sélection sondes (4 critères + pondération géographique)
+  \item Gestion interférence (filtrage hardware, tolérance timing)
+  \item Optimisation crédits (4 stratégies documentées)
+  \item Filtrage qualité (3 filtres + taux exclusion attendus)
+\end{itemize}
+
+\textbf{Architecture système} :
+
+Adaptation OpenINTEL pour RIPE Atlas :
+\begin{itemize}
+  \item Pipeline 5 étapes (Input $\rightarrow$ Measurement $\rightarrow$ Collection $\rightarrow$ Storage $\rightarrow$ Analysis)
+  \item Stockage 2-tiers (Avro + Parquet)
+  \item Analyses quantitatives Q1-Q4 avec code Python complet
+\end{itemize}
+
+\subsection{Contributions de données}
+\label{subsec:5.3.3}
+
+\textbf{Dataset public} :
+
+Publication d'un dataset unique combinant :
+\begin{itemize}
+  \item [XX millions] de mesures DNS
+  \item Couverture Tranco Top 10K
+  \item Distribution mondiale (\textasciitilde{}100 vantage points, 6 continents)
+  \item Période longitudinale [X mois]
+  \item Format FAIR (Findable, Accessible, Interoperable, Reusable)
+\end{itemize}
+
+\textbf{Accessibilité} :
+\begin{itemize}
+  \item DOI Zenodo permanent : [À attribuer]
+  \item Licence CC BY 4.0 (réutilisation libre avec attribution)
+  \item Formats ouverts (Avro, Parquet, CSV)
+  \item Documentation méthodologique complète
+  \item Scripts d'analyse fournis
+\end{itemize}
+
+\textbf{Impact attendu} :
+
+Ce dataset permettra :
+\begin{itemize}
+  \item Validation/comparaison avec futures études DNS
+  \item Analyses secondaires (questions non explorées ici)
+  \item Enseignement (exemples réels pour cours réseaux/sécurité)
+  \item Benchmark pour nouveaux algorithmes (CDN selection, anycast routing)
+\end{itemize}
+\bigskip
+\section{Perspectives et travaux futurs}
+\label{sec:5.4}
+
+\subsection{Extensions immédiates}
+\label{subsec:5.4.1}
+
+\textbf{Extension temporelle} :
+
+Poursuivre la collecte au-delà de [X mois] pour :
+\begin{itemize}
+  \item Capturer tendances saisonnières (été vs hiver, événements commerciaux)
+  \item Identifier migrations CDN long-terme
+  \item Valider stabilité temporelle sur années
+  \item Corréler avec événements géopolitiques/techniques
+\end{itemize}
+
+\textbf{Extension spatiale} :
+
+Améliorer couverture géographique :
+\begin{itemize}
+  \item Cibler déploiement sondes en Asie, Afrique, Am. Sud (régions sous-représentées)
+  \item Collaborer avec opérateurs locaux (ISP, universités)
+  \item Valider si régions sous-représentées apportent diversité critique
+\end{itemize}
+
+\textbf{Extension thématique} :
+
+Étendre types de mesures :
+\begin{itemize}
+  \item \textbf{IPv6} : Mesures AAAA records (adoption IPv6, diversité géographique IPv6 vs IPv4)
+  \item \textbf{Email} : MX records (centralisation infrastructure email)
+  \item \textbf{Délégation} : NS records (structure hiérarchique DNS)
+  \item \textbf{DNSSEC} : DS, DNSKEY records (adoption sécurité DNS)
+\end{itemize}
+
+\subsection{Nouvelles questions de recherche}
+\label{subsec:5.4.2}
+
+\textbf{Q5 : Diversité IPv6 vs IPv4} :
+
+Les réponses DNS IPv6 (AAAA) présentent-elles la même diversité géographique que IPv4 (A) ?
+\begin{itemize}
+  \item Hypothèse : IPv6 adoption moindre $\rightarrow$ potentiellement moins de diversité CDN
+  \item Méthode : Mesures dual-stack (A + AAAA) depuis mêmes vantage points
+  \item Impact : Informer migration IPv6
+\end{itemize}
+
+\textbf{Q6 : Corrélation avec incidents sécurité} :
+
+Peut-on détecter précocement campagnes malveillantes via anomalies DNS ?
+\begin{itemize}
+  \item Approche : Combiner nos données historiques avec feeds malware (URLhaus, Abuse.ch)
+  \item Méthode : Identifier patterns DNS précédant inclusion blacklists
+  \item Impact : Détection proactive phishing/C\&C
+\end{itemize}
+
+\textbf{Q7 : Centralisation email vs web} :
+
+La centralisation DNS \cite{Xu2023} affecte-t-elle également l'infrastructure email ?
+\begin{itemize}
+  \item Méthode : Analyse MX records Tranco Top 10K
+  \item Comparaison : Providers web (Cloudflare, AWS) vs email (Google Workspace, Microsoft 365)
+  \item Impact : Souveraineté numérique, RGPD
+\end{itemize}
+
+\subsection{Améliorations méthodologiques}
+\label{subsec:5.4.3}
+
+\textbf{Machine Learning pour CDN classification} :
+
+Notre identification providers CDN est heuristique (AS mapping, patterns). Amélioration :
+\begin{itemize}
+  \item \textbf{Features} : TTL, nombre IPs, patterns géographiques, AS, réponses NSID
+  \item \textbf{Labels} : Validation manuelle échantillon + datasets publics (CDNPlanet)
+  \item \textbf{Modèle} : Random Forest ou Gradient Boosting
+  \item \textbf{Validation} : Précision >95\% sur test set
+\end{itemize}
+
+\textbf{Détection automatique lying resolvers} :
+
+Notre filtre lying resolvers utilise seuils fixes (5\% fréquence). Amélioration :
+\begin{itemize}
+  \item \textbf{Approche} : Clustering réponses DNS (DBSCAN, Isolation Forest)
+  \item \textbf{Features} : Réponses DNS, RTT, géolocalisation resolver, AS
+  \item \textbf{Validation} : Comparaison avec baseline OpenINTEL (ground truth)
+\end{itemize}
+
+\textbf{Causalité TTL ___P77_MATH___ changement} :
+
+Notre analyse montre corrélation mais pas causalité. Pour démontrer causalité :
+\begin{itemize}
+  \item \textbf{Approche} : Réseaux bayésiens \cite{Hours2016} ou do-calculus
+  \item \textbf{Variables} : TTL, fréquence changement, type domaine, provider CDN
+  \item \textbf{Impact} : Guider configuration TTL optimale
+\end{itemize}
+
+\subsection{Collaborations et partenariats}
+\label{subsec:5.4.4}
+
+\textbf{OpenINTEL} :
+
+Collaboration potentielle :
+\begin{itemize}
+  \item \textbf{Apport mutuel} : OpenINTEL exhaustivité (.com complet) vs notre diversité géo
+  \item \textbf{Étude jointe} : Comparer réponses DNS même domaine (OpenINTEL NL vs nos 100 points)
+  \item \textbf{Validation} : Identifier domaines où localisation change réponses
+\end{itemize}
+
+\textbf{RIPE NCC} :
+
+Contribution communauté RIPE Atlas :
+\begin{itemize}
+  \item \textbf{Publication RIPE Labs} : Article vulgarisation résultats
+  \item \textbf{Présentation RIPE Meeting} : Partager méthodologie, best practices
+  \item \textbf{Feedback plateforme} : Suggérer améliorations API, documentation
+\end{itemize}
+
+\textbf{Universités partenaires} :
+
+Extension multi-sites avec infrastructures complémentaires :
+\begin{itemize}
+  \item \textbf{M-Lab} : Plateforme mesures similaire, couverture différente
+  \item \textbf{PlanetLab} : Infrastructure académique distribuée
+  \item \textbf{Validation croisée} : Comparer résultats RIPE Atlas vs autres plateformes
+\end{itemize}
+\bigskip
+\section{Conclusion générale}
+\label{sec:5.5}
+
+\subsection{Synthèse du mémoire}
+\label{subsec:5.5.1}
+
+Ce mémoire a abordé la problématique de l'\textbf{archivage DNS spatialement et temporellement distribué}, en réponse à une limitation majeure des infrastructures existantes : l'absence de diversité géographique dans les mesures DNS.
+
+\textbf{Nos contributions} :
+
+\begin{enumerate}
+  \item \textbf{Empirique} : Quantification de la diversité géographique ([XX\%] domaines Tranco Top 10K), stabilité temporelle (X.X\% changement quotidien), impact biais RIPE Atlas et choix resolver.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Méthodologique} : Conception et validation d'un système de mesures DNS distribuées combinant Tranco + RIPE Atlas, avec pipeline reproductible et best practices documentées.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Données} : Publication dataset public ([XX millions] mesures) conforme FAIR principles, réutilisable par la communauté scientifique.
+\end{enumerate}
+
+\textbf{Validation hypothèses} :
+
+Nos résultats empiriques [confirment / infirment / nuancent] les hypothèses de la littérature sur CDN, anycast, ECS et centralisation DNS. [Détail selon résultats Q1-Q4].
+
+\subsection{Réponse à la problématique}
+\label{subsec:5.5.2}
+
+\textbf{Question initiale} : Comment concevoir et déployer un système d'archivage DNS qui capture la diversité géographique des réponses DNS dans le temps ?
+
+\textbf{Réponse} : Notre système opérationnel, déployé durant [X mois], démontre qu'il est \textbf{techniquement faisable et scientifiquement pertinent} d'archiver DNS de manière distribuée. Les résultats quantitatifs valident que :
+
+\begin{enumerate}
+  \item \textbf{La diversité géographique est significative} : [XX\%] des domaines populaires varient selon la localisation, justifiant l'approche distribuée.
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{La stabilité temporelle est hétérogène} : [XX\%] domaines stables (mesures hebdomadaires suffisantes) vs [X\%] volatiles (quotidien nécessaire).
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Les biais sont gérables} : Le biais RIPE Atlas [impacte modérément / significativement] les résultats, mais avec transparence et pondération, les conclusions restent [valides / interprétables].
+\end{enumerate}
+
+\begin{enumerate}
+  \item \textbf{Le choix de resolver importe} : DNS publics vs ISP locaux [divergent significativement / convergent avec ECS], informant les stratégies de mesure futures.
+\end{enumerate}
+
+\subsection{Impact attendu}
+\label{subsec:5.5.3}
+
+\textbf{Recherche académique} :
+
+\begin{itemize}
+  \item \textbf{Performance réseau} : Dataset pour valider modèles CDN, optimisation anycast, protocoles EDNS
+  \item \textbf{Sécurité} : Archivage historique pour investigation incidents, détection campagnes malveillantes
+  \item \textbf{Mesures Internet} : Méthodologie réutilisable pour autres études RIPE Atlas
+  \item \textbf{Enseignement} : Cas d'étude réel pour cours réseaux, DNS, mesures distribuées
+\end{itemize}
+
+\textbf{Industrie et opérateurs} :
+
+\begin{itemize}
+  \item \textbf{CDN providers} : Insights sur distribution géographique effective, comparaisons compétitives
+  \item \textbf{DNS providers} : Validation stratégies ECS, identification domaines à améliorer
+  \item \textbf{Régulateurs} : Données objectives sur centralisation infrastructure DNS (souveraineté numérique)
+\end{itemize}
+
+\textbf{Politiques publiques} :
+
+\begin{itemize}
+  \item \textbf{Souveraineté numérique} : Quantification dépendance providers étrangers (Cloudflare, Google, AWS)
+  \item \textbf{RGPD} : Impact ECS sur privacy (exposition préfixe IP clients)
+  \item \textbf{Résilience} : Identification single points of failure (centralisation documentée par Xu et al., 2023)
+\end{itemize}
+
+\subsection{Leçons apprises}
+\label{subsec:5.5.4}
+
+\textbf{Techniques} :
+
+\begin{itemize}
+  \item RIPE Atlas est une plateforme puissante mais nécessite rigueur méthodologique (interférence, biais)
+  \item Stockage 2-tiers (Avro + Parquet) efficace pour gros volumes (ratio compression 1:X.X)
+  \item Filtrage qualité données crucial (XX\% résultats exclus mais XX\% valides suffisant)
+\end{itemize}
+
+\textbf{Scientifiques} :
+
+\begin{itemize}
+  \item Diversité géographique DNS [plus importante / moins importante] qu'anticipé
+  \item TTL $\neq$ bon prédicteur changements (corrélation [faible / inexistante])
+  \item ECS adoption [résout partiellement / ne résout pas] problème remote DNS
+\end{itemize}
+
+\textbf{Méthodologiques} :
+
+\begin{itemize}
+  \item Reproductibilité nécessite versioning complet (code, données, paramètres)
+  \item Trade-offs inévitables (exhaustivité vs faisabilité, précision vs coût)
+  \item Transparence sur limitations essentielle pour validité scientifique
+\end{itemize}
+
+\subsection{Message final}
+\label{subsec:5.5.5}
+
+Le DNS, infrastructure invisible et critique d'Internet, évolue constamment. Sa nature éphémère et géographiquement diverse nécessite des approches de mesure \textbf{distribuées}, \textbf{longitudinales} et \textbf{transparentes}.
+
+Ce mémoire démontre qu'avec des outils communautaires (RIPE Atlas), des listes robustes (Tranco) et une méthodologie rigoureuse, il est possible de capturer cette complexité et de la rendre accessible à la communauté scientifique.
+
+Les [XX millions] de mesures DNS collectées, désormais publiques, constituent une \textbf{photographie spatio-temporelle} d'Internet en [année 2026]. Elles serviront de référence pour comparer l'évolution future, valider des modèles théoriques, et informer les décisions techniques et politiques sur l'architecture d'Internet.
+
+\textbf{Notre espoir} : Que ce travail inspire d'autres chercheurs à étendre ces mesures, combler les lacunes identifiées (couverture géographique, types d'enregistrements, durée longitudinale), et contribuer collectivement à une meilleure compréhension de l'infrastructure DNS mondiale.
+
+Comme l'écrivait Stéphane Bortzmeyer : \textit{"Le DNS est souvent oublié dans les études de résilience et qualité de service d'Internet"}. Ce mémoire est une modeste contribution pour le rendre \textbf{visible}, \textbf{mesurable} et \textbf{compréhensible}.
+\bigskip
+\textbf{Fin du Chapitre 5 - Discussion et conclusion}

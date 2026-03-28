@@ -1,21 +1,16 @@
 \documentclass[a4paper,11pt]{book}
 
-% Chargement du préambule
-\input{preamble}
+% Chargement du préambule (commun à toutes les versions)
+\input{preamble_fr}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MÉTADONNÉES DU MÉMOIRE - À PERSONNALISER
+%% MÉTADONNÉES DU MÉMOIRE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\titreMemoire}{Mesures DNS dans l'espace et le temps}
-
 \newcommand{\auteurMemoire}{Olivier Gautier}
-
-%% Master 60
 \newcommand{\diplome}{Mémoire présenté en vue de l'obtention du grade de Master 60 en Sciences Informatiques}
-
 \newcommand{\anneeacademique}{2025-2026}
-
 \newcommand{\promoteur}{Fl. Rochet -- J. Dejaeghere}
 \newcommand{\copromoteur}{Pierre Luycx}
 
@@ -24,10 +19,10 @@
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PAGE DE COUVERTURE (NE PAS MODIFIER)
+%% PAGE DE COUVERTURE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\fancyhf{} % Suppression header et footer sur la couverture
+\fancyhf{}
 \pagestyle{fancyplain}
 \begin{tikzpicture}[remember picture,overlay]
     \node[anchor=north west,yshift=-30pt,xshift=30pt]
@@ -87,11 +82,10 @@
 %% PAGES PRÉLIMINAIRES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\justifying % Texte justifié pour toutes les pages suivantes
-\pagestyle{empty}   % Pas de header/footer sur les pages préliminaires
-\onehalfspacing     % Interligne 1.5 à partir d'ici
+\justifying
+\pagestyle{empty}
+\onehalfspacing
 
-% Page blanche
 \clearpage\newpage\hbox{ }\clearpage\newpage
 
 \noindent\textbf{\huge Remerciements}
@@ -108,14 +102,13 @@ Mes remerciements vont aussi à l'équipe de recherche de l'Université de Twent
 Enfin, je remercie ma famille et mes proches pour leur soutien constant durant cette année de Master.
 \end{quote}
 
-% Page blanche
 \clearpage\newpage\hbox{ }\clearpage\newpage
 
 \noindent\textbf{\huge Résumé}
 \bigskip
 
 \begin{quote}
-Le système DNS est une infrastructure critique d'Internet, assurant la traduction des noms de domaine en adresses IP. Les CDN exploitent ce système pour implémenter du géo-routing en retournant des adresses IP différentes selon la localisation du client. Ce mémoire présente une étude empirique de la diversité géographique des réponses DNS pour les 10\,000 domaines les plus populaires (liste Tranco), mesurés quotidiennement pendant 90 jours depuis $\approx$100 vantage points distribués globalement via RIPE Atlas. Nous quantifions la prévalence de cette diversité (Q1), sa stabilité temporelle (Q2), l'impact du biais géographique de RIPE Atlas (Q3), et l'effet du choix de resolver DNS (Q4). Les résultats révèlent que $\approx$30\,\% des domaines présentent une diversité géographique significative, stable sur 90 jours, avec un impact mesurable du biais de la plateforme et du choix du resolver.
+Le système DNS est une infrastructure critique d'Internet, assurant la traduction des noms de domaine en adresses IP. Les CDN exploitent ce système pour implémenter du géo-routage en retournant des adresses IP différentes selon la localisation du client. Ce mémoire présente une étude empirique de la diversité géographique des réponses DNS pour les 10\,000 domaines les plus populaires (liste Tranco), mesurés quotidiennement pendant 90 jours depuis $\approx$100 points de mesure distribués globalement via RIPE Atlas. Nous quantifions la prévalence de cette diversité (Q1), sa stabilité temporelle (Q2), l'impact du biais géographique de RIPE Atlas (Q3), et l'effet du choix de résolveur DNS (Q4). Les résultats révèlent qu'environ 30\,\% des domaines présentent une diversité géographique significative, stable sur 90 jours, avec un impact mesurable du biais de la plateforme et du choix du résolveur.
 \end{quote}
 
 \bigskip
@@ -133,7 +126,6 @@ The DNS is a critical Internet infrastructure translating domain names into IP a
 \bigskip
 \noindent\textbf{Keywords} : DNS, distributed measurements, geolocation, CDN, RIPE Atlas, geographic diversity, Tranco
 
-% Page blanche
 \clearpage\newpage\hbox{ }\clearpage\newpage
 
 \tableofcontents
@@ -144,43 +136,44 @@ The DNS is a critical Internet infrastructure translating domain names into IP a
 \section*{Acronymes}
 
 \begin{description}
-    \item[A:] Address Record (enregistrement DNS IPv4)
-    \item[AAAA:] IPv6 Address Record (enregistrement DNS IPv6)
-    \item[API:] Application Programming Interface
-    \item[AS:] Autonomous System (système autonome BGP)
-    \item[ASN:] Autonomous System Number
-    \item[BGP:] Border Gateway Protocol
-    \item[CDN:] Content Delivery Network
-    \item[CNAME:] Canonical Name Record
-    \item[DNS:] Domain Name System
-    \item[DNSSEC:] DNS Security Extensions
-    \item[DoH:] DNS over HTTPS
-    \item[DoT:] DNS over TLS
-    \item[ECS:] EDNS Client Subnet
-    \item[EDNS:] Extension Mechanisms for DNS
-    \item[GeoIP:] Geolocation IP database
-    \item[HTTP:] HyperText Transfer Protocol
-    \item[HTTPS:] HyperText Transfer Protocol Secure
-    \item[ICANN:] Internet Corporation for Assigned Names and Numbers
-    \item[IETF:] Internet Engineering Task Force
-    \item[IP:] Internet Protocol
-    \item[IPv4:] Internet Protocol version 4
-    \item[IPv6:] Internet Protocol version 6
-    \item[ISP:] Internet Service Provider
-    \item[MX:] Mail Exchanger Record
-    \item[NS:] Name Server Record
-    \item[PoP:] Point of Presence
-    \item[QoS:] Quality of Service
-    \item[RFC:] Request for Comments
-    \item[RIPE:] Réseaux IP Européens
-    \item[RTT:] Round-Trip Time
-    \item[TCP:] Transmission Control Protocol
-    \item[TLD:] Top-Level Domain
-    \item[TLS:] Transport Layer Security
-    \item[TTL:] Time To Live
-    \item[TXT:] Text Record
-    \item[UDP:] User Datagram Protocol
-    \item[URL:] Uniform Resource Locator
+    \item[A :] Address Record (enregistrement DNS IPv4)
+    \item[AAAA :] IPv6 Address Record (enregistrement DNS IPv6)
+    \item[API :] Application Programming Interface
+    \item[AS :] Autonomous System (système autonome BGP)
+    \item[ASN :] Autonomous System Number
+    \item[BGP :] Border Gateway Protocol
+    \item[CDN :] Content Delivery Network (réseau de distribution de contenu)
+    \item[CNAME :] Canonical Name Record
+    \item[DNS :] Domain Name System
+    \item[DNSSEC :] DNS Security Extensions
+    \item[DoH :] DNS over HTTPS
+    \item[DoT :] DNS over TLS
+    \item[ECS :] EDNS Client Subnet
+    \item[EDNS :] Extension Mechanisms for DNS
+    \item[GeoIP :] Base de données de géolocalisation IP
+    \item[HTTP :] HyperText Transfer Protocol
+    \item[HTTPS :] HyperText Transfer Protocol Secure
+    \item[ICANN :] Internet Corporation for Assigned Names and Numbers
+    \item[IETF :] Internet Engineering Task Force
+    \item[IP :] Internet Protocol
+    \item[IPv4 :] Internet Protocol version 4
+    \item[IPv6 :] Internet Protocol version 6
+    \item[ISP :] Internet Service Provider (fournisseur d'accès)
+    \item[MX :] Mail Exchanger Record
+    \item[NS :] Name Server Record
+    \item[NSID :] Name Server Identifier
+    \item[PoP :] Point of Presence (point de présence)
+    \item[QoS :] Quality of Service
+    \item[RFC :] Request for Comments
+    \item[RIPE :] Réseaux IP Européens
+    \item[RTT :] Round-Trip Time (temps aller-retour)
+    \item[TCP :] Transmission Control Protocol
+    \item[TLD :] Top-Level Domain (domaine de premier niveau)
+    \item[TLS :] Transport Layer Security
+    \item[TTL :] Time To Live
+    \item[TXT :] Text Record
+    \item[UDP :] User Datagram Protocol
+    \item[URL :] Uniform Resource Locator
 \end{description}
 
 \clearpage\newpage\hbox{ }\clearpage\newpage
@@ -193,14 +186,14 @@ The DNS is a critical Internet infrastructure translating domain names into IP a
 \pagestyle{fancy}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% CHAPITRES DU MÉMOIRE
+%% CHAPITRES DU MÉMOIRE (VERSION LONGUE)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{chapters/01-introduction}
-\input{chapters/02-etat-art}
-\input{chapters/03-methodologie}
-\input{chapters/04-resultats}
-\input{chapters/05-conclusion}
+\input{long/01-introduction-fr}
+\input{long/02-etat-art-fr}
+\input{long/03-methodologie-fr}
+\input{long/04-resultats-fr}
+\input{long/05-conclusion-fr}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BIBLIOGRAPHIE
@@ -224,21 +217,22 @@ Cette annexe présente la configuration détaillée des mesures RIPE Atlas utili
 {
   "definitions": [
     {
-      "target": "www.example.com",
-      "description": "DNS A query for www.example.com",
+      "target": "<authoritative_ns_ip>",
+      "description": "Thesis DNS geo-diversity - authoritative - domain.com",
       "type": "dns",
       "af": 4,
       "query_class": "IN",
       "query_type": "A",
-      "query_argument": "www.example.com",
+      "query_argument": "domain.com",
       "use_probe_resolver": false,
-      "use_resolver": false,
       "set_rd_bit": false,
+      "set_nsid_bit": true,
       "set_do_bit": false,
-      "set_cd_bit": false,
-      "timeout": 10000,
+      "include_abuf": true,
+      "timeout": 5000,
       "retry": 2,
-      "protocol": "UDP"
+      "protocol": "UDP",
+      "udp_payload_size": 1024
     }
   ],
   "probes": [
@@ -247,7 +241,7 @@ Cette annexe présente la configuration détaillée des mesures RIPE Atlas utili
       "type": "area",
       "value": "WW",
       "tags": {
-        "include": ["system-ipv4-works"]
+        "include": ["system-ipv4-works", "system-resolves-a-correctly"]
       }
     }
   ],
@@ -260,43 +254,42 @@ Cette annexe présente la configuration détaillée des mesures RIPE Atlas utili
 
 Critères de filtrage appliqués :
 \begin{itemize}
-    \item Statut : \texttt{connected} (sondes actives)
-    \item Uptime : $>80\%$ sur les 30 derniers jours
-    \item Support IPv4 : obligatoire
-    \item Taux de succès DNS : $>85\%$ sur les 7 derniers jours
-    \item Distribution géographique : au moins 5 sondes par continent
+    \item Tags système : \texttt{system-ipv4-works}, \texttt{system-resolves-a-correctly}
+    \item Hardware version 3+ (préférence)
+    \item Stratification géographique : allocation inverse aux 6 régions continentales
+    \item Diversité d'AS : minimum 1 sonde par AS distinct dans chaque strate
+    \item Planification : 02h00 UTC quotidiennement (heures creuses)
 \end{itemize}
 
 \chapter{Structure des données}
 
 \section{Schéma Apache Avro}
 
-\begin{lstlisting}[caption=Schéma Avro pour les résultats DNS]
+\begin{lstlisting}[caption=Schéma Avro pour les résultats DNS (champs principaux)]
 {
   "type": "record",
   "name": "DNSMeasurement",
   "namespace": "dns.measurements",
   "fields": [
-    {"name": "timestamp", "type": "long"},
-    {"name": "probe_id", "type": "int"},
-    {"name": "domain", "type": "string"},
-    {"name": "query_type", "type": "string"},
-    {
-      "name": "answers",
-      "type": {
-        "type": "array",
-        "items": {
-          "type": "record",
-          "name": "Answer",
-          "fields": [
-            {"name": "rdata", "type": "string"},
-            {"name": "ttl", "type": "int"}
-          ]
-        }
-      }
-    },
-    {"name": "rtt", "type": "float"},
-    {"name": "error", "type": ["null", "string"], "default": null}
+    {"name": "msm_id",          "type": "long"},
+    {"name": "prb_id",          "type": "long"},
+    {"name": "timestamp",       "type": "long"},
+    {"name": "domain",          "type": "string"},
+    {"name": "query_type",      "type": "string"},
+    {"name": "campaign_type",   "type": "string"},
+    {"name": "probe_country",   "type": "string"},
+    {"name": "probe_asn",       "type": "long"},
+    {"name": "probe_lat",       "type": "double"},
+    {"name": "probe_lon",       "type": "double"},
+    {"name": "resolver_ip",     "type": ["null", "string"]},
+    {"name": "target_ip",       "type": "string"},
+    {"name": "rcode",           "type": "int"},
+    {"name": "answer_ips",      "type": {"type": "array", "items": "string"}},
+    {"name": "answer_ttl",      "type": "long"},
+    {"name": "nsid",            "type": "string"},
+    {"name": "rt_ms",           "type": "double"},
+    {"name": "valid",           "type": "boolean"},
+    {"name": "validation_flag", "type": "string"}
   ]
 }
 \end{lstlisting}
