@@ -1,5 +1,34 @@
 # Claude - Journal de travail et documentation du projet
 
+## ⚡ Reprise rapide de contexte (après rebuild / perte de session)
+
+**Projet** : Mémoire "Mesures DNS dans l'espace et le temps" — Olivier Gautier, Master 60 UNamur 2025-2026.
+**Promoteurs** : Fl. Rochet, J. Dejaeghere. **Co-promoteur** : Pierre Luycx.
+**Repo GitHub** : https://github.com/ogautier1980/dns-measures.git
+
+### État au 28 mars 2026 — Ce qui est en place
+
+| Version mémoire | Fichier | PDF | Pages |
+|---|---|---|---|
+| Longue EN | `latex/main_long_en.tex` | `output/memoire_long_en.pdf` | 117 p. |
+| Longue FR | `latex/main_fr_long.tex` | `output/memoire_long_fr.pdf` | 137 p. |
+| Courte EN | `latex/main.tex` | `output/memoire_court_en.pdf` | 79 p. |
+| Courte FR | `latex/main_fr.tex` | `output/memoire_court_fr.pdf` | 73 p. |
+
+**Compilation** : `cd /workspace/latex && make long-en` (ou `make all` pour les 4)
+
+### Ce qui reste à faire
+
+1. **Implémenter les mesures RIPE Atlas** — `scripts/fetch_ripe_atlas.py` est un squelette
+2. **Pipeline Tranco** — téléchargement et filtrage Top 10K
+3. **Remplir chapitre 4** (Résultats) avec les vraies mesures
+4. **Remplir chapitre 5** (Conclusion) basé sur les résultats
+5. **Clé API RIPE Atlas** — copier `.env.example` → `.env` et remplir `RIPE_ATLAS_API_KEY`
+
+### Attention — point sensible
+La version longue FR (`main_fr_long.tex`) compile avec warnings Unicode (non bloquants).
+Ne PAS réécrire les fichiers `latex/long/*-fr.tex` sans demander — ils ont pris du temps à générer.
+
 ## Vue d'ensemble du projet
 
 Projet de mémoire : **Mesures DNS dans l'espace et le temps**
