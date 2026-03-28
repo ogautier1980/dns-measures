@@ -424,21 +424,3 @@ The measurement design follows the ethical framework of Kisteleki et al. (2016) 
 **Pilot validation**: Before the three-month production campaign, a seven-day pilot campaign is conducted on a 500-domain subset with 10 probes to validate the measurement configuration, estimate actual credit consumption, and verify the data pipeline end-to-end. The pilot results are included in the public dataset as a separate partition, providing a compact reproducible example of the full methodology.
 
 ---
-
-## Bibliography
-
-*(Full references in the thesis bibliography file)*
-
-- Bajpai, V., Jacob Eravuchira, S., Schönwälder, J., Kisteleki, R., & Aben, E. (2017). Vantage Point Selection for IPv6 Measurements: Benefits and Limitations of RIPE Atlas Tags. IM 2017.
-- Bortzmeyer, S. (n.d.). DNS Measurements with RIPE Atlas (Tutorial). RIPE presentation.
-- Bortzmeyer, S. (2013). Using RIPE Atlas to Find the Most Popular Instances of a DNS Anycast Name Server. *RIPE Labs*.
-- Contavalli, C., van der Gaast, W., Lawrence, D., & Kumari, W. (2016). RFC 7871: Client Subnet in DNS Queries. IETF.
-- Finnegan, K. (2018). Measuring Anycast DNS Services Using RIPE Atlas. *RIPE Labs*.
-- Holterbach, T., Pelsser, C., Bush, R., & Vanbever, L. (2015). Quantifying Interference between Measurements on the RIPE Atlas Platform. IMC 2015.
-- Jones, B., Feamster, N., Paxson, V., Weaver, N., & Allman, M. (2016). Detecting DNS Root Manipulation. PAM 2016.
-- Kisteleki, R. et al. (2016). Ethics of RIPE Atlas Measurements. *RIPE Labs*.
-- Le Pochat, V., Van Goethem, T., Tajalizadehkhoob, S., Korczyński, M., & Joosen, W. (2019). Tranco: A Research-Oriented Top Sites Ranking Hardened Against Manipulation. NDSS 2019.
-- Nosyk, Y. et al. (2024). Day in the Life of RIPE Atlas: Operational Insights and Applications in Network Measurements. arXiv:2511.22474.
-- van Rijswijk-Deij, R., Jonker, M., Sperotto, A., & Pras, A. (2016). A High-Performance, Scalable Infrastructure for Large-Scale Active DNS Measurements. IEEE JSAC.
-- Wang, Z., Huang, J., & Rose, S. (2018). Evolution and Challenges of DNS-Based CDNs. Digital Communications and Networks.
-- Xu, C. et al. (2023). Measuring the Centrality of DNS Infrastructure in the Wild. Applied Sciences.

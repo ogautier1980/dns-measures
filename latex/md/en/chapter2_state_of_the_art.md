@@ -1,8 +1,5 @@
 # Chapter 2 - State of the Art
 
-> **Note on sourcing.** This thesis relies on 22 primary sources. Section 2.1 is a background section covering fundamental DNS concepts that all measurement papers in this corpus presuppose. Most of its content is general technical knowledge derived from RFC 1034 and RFC 1035 rather than from the listed sources. Where specific facts are drawn from a cited source, the citation is given explicitly. All other sections are grounded in the bibliography at the end of this chapter.
-
----
 
 ## 2.1 The DNS System: Background and Fundamental Concepts
 
@@ -10,9 +7,9 @@ The Domain Name System (DNS) is the distributed directory that translates human-
 
 ### 2.1.1 Hierarchical Structure and Resolution
 
-DNS is organised as a hierarchy whose structure reflects the delegation of administrative authority over portions of the namespace. The root zone, maintained by ICANN/IANA and operated by twelve root-server organisations, forms the apex of this hierarchy: it contains delegations for every Top-Level Domain (TLD) on the Internet. Below the root, TLDs such as *.com*, *.net*, *.org*, *.fr*, and over 1,500 others each maintain their own authoritative zone. Authoritative name servers at the domain level contain the definitive resource records for specific domains and their subdomains.
+DNS is organised as a hierarchy whose structure reflects the delegation of administrative authority over portions of the namespace (RFC 1034, Mockapetris, 1987). The root zone, maintained by ICANN/IANA and operated by twelve root-server organisations, forms the apex of this hierarchy: it contains delegations for every Top-Level Domain (TLD) on the Internet. Below the root, TLDs such as *.com*, *.net*, *.org*, *.fr*, and over 1,500 others each maintain their own authoritative zone. Authoritative name servers at the domain level contain the definitive resource records for specific domains and their subdomains.
 
-Name resolution is carried out by a **recursive resolver** (also called a full-service resolver), which performs the iterative query sequence on behalf of the client. When a user or application requests the address of `www.example.com`, the recursive resolver contacts a root server to obtain the address of the *.com* TLD servers, then the TLD servers to obtain the addresses of the authoritative servers for `example.com`, and finally the authoritative server to obtain the A or AAAA record for `www.example.com`. From the client's perspective, this entire process appears as a single request-response exchange.
+Name resolution is carried out by a **recursive resolver** (also called a full-service resolver), which performs the iterative query sequence on behalf of the client (RFC 1034, Mockapetris, 1987). When a user or application requests the address of `www.example.com`, the recursive resolver contacts a root server to obtain the address of the *.com* TLD servers, then the TLD servers to obtain the addresses of the authoritative servers for `example.com`, and finally the authoritative server to obtain the A or AAAA record for `www.example.com`. From the client's perspective, this entire process appears as a single request-response exchange.
 
 The recursive resolver may be operated by the client's ISP, by a corporate network gateway, or by a commercial public DNS service such as Google Public DNS (8.8.8.8) or Cloudflare (1.1.1.1). The geographic location of the recursive resolver is a critical parameter for DNS-based CDN routing, as discussed in Section 2.6. Van Rijswijk-Deij et al. (2016) note that the *.com* TLD alone contained approximately 123 million registered names during their measurement period (March 2015 – January 2016), and that *.com*, *.net*, and *.org* together constitute roughly 50% of the global DNS name space.
 
@@ -20,7 +17,7 @@ The root zone is protected by DNSSEC since July 2010, establishing the trust anc
 
 ### 2.1.2 Resource Record Types Relevant to Measurement Studies
 
-DNS stores information in typed **Resource Records** (RR), each serving a distinct purpose. The record types most relevant to distributed measurement studies are:
+DNS stores information in typed **Resource Records** (RR), each serving a distinct purpose (RFC 1035, Mockapetris, 1987). The record types most relevant to distributed measurement studies are:
 
 **A and AAAA records** map a domain name to an IPv4 or IPv6 address respectively. A single name may have multiple A or AAAA records, enabling load distribution through round-robin responses and geographic routing through location-aware DNS (different addresses returned depending on the querying resolver's location). This geographic differentiation in A/AAAA responses is one of the primary phenomena this thesis investigates.
 
@@ -36,7 +33,7 @@ DNS stores information in typed **Resource Records** (RR), each serving a distin
 
 ### 2.1.3 DNS Caching and TTL: Implications for Active Measurements
 
-Every DNS resource record carries a **Time To Live** (TTL) value specifying how long a recursive resolver or cache may retain the record before treating it as stale and re-querying the authoritative server. TTL values reflect a trade-off between server load (longer TTLs mean fewer queries to authoritative servers) and responsiveness (shorter TTLs allow faster propagation of changes). CDNs routinely use short TTLs — often 60 seconds or less — to enable rapid traffic redirection, while stable infrastructure records (mail server delegations, authoritative NS records) may carry TTLs of 24 hours or more.
+Every DNS resource record carries a **Time To Live** (TTL) value specifying how long a recursive resolver or cache may retain the record before treating it as stale and re-querying the authoritative server (RFC 1034 and RFC 1035, Mockapetris, 1987). TTL values reflect a trade-off between server load (longer TTLs mean fewer queries to authoritative servers) and responsiveness (shorter TTLs allow faster propagation of changes). CDNs routinely use short TTLs — often 60 seconds or less — to enable rapid traffic redirection, while stable infrastructure records (mail server delegations, authoritative NS records) may carry TTLs of 24 hours or more.
 
 Caching operates at multiple levels: the recursive resolver shared by many clients, the operating system stub resolver, and — in some implementations — the application itself. Koch et al. (2021) emphasise that DNS root records have TTLs measured in days (typically 518,400 seconds = 6 days), meaning that recursive resolvers rarely contact the root in the steady state; most user queries are served from cache.
 
@@ -452,30 +449,3 @@ This thesis addresses the identified gaps by designing, implementing, and deploy
 The ethical framework for this measurement system follows Kisteleki et al. (2016) and the Menlo Report (2012): all query targets are publicly accessible domains from a research-grade list; no politically sensitive, censored, or jurisdictionally risky domains are included; measurement frequency is calibrated to avoid overloading authoritative DNS infrastructure (van Rijswijk-Deij et al., 2016); and the RIPE Atlas credit system and terms of service are respected throughout.
 
 ---
-
-## Bibliography
-
-*(Full references in the thesis bibliography file)*
-
-- Bajpai, V., Jacob Eravuchira, S., Schönwälder, J., Kisteleki, R., & Aben, E. (2017). Vantage Point Selection for IPv6 Measurements: Benefits and Limitations of RIPE Atlas Tags. IM 2017.
-- Bortzmeyer, S. (n.d.). DNS Measurements with RIPE Atlas (Tutorial). RIPE presentation.
-- Bortzmeyer, S. (2013). Using RIPE Atlas to Find the Most Popular Instances of a DNS Anycast Name Server. *RIPE Labs*.
-- Boswell, E., & Perkins, C. (2024). RIPEn at Home: Surveying Internal Domain Names using RIPE Atlas. TMA 2024.
-- Calder, M., Flavel, A., Katz-Bassett, E., Mahajan, R., & Padhye, J. (2015). Analyzing the Performance of an Anycast CDN. IMC 2015.
-- Cicalese, D., Augé, J., Joumblatt, D., Friedman, T., & Rossi, D. (2015). Characterizing IPv4 Anycast Adoption and Deployment. CoNEXT 2015.
-- Contavalli, C., van der Gaast, W., Lawrence, D., & Kumari, W. (2016). RFC 7871: Client Subnet in DNS Queries. IETF.
-- Edgecast/Verizon Digital Media (2017). Seeing the World with RIPE Atlas. *RIPE Labs*.
-- Finnegan, K. (2018). Measuring Anycast DNS Services Using RIPE Atlas. *RIPE Labs*.
-- Holterbach, T., Pelsser, C., Bush, R., & Vanbever, L. (2015). Quantifying Interference between Measurements on the RIPE Atlas Platform. IMC 2015.
-- Hours, H., Biersack, E., Loiseau, P., Finamore, A., & Mellia, M. (2016). A Study of the Impact of DNS Resolvers on CDN Performance Using a Causal Approach. Computer Networks.
-- Jones, B., Feamster, N., Paxson, V., Weaver, N., & Allman, M. (2016). Detecting DNS Root Manipulation. PAM 2016.
-- Kisteleki, R. et al. (2016). Ethics of RIPE Atlas Measurements. *RIPE Labs*.
-- Koch, T., Li, K., Ardi, C., Katz-Bassett, E., Calder, M., & Heidemann, J. (2021). Anycast in Context: A Tale of Two Systems. ACM SIGCOMM 2021.
-- Le Pochat, V., Van Goethem, T., Tajalizadehkhoob, S., Korczyński, M., & Joosen, W. (2019). Tranco: A Research-Oriented Top Sites Ranking Hardened Against Manipulation. NDSS 2019.
-- Li, X. et al. (2025). Global CDN Analysis for Video Streaming. AINTEC 2025.
-- Nosyk, Y. et al. (2024). Day in the Life of RIPE Atlas: Operational Insights and Applications in Network Measurements. arXiv:2511.22474.
-- van der Toorn, O., van Rijswijk-Deij, R., Geesink, B., & Sperotto, A. (2018). Melting the Snow: Using Active DNS Measurements to Detect Snowshoe Spam Domains. NOMS 2018.
-- van Rijswijk-Deij, R., Jonker, M., Sperotto, A., & Pras, A. (2016). A High-Performance, Scalable Infrastructure for Large-Scale Active DNS Measurements. IEEE JSAC.
-- van Rijswijk-Deij, R. (2018). The Ongoing Story of OpenINTEL. NLnet Labs Blog.
-- Wang, Z., Huang, J., & Rose, S. (2018). Evolution and Challenges of DNS-Based CDNs. Digital Communications and Networks.
-- Xu, C. et al. (2023). Measuring the Centrality of DNS Infrastructure in the Wild. Applied Sciences.

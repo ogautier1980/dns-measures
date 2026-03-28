@@ -622,11 +622,11 @@ def convert_chapter(src: Path, dst: Path, num: int):
 
 
 CHAPTERS = [
-    ('chapter1_introduction.md',     'chapters/01-introduction.tex',  1),
-    ('chapter2_state_of_the_art.md', 'chapters/02-etat-art.tex',      2),
-    ('chapter3_methodology.md',      'chapters/03-methodologie.tex',   3),
-    ('chapter4_results.md',          'chapters/04-resultats.tex',      4),
-    ('chapter5_conclusion.md',       'chapters/05-conclusion.tex',     5),
+    ('md/en/chapter1_introduction.md',     'chapters/01-introduction.tex',  1),
+    ('md/en/chapter2_state_of_the_art.md', 'chapters/02-etat-art.tex',      2),
+    ('md/en/chapter3_methodology.md',      'chapters/03-methodologie.tex',   3),
+    ('md/en/chapter4_results.md',          'chapters/04-resultats.tex',      4),
+    ('md/en/chapter5_conclusion.md',       'chapters/05-conclusion.tex',     5),
 ]
 
 

@@ -1,14 +1,11 @@
 # Chapter 1 - Introduction
 
-> **Note on sourcing.** The introduction draws on the 22 primary sources listed in the thesis bibliography to motivate the research and position the contribution. Deep technical analysis of these sources is reserved for Chapter 2 (State of the Art). Where specific empirical findings or citations are used in this chapter, they are attributed explicitly; general DNS background knowledge is presented without citation, as it derives from the DNS protocol specifications (RFC 1034, RFC 1035) rather than from the listed sources.
-
----
 
 ## 1.1 Context and Motivation
 
 ### 1.1.1 The DNS: Critical Infrastructure of the Internet
 
-The Domain Name System (DNS), specified in 1983 by Paul Mockapetris in RFC 1034 and RFC 1035, is the distributed directory service that underlies virtually every networked application on the Internet. Its function — translating human-readable domain names such as `www.example.com` into machine-routable information such as IPv4 and IPv6 addresses, mail server designations, and cryptographic key references — is so fundamental that van Rijswijk-Deij et al. (2016) characterise it as a service on which "almost all networked services depend". The scale of this dependency is correspondingly enormous: the *.com* Top-Level Domain alone contained approximately 123 million registered names during the 2015–2016 period studied by van Rijswijk-Deij et al. (2016), and OpenINTEL's measurement infrastructure must process at least 1.85 billion DNS queries per day for *.com* alone to achieve full daily coverage.
+The Domain Name System (DNS), specified by Paul Mockapetris in RFC 1034 and RFC 1035 (Mockapetris, 1987), is the distributed directory service that underlies virtually every networked application on the Internet. Its function — translating human-readable domain names such as `www.example.com` into machine-routable information such as IPv4 and IPv6 addresses, mail server designations, and cryptographic key references — is so fundamental that van Rijswijk-Deij et al. (2016) characterise it as a service on which "almost all networked services depend". The scale of this dependency is correspondingly enormous: the *.com* Top-Level Domain alone contained approximately 123 million registered names during the 2015–2016 period studied by van Rijswijk-Deij et al. (2016), and OpenINTEL's measurement infrastructure must process at least 1.85 billion DNS queries per day for *.com* alone to achieve full daily coverage.
 
 The criticality of the DNS is most visible when it fails. The Facebook BGP misconfiguration of October 4, 2021 — which withdrew the BGP routes to Facebook's authoritative name servers, making the domain unresolvable from any resolver worldwide — illustrates what Xu et al. (2023) document empirically: when over 98% of all global domains depend on a single DNS provider, a provider-level failure propagates immediately and universally. The Akamai DNS outage of June 2021 and the Fastly CDN outage of the same month produced comparable effects, crippling access to large portions of the web for millions of users. In each case, the DNS was the critical failure point: not the application servers, not the network, but the name resolution layer that clients depend on before any application connection can be established.
 
@@ -16,11 +13,11 @@ Despite this criticality, the DNS has historically received less systematic meas
 
 ### 1.1.2 The Ephemeral Nature of DNS Data
 
-A fundamental characteristic of the DNS that motivates archival measurement is the **ephemeral nature of DNS data**. DNS resource records — the atomic units of information in the DNS — carry a Time To Live (TTL) field that governs how long resolvers and caches may retain them. When a TTL expires, the record is discarded; subsequent queries retrieve a fresh response from the authoritative server, which may contain different information. Zone administrators can modify records at any time: a domain that resolved to a server cluster in Europe this morning may resolve to a server cluster in Asia this afternoon, and the DNS infrastructure itself retains no trace of the previous configuration.
+A fundamental characteristic of the DNS that motivates archival measurement is the **ephemeral nature of DNS data**. DNS resource records — the atomic units of information in the DNS — carry a Time To Live (TTL) field that governs how long resolvers and caches may retain them (RFC 1034 and RFC 1035, Mockapetris, 1987). When a TTL expires, the record is discarded; subsequent queries retrieve a fresh response from the authoritative server, which may contain different information. Zone administrators can modify records at any time: a domain that resolved to a server cluster in Europe this morning may resolve to a server cluster in Asia this afternoon, and the DNS infrastructure itself retains no trace of the previous configuration.
 
-This ephemerality creates a structural gap in Internet research. As the official thesis subject statement (Dejaeghere and Rochet, 2025) articulates: "in certain research domains, it is interesting to be able to obtain the DNS information provided at a given period." The use cases are varied but share a common dependency on historical DNS data:
+This ephemerality creates a structural gap in Internet research. As the thesis subject statement articulates: "in certain research domains, it is interesting to be able to obtain the DNS information provided at a given period." The use cases are varied but share a common dependency on historical DNS data:
 
-**Network simulation**: Researchers developing Internet simulators — for evaluating routing protocols, security mechanisms, or traffic engineering policies — need realistic DNS data for their simulated networks. Simulating the Internet as it existed two years ago requires knowing what addresses the DNS returned for major domains at that time, from diverse geographic vantage points. Without archival DNS data, these simulations rely on present-day snapshots that do not reflect the historical state of the network (Dejaeghere and Rochet, 2025).
+**Network simulation**: Researchers developing Internet simulators — for evaluating routing protocols, security mechanisms, or traffic engineering policies — need realistic DNS data for their simulated networks. Simulating the Internet as it existed two years ago requires knowing what addresses the DNS returned for major domains at that time, from diverse geographic vantage points. Without archival DNS data, these simulations rely on present-day snapshots that do not reflect the historical state of the network.
 
 **Security forensics**: Malicious infrastructure — command-and-control servers for botnets, phishing domains, spam networks — frequently changes its DNS configuration to evade detection and blacklisting. Van der Toorn et al. (2018) demonstrate that snowshoe spam domains are detectable from their DNS patterns as much as 100 days before appearing on blacklists, but only if historical DNS data is available for analysis. Without longitudinal archival, post-incident investigation cannot reconstruct the full temporal evolution of malicious DNS configurations.
 
@@ -172,7 +169,7 @@ The thesis uses **RIPE Atlas** as its distributed measurement infrastructure, a 
 
 **Community validation**: RIPE Atlas has been used in over 600 academic publications, ensuring that its measurement artefacts, biases, and limitations are well characterised (Nosyk et al., 2024; Holterbach et al., 2015; Bajpai et al., 2017). Results obtained from RIPE Atlas are directly comparable with the existing literature.
 
-**Accessible resource model**: RIPE Atlas operates on a credit economy in which probe hosts earn credits that can be shared with the research community. Stéphane Bortzmeyer confirmed in correspondence with the thesis supervisors (Dejaeghere, 2025) that researchers can readily obtain measurement credits by describing their study to the RIPE Atlas community, making the platform financially accessible to academic research projects.
+**Accessible resource model**: RIPE Atlas operates on a credit economy in which probe hosts earn credits that can be shared with the research community. Researchers can obtain measurement credits by describing their study to the RIPE Atlas community, making the platform financially accessible to academic research projects.
 
 ### 1.5.3 System Architecture Overview
 
@@ -261,29 +258,3 @@ The thesis will be considered successful against the following measurable criter
 **Academic**: A complete five-chapter thesis is submitted in conformance with the University of Namur Master 60 format requirements; the dataset is published with a permanent DOI before the oral defence; ethical guidelines (Kisteleki et al., 2016; Menlo Report, 2012) are demonstrably respected in the measurement design.
 
 ---
-
-## Bibliography
-
-*(Full references in the thesis bibliography file)*
-
-- Bajpai, V., Jacob Eravuchira, S., Schönwälder, J., Kisteleki, R., & Aben, E. (2017). Vantage Point Selection for IPv6 Measurements: Benefits and Limitations of RIPE Atlas Tags. IM 2017.
-- Bortzmeyer, S. (n.d.). DNS Measurements with RIPE Atlas (Tutorial). RIPE presentation.
-- Bortzmeyer, S. (2013). Using RIPE Atlas to Find the Most Popular Instances of a DNS Anycast Name Server. *RIPE Labs*.
-- Calder, M., Flavel, A., Katz-Bassett, E., Mahajan, R., & Padhye, J. (2015). Analyzing the Performance of an Anycast CDN. IMC 2015.
-- Cicalese, D., Augé, J., Joumblatt, D., Friedman, T., & Rossi, D. (2015). Characterizing IPv4 Anycast Adoption and Deployment. CoNEXT 2015.
-- Contavalli, C., van der Gaast, W., Lawrence, D., & Kumari, W. (2016). RFC 7871: Client Subnet in DNS Queries. IETF.
-- Dejaeghere, J., & Rochet, F. (2025). Thesis subject: DNS Measurements in Space and Time. University of Namur (internal document).
-- Finnegan, K. (2018). Measuring Anycast DNS Services Using RIPE Atlas. *RIPE Labs*.
-- Holterbach, T., Pelsser, C., Bush, R., & Vanbever, L. (2015). Quantifying Interference between Measurements on the RIPE Atlas Platform. IMC 2015.
-- Hours, H., Biersack, E., Loiseau, P., Finamore, A., & Mellia, M. (2016). A Study of the Impact of DNS Resolvers on CDN Performance Using a Causal Approach. Computer Networks.
-- Jones, B., Feamster, N., Paxson, V., Weaver, N., & Allman, M. (2016). Detecting DNS Root Manipulation. PAM 2016.
-- Kisteleki, R. et al. (2016). Ethics of RIPE Atlas Measurements. *RIPE Labs*.
-- Koch, T., Li, K., Ardi, C., Katz-Bassett, E., Calder, M., & Heidemann, J. (2021). Anycast in Context: A Tale of Two Systems. ACM SIGCOMM 2021.
-- Le Pochat, V., Van Goethem, T., Tajalizadehkhoob, S., Korczyński, M., & Joosen, W. (2019). Tranco: A Research-Oriented Top Sites Ranking Hardened Against Manipulation. NDSS 2019.
-- Li, X. et al. (2025). Measurement and Analysis of a Global-Scale CDN. AINTEC 2025.
-- Nosyk, Y. et al. (2024). Day in the Life of RIPE Atlas: Operational Insights and Applications in Network Measurements. arXiv:2511.22474.
-- van der Toorn, O., van Rijswijk-Deij, R., Geesink, B., & Sperotto, A. (2018). Melting the Snow: Using Active DNS Measurements to Detect Snowshoe Spam Domains. NOMS 2018.
-- van Rijswijk-Deij, R., Jonker, M., Sperotto, A., & Pras, A. (2016). A High-Performance, Scalable Infrastructure for Large-Scale Active DNS Measurements. IEEE JSAC.
-- van Rijswijk-Deij, R. (2018). The Ongoing Story of OpenINTEL. NLnet Labs Blog.
-- Wang, Z., Huang, J., & Rose, S. (2018). Evolution and Challenges of DNS-Based CDNs. Digital Communications and Networks.
-- Xu, C. et al. (2023). Measuring the Centrality of DNS Infrastructure in the Wild. Applied Sciences.
