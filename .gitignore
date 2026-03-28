@@ -47,6 +47,12 @@ output/*.pdf
 output/*.png
 output/*.jpg
 output/*.svg
+output/*.aux
+output/*.bcf
+output/*.log
+output/*.out
+output/*.run.xml
+output/*.toc
 !output/.gitkeep
 
 # LaTeX
