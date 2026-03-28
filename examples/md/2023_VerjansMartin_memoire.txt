@@ -1,0 +1,3426 @@
+                          Institutional Repository - Research Portal
+                          Dépôt Institutionnel - Portail de la Recherche
+                   researchportal.unamur.be
+     University of Namur
+
+
+
+
+                                                      THESIS / THÈSE
+
+     MASTER IN COMPUTER SCIENCE
+
+
+     An Escape Game Theory
+
+
+
+
+Author(s) - Auteur(s) :
+     VERJANS, Martin
+
+     Award date:
+     2023
+
+
+     Awarding institution:
+     University of Namur
+Supervisor - Co-Supervisor / Promoteur - Co-Promoteur :
+     Link to publication
+
+
+
+
+Publication date - Date de publication :
+
+
+
+Permanent link - Permalien :
+
+
+
+Rights / License - Licence de droit d’auteur :
+
+     General rights
+     Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+     and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+             • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+             • You may not further distribute the material or use it for any profit-making activity or commercial gain
+             • You may freely distribute the URL identifying the publication in the public portal ?
+     Take down policy
+     If you believe that this document breaches copyright please contact us providing details, and we will remove access to the work immediately
+     and investigate your claim.
+
+Bibliothèque   Universitaire
+     Download date: 23. mars. 2026Moretus Plantin
+                                   UNIVERSITÉ DE NAMUR
+                                      Faculté d'informatique
+                                  Année académique 2022-2023
+
+
+
+
+                                An Escape Game Theory
+
+
+                                         Martin Verjans
+
+
+
+
+                 ........................ (Signature pour approbation du dépôt - REE art. 40)
+
+
+                 Promoteur : VANHOOF Wim
+
+
+                 Co-promoteur : YERNAUX Gonzague
+
+
+
+
+Mémoire présenté en vue de l'obtention du grade de Master 60 en Sciences Informatiques
+
+
+
+
+                          Faculté d'Informatique  Université de Namur
+
+
+                 RUE GRANDGAGNAGE, 21 ● B-5000 NAMUR(BELGIUM)
+Acknowledgments
+  I wish to thanks my co-tutor, Gonzague Yernaux. This subject proposal was a bottle in the sea and looked
+interesting at a rst glance. After a few readings, it appeared that he hit the bull's eyes. Reading an article
+explaining how and why your thesis' subject is an actual need is a nice feeling. I wish to thank him for his time,
+patience and precious advices.
+
+
+  I also wish to thank Simon Dourte, a student of Namur University. During one of his software development
+courses, he was assigned with the mission of building a functional software based on my ideas. Despite the fact
+that the framework was constantly evolving, he managed to produce a working piece of software. Thanks to
+him for he allowed me to validate or refute many ideas.
+
+
+  Also, a special thanks to my life companion. Her patience (and coees) managed to keep me working during
+late hours. Without her approbation, I wouldn't have written anything. Thank you, I owe you a lot.
+
+
+
+
+                                                                                                                2
+Résumé
+La littérature dédiée aux Escape Games reste limitée, en dépit de leur prolifération ces dernières décennies. En
+particulier, l'absence d'un framework formel et bien établi élucidant la nature fondamentale des Escape Games
+est agrante. Bien qu'en reconnaissant la nécéssité, la littérature scientique n'a pas encore produit de dénition
+formelle. Ce travail constitue un premier pas permettant de combler ce vide. Nous construisons un framework,
+basé sur les concepts trouvés dans la littérature existante, en général introduits de manière informelle.       Le
+résultat produit est un premier framework fonctionnel permettant de représenter, de manipuler et de raisonner
+mathématiquement avec ces jeux à travers une représentation des Escape Games en tant que graphes gouvernés
+par des règles explicites. Nous discutons aussi des extensions possibles de ce framework.
+
+
+Mots-clés : Escape Games, Dénition, Framework, Théorie des graphes
+
+
+
+
+Abstract
+The body of literature dedicated to Escape Games remains limited, despite their proliferation for several decades.
+In particular, the absence of a well-established formal framework for elucidating the fundamental nature of
+Escape Games is conspicuous. While acknowledging the need for it, literature did not produce a valid formalized
+denition yet.   This work constitutes a rst step towards lling this gap.     We build a framework, based on
+existing literary sources where the game concepts are typically introduced in an informal manner. This results
+in a rst working framework for representing, manipulating and reasoning on a mathematical level with such
+games, notably through a representation of Escape Games as graphs governed by explicit rules. We also discuss
+extensions to this framework.
+
+
+Keywords : Escape Games, Denition, Framework, Graph Theory
+4
+Contents
+
+1 Introduction                                                                                                             7
+  1.1   The research question       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    7
+
+
+2 State of the art                                                                                                        11
+  2.1   Article classication     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   11
+        2.1.1   Taxonomy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        11
+        2.1.2   Escape Game implementations           . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   11
+        2.1.3   Device to be used in Escape Games           . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   12
+        2.1.4   States of the art, history and surveys . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        12
+        2.1.5   Collaboration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       13
+        2.1.6   Design Frameworks . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         13
+  2.2   What is an escape game ? . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .          15
+        2.2.1   Unravelling main concepts from literature . . . . . . . . . . . . . . . . . . . . . . . . . . .           15
+
+
+3 The Escape Game Framework                                                                                               19
+  3.1   Main concepts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       19
+        3.1.1   A denition . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       19
+        3.1.2   Selected concepts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       20
+        3.1.3   Rejected concepts       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   20
+  3.2   Chosen representation       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   21
+  3.3   The Escape Game Graph           . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   21
+        3.3.1   Edges     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   22
+        3.3.2   Skills . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    22
+        3.3.3   Clues     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   23
+        3.3.4   Rooms . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       23
+        3.3.5   Puzzles     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   23
+        3.3.6   Roles     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   24
+        3.3.7   Meta-information . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        24
+        3.3.8   Incidence function      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   25
+        3.3.9   Example . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       25
+  3.4   The Game Session Frame Graph            . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   29
+        3.4.1   Game Sessions       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   29
+        3.4.2   Game Session Frame . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .          29
+        3.4.3   Oriented edges      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   29
+        3.4.4   Non-oriented edges . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        30
+        3.4.5   Rooms . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       30
+        3.4.6   Players     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   30
+        3.4.7   Skills . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    30
+        3.4.8   Clues     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   31
+        3.4.9   Puzzles     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   31
+        3.4.10 Map incidence function         . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   31
+        3.4.11 Object Incidence Function . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .          31
+        3.4.12 Example . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        32
+  3.5   Actions and reactions       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   33
+        3.5.1   The action set      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   33
+        3.5.2   The reaction set      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   40
+  3.6   The Game Session Forest         . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   49
+        3.6.1   The forest . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      49
+                                   CONTENTS
+
+
+
+
+4 Discussion                                                                                                              51
+  4.1   The Escape Game Framework . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .             51
+  4.2   Extensions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      52
+        4.2.1   Skill level   . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   52
+        4.2.2   Time . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      52
+        4.2.3   Player multithreading       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   52
+        4.2.4   Non-Mandatory items         . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   52
+
+
+5 Conclusion                                                                                                              53
+A Articles by year query data                                                                                             61
+B Game Session Illustration                                                                                               63
+  B.1   A game session    . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     63
+
+
+
+
+                                                                                                                           6
+1              Introduction
+
+  Escape Games are a phenomenon that has widely developed over the last few years. From early video games
+to real physical rooms or buildings and more recently Virtual Reality, they are very popular amongst the young
+generation. Scientic literature is slowly getting interested in these new kind of games, mainly for educational
+purposes.
+
+
+
+  However, while many articles are interested in the realization of an Escape Game to teach a specic topic,
+no real denition has been posed on what is an Escape Game.           Wiemker, Elumir and Clare (2015)[34] have
+published an article that is trying to provide an overview of Escape Games and to expose their main concepts.
+This will serve as a basis for this work.
+
+
+
+  The original research question aimed at providing a mathematical denition of what an Escape Game is.
+Game theories in mathematics include more and more games, but Escape Games still don't have one of their
+own.
+    It is worth noting that Escape Games are sometimes mentioned as Escape the Room, Escape Rooms,
+Exit Games, Exit Rooms with a few other variations. The choice here has been made to call them Escape
+Games, as it seems it is best suited for all platform variations.
+
+
+
+  Before deep diving into escape games, it seems relevant to gure out the growing interest on this matter.
+                                         "Escape Game" OR "Escape Room" OR "Exit Game"
+Using the search query (in Google Scholars)
+OR "Exit Room" and ltering by year, we can observe that the publication count explodes from 2016. Using
+an adapted query on various search engines (ScienceDirect, Springer, ACM Digital Library and DBLP), we can
+observe the same tendencies with little variations. Figure 1.1
+                                                                 1 illustrates this tendency.
+
+
+
+  It seems the rst digital Escape Game, as in you must escape the room, has been released in 1988 by
+John Wilson[15].   It was only a text-based game but already contained the main ingredients on what makes
+contemporary Escape Games. According to Scott Nicholson (2015)[25], it seems the rst real live action Escape
+Game started in Japan in 2007.       As of today, they exists in various and mixed forms and environments.    A
+simple search on Google Play©yields thousands of results on Escape Games for smartphones, available for free
+or not. You can nd books, board games, card games that are all Escape Games. Recently, Virtual Reality
+games have developed quite a lot and Escape Games are a part of those games too.
+
+
+
+  All those games on all those platforms must have something in common to be called Escape Games. There
+should be a denition, formal or not, that denes these games so that a line may be drawn as where they
+begin to be Escape Games and where they are no more. Surprisingly, there is no such denition yet. Nicholson
+(2015)[25] and Wiemker, Eljumir and Clare (2015)[34] provided us with the main concepts they have identied
+as constituent of an Escape Game. No real major addition could be found to these concepts.
+
+
+
+
+1.1 The research question
+  The original idea behind this work was : Is it possible to develop an Escape Game Theory using mathematics'
+Game Theory ?.     Since nobody seemed to have answered that question yet, it seems our job is to make an
+attempt at building a mathematical theory for Escape Games.
+
+  1 Actual data can be found in Appendix A
+                              1.1.   THE RESEARCH QUESTION
+
+
+
+
+Figure 1.1: Number of articles by year on dierent search engines containing any of the words "Escape Game",
+"Escape Room", "Exit Game" or "Exit Room"
+
+
+
+
+                                                                                                          8
+CHAPTER 1.       INTRODUCTION
+
+
+
+
+  If possible, the goal will be to provide this theory. The Escape Games research eld is brand new and in need
+of methodological methods in order to validate/measure a game :
+
+    Is the Escape Game possible to win ?
+    How is the game balanced ?
+    Is it possible to measure the connection between each item and the main theme in order to have a coherence
+       score ?
+
+    Will the game immerse the players enough in order to trigger the ow state ?
+    If the game is teaching something, is it possible to measure the long term outcome ?
+    Would it be possible to dierentiate a good Escape Game from a bad one ?
+    Is it possible to measure the cooperation level among players ?
+
+  All these questions require some kind of metrics that would help quantify and qualify a given Escape Game.
+
+
+  Currently, no attempt at dening an Escape Game from a mathematical point of view has been performed
+   2
+yet . There is no article or scientic literature
+                                                     3 providing an exhaustive list of games included in Game Theory.
+When searching using State of the art and Game Theory keywords, mainly articles are focused on whether
+Game Theory is really useful in real life situations
+                                                          4 or provide a new eld in which a particular game could be
+applied in order to build a model.
+
+
+  In last resort, the only place where it is possible to nd the most complete compilation on what has been
+published, on which games have a theory and on the list of these games is Wikipedia[2] [3].                     Obviously not
+belonging to scientic literature, these articles can provide an interesting starting point in order to answer the
+question : Is there a Game Theory that could match or dene Escape Games ?. The short answer is no.
+
+
+  A previously stated, no literature (so far) has made a proper link to the mathematics eld in order to formally
+dene an Escape Game. If dened properly, a mathematical model could probably :
+
+    decide whether a game is possible to win
+    measure the complexity balance for each challenge and for the overall game
+
+  A link to computer sciences could be done. Provided that we have a mathematical model for Escape Games,
+it would be possible to write a program helping designers in many aspects of the design process. It could provide
+warnings when the game becomes too dicult or too easy, graphically assist designers as they build the rooms
+or pretest the game without any real item and before the room is actually built .
+                                                                                             5
+
+
+  Our research then becomes : Would it be possible to provide an escape game mathematical denition that
+includes the main aspects of an Escape Game and provide its evolution rules ?
+
+
+  This work focuses on the realization of a formal framework capable of modelling Escape Games.                         We will
+rst conduct a state of the art, then extract the main concepts out of it. We will then select concepts that are
+relevant to the game mechanics. Those concepts will be dened from a mathematical perspective using Graph
+Theory. We will introduce and dene three graphs :
+
+  1. The Escape Game Graph, presenting an Escape Game as a blueprint.
+
+  2. The Game Session Frame Graph, presenting a Game in the action at a given moment in time.
+
+  3. The Game Session Forest, presenting how the Frames can be linked together by players' actions and
+       system's reactions.
+
+
+  After dening those graphs, we will discuss about the framework completeness, its usability and its possible
+future extensions. We shall then conclude this work.
+  2 At least, none that the author could nd.
+  3 Again, not that the author could nd.
+  4 For example, Guerrien, Bernard (2018)[16]
+  5 Although this may seem less relevant, the industry world is usually enthusiastic when provided with a cost saving tool.
+1.1.   THE RESEARCH QUESTION
+
+
+
+
+                               10
+2               State of the art
+
+2.1 Article classication
+  The literature on Escape Game is vast, as shown in Figure 1.1. Therefore we choose to sort the vast amount
+of articles into several categories :
+
+
+   1. Taxonomy;
+
+
+   2. The realization/implementation of an Escape Game, usually for educational purposes, with validation
+      using student sets;
+
+
+   3. The realization of an item or device to be used in Escape Games by teachers;
+
+
+   4. States of the art, history and surveys;
+
+
+   5. Escape Games examined through the collaborative and teamwork lens.
+
+
+   6. Design frameworks, proposed to help designers create great games.
+
+
+
+2.1.1 Taxonomy
+  Recently, a taxonomy on puzzles encountered in Escape Games has been developed[22]. The authors dene
+a puzzle as a set of atomic challenges
+                                           1 that have to be solved in order to solve the puzzle2 . They break the
+challenges into three main categories :
+
+
+   1. Mental challenges, where the players have to use their brains
+
+
+   2. Physical challenges, where a physical action in the real world (or the gaming environment) is required
+
+
+   3. Emotional challenges, where players have to deal with their internal emotions (fear, disgust...)
+
+
+    Since this is the very rst taxonomy on Escape Game puzzles (or in the Escape Games eld), it is the only
+article in this category.
+
+
+
+2.1.2 Escape Game implementations
+  By far the most populated category. It is about the creation and validation of an Escape Game aimed at
+teaching a specic subject for a specic student set. The structure of these articles is usually the same :
+
+
+     Introducing the matter to learn
+
+     Introducing the target audience (student proles)
+
+     Designing the Game
+
+     Evaluating the Game
+  1 This article is the reason the author choose to use the word Challenge instead of Puzzle.
+  2 This denition is really convenient for computer science and mathematics as the challenges are atomic, therefore a complete
+taxonomy of atomic challenges would allow to model any puzzle.
+                                2.1.   ARTICLE CLASSIFICATION
+
+
+
+
+Figure 2.1:   Puzzle taxonomy, from Krekhov, Andrey and Emmerich, Katharina and Rotthaler, Ronja and
+Krueger, Jens (2021)
+
+
+
+
+  In Escape Rooms as a Way to Teach Magnitudes and Measure in Degrees in Education [5], Students in
+primary schools discover the notions of mass, volumes and lengths. An escape room as a simulation teaching
+strategy [7] provides a course for nursing student.   They must analyse patients' data in order to nd clues
+that will help them open the locks. Designing an escape room game to develop problem solving and spatial
+reasoning skills [11] proposes an escape game to develop problem solving as well as spatial reasoning skills.
+Escaping the routine: Unlocking group intervention [12] is about making students understand the principle
+of diverse approaches from group members and how interdependence leads to positive group outcomes . The
+                                                                                                         3
+use of escape rooms to teach and learn English at university [23] is aimed at helping Spanish students learn
+English in a unconventional way. Ho, Anne M (2018)[19] developed an Escape Game aimed at understanding
+cryptography.
+
+
+
+  The main issue with these studies is that the Escape Games are often self-validated and the outcomes cannot
+be easily calculated. The question : Did these student learn better from an Escape Game than from traditional
+teaching ?    cannot be answered straightforward.     Taraldsen and all (2020)[31] perform an analysis and a
+systematic review on Escape Games for educational purposes implementation. They state that :[..] it seems
+that the research on the use of escape rooms for educational purposes has reached a new phase, which requires
+greater structure and transparency in research design and methods for data collection and analysis.
+
+
+
+  This sentence is actually validating the need for this work.    Providing a transparent, standard and formal
+framework is a rst step towards a global analysis of educational escape games.
+
+
+
+2.1.3 Device to be used in Escape Games
+  We shall not deep dive into this section, as not really relevant for our research question. It is worth noting
+that this kind of work exists in order to help teachers build Escape Games at low costs. Ross, Robert (2019)[30],
+for example, created a small numerical keypad-based lock, equipped with a timer that can be built by anyone
+for $30.00 AUD.
+
+
+
+2.1.4 States of the art, history and surveys
+  Nicholson (2015)[25] conducts a survey on 175 Escape Game facilities. It is the rst survey we could nd and
+it explores demographics, facility descriptions, costs, themes and narratives, puzzle organisation...
+
+  3 from the abstract
+
+
+                                                                                                              12
+CHAPTER 2.        STATE OF THE ART
+
+
+
+
+  Penttilä, Katriina (2018)[29] provides a History on Escape Games as a master thesis. The author states
+that Dr. Nicholson's white paper Peeking behind the locked door: A survey of escape room facilities [25] is
+the rst real article addressing the Escape Game eld. A history of Escape Games from their premises until
+the late 2010s is analysed.
+
+
+  Fotaris, Panagiotis and Mastoras, Theodoros (2019)[14] conduct a systematic review on educational Escape
+Games.
+
+
+
+2.1.5 Collaboration
+                                                         4
+Escape Games are essentially collaborative games . Players must overcome challenges as a team. Collaboration,
+Awareness, and Communication in Real-Life Escape Rooms [27] conduct an observational study in order to
+understand the collaborative process in Escape Games.               Escape Rooms as a Collaborative Problem-Solving
+Environment [28] follows groups of students among an Escape Game, enlightens the collaborative process as
+well as the meta-cognition
+                               5 process that takes place during the game.
+
+
+2.1.6 Design Frameworks
+A few design frameworks have been developed
+                                                      6 in order to aid designers create Escape Games. To name a few :
+
+     Ask why ?[26]
+     The Experience Pyramid Model[18]
+     EscapED [10]
+     The Star Model[6]
+
+  Nicholson (2016) states that a properly designed Escape Game should contain only challenges and items that
+have a connection to the main story and theme. This will bring consistency throughout the game and allow
+better immersion for the players.        It is less of a framework than a series of guidelines, intended to enlighten
+designers on how to create better games.
+
+
+  Heikkinen, Outi and Shumeyko, Julia (2016) propose a Framework, the Experience Pyramid Model and build
+an Escape Game with it. Even if they don't validate the game with real players, they claim that this model
+is well suited for Escape Game design. They explain the model, originally introduced by Tarssanen (2009)[32],
+which consist in 5 levels of perception. From Tarssanen (2009) : The model represents an ideal product, which
+takes into account all the elements at all levels of a meaningful experience. It is an explicit tool for identifying
+critical points or deciencies in the product, and thus, for designing the product further.
+
+
+  The EscapED theoretical framework is a 6 steps guide in order to design a proper Escape Game. Its main
+goal is to assist Escape Game designers.          It helps dening the boundaries and challenges of the game in the
+proper order, which is :
+
+   1. Participants
+
+   2. Objectives
+
+   3. Theme
+
+   4. Puzzles
+
+   5. Equipment
+
+   6. Evaluation
+
+The authors provided the framework to designers and analysed how they created games based on it. Although
+no formal study has been conducted, the feedback was rather positive. However they noticed that the Theme
+step was usually set back by the designers and usually took place amongst the last steps of the design process;
+they concluded by stating that further studies were required in order to properly dene this particular step
+position.
+   4 Although some platforms do not allow to play them as a team (smartphones, VR devices...), it is likely that multi-player
+versions of these games will be developed in the near future.
+   5 They do so by using Chiu, Ming Ming and Kuo, Sze Wing (2009)[8] meta-cognition framework.
+   6 Some books also provide design guidelines or frameworks, Escape The Game: How to make puzzles and escape rooms [9],
+Games, puzzles, and computation [17], Theory of fun for game design [21] for example.
+                              2.1.   ARTICLE CLASSIFICATION
+
+
+
+
+                    Figure 2.2: The Experience Pyramid Model, from Tarssanen (2009)
+
+
+
+
+Figure 2.3: The EscapED framework, from Clarke, Samantha and Peel, Daryl and Arnab, Sylvester and Morini,
+Luca and Keegan, Helen and Wood, Oliver (2017)
+
+
+
+
+                                                                                                      14
+CHAPTER 2.           STATE OF THE ART
+
+
+
+
+                     Figure 2.4: The Star Model, from Botturi, Luca and Babazadeh, Masiar (2020)
+
+
+
+
+     More recently, Botturi, Luca and Babazadeh, Masiar (2020)[6] developed a design framework, the Star Model,
+in order to help teachers create better Escape Games.               This framework is mainly intended for educational
+purposes.     It is a two layers model, containing as rst layer (the Game layer) the ve dimensions required
+to design Escape Games : Narrative, Equipment, Puzzles, Game-ow and Learning
+                                                                                                    7 The second layer (the
+Context layer) contains four items related to the context where the Escape Game should take place : Players,
+Constraints, Evaluation and Debrieng.           In order to validate the model, they provided a course for teachers
+to attend and to evaluate on the clarity, completeness and utility of the presented model. They received an
+acceptable overall score in order to validate the Star Model. However, they did not evaluate any of the Games
+that have been produced using this model.
+
+
+
+
+2.2 What is an escape game ?
+     We will now make an attempt at dening the main concepts that are behind the words Escape Game. Words
+in   bold are the concepts that have been discovered and will require a proper denition.
+
+2.2.1 Unravelling main concepts from literature
+     Nicholson (2015)[25] denes an escape game as : Live-action team-based games where players discover clues,
+solve puzzles, and accomplish tasks in one or more rooms in order to accomplish a specic goal (usually escaping
+from the room) in a limited amount of time. It seems to be the rst denition of what an Escape Game is and
+some of the main concepts are taken into acount :
+
+
+       Players are seen as a team, therefore Escape Games are above all cooperative games. Also, there are no
+        enemies .
+                 8
+
+
+       Clues, Puzzles, Tasks are what is to be done in order to win the game.
+
+       Rooms(s) indicate that there is a gaming environment from which the players must escape from.
+
+       Goal, Exit is where the players need to go to win.
+
+       Time limit is setting a constraint on victory. The Goal must be reached before the time limit ends.
+
+     Although interesting, this denition is not accurate enough as Escape Games have evolved on many platforms.
+
+     7 This last item introduces the learning dimension and could be left over if designing non educational Escape Games.
+     8 Some Escape Game companies appear to have teams play against each other, but this is marginal and doesn't really count as
+enemy. The other team is seen as a competitor
+                                    2.2.   WHAT IS AN ESCAPE GAME ?
+
+
+
+
+  Live-action is not always true, as it is possible to play Escape Game on Virtual Reality devices, Smartphones,
+computers...
+
+
+  Team-based is correct for live-action games, while for digital devices it is usually one player games. Escape
+Game books can be played alone or together.
+
+
+  The concept of time limit is not perceived the same way depending on the platform. In a real live-action
+Escape Game, you usually have a timer indicating how much time is left. If the team doesn't nd the exit in
+                                                               9
+time, the game is lost. Using an Escape Game book , you have to monitor the time yourself, books usually
+provide rating at the end depending on the time you took. Some Escape Games on smartphones only monitor
+time in order to create ratings among the players. Some early Flash games on computers simply don't mention
+time.
+
+
+  Wiemker, Eljumir and Clare (2015) elaborate on the puzzle concept and introduce the Game Master and
+theme concepts :
+
+    Puzzles;
+            Puzzle path;
+            Hints;
+            Skills;
+    Game Master;
+    Theme.
+
+  Mainly they focus on the fact that an Escape Game is above all a set of puzzles, a series of challenges that
+players have to overcome in order to win together against the game.                 They rene the concept of puzzles by
+explaining how the puzzles are arranged altogether, as the reward for solving one puzzle gives a clue that will
+allow one to solve the next puzzle. They subdivide puzzles into three main categories : Standalone puzzles,
+Meta-puzzle (the ultimate puzzle to open the last door) and discovery puzzle (that explains the game to the
+players and starts the narrative).
+
+
+  They add the notion of skills (what is required for the player(s) in order to solve the puzzles).
+
+
+  They introduce the concepts of Game Master, a person that is here to help the players (should they get stuck)
+by giving them hints.
+
+
+  Finally they enlighten the concept of theme, which is the story that is built around the puzzle path in order
+to immerse the players and make them enter the state of ow (see further).
+
+
+  Nicholson (2016)[26] provides information on how to properly design an Escape Game and mention the fact
+that all elements inside the room must be connected to the main theme in order to bring                     coherence. Using
+the method "Ask why?"
+                           10 , he helps designers create immersive Escape Games.
+
+
+  In their conference paper[27], Pan, Lo and Neustaedter (2017) state that [..]                   escape rooms can provide
+learning environments for exploring social questions around leadership, group hierarchy, conict, proxemics,
+and distributed cognition.. Escape Games can be seen a set of collaborative problem solving tasks,
+according to Papadopoulus and Tenta (2021)[28].
+
+
+  Last, but not least, is the concept of     ow, originally introduced by Csíkszentmihályi (1996)[13]. Many other
+articles
+        11 reference this concept. The idea is that when a game is well designed, the player experiences a state
+of ow, where the immersion is so strong that performances are at their best. Although there doesn't exist a
+quantitative way of knowing if a given Escape Game can induce players into ow state, the aim is to provide
+problems that are balanced between feasibility and challenge.
+  9 In "échappe-toi de la tour aux dragons"[24], every page contains a puzzle, the reward for each puzle is one symbol to unlock
+the nal page
+ 10 For each element/artefact in the room, you must ask "Why is it here?", "Is the place of this object relevant to the storyline?"
+ 11 Hsieh, Ya-Hui and Lin, Yi-Chun and Hou, Huei-Tse (2013)[20], Veldkamp, Alice and Niese, Johanna and Heuvelmans, Martijn
+and Knippels, Marie-Christine and van Joolingen, Wouter (2022)[33], Admiraal, Wilfried and Huizenga, Jantina and Akkerman,
+Sanne and Dam, Geert (2011)[4] among others
+
+
+
+                                                                                                                                16
+CHAPTER 2.     STATE OF THE ART
+
+
+
+
+Figure 2.5: Model of ow (from Admiraal, Wilfried and Huizenga, Jantina and Akkerman, Sanne and Dam,
+Geert (2011), adapted from Csikszentmihalyi (1990, 1997)
+2.2.   WHAT IS AN ESCAPE GAME ?
+
+
+
+
+                                  18
+3              The Escape Game Framework
+
+  In this work, we will formally dene Escape Game based on the selected concepts that have been extracted
+from literature. We will explain why graphs have been chosen in order to dene Escape Game. The Escape
+Game Graph will be formally dened. From it, we will derive the Game Session Frame Graph and explain the
+rules for dening player's actions. When the action's reactions will have been dened, the Game Session Graph
+will be introduced. Finally, the Game Session Forest will close the Framework denition.
+
+
+
+
+3.1 Main concepts
+3.1.1 A denition
+  Using the concepts highlighted in the introduction, we can provide our own denition of what an Escape
+Game is. First of all, we must dene the main ideas :
+
+
+Denition 3.1.1 (Player). A player is a human being playing the game. He/She is volunteer to play and
+possesses skills that will help him/her overcome the challenges and win the game.
+Denition 3.1.2 (Team). A team gathers all the players that agreed to play the game. They all loose or win
+together and must collaborate in order to succeed.
+Denition 3.1.3 (Skill). A skill is a capability that players possess. It allows them to solve puzzles.
+Denition 3.1.4 (Gaming Environment). The gaming environment is the physical, digital or imaginary1 area
+in which the team has to evolve. The game usually ends when the whole team is out of the environment.
+Denition 3.1.5 (Challenge). A challenge can be seen as a puzzle, task or problem that requires to be solved
+in order to progress in the game. It is possible to solve it by using clues, player skills and knowledge, or hints
+provided by the Game Master.
+Denition 3.1.6 (Game Master). The Game Master is an entity that exists in order to help the players, should
+they get stuck. Depending on the platform, this entity can be human or software and can provide clues in order
+to help the players through the game.
+Denition 3.1.7 (Theme). The theme is the general atmosphere during the game2 .
+Denition 3.1.8 (Story (or narrative)). The story is an interactive scenario between the game designer and
+the players. It is provided to the players, who are the main actors, and will unravel as they overcome challenges.
+The story is related to the theme.
+
+
+
+Denition 3.1.9 (Escape Game). An Escape Game is a game where a player or a team of players must escape
+their gaming environment by solving challenges linked together by a narrative in a given time frame.
+
+  Note that the notion of learning environment has been voluntary left behind. This is because not all Escape
+Games are trying to teach something and because it is still unclear whether Escape Games provide a learning
+environment that is better than the traditional ones.
+
+  1 When playing a card Escape Game for instance
+  2 Theme examples are : medieval, nd the murderer, cyberpunk...
+                                 3.1.   MAIN CONCEPTS
+
+
+
+
+3.1.2 Selected concepts
+From the provided denitions, we will now select which ones are to be formally represented and which one will
+be left behind.
+
+
+
+Players     are the central concept of Escape Games. Without players there would be no game, or at least no
+one to play. The concept of Team has been left behind, as the game mechanics itself will provide the team work.
+All players win the game or they all loose.
+
+
+
+Puzzles     is the word that has been chosen as it is the most common encounter in literature. Puzzles are the
+second main concept of Escape Games. Without them, the game becomes a simple maze from which players
+have to get out.
+
+
+
+Rooms      represent the physical universe of the game. Whether the game is virtual or real-life, players always
+evolve in an environment. While this concept is important, it may happen that an Escape Game involves only
+one room. Usually educational games must be built in order to be playable in a classroom, therefore constraining
+the game to only one room.
+
+
+
+Clues     are helper items or information for players. They will need them in order to solve puzzles and progress
+in the game.
+
+
+
+Triggers     are events that may happen in the game provided a specied condition is satised.      A door may
+close when players enter a specic room for example.
+
+
+
+Actions     are activities players can perform while in the game. No article enumerating the possible player's
+actions could be found in the literature. Therefore we have to provide a possible action list.
+
+
+
+Action list
+  As stated, no exhaustive possible action list could be found. So we decided to provide our own action list, in
+the hope it is sucient to formally model Escape Games. The actions are only stated, rules validating whether
+an action may be performed and how the game should react will be dened in section 3.5 Actions and reactions.
+
+
+A.1 Enter : A player can enter in the game.
+A.2 Exit : A player can exit the game.
+A.3 Move : A player can move from one room to another.
+A.4 Search : A player can look in the room he/she is located for clues, puzzles or doors to other rooms.
+A.5 Attempt : A player or a player group can try to solve a puzzle.
+A.6 Inventory : A player can pick-up or drop an item. He/She can also memorize a informative clue.
+A.7 Communicate : A player can give one of its items to another one; he/she can also tell another player
+     about a clue he/she memorized.
+
+
+
+3.1.3 Rejected concepts
+  The following concept are constituent of Escape Games. However, we choose not to retain them for dierent
+reasons. Mainly because while they are important to Escape Games, they do no aect the Game Mechanics.
+
+
+
+Time    may appear as essential. However it doesn't change the game mechanics. Only the player's attitude is
+dierent if time was to be removed from a real-life Escape Game. Puzzles will be solved the same way. Clues
+will be found the same way as well.
+
+
+
+Game Master        is not required in all Escape Games. It is only a helper in case players get stuck. The Game
+Master should not aect the game mechanics.
+
+
+                                                                                                              20
+CHAPTER 3.       THE ESCAPE GAME FRAMEWORK
+
+
+
+
+Theme       is very important in order to build a quality Escape Game.             However, since we want to build a
+mathematical model, theme is irrelevant in this work. We want to unveil the game mechanics, not the wrapping
+that has been made around it.
+
+
+
+
+3.2 Chosen representation
+  In order to represent an Escape Game from a mathematical perspective, graphs have been chosen. An Escape
+Game can be represented as a graph, illustrating a blueprint for a specic game.
+    We will describe the objects that are part of this graph in the following section.
+
+
+
+  Usually graphs are represented with dots as nodes and a label nearby to indicate the node's name. For the
+sake of clarity, we choose a dierent representation. A node will be represented as a circle, its name inside the
+circle.
+    Edges leaving or arriving at a node will therefore arrive or leave the circle's perimeter border.
+
+
+
+  Graphs have multiple representation styles in mathematics. The one chosen in this work denes a graph G
+as :
+
+
+
+                                                      G = (N, E, ϕ)
+
+    where :
+
+
+     G is the whole graph.
+
+     N is the node set3 .
+
+     E is the edge set.
+
+     ϕ is the incidence function. It denes which nodes the edges are linking together.
+
+
+  The incidence function returns an ordered or unordered (depending on the graph type) node pair, provided
+that an edge had been passed as argument. Let e be an edge in E , linking nodes n1 and n2 (both belonging to
+N ), then
+
+                                                     ϕ(e) = {n1 , n2 }
+
+
+  We may also dene the incidence function as a mapping. If e1 and e2 are edges belonging to E and n1 , n2
+and n3 are nodes belonging to N , then the incidence function can be dened as :
+
+
+
+                                        ϕ = (e1 −→ {n1 , n2 }, e2 −→ {n1 , n3 })
+
+    meaning that e1 link nodes n1 and n2 and e2 provides a link between n1 and n3 .
+
+
+
+  In this work, the node set be will split into several node types. The edge set as well. It doesn't aect the
+rules of Graph Theory as the dierent node types are simply a subset of the graph nodes.
+
+
+
+
+3.3 The Escape Game Graph
+  As stated before, graphs will be used to model an Escape Game. Several graphs will be involved in the formal
+denition. The rst one to be introduced is the most important, as it can be considered as the blueprint of a
+given Escape Game. The other graphs that will be built later on can be calculated based on this one.
+
+   3 The word node has been selected over the word vertex.
+                                   3.3.   THE ESCAPE GAME GRAPH
+
+
+
+
+  The Escape Game Graph is an oriented connected graph, containing 6 node types, 1 edge set and an incidence
+function. Node types are : Rooms, Puzzles, Roles, Clues, Skills and Meta-information.
+   An Escape Game Graph E can be dened as :
+
+
+                                                E = (S, C, R, L, Z, I, W ϕ)
+   where :
+
+
+    S is the skill node set;
+
+    C is the clue node set;
+
+    R is the room node set;
+
+    L is the role node set;
+
+    Z is the puzzle node set;
+
+    I is the meta-information node set;
+
+    W is the edge set;
+
+    ϕ is the incidence function
+
+   We shall dene and detail each set.
+
+
+
+3.3.1 Edges
+  Edges in this graph are simply used to connect nodes together.               They are oriented and will be noted wx ,
+where x is the edge number and wx ∈ W .
+
+
+
+3.3.2 Skills
+  Skills are competences players need to possess in order to solve the dierent puzzles in the game. Each skill
+is represented once.
+
+
+The Full Skill Set
+  To solve it, a puzzle requires dierent skills taken from the puzzle taxonomy built by Krekhov and all[22].
+The taxonomy provided by this article divides a puzzle into a set of atomic challenges that can be of type
+Mental, Physical or Emotional. For each challenge presented in the taxonomy set, we will consider it a unique
+skill to possess in order to be able to solve the puzzle.
+
+
+  Since the taxonomy is supposed exhaustive, we can therefore build any puzzle as a combination of any of these
+                          4
+challenges, in any order . Therefore any puzzle can be represented as a combination of these atomic challenges.
+Since a skill can be mapped directly to an atomic challenge, any puzzle is a combination of skills.
+   Therefore, we shall dene a skill as an element belonging to the set presented in table 3.1.
+
+
+                  Observation/Searching                                  Knowledge
+                  Correlation/Logic                                      Pattern Recognition
+                  Computation/Math                                       Mirror/Magnier/Light
+                  Deduction                                              Comparison/Distinction
+                  Distributed Knowledge/Information Sharing              Memorization/Reproduction
+                  Supernatural Abilities                                 Combination
+                  Disentanglement/Disassembly                            Object Movement/Alignment
+                  Self-Motion/Agility                                    Connection
+                  Damaging/Destruction                                   Timing
+                  Overcoming Fear/Disgust                                Dicult/Moral Decisions
+                  Dealing with Negative Consequences
+
+
+Table 3.1: Skill set from Puzzles Unpuzzled: Towards a Unied Taxonomy for Analog and Digital Escape
+Room Games
+
+  4 Whenever the taxonomy will be found incomplete, adding the missing items will allow us to consider it exhaustive again.
+
+
+                                                                                                                              22
+CHAPTER 3.         THE ESCAPE GAME FRAMEWORK
+
+
+
+
+                                                                               F
+    This set shall be referred to as the Full Skill Set and noted S                . This set is a constant through all Escape
+     5
+Games .
+
+
+The Skill Set
+                                                                                                                   F
+  The skill set used in an Escape Game is the set S , which is a subset of the Full Skill Set S                        .
+
+
+                                                                                     F
+  Skills will be noted Sx , where x is the skill number and Sx ∈ S ⊆ S                   .
+    Skills possess no incoming edge and their outgoing edges go to Role nodes.
+
+
+
+3.3.3 Clues
+  Clues are used by the players to solve puzzles. As general guideline rules about clues, they should be used
+for only one puzzle and it should be rather easy to gure out to what puzzle they belong to . In this work, we
+                                                                                                               6
+will consider that players immediately recognize the puzzle linked to the clue. We will also consider that a clue
+may be destroyed (removed from the game) whenever the puzzle they provide help for is solved.
+    Therefore they possess only one outgoing edge to the role connected to their related puzzle.
+
+
+  They will be noted Cx.y , where x is the puzzle Zx they relate to and y is the clue number in the puzzle. All
+clues in the game belong to the clue set C : Cx.y ∈ C .
+    Clues can be an information (a number painted on the wall) or an item that can be carried by players
+(a key). Therefore they possess a type, representing that fact, that can be noted Cx.y = {ClueT ype}, where
+ClueT ype ∈ {Item, Inf ormation}.
+
+  Graphically, information clues will have a dashed border while item clue's border will be plain.
+
+
+
+3.3.4 Rooms
+  Rooms are the main containers in Escape Games. Anything (players, puzzles, clues) existing in the game is
+located in a room.
+
+
+  A room must have at least one incoming edge from another room, puzzle or role node in order to be reachable.
+                                                                       7
+Outgoing edges may lead to many other node types (Room , Puzzle, Clue, Meta-information).
+    Rooms will be noted Rx , where x is the room number and Rx ∈ R.
+
+
+
+3.3.5 Puzzles
+  Puzzles are the main components in an Escape Game, as it is the reason players play. They are located in
+a room, therefore any puzzle shall possess at least one incoming edge coming from a room
+                                                                                                                8 or from another
+      9
+puzzle .
+
+
+  Puzzles require a minimum amount of players that need to solve it together. Therefore a puzzle will receive
+one incoming edge from a Role node for each required player.
+
+
+                                                                                                           F
+  In order to be solved, a puzzle requires dierent skills taken from the Full Skill Set S                     . To represent this,
+each Role node connected to the puzzle will receive an incoming edge for each required skill. This allows for
+complex puzzles to be represented, as sometimes a puzzle requires a player with good dexterity and another
+one with good observation skills.
+
+
+  Last, but not least, puzzles often require clues in order to be solved. Clues are items or information that are
+to be gathered by players to progress in the game. As already discussed, clues are not directly linked to the
+puzzles but to the roles connected to them.
+
+   5 Provided that the taxonomy is complete, there will be no addition to this set.
+   6 This is rule 5 of 13 Rules for Escape Room puzzle design[1], although not a scientic article, it provides guidelines generally
+accepted by the Escape Game enthusiasts community
+   7 Two rooms connected together by an edge means that there are no obstacles between the rooms and players can freely move
+from one to another. This may seem useless and in a theoretical approach the two rooms could be fused together. However this
+situation is rather frequent in live action Escape Games as the building conguration is a constraint that cannot be bend easily.
+   8 It is possible that a puzzle is accessible from two dierent rooms. It then would require one player in each room to solve it.
+   9 in which case this puzzle is the reward for solving its predecessor
+                                    3.3.   THE ESCAPE GAME GRAPH
+
+
+
+
+  Puzzles oer a reward when solved (as stated in Escape room games[35]), otherwise they are pointless and
+create noise for the players. The reward is represented as an outgoing edge to the reward they point to
+                                                                                                                    10 . The
+reward can be of type room, clue or puzzle.
+
+
+
+  Puzzles will be noted Zx , where x is the puzzle number and Zx ∈ Z .
+
+
+
+3.3.6 Roles
+Role nodes have two usages :
+
+
+   1. Represent the required roles in order to solve a puzzle
+
+
+   2. Locate the players' starting positions.
+
+
+
+Solving puzzles       In order to solve a puzzle, there must be at least one player for each role connected to the
+puzzle. Each role may require a dierent skill set and specic clues. Therefore they receive incoming edges from
+skills and clues and possess only one outgoing edge to the puzzle they relate to. They also receive an incoming
+edge from a room, They are noted Lx.y , where x is the puzzle Zx they relate to and y the role number in the
+puzzle. Also, Lx.y ∈ L.
+
+
+
+Starting positions       Sometimes, players will start an Escape Game from dierent positions. To represent this,
+each specic starting position will be represented as a Role node and connected to a Room These nodes can
+also receive incoming edges from specic skill nodes, as a specic starting position could require specic skills
+                                                                                                                          11 .
+These nodes will be noted Lx , where x is the Starting position number. Also, Lx ∈ L.
+
+
+                                                                            P
+  Because there are two role types, we can split this set in two as well : L  contains roles linked to a puzzle,
+L contains roles representing a starting position. Naturally, L ∪ L = L and LP ∩ LS = ∅.
+ S                                                              P    S
+
+
+
+  The standard starting position is a specic role node.           It is the player's starting position when all other
+starting positions have been lled with players. It will be noted L0 and must always be present.
+
+
+
+3.3.7 Meta-information
+  Meta-information node are nodes that allow the system to trigger events in the game.                   These events are
+conditional to any part of the game status. Whenever the conditions are fullled, the Action is executed and
+the graph changes.     As an example, one could imagine an event triggering after all players are in a room to
+release a clue or to close a door.
+
+
+
+  Meta-information nodes will be noted Ix , where x is the Meta-information number. These nodes contain a
+condition, an action and a boolean value that are noted :
+
+
+                                           Ix = {Condition, Action, Repeat}
+where :
+
+
+    Condition is a boolean function; when it returns true, the event should be triggered.
+
+    Action is a function that tells the system what to do when the event is triggered.
+
+    Repeat is a boolean indicating whether the event will trigger only once (Repeat = f alse) or every time
+     Condition evaluates to true.
+
+  Meta-Information nodes all belong to the set I .
+
+
+
+  Meta-Information nodes' Actions and Conditions only have a meaning when the game is played and that a
+Game Session is linked to an Escape Game Graph. This is described in further sections.
+
+ 10 It is also possible that rewards are multiple, then we would nd multiple edges leaving the puzzle node
+ 11 The author once played an Escape Game where one of the player had to start in a prison cell, the Game Master having asked
+rst who was not claustrophobic. This could be represented as a specic Role node connected to the cell Room and connected to
+the skill OvercomingF ear/Disgust
+
+
+
+                                                                                                                          24
+CHAPTER 3.        THE ESCAPE GAME FRAMEWORK
+
+
+
+
+  Two Meta-information nodes will always be present in an Escape Game Graph : the Exit node I0 and the
+Victory node I1 .
+
+
+
+Exit Node        The denition of the Exit Node is I0 = {true, RemoveP layersInRoom(), true}. This node must
+be connected to at least one room. That room represent the Exit point and should not contain anything (i.e.
+there should be only one one-way connection to this room).
+   The condition being true as well as the Repeat value, this means the action is continuously checked. Any
+player present in a room that is directly linked to the Exit node will be removed from the game.
+   Note that there could be several exits. Each exit is then represented by an empty room that is connected
+to the Exit Node.
+
+
+
+Victory Node        This node can be dened as I1 = {|P | = 0, win(), f alse}. The set P being the set of players
+(see section), whenever this set is empty (i.e. there are no more players in the game), the game is won. Once
+the game is won, there is no game anymore and the Repeat value doesn't mean much. This node doesn't require
+to be connected to any node. However, in order to respect the fact that the Escape Game Graph is connected,
+we will connect it to the Exit node.
+
+
+
+  The Victory node may seem useless. Indeed, with the Exit node removing players, the game could calculate
+by itself whether all players are gone.   However, in some situation the goal is dierent.      The objective of an
+Escape Game is      usually to exit, but not always. With this Victory node, it is possible to alter the Victory
+condition without altering the rest of the game mechanics.
+
+
+
+3.3.8 Incidence function
+The incidence function ϕ is the function that maps every edge wx ∈ W to an ordered pair of nodes (from the
+sets S, C, R, L, Z and I ).
+   There are, however, rules to respect as one node cannot be linked to any other. The table 3.2 lists all the
+allowed links.
+
+
+  Source Node       Destination Node    Set space                                                       meaning
+  Skill             Role                {W −→ S × L}                                  The role requires the skill
+  Clue              Role                {W −→ C × Z}                                 The role requires the clues
+  Role              Room                {W −→ L × R}                           The room is a starting position
+  Room              Role                {W −→ R × L}                           The role is located in the room
+  Role              Puzzle              {W −→ L × Z}                                The puzzle requires the role
+  Puzzle            Puzzle              {W −→ Z × Z}                      The puzzle reward is another puzzle
+  Puzzle            Clue                {W −→ Z × C}                                The puzzle reward is a clue
+  Puzzle            Room                {W −→ Z × R}                      The puzzle reward is a door opening
+  Room              Clue                {W −→ R × C}                                    The clue is in the room
+  Room              Puzzle              {W −→ R × Z}                                  The puzzle is in the room
+  Room              Room                {W −→ R × R}                          The room links to another room
+  Meta              Any                 {W −→ I × {S, C, R, L, Z, I}}    Depends on the condition and action
+
+
+                                  Table 3.2: Allowed links for incidence function
+
+
+
+
+3.3.9 Example
+  The following example illustrates how those rules can be used in order to generate an Escape Game Graph.
+
+
+
+  Let us build an Escape Game, containing 2 rooms. Players start in the rst room and must solve the last
+puzzle in order to open the exit door. This last puzzle is a lock pair on the exit door, therefore requiring 2 keys
+in order to be opened. Both keys must be turned together, requiring 2 players to coordinate.
+
+
+
+  The rst key is to be found after opening a chest, located in the rst room. The chest is locked by a three
+digit lock, thus requiring 4 information clues (3 digits and the order in which to place them).       Each digit is
+painted on a wall in the second room, in a dierent color. Next to the chest are three painted circles, matching
+the digit colors. The circles represent the order in which to input the digits into the lock.
+                                  3.3.   THE ESCAPE GAME GRAPH
+
+
+
+
+    For the second key, it is the reward of another puzzle, located in the second room. The key is at the bottom
+of a water tank. Players have to gure out how to get the key. They will nd a magnet in the rst room and a
+string attached to a stick in the second room, next to the water tank. Players must understand that they need
+to attach the magnet to the string, allowing them to sh the key.
+
+
+    Using the Escape Game Graph denition earlier provided, we can formalize this game description as follow :
+
+      Rooms are R1 , R2 and R3 . R1 is the starting room. R3 is the exit room.
+      L0 , the standard starting position node, is linked to R1 .
+      The chest is puzzle Z1 :
+           It requires one player to be solved, therefore role L1.1 is linked to the puzzle.
+           Digit painted clues are clues C1.1 , C1.2 and C1.3 and are located in R2 .
+           Painted circles are clue C1.4 , located in R1 .
+           All those clues are linked to L1.1 .
+           Required skills, connected to L1.1 are :
+            S1 Observation/Searching, to nd the clues.
+            S2 Deduction, to gure out what to do with them .
+            S3 Object Movement/Alignment, to manipulate the digit-lock on the chest.
+           The reward for Z1 is a key, clue C3.1 to the nal puzzle Z3 .
+      The water tank is puzzle Z2 :
+           It requires one player to be solved, therefore role L2.1 is linked to the puzzle.
+           The magnet is clue C2.1 and located in room R1 .
+           The string and stick are clue C2.2 and located in room R2 .
+           Those clues are linked to L2.1 .
+           Required skills, connected to L2.1 , are :
+            S1 Observation/Searching, to nd the clues.
+            S4 Combination, to build the shing rod.
+            S5 Self-Motion/Agility, to sh the key.
+           The reward for Z2 is a key, clue C3.2 to the nal puzzle Z3 .
+      The Locks on the exit door are puzzle Z3 :
+           It requires one player in front of each lock, therefore requiring 2 roles : L3.1 and L3.2 .
+           The rst key Z3.1 is linked to role L3.1
+           The second key Z3.2 is linked to role L3.2
+           Required skills, connected to both roles, are :
+            S3 Object Movement/Alignment, to turn the keys
+            S6 Distributed Knowledge/Information Sharing, to coordinate on when to do it.
+           R3 is the Exit room, and the reward of puzzle Z3 .
+
+    Now that the objects present in the Game have been dened, we can dene our Escape Game E as the graph
+:
+
+
+
+                                   E = (S, C, R, L, Z, I, W ϕ)
+                                   S = (S1 , S2 , S3 , S5 , S6 )
+                                   C = (C1.1 , C1.2 , C1.3 , C1.4 , C2.1 , C2.2 , C3.1 , C3.2 )
+                                   R = (R1 , R2 , R3 )
+                                   L = (L1.1 , L2.1 , L3.1 , L3.2 )
+                                   Z = (Z1 , Z2 , Z3 )
+                                    I = (I0 , I1 )
+                                  W = (w1 , w2 , w3 , ..., w31 , w32 )
+
+
+
+                                                                                                             26
+CHAPTER 3.      THE ESCAPE GAME FRAMEWORK
+
+
+
+
+  Figure 3.1 illustrates the Escape Game Graph representing our game. The dashed rectangles correspond to
+room boundaries. For the sake of clarity, we decided to omit the skill nodes and the edges linking them. Adding
+them into the graph would only make it harder to read. The next graphical representations will usually leave
+skills out of the way.
+3.3.   THE ESCAPE GAME GRAPH
+
+
+
+
+  Figure 3.1: Escape Game Graph Example
+
+
+
+
+                                          28
+CHAPTER 3.         THE ESCAPE GAME FRAMEWORK
+
+
+
+
+3.4 The Game Session Frame Graph
+3.4.1 Game Sessions
+  The Escape Game Graph previously introduced allows us to describe an Escape Game from a static perspec-
+tive. It can be considered as the blueprint of an Escape Game. While this graph by itself already presents many
+relevant information, it would be interesting to be able to model a game while being played.
+
+
+
+  In order to present a complete model, we will now introduce the concept of Game Session (GS) and Game
+Session Frame (GSF). A Game Session is a mathematical representation of an Escape Game when it is played
+by real players, from start to nish. A Game Session Frame is a mathematical representation of an in-progress
+Escape Game, at a given moment. It can be considered as snapshot of the game in a given point in time.
+
+
+
+  A Game Session is therefore a set of Game Session Frames, linked together by the decisions players make in
+order to progress in the game.
+
+
+
+  In this section, we will rst describe the Game Session Frame components.                      We will then provide ways to
+calculate how the possible actions
+                                         12 can be found from a Game Session Frame and the Escape Game Graph.
+For each of these actions, we shall dene the rules for generating a new Game Session Frame from the previous
+one, the selected action and the Escape Game Graph. Finally, we will describe how a Game Session tree can
+be build and present the Game Session forest for a given Escape Game Graph.
+
+
+
+3.4.2 Game Session Frame
+  A Game Session Frame Fk is a mixed, simple graph
+                                                                13 . It contains two edge types (oriented and non-oriented),
+5 node types (Rooms, Players, Skills, Clues and Puzzles) and 2 incidence functions (map and objects).
+    It can be represented as
+
+
+                                          Fk = (Em , Ef , Rf , Pf , Sf , Cf , Zf , ϕm , ϕo )
+    where :
+
+
+     Em is the oriented edge set, used for the map,
+
+     Ef is the non-oriented edge set,
+
+     Rf is the discovered room set,
+
+     Pf is the active player set,
+
+     Sf is the player's skill set,
+
+     Cf is the discovered but unused clue set,
+
+     Zf is the discovered but unsolved puzzle set,
+
+     ϕm is the incidence function representing the map,
+
+     ϕo is the incidence function representing the objects.
+
+3.4.3 Oriented edges
+  Oriented edges will be used in order to represent available player path. They will connect rooms together
+and indicate whether a player can move to another room or not. These edges will be noted Emx (where x is
+the oriented edge number) and belong to the set Em .
+
+
+
+  If players can move from one room to another and come back, then two edges will exist, because they are
+oriented. In order to ease the graphical representation, this situation may be presented as a double arrow.
+
+  12 The actions have been dened in section 3.1.2 Actions
+  13 while usually connected, it is possible that some event would close a door and that players loose access to a room, disconnecting
+the graph. It is also possible that players are separated from each other in dierent rooms that are not reachable (yet, or any more).
+                                3.4.   THE GAME SESSION FRAME GRAPH
+
+
+
+
+3.4.4 Non-oriented edges
+  Non-oriented edges will be used to represent all the other connections between nodes, as orientation does not
+matter. Saying that a puzzle is in a room or that a room contains a puzzle makes no dierence in terms of
+semantics.
+   They may represent :
+
+
+    The location of an item (edge between an item (player, clue or puzzle) and a room),
+
+    A player possessing a skill (edge between a player and a skill),
+
+    A player having knowledge of an information clue (edge between a player and a clue),
+
+    A player carrying a clue (edge between a player and a clue),
+
+    A player carrying a puzzle (edge between a player and a puzzle).
+
+  They will be noted Ef x (where x is the non-oriented edge number) and belong to the set Ef .
+
+
+
+3.4.5 Rooms
+  Rooms are the physical space that players evolve in. Pretty much any other object is connected to a room to
+represent the fact that it is located somewhere. Rooms are connected through each other by oriented edges to
+represent the possible player path.
+
+
+
+  We will use the same objects as in the Escape Game Graph in which rooms are noted Rx and Rx ∈ R.
+
+
+
+  When a room is present in a Game Session Frame, it means players have discovered it. The Escape Game
+may contain rooms that have not been discovered yet. Therefore the Game Session Frame room set Rf is always
+a subset of the Escape Game Graph room set R.
+
+
+
+3.4.6 Players
+  Players are the human beings that will play the Escape Game.          They will evolve through the game with
+the objective of exiting it. They will initiate actions the system will respond to in order to advance in their
+progression. As stated earlier, the Game is usually won when all players have exited the game. For other win
+conditions, see section 3.3.7 Victory Node.
+
+
+
+  Players will be noted Px where x is the player number. They belong to the set Pf . This set will reduce every
+time a player manages to exit the game.
+
+
+
+  Players are always located in a room, therefore there will always be one (and only-one) non-oriented edge
+from each player to a room.
+
+
+
+  Each player possess a unique skill set, so there will be non-oriented edges from each player to the skills they
+possess.
+
+
+
+  Players can gather knowledge from information clues, this will be represented as non-oriented edges going
+from the players to the clues they are aware of. They can also carry item clues. So a non-oriented edge will
+connect a player to each clue he/she is carrying.
+
+
+
+3.4.7 Skills
+  Skills in the Game Session Frame correspond to the skills players possess. Similar to the Skills in the Escape
+                                                      F
+Game Graph, they all belong to the Full Skill Set S       . Skills in the Game Session Frame are noted Sf x where
+x is the skill number and Sf x ∈ Sf ⊆ S F .
+
+  Skills are linked to players with non-oriented edges depending on their competences. They will be used by
+the system to validate whether a given player can solve a puzzle.
+
+
+                                                                                                              30
+CHAPTER 3.        THE ESCAPE GAME FRAMEWORK
+
+
+
+
+  From the skill set Sf , it is already possible to check whether the game is impossible. If the skill set in the
+Escape Game Graph is not a subset of the Game Session Frame skill set, we already know that players do not
+have the skills to complete all the puzzle, therefore they will probably not be able to win the game. That is, if
+S ⊈ Sf , the game is impossible.
+
+
+3.4.8 Clues
+  Clues, as stated before, are used by players to solve puzzles. They can be information or items. Any clue
+present in a Game Session Frame represent a clue that has been discovered but not used yet. Clues will therefore
+appear in a Game Session Frame, then disappear when the puzzle they relate to is solved.
+
+
+
+  Since they represent the same objects as in the Escape Game Graph, clues in the Game Session Frame Graph
+will be noted the same way, Cx.y . All clues present in the Game Session Frame Graph will be in the set Cf and
+Cf ⊆ C .
+
+
+  Clues may be located in a room or carried by a player. Informative clues are known by players. Item clues
+therefore only possess one non-oriented edge that goes either to a Room or to a Player. Informative clues possess
+one non-oriented edge to the room they belong to, and one non-oriented edge to each player that knows about
+the clue.
+
+
+
+3.4.9 Puzzles
+  Puzzles are to be solved by the players using clues and skills. Whenever a player makes an attempt to solve
+a puzzle, the current Game Session Frame Graph and the Escape Game Graph will be used to check whether
+the puzzle can be solved. See section 3.5.2 Attempt for details on how these checks can be performed.
+
+
+
+  Puzzles nodes in a Game Session Frame Graph correspond to puzzles that have been found but not solved yet.
+Whenever a puzzle is solved by the players, it will be removed from the Game Session Frame Graph. Puzzles
+are linked to at least one room
+                                     14 .
+
+
+
+  Again, they are the same items as the puzzles in the Escape Game Graph. Therefore, any puzzle in the Game
+Session Frame Graph is Zx ∈ Zf ⊆ Z .
+
+
+
+3.4.10 Map incidence function
+  The oriented incidence function ϕm is the function that maps every edge from the set Em to an ordered pair
+of nodes from the Room set Rf . It represent the available path for the players in the current game frame. In
+order to ease calculation whenever a path is required to be found, it is possible to produce a reduced graph from
+any given Game Session Frame Graph. The M ap function provides this functionality and is dened as follow :
+
+
+Function 3.4.1 (Map).
+                                                   M ap(Fk ) = (Rf , Em , ϕm )
+
+
+  This is a valid oriented simple graph containing nodes (Rf ), edges (Eo ) and an incidence function (ϕm ) that
+maps the edges to an oriented pair of nodes. The M ap function simply extracts the required items from a given
+Game Session Frame Graph. Mainly, it can be used in order to check whether a path exists from a given Room
+to another one.
+
+
+
+3.4.11 Object Incidence Function
+  The Object Incidence Function ϕo is the function that maps every edge from the set Ef to a pair of nodes
+from the sets Rf , Pf , Sf Cf , and Zf . There are, however, rules to respect as one node cannot be linked to any
+other. The table 3.3 lists all the allowed links. Note that source and destination nodes can be switched as the
+edges are non-oriented.
+
+ 14 It is possible that a puzzle is located in two rooms, therefore requiring multiple players to solve it
+                                     3.4.   THE GAME SESSION FRAME GRAPH
+
+
+
+
+         Source Node       Destination Node           Set space                                              description
+         Room              Player                     {Rf × Pf }                           The player is in the room
+         Room              Clue                       {Rf × Cf }                             The clue is in the room
+         Room              Puzzle                     {Rf × Zf }                          The puzzle is in the room
+         Player            Skill                      {Pf × Sf }                      The player possesses the skill
+         Player            Clue                       {Pf × Cf }         The player carries (or memorized) the clue
+
+
+                             Table 3.3: Allowed links for the Object Incidence Function
+
+
+
+3.4.12 Example
+  To illustrate the Game Session Frame Graph, let us remind about the Escape Game Graph example, illustrated
+by Figure 3.1 Escape Game Graph Example. We dened an Escape Game and drew its graph.
+
+
+  We will now illustrate the Game during a game session. At some point, 2 players started the game, P1 and
+P2 . Both have all the required skills for all the puzzles. They explored around and solved the chest puzzle (Z1 ),
+P1 gathered the reward (a key for the nal puzzle). P2 wandered around and found the string attached to a
+stick, he picked it up. They saw the magnet but left it in the rst room, having not yet discovered its usage.
+All the puzzle have been found.
+   The Game Session Frame Graph is actually much simpler than the Escape Game Graph :
+
+
+
+
+                    Fk = (Em , Ef , Rf , Pf , Sf , Cf , Zf , ϕm , ϕo )
+                   Em = (Em1 , Em2 )
+                    Ef = (Ef 1 , Ef 2 , Ef 3 , Ef 4 , Ef 5 , Ef 6 , Ef 7 )
+                    Rf = (R1 , R2 )
+                    Pf = (P1 , P2 )
+                    Sf = (S1 , S2 , S3 , S4 , S5 , S6 )
+                    Cf = (C2.1 , C2.2 , C3.1 )
+                    Zf = (Z2 , Z3 )
+             ϕm (Em1 ) = (R1 , R2 ), ϕ(Em2 ) = (R2 , R1 )
+              ϕo (Ef 1 ) = (R1 , C2.1 ), ϕo (Ef 2 ) = (R1 , P1 ), ϕo (Ef 3 ) = (P1 , C3.1 ), ϕo (Ef 4 ) = (P2 , C2.2 ),
+              ϕo (Ef 5 ) = (R2 , P2 ), ϕo (Ef 6 ) = (R2 , Z2 ), ϕo (Ef 7 ) = (R2 , Z3 )
+
+   Figure 3.2 illustrates the graph.         This is the current game situation and is actually pretty easy to read.
+Again, the skills have not been represented.
+
+
+
+
+                                                                                                                           32
+CHAPTER 3.      THE ESCAPE GAME FRAMEWORK
+
+
+
+
+                                    Figure 3.2: Game Session Graph Example
+
+
+
+
+3.5 Actions and reactions
+  The Game Session Frame Graph has been introduced in the previous section, providing the possibility to
+represent an Escape Game at a given moment of its execution by players. We shall now dene how to calculate
+the possible actions for the players, based on a Game Session Frame Graph and the Escape Game Graph. Those
+actions have been dened in section 3.1.2 Actions. For each action, we will determine how to calculate whether
+it is a possible action for the current frame.
+
+
+
+3.5.1 The action set
+  For any given Game Session Frame Graph Fk , there is a set of possible actions A(Fk ) that can be calculated.
+The set contains all the actions players can make at this particular moment of the game. Each action will be
+noted Ax , where x is the action number and Ax ∈ A(Fk ). Any action Ax is an ordered set containing dierent
+item types. The type and ordering of the items are unique to each action type.
+
+
+  Each action type is a subset of the action set A(Fk ). Therefore the action set is the union of all action type
+sets.
+
+
+The Find function
+  Before calculating possible actions, we must introduce the Find function. As an Escape Game is a graph, we
+already know that edges are linked through nodes using the graph incidence function. The incidence function
+is a mapping that links one edge to a pair (ordered or not) of nodes. In this work, we will introduce a new
+function, based on the incidence function. The function F ind() is a function that maps any item (node or edge)
+or set to a set containing all the mappings in which this item is present in a given incidence function.
+   The F ind function can be dened as :
+
+Function 3.5.1 (Find).
+                                                 F ind(G, ϕ, I)
+   where
+
+
+    G is the Graph containing the items to nd.
+    ϕ is the incidence function to use from the graph.
+                                3.5.   ACTIONS AND REACTIONS
+
+
+
+
+    I is an item (node, edge or set) existing in the graph.
+
+
+  As an example, let us dene the graph G as :
+
+
+
+
+                                    G = (V, W, E, ϕ)
+                            V (G) = {v1, v2, v3, v4}
+                            W (G) = {w1, w2}
+                             E(G) = {e1, e2, e3, e4, e5}
+                            ϕG (e1) = (v1, v2), ϕG (e2) = (v1, v3), ϕG (e3) = (v2, v4),
+                            ϕG (e4) = (v3, w1), ϕG (e5) = (w1, w2)
+
+
+   where
+
+
+    V and W are sets containing nodes of dierent types.
+
+    E is the edge set.
+
+    ϕ is the incidence function.
+
+   We dene the F ind() function as follow :
+
+
+                          Function              Resulting set
+                          F ind(G, ϕG , e1)     {e1, v1, v2}
+                          F ind(G, ϕG , e2)     {e2, v1, v3}
+                          F ind(G, ϕG , e3)     {e3, v2, v4}
+                          F ind(G, ϕG , e4)     {e4, v3, w1}
+                          F ind(G, ϕG , e5)     {e5, w1, w2}
+                          F ind(G, ϕG , v1)     {e1, e2, v1, v2, v3}
+                          F ind(G, ϕG , v2)     {e1, e3, v1, v2, v4}
+                          F ind(G, ϕG , v3)     {e2, v1, v3}
+                          F ind(G, ϕG , v4)     {e3, v2, v4}
+                          F ind(G, ϕG , w1)     {e3, v3, w1}
+                          F ind(G, ϕG , w2)     {e5, w1, w2}
+                          F ind(G, ϕG , V )     {e1, e2, e3, e4, v1, v2, v3, v4, w1}
+                          F ind(G, ϕG , W )     {e4, e5, v3, w1, w2}
+                          F ind(G, ϕG , E)      {e1, e2, e3, e4, e5, v1, v2, v3, v4, w1, w2}
+
+                                           Table 3.4: The Find function
+
+
+
+   In other words, the F ind() function allows us to get all objects that are connected to the ones passed as
+parameter.
+   It is also possible to pass custom subsets of the graph to the F ind function. It will then return a union of
+the items :
+
+
+
+
+                                              F ind(G, ϕG , {e1, e3, e5})
+                                                          =
+                             F ind(G, ϕG , e1) ∪ F ind(G, ϕG , e3) ∪ F ind(G, ϕG , e5)
+                                                          =
+                                           {e1, e3, e4, v1, v2, v4, w1, w2}
+
+
+
+  If the graph is oriented, the F ind function behaviour is the same.
+
+
+                                                                                                             34
+CHAPTER 3.      THE ESCAPE GAME FRAMEWORK
+
+
+
+
+Enter
+  This action can be executed only once by the players, at the game startup. Therefore this action will never
+be present in any action set, except the rst one. The Enter action is always the rst possible action in the
+game and can be dened as :
+
+
+
+                                                    A0 = {P }
+
+   where P is the player set.
+
+
+
+Exit Game
+  As stated in section 3.3.7 Exit Node, players leave the game when in a specic room. Therefore leaving the
+game is not a specic action but only a movement to this specic room.
+
+
+
+Move
+                                                                                    M
+  This action allows players to move from one room to another. The set A(Fk )           set contains all movement
+actions. A move action Ax is dened as :
+
+
+
+                                                  Ax = {Py , Rz }
+
+   The ordered set is a pair containing a player Py as rst item then a room Rz as second item, indicating that
+the player can move from its current location to the provided room.
+
+
+
+  In order to nd all the possible moves a player can make, we rst need to nd the player's current room. For
+this purpose, we dene the function Location(Py ), which is a shorter way for :
+
+
+Function 3.5.2 (Location).
+                                      Location(Py ) = F ind(Fk , ϕo , Py ) ∩ R
+
+  The F ind function will return a set containing all objects directly connected to the player. Since a player
+can be directly connected to only one room at any given moment, intersecting this set with the set of all rooms
+results in a set containing only the room the player is connected to. Therefore, Location(Py ) is a room, precisely
+the room in which the player is located.
+
+
+
+  Once the player location has been found, it is then possible to use a graph traversal algorithm on the
+M ap(Fk ) graph (which is a graph containing only rooms and path linking them) in order to nd all rooms that
+are reachable from Location(Py ). Any Room node Rz that is found by the algorithm will generate an action
+Ax = {Py , Rz } that is to be included in the set of possible move actions A(Fk )M .
+
+  The choice of the algorithm is not relevant. Any algorithm ensuring all reachable room nodes from Rz will
+be reached is sucient to generate the correct action set.      The path from the player's location to any room
+he/she can move to is irrelevant as well. Knowing the player can move to the given room is sucient to add the
+corresponding action to the move action set. Assuming a correct graph traversal algorithm has been chosen, we
+can dene the function Reachable() as the function that returns a reachable room set from a given room and a
+map. It is dened as :
+
+
+Function 3.5.3 (Reachable).
+                                                 Reachable(r, M )
+
+   where :
+
+
+    r is a room node existing in M .
+
+    M is a graph such a the one dened by the M ap() function.
+
+    The resulting set contains all reachable rooms in M from r, including the room r.
+                                      3.5.       ACTIONS AND REACTIONS
+
+
+
+
+  Of course, this search has to be done for each player in the game. Therefore, we can dene the possible move
+                    M
+action set A(Fk )       as follow :
+
+
+
+
+                                      A(Fk )M =
+                                             Ax |∀p ∈ P,
+                                                  ∀r ∈ Reachable(Location(p), M ap(Fk )),
+                                                  Ax = {p, r}
+
+
+
+Search
+  This action will allow players to discover the items that exist in the game but are still hidden to them. The
+           S
+set A(Fk )     contains all search actions. A Search Action is dened as :
+
+
+                                                             Ax = {Py }
+   Because a player can only make a search in the room he/she is located, nding the player's current room is
+the only required step for the action to be generated. This is done by reusing the Location(Py ) function dened
+earlier.
+                                                                                            S
+   Each player can perform a search, therefore the possible search action set A(Fk )            will contain one search
+action for each player still in the game :
+
+
+
+
+                                                          A(Fk )S =
+                                                                Ax |∀p ∈ P,
+                                                                  Ax = {p}
+
+
+
+Attempt
+  This action becomes available when a player or a group of player have the possibility to solve a puzzle. Since
+we only care about generating the possible actions, we do not know (yet) if the players are in conditions to solve
+                                             A
+it. The attempt action set is A(Fk )             and an attempt action is :
+
+
+                                                         Ax = {Zy , P (Zy )}
+   where :
+
+
+    Zy is the puzzle to solve
+
+    P (Zy ) is the set of players that can and want to try solving the puzzle
+
+  Before building all the possible attempt actions, we need to create a function that maps every reachable
+puzzle Zx to the set of players that may try to solve it :
+
+
+                                                     Attempts ≡ Zx −→ P (Zx )
+   A player Py can make an attempt on a puzzle Zx if he/she is in the same room Rz as a role Lx.a dened
+for the puzzle (linked to the puzzle in the Escape Game Graph). Even if the player doesn't have the required
+skills or clues to solve it, it is possible to try.
+
+
+
+  First, we need to nd the player's current room, using the Location(Py ) function. Then, we nd all the roles
+connected to this room in the Escape Game Graph E :
+
+
+                                        Roles(Py ) = F ind(E, ϕ, Location(Py )) ∩ L
+   F ind(E, ϕ, Location(Py )) will return a set containing all objects connected to the current player's room in
+the Escape Game Graph. Intersecting this set with the Role set L will return a set containing all roles in the
+player's room.
+
+
+                                                                                                                    36
+CHAPTER 3.        THE ESCAPE GAME FRAMEWORK
+
+
+
+
+  Finally, we can nd the puzzles linked to those roles :
+
+
+
+                                     P uzzles(Py ) = F ind(E, ϕ, Roles(Py )) ∩ Z
+
+
+  Using the same approach, we nd all objects connected to the roles, then the intersection with the puzzle set
+Z will return the reachable puzzle set. Each puzzle Zx in P uzzles(Py ) will be added to the mapping function
+Attempts. Once done for every player and every puzzle, it remains to build all the possible combinations for
+players grouping together.
+
+
+
+  For example, if players P1 and P2 have the possibility to solve puzzle Z1 , the mapping function would be
+generated as follow :
+
+
+
+                                            Attempts = {Z1 −→ {P1 , P2 }}
+
+   Players actually have the following choices :
+
+
+
+    Player P1 makes the attempt
+
+    Player P2 makes the attempt
+
+    P1 and P2 make the attempt together
+
+   Therefore, we need to generate the following actions :
+
+
+
+    A1 = Attempt(Z1 , {P1 })
+
+    A2 = Attempt(Z1 , {P2 })
+
+    A3 = Attempt(Z1 , {P1 , P2 })
+
+   The dierent possibilities correspond to the power set
+                                                              15 P(P (Z )) (excluding the empty set) generated from
+                                                                         y
+the mapping set in Attempts.
+
+   Therefore, the attempt action set can be expressed as :
+
+
+
+
+                                         A(Fk )S =
+                                             Ax |∀(Zy −→ P (Zy )) ∈ Attempts,
+                                                ∀ps ∈ P(P (Zy )) \ ∅,
+                                                Ax = {Zy , ps}
+
+
+Inventory
+  At any moment during the game, players can perform action on their inventory. They can pick up or drop a
+clue. They can also memorize an information clue.
+                                     I
+   The inventory action set A(Fk )       contains actions Ax such that :
+
+
+
+                                                     Ax = {Py , Cz.a }
+
+
+  If the player is already carrying the clue, then the action is a request to drop it in the room where the player is
+located. If the player isn't carrying the clue, then it is a request to take it. Information clues can't be dropped,
+so it is always a request to memorize it.
+
+
+ 15 The set containing all subsets
+                                 3.5.   ACTIONS AND REACTIONS
+
+
+
+
+Clue subsets     Since clues will be separated and ltered according to their types, we can dene the subsets
+C item and C inf o , respectively the set containing only the item clues and the set containing only the information
+clues. Both are a subset of C and they are dened as :
+
+
+
+
+                                           C item ⊆ C
+                                           C inf o ⊆ C
+                                           C item ∪ C inf o = C
+                                           C item ∩ C inf o = ∅
+                                   C item = (Cx.y ∈ C|Cx.y .ClueT ype = Item)
+                                   C inf o = (Cx.y ∈ C|Cx.y .ClueT ype = Inf o)
+
+
+   To generate those actions, there are three rules :
+
+
+R.1 Any item clue the player is carrying can be dropped
+R.2 Any item clue in the same room as the player can be picked-up
+R.3 Any information clue the player isn't aware of yet and in the same room as the player can be memorized.
+
+  Each one of these rules will generate a specic action set, itself a subset of the Inventory action set. We can
+then redene the Inventory action set as :
+
+
+
+                                    A(Fk )I = A(Fk )ID ∪ A(Fk )IP ∪ A(Fk )IM
+
+  Each of these sets is built according to the predened rules.
+
+
+
+Rule R.1, Drop       The clue set that can be dropped is actually the clue set the player is already carrying :
+
+
+
+                                               F ind(Fk , ϕo , Py ) ∩ C item
+
+   Intersecting player's connected items with the item clue subset will result in a set containing item clues
+connected to the player.
+                                                                                                   ID
+   Any clue c in this set will generate a drop action Ax and we can dene the set A(Fk )                as :
+
+
+
+
+                                    A(Fk )ID =
+                                            Ax |∀c ∈ (F ind(Fk , ϕo , Py ) ∩ C item ),
+                                               Ax = {Py , c}
+
+Rule R.2, Pick-up       The clue set that can be picked-up is the set of items in the same room as the player,
+excluding the information clue. We will reuse the Location(Py ) function dened earlier :
+
+
+
+                                         F ind(Fk , ϕo , Location(Py ) ∩ C item
+                                                                                    IP
+   Any clue in this set will generate a pickup action Ax and the set A(Fk )              can be dened as :
+
+
+
+
+                                A(Fk )IP =
+                                        Ax |∀c ∈ F ind(Fk , ϕo , Location(Py ) ∩ C item ,
+                                           Ax = {Py , c}
+
+Rule R.3, Memorize
+
+                                                                                                                  38
+CHAPTER 3.         THE ESCAPE GAME FRAMEWORK
+
+
+
+
+    This is the set containing information clues located in the same room as the player and that the player hasn't
+already memorized :
+
+
+
+                               (F ind(Fk , ϕo , Location(Py ) ∩ C inf o )(F ind(Fk , ϕo , Py ) ∩ C inf o )
+                                                                                                       IM
+     Clues c in this set will generate an action Ax that allows to dene the set A(Fk )                      as :
+
+
+
+
+                   A(Fk )IM =
+                             Ax |∀c ∈ F ind(Fk , ϕo , Location(Py ) ∩ C inf o ) \ (F ind(Fk , ϕo , Py ) ∩ C inf o ,
+                                 Ax = {Py , c}
+
+Communicate
+    Players have the ability to exchange and share information or item clues. To model this, the Communicate
+                    C
+action set A(Fk )         contains actions Ax that can be dened as :
+
+
+
+                                                           Ax = {Cx.y , Pa , Pb }
+
+    This action represent the fact that player Pa has the possibility to give the clue Cx.y to player Pb . If the clue
+is an information, it represent that fact that player Pa can teach the clue Cx.y to player Pb . To reect the
+                                                                                       C                            CT            CF
+dierences between items and information, we can split the set A(Fk )                      in two subsets, A(Fk )        and A(Fk )    ,
+respectively the items that can be given and the information that can be explained (or taught).
+
+
+
+    In order to communicate, we will assume players must be in the same physical location. Therefore, we will
+rst build a mapping function Others that maps a player to a set containing the other players in the same room
+:
+
+
+
+                                                        Others ≡ Px −→ P others
+                 others
+     The set P            can be build as follow :
+
+
+
+                                                 F ind(Fk , ϕo , Location(Px )) ∩ (P \ Px )
+
+     For each player Px as the source (left side of the arrow) of a mapping in Others, we can build its item and
+            item             inf o
+info sets Px       and Px            :
+
+
+
+
+                                                   Pxitem = F ind(Fk , ϕo , Px ) ∩ C item
+                                                   Pxinf o = F ind(Fk , ϕo , Px ) ∩ C inf o
+
+                     item
+    The item set Px          is the set containing item clues carried by the player. All items in this set can be given to
+                                                                                                                                      CT
+any player in the Others mapping for the player Px . Therefore, the Communicate actions set for items A(Fk )
+can be expressed as :
+
+
+
+
+                                                   A(Fk )CT =
+                                                         Ax |∀(Py , P others ) ∈ Others,
+                                                             ∀c ∈ Pyitem ,
+                                                             ∀p ∈ P others ,
+                                                             Ax = {c, Py , p}
+
+                                     inf o
+    Likewise, the info set Px                is the set containing information clues known by the player.             The player can
+share his/her knowledge only to players not aware of those information yet. The Communicate action set for
+                        CF
+information A(Fk )           is slightly modied to exclude the players already aware of the information to share :
+                                3.5.   ACTIONS AND REACTIONS
+
+
+
+
+                                       A(Fk )CF =
+                                            Ax |∀(Py , P others ) ∈ Others,
+                                               ∀c ∈ Pyinf o ,
+                                               ∀p ∈ P others |(c ∈
+                                                                 / pinf o ),
+                                               Ax = {c, Py , p}
+
+3.5.2 The reaction set
+  We have established the possible actions and ways to calculate them from a Game Session Frame Graph and
+the Escape Game Graph. So, for each Game Session Frame Graph, there is a set of possible actions A(Fk ) from
+which players can choose. Once players have chosen an action, we need to generate a new Game Session Frame
+Graph to reect the action's eect on the game.      Sometimes, we have to generate multiple Graphs because
+the selected action may induce several possible reactions. Those newly generated graphs will be part of a set,
+the Reaction set, noted R(Ax ).   Each action from the Action set A(Fk ) will generate a specic reaction set,
+containing one or more items. The items contained in the Reaction set are new Game Session Frame Graphs,
+for which we will be able to generate new action sets.
+
+
+  This section describes, for each Game Session Frame Graph Fk , how to generate the next graph Fk+1 (or
+the next graph set) in reaction to a player's action.    To simplify the model's mechanics, we need to enforce
+a constraint : a player or a player set only pick one action, players not involved in the action do nothing in
+the meantime. In the real world players will perform actions simultaneously. This is discussed in section 4.2.3
+Player multithreading.
+
+
+Generating a new graph
+In order to generate new graphs from the previous situations, we need to introduce 3 functions :
+
+  1. Add
+
+  2. Remove
+
+  3. Update
+
+
+Function : Add     Whenever an item is to be added to game. The Add function will return a new graph based
+on the provided graph and the nodes and mapping to add.
+
+Function 3.5.4 (ADD).
+                                                Add(G, N, M )
+                                                         or
+                                                    Add(G, M )
+   where
+
+    G is the Game Session Game Graph Fk in which to add N and M .
+    N is a node set that exist in the Escape Game Graph E but not in G yet.
+    M is a node pair set containing links to be added. All nodes in the mappings must exist in G or be part
+     of N .
+
+
+  The function returns a new Game Session Frame Graph Fk+1 , a copy of the graph Fk , in which the nodes N
+have been added. Edges of the proper type are added as well and the mapping function is updated accordingly.
+   There are three node types that can be added in a Game Session Graph :
+
+  1. Rooms, the new edges will be created in the Em set and the mapping ϕm will be updated as well.
+
+  2. Puzzles, the new edges will be created in the Ef set and the mapping ϕo will be updated.
+
+  3. Clues, the new edges will be created in the Ef set and the mapping ϕo will be updated.
+
+   The second version of the Add function, without the specied nodes, allows us to add edges corresponding
+to the provided mappings. If a provided mapping contains two nodes of type Room, the edge will be added into
+Em and ϕm will be updated accordingly. Otherwise, an edge will be added into Ef and ϕo will be updated.
+
+                                                                                                            40
+CHAPTER 3.      THE ESCAPE GAME FRAMEWORK
+
+
+
+
+Function : Remove         Whenever an item is no longer needed in the game. The Remove function will return
+a new graph based on the provided graph and the nodes to be removed.
+
+Function 3.5.5 (Remove).
+                                                    Remove(G, I)
+   where
+
+
+    G is the Game Session Frame Graph Fk from which to remove the items.
+    I is a set containing items already present in G. If a node is removed, all edges linked to it will also be
+     removed and the mapping function updated accordingly.
+
+
+  The function will return a new Game Session Frame Graph FK+1 in which the provided item set is no longer
+present.
+   Items that can be removed from the game are :
+
+
+  1. Oriented Edges, whenever a door from the Escape Game Graph closes, an oriented edge from Em is to be
+     removed.
+
+  2. Puzzles : when solved, the puzzle disappears.
+
+  3. Clues : when the related puzzle is solved, clues for this puzzle are of no interest anymore.
+
+  4. Players : When in the Exit Room, players are removed from the game.
+
+
+  Obviously, any mapping in the incidence function containing the items to remove will also be removed, in
+order to keep consistency.
+
+
+  In order to remember which items have already been discovered (see later), we want to remember some of
+the removed items. To do so, we will create a set named Removed that will remember items not present in the
+game anymore. Only nodes of type Puzzle, Clue or Player will be present in the Removed set. Every time the
+Remove function will be used (and if the item type to remove is of one of those stated), the Removed set will
+collect removed nodes.
+
+
+Function : Update        The U pdate function allows to update an incidence function without touching anything
+else. It returns a new graph with the updated incidence function. It can be seen as edge redirecting.
+
+Function 3.5.6 (Update).
+                                                  U pdate(G, E, M )
+   where
+
+
+    G is the Game Session Frame Graph Fk to take the incidence function from.
+    E is an edge in the graph.
+    M is a new unordered node pair that will redirect the edge to another node pair.
+
+  The nodes in the new mapping must already exist prior to calling this function. This function will return a
+new Game Session Frame Graph Fk+1 where it's object incidence function ϕo has been updated to reect the
+edge redirection.
+   The operation is pretty straightforward :
+
+
+                                                     ϕo (E) = M
+   Table 3.5 Update function's rules lists the allowed mappings for the U pdate function.
+
+
+                         original mapping    new mapping              description
+                         Room to Player       New Room to Player      Player's movement
+                         Clue to Room         Clue to Player          Player's pickup action
+                         Clue to Player      Clue to Room             Player's drop action
+
+
+                                          Table 3.5: Update function's rules
+                                   3.5.   ACTIONS AND REACTIONS
+
+
+
+
+Enter
+  Entering the game is an action that is executed only once, at game startup. It is the rst action players will
+execute. The Enter action has bee dened as :
+
+
+                                                       A0 = {P }
+   Therefore we need to place the players and build the rooms around them. As a reminder, roles Lx connected
+to a room act as possible starting positions. Role L0 is the standard starting position when all other starting
+positions are occupied.
+
+
+
+  We need to assign each player a starting position, taking into account the required skills for each position.
+Figure 3.3a illustrates an Escape Game having 2 start position L0 and L1 , L1 requiring a specic skill. Figure
+3.3b illustrates 3 players, 2 of them possessing the skill required to start at position L1 . First, we want to gather
+all starting positions except the standard one L0 into the set Start :
+
+
+                                          Start = (F ind(E, ϕo , R) ∩ LS ) \ L0
+                S
+   Roles in L       are the starting position. We then exclude the standard position L0 .
+
+
+
+  For each starting position s in Start, there is a skill set, representing the required skills to be able to start
+from there. We shall gather those skills in the Start Requirement set SR(s). There is one requirement set for
+each starting position. Likewise, each player possesses a skill set, indicating what he/she is capable of. The
+player skill set P S(p) represents the skill set of player p and can be calculated as :
+
+
+                                             P S(p) = F ind(Fk , ϕo , p) ∩ S
+
+  In order to validate the starting positions, we need to nd a match between each Start Requirement Sets and
+the Player Skill Sets. Since the players can have more skills than required (but no less), it is sucient to say
+that if SR(s) ⊆ P S(p), then player p is eligible for starting position s. If all starting position can be lled by
+at least a dierent player, then it is possible to start the game. Remaining players will be put in the standard
+starting position L0 .
+
+
+
+  To solve this problem, we can build a bipartite graph in which the nodes are the Start Requirement Sets on
+one side and the Player Skill Sets on the other. Nodes are linked if SR(s) ⊆ P S(p) (if a player is eligible for
+a role). The goal then is to nd a maximum coupling including all of the Start Requirements Sets. If no such
+coupling exists, then all the requirements cannot be met with the current player set and the game cannot start.
+If a maximum coupling including all the Start Requirement sets can be found, then it is possible to start the
+game. Figure 3.3c illustrate the bipartite graph between the Start Requirements and the Player Skills.
+
+
+
+  Since we have to provide all possible reactions to a given action. Not only is it needed to nd a maximum
+coupling including all the Start Requirement sets, it is also required to nd them all. Each maximum coupling
+CxM ∈ C M will generate a dierent starting situation. Once the couplings have been found, we need to add a
+coupling between each remaining player (that is not yet part of a coupling) and the standard starting position
+L0 . We then need to create the rooms and place the players in it. A coupling pair c ∈ CxM is an ordered node
+pair containing a player p and a role l (starting situation) : c = (p, l). We will therefore gather all the rooms
+linked to the starting positions, create them, and create one edge between each player and its starting room.
+The room set to create is
+
+
+                                             Rooms = F ind(E, ϕ, LS ) ∩ R
+                                                                                                   M
+   The mapping linking players to their starting room can be generated from the coupling Cx            :
+
+
+                                 M apping(CxM ) = ∀(p, l)inCxM , {p, F ind(E, ϕ, l) ∩ R}
+   The reaction set for entering the game can be expressed as :
+
+
+
+
+                                  R(Ax ) = ∀CxM ∈ C M , Add(Fk , Rooms, M apping)
+
+   Figures 3.3d and 3.3e illustrates the 2 possible starting situation in the Reaction set.
+
+
+                                                                                                                   42
+CHAPTER 3.       THE ESCAPE GAME FRAMEWORK
+
+
+
+
+                                                              (c) Possible couplings between Start Requirements and
+    (a) Starting positions             (b) Frame F0           Player Skills
+
+
+
+
+   (d) Starting situation 1       (e) Starting situation 2
+
+
+                                       Figure 3.3: Result of the Enter Action
+
+
+
+
+Move
+  As dened earlier, a Movement action is an ordered set containing a player Px and a reachable room Ry :
+
+
+                                                    Ax = {Px , Ry }
+
+  Because we already calculated it, we know the room is reachable (i.e. there is a valid path between the player
+and the room). We are not interested in which path the player is taking in order to move to that room, we
+are only interested in the action's result. The result is that the player is now located in room Ry and left the
+previous room he was in. In order to generate a new Game Session Graph reecting the new game situation,
+we only need to redirect the edge going from the player to the previous room and make it go to the new room.
+This is done rst by nding edge e, linking the player to its current room (Location(Py )) :
+
+
+                              e = F ind(Fk , ϕo , Px ) ∩ F ind(Fk , ϕo , Location(Px )) ∩ Ef
+   The rst intersect will return a set containing the player, the room and the edge linking them. Intersecting
+again with the non-oriented edge set will return only the edge. The U pdate function will then generate a new
+graph, reecting the player's new location. It generates only one reaction in the reaction set :
+
+
+                                          R(Ax ) = U pdate(Fk , e, {Px , Ry })
+
+Search
+  A search result can yield various results, depending on the player's location. Indeed, the point of performing
+a search action is for the players to discover new items (clues, puzzles or rooms) that haven't been found yet.
+However, the search will create only one new item in the game.            So it is possible that a search action may
+generate several Game Session Frame Graph, depending on the object found.
+
+
+
+  The rst thing to do is to build a set        U ndiscovered containing all the undiscovered items in the room
+players want to search. Then we generate one new Game Session Frame Graph for each item present in the
+U ndiscovered set using the Add function.
+   As dened earlier, the Search action is dened as :
+
+
+                                                      Ax = {Fk , Py }
+   Only the following items can be discovered by a search :
+
+
+  1. Clues in the same room as the player.
+                                   3.5.   ACTIONS AND REACTIONS
+
+
+
+
+  2. Puzzles in the same room as the player.
+
+  3. Rooms connected to the player's current room.
+
+  4. Room connections that have not been found yet.
+
+
+Available clues     The available clues set Avc , containing the clues to be discovered, can be found using the
+following calculation :
+
+
+                           Avc = c ∈ (F ind(E, ϕ, Location(Py )) ∩ C)|c ∈
+                                                                        / (Cf ∪ Removed)
+
+  F ind(E, ϕ, Location(Py )) ∩ C is a set containing all the clues linked to the player's room in the Escape Game
+Graph.  We need then to lter out the clues that have already been discovered. (Cf ∪ Removed) is a set
+containing all the discovered clues, those still active and those that have been removed.
+
+
+Available puzzles     Processing the same way, the available puzzle set Avz can be found using the following :
+
+
+                           Avz = z ∈ (F ind(E, ϕ, Location(Py )) ∩ Z)|z ∈
+                                                                        / (Zf ∪ Removed)
+   Again, we rst nd all the puzzles in the room, then remove those in the current Game Session Frame Graph
+as well as those already removed.
+
+
+Connected rooms           We rst need to build the U ndiscoveredRooms set, containing all rooms possessing a
+path to or from the player's current location which have not yet been discovered :
+
+
+                          U ndiscoveredRooms = (Py ) = (F ind(E, ϕ, Location(Py )) ∩ R)Rf
+   Then we select the rooms accessible from Location(Py ) :
+
+
+
+                             Avr = r ∈ U ndiscoveredRooms|∃ϕ(e) = {Location(Py ), r}
+
+   We nd the connected rooms and remove those already existing in the current Game Session Frame Graph.
+
+
+Room connections
+
+  Let us assume we have three rooms, all directly connected together.               We would have the following in the
+Escape Game Graph :
+
+
+
+                                  R = {R1 , R2 , R3 , ...}
+                                 W = {w1 , w2 , w3 , ...}
+                              ϕ(w1 ) = (R1 , R2 ), ϕ(w2 ) = (R2 , R3 ), ϕ(w3 ) = (R1 , R3 ), ...
+
+  At some point in the game players search R1 and nd the next room R2 . Later on they search R2 and nd
+R3 . With the previously stated searches, the connection between R1 and R3 will never be found, because all
+rooms have been found. We need to look for undiscovered room connections.
+
+
+  We can rst build the DiscoveredRooms set, containing all rooms that have been discovered by the players
+(and linked to the player's current location) :
+
+
+                              DiscoveredRooms(Py ) = F ind(E, ϕ, Location(Py )) ∩ Rf
+   Then, provided that there is a path between the rooms r ∈ DiscoveredRooms(Py ) and the current player's
+room Location(Py ), we check whether this path exists in the Game Session Frame Graph Fk :
+
+
+
+                           Avrc = r ∈ DiscoveredRooms(Py )|∄ϕm (e) = {Location(Py ), r}
+
+   The set Avrc provides the missing room connections. First we select all the rooms connected to the current
+player's room in the Escape Game Graph that have already been discovered, then we keep only the rooms from
+which the current player's room doesn't provide a path.
+
+
+                                                                                                                   44
+CHAPTER 3.       THE ESCAPE GAME FRAMEWORK
+
+
+
+
+Undiscovered items       The U ndiscovered set is then the union of the preceding sets :
+
+
+                                    U ndiscovered = Avc ∪ Avz ∪ Avr ∪ Avrc
+
+Search results     As previously stated, we will now generate a new Game Session Frame Graph Fk+1 for each
+item u in U ndiscovered. The creation rules are pretty straightforward :
+
+
+
+Clues     Clues are to be added directly in the room Ry :
+
+
+                                              Fk+1 = Add(Fk , u, {Ry , u})
+
+Puzzles     Puzzles are to be added directly in the room Ry :
+
+
+                                              Fk+1 = Add(Fk , u, {Ry , u})
+
+Direct rooms       Rooms from Avr are to be added as unidirectional path. Players don't know in advance if
+there is way to come back to their current room :
+
+
+                                              Fk+1 = Add(Fk , u, {Ry , u})
+
+Room connections        Rooms from Avrc have already been discovered. What is left is to add an edge from Ry
+to those rooms :
+
+
+                                               Fk+1 = Add(Fk , {Ry , u})
+
+Attempt
+  An attempt reects the fact that players want to try to solve a puzzle. It doesn't mean they will solve it. So
+the rst thing to check is whether the attempt is successful or not. Depending on the result, the new graph will
+be generated.
+   It has been dened as :
+
+
+                                                  Ax = {Zx , P (Zx )}
+
+Attempt check       In order to solve a puzzle, several conditions must be fullled :
+
+
+C.1 There must be at least as many players as required by the puzzle.
+C.2 The players attempting to solve the puzzle must be in the correct room.
+C.3 The players attempting to solve the puzzle must possess the required skills.
+C.4 The required clues for solving the puzzle must be in possession of the players attempting to solve it.
+
+  If any of these conditions is not met, the puzzle can't be solved and the attempt will result in a failure. Each
+of the previous conditions must be fullled in order to allow players to solve the puzzle. The puzzle itself doesn't
+contain any indications as what is required to solve it. We need to refer to the roles connected to Zx . We will
+dene the role set for the puzzle Zx as :
+
+
+                                            L(Zx ) = F ind(E, ϕ, Zx) ∩ LP
+
+   checking C.1      We rst need to nd out how many roles are required to solve the puzzle :
+
+
+                                                    NR = |L(Zx )|
+
+   then, if |P (Zx )| >= NR , the condition   C.1 is met.
+                                 3.5.    ACTIONS AND REACTIONS
+
+
+
+
+   checking C.2, C.3 and C.4            For each of the roles in L(Zx ), we need to nd a player possessing the same
+characteristics.
+   Namely, for each role, there must be a player that is :
+
+
+    located in the proper room (S.1) and
+
+    possess the required clues (S.2) and
+
+    possess the required skills (S.3).
+
+   So, for each role Lx ∈ L(Zx ), we can build the following sets :
+
+
+ S.1 F ind(E, ϕ, Lx ) ∩ R
+ S.2 F ind(E, ϕ, Lx ) ∩ C
+ S.3 F ind(E, ϕ, Lx ) ∩ S
+   The union of these sets is the Requirement Set for role Lx , noted Rs(Lx ). The Requirement Set for a Puzzle
+Zx is Rs(Zx ) and is a set containing all the roles Requirement Sets involved in the puzzle Zx . There is one
+Requirement Set for each puzzle and these sets are constant throughout the game.
+   Then, for each player p ∈ P (Zx ), we can build the following sets :
+
+
+ S.1 F ind(Fk , ϕo , p) ∩ R
+ S.2 F ind(Fk , ϕo , p) ∩ C
+ S.3 F ind(Fk , ϕo , p) ∩ S
+   The union of these sets is the Player Capabilities Set for the player p, noted P c(p). Each player possesses a
+Player Capabilities Set, but it will change over time as they move from room to room and gather or drop clues.
+   In order to validate the puzzle conditions, the system needs to nd a match between each Requirement Set
+for the puzzle and the Player Capabilities Sets. Since the players can carry more clues than required (but no
+less) and can have more skills than required (again, but no less), it is sucient to say that if Rs(Lx ) ⊆ P c(Py ),
+then player Py is eligible for role Lx . If all roles for the puzzle are fullled by at least a dierent player, then
+the puzzle can be solved.
+   To solve this problem, we can build a bipartite graph in which the nodes are the Requirement Sets on one
+side and the Player Capabilities Sets on the other. Nodes are linked if Rs(Lx ) ⊆ P c(Px ) (if a player is eligible
+for a role). The goal then is to nd a maximum coupling including all of the Requirements Sets. If no such
+coupling exists, then all the requirements cannot be met with the current player set and the puzzle cannot be
+solved. If a maximum coupling including all the Requirement sets can be found, then the puzzle can be solved.
+   For example, let's imagine a big chest that has two locks on each of its sides.          It requires two players to
+turn the keys in the locks at the same time. Let the chest be the puzzle Z1 and the two keys be the clues C1.1
+and C1.2 . There would be also two roles L1.1 and L1.2 , each one connected to one of the clues and the skill S1
+(corresponding to the ability to turn the key in the lock). If two players (P1 and P2 ) attempt to solve it together
+while P1 owns the two keys, no coupling where all the Requirements are met exists. Players will rst need to
+transfer one of the 2 keys to P2 and attempt again. Then it will be possible to meet all the requirements and
+the puzzle can be solved.
+   The puzzle requirement set Rs(Z1 ) is :
+
+
+
+
+                                           Rs(Zx ) =
+                                                    {
+                                                    Rs(L1 ) = {R1 , C1.1 , S1 },
+                                                    Rs(L2 ) = {R1 , C1.2 , S1 }
+                                                    }
+
+   And the player's capability set P c(P1 ) and P c(P2 ) are, in the original situation :
+
+
+
+
+                                           P c(P1 ) = {R1 , C1.1 , C1.2 , S1 , S2 }
+                                           P c(P2 ) = {R1 , C2.1 , S1 , S3 , S4 }
+
+                                                                                                                   46
+CHAPTER 3.       THE ESCAPE GAME FRAMEWORK
+
+
+
+
+   Both requirement sets are subsets of P c(P1 ), but none of them is a subset of P c(P2 ). Therefore, since P1
+can play only one role in the puzzle, the puzzle cannot be solved.
+   If P1 was to give clue C1.2 to P2 , the capability sets would then become :
+
+
+                                      P c(P1 ) = {R1 , C1.1 , S1 , S2 }
+                                      P c(P2 ) = {R1 , C1.2 , C2.1 , S1 , S3 , S4 }
+
+   In this new situation, Rs(L1 ) ⊆ P c(P1 ) and Rs(L2 ) ⊆ P c(P2 ), providing a maximum coupling including all
+the elements of Rs(Zx ). The puzzle can therefore be solved.
+
+
+
+Attempt failure     Whenever the puzzle cannot be solved, the action made by the player is useless and the
+game situation didn't change. So, the newly generated Game Session Frame Graph is actually the same as the
+previous one :
+
+
+
+                                                     Fk+1 = Fk
+
+
+Attempt success      If the players manage to solve the puzzle, multiple actions must be taken in order to
+generate the next graph Fk+1 :
+
+
+  1. All clues related to the puzzle are to be removed.
+
+
+  2. The puzzle must be removed.
+
+
+  3. The Reward must appear in the new graph
+
+
+   We will dene 2 sets :   T oRemove will contain items to remove from the current graph (clues and puzzle)
+and T oAdd will contain items to add and where to add them.
+
+
+
+   Removing clues       The rst action to take is to remove the clues linked to this puzzle. To do so, we can
+reuse the Puzzle Requirement Set Rs(Zx ) as it already contains all the clues linked to the puzzle. We just need
+to keep only the clues and to put those in the T oRemove set :
+
+
+
+                                            T oRemove = Rs(Zx ) ∩ C
+
+
+   Removing puzzle       We add the puzzle in the T oRemove set. The set denition becomes :
+
+
+
+                                       T oRemove = (Rs(Zx ) ∩ C) ∪ Zx
+
+
+   Granting reward       As stated in the Puzzle node denition, the reward type can be a clue, a puzzle or a
+room. Also, there can be multiple rewards. The reward set can be dened as :
+
+
+
+                                  Rw = r ∈ {R, C, Z}|(∃w|ϕ(w) = {Zx , Re})
+
+   We look for the items that have an incoming edge from the puzzle, they are the reward.
+   For each of those rewards, we need to add them to the new graph Fk+1 :
+
+
+
+                                 Fk+1 = Add(Fk , Rw, {∀Re ∈ Rw, {Ry , Re}})
+
+   We add the reward set, providing a mapping from the puzzle's room to each reward.
+
+
+
+Inventory
+As a reminder, there are actually 3 possible inventory actions : drop, pick-up and memorize. For each of those,
+we need to dene how the resulting graph will be calculated.
+                                     3.5.    ACTIONS AND REACTIONS
+
+
+
+
+Drop     The drop action was dened as :
+
+
+                                                            Ax = {Py , c}
+   The idea is that the player drops the clue in the room he/she is located. So all we have to do is nd the
+edge linking the player and the clue, then redirect this edge to the room :
+
+
+
+
+                                                   edge = e ∈ Ef |ϕ(e) = {Py , c}
+                                            mapping = {c, Location(Py )}
+                                                 Fk+1 = U pdate(Fk , edge, mapping)
+
+Pick-up    The Pick-up action was dened as :
+
+
+                                                            Ax = {Py , c}
+   It is the same action as drop, but reversed. First we need to nd the edge between the clue and the room,
+then redirect this edge :
+
+
+
+
+                                               edge = e ∈ Ef |ϕ(e) = {Location(Py ), c}
+                                         mapping = {c, Py }
+                                             Fk+1 = U pdate(Fk , edge, mapping)
+
+Memorize      The Memorize action has been dened as :
+
+
+                                                            Ax = {Py , c}
+   The only thing to do here is adding a new edge between the player and the clue, because it will stay in the
+room :
+
+
+                                                      Fk+1 = Add(Fk , {Py , c})
+
+Communicate
+Finally, the Communicate actions are to be calculated. As a reminder, the communication action set has been
+                            CT                CF
+split in two sets, A(Fk )        and A(Fk )        . For each of those, the rules are slightly dierent.
+
+
+Exchange      Actions in A(Fk )
+                                    CT
+                                         are dened as Ax = {c, Py , p}, meaning that player Py is about to give clue c
+to player p. To reect this operation in the new graph, we need to modify the edge linking the clue c and Py in
+order to make it go to p :
+
+
+
+
+                                                   edge = e ∈ Ef |ϕo (e) = {Py , c}
+                                            mapping = {c, p}
+                                                 Fk+1 = U pdate(Fk , edge, mapping)
+
+Communicate        Actions in A(Fk )
+                                          CT
+                                                are dened as Ax = {c, Py , p}, meaning that player Py is about to reveal
+(or teach) clue c to player p. To reect this operation in the new graph, we need to add an edge linking clue c
+and player p :
+
+
+                                                      Fk+1 = Add(Fk , {c, p})
+
+
+
+
+                                                                                                                      48
+CHAPTER 3.       THE ESCAPE GAME FRAMEWORK
+
+
+
+
+3.6 The Game Session Forest
+  We now have the ability to calculate the possible action set A(Fk ) from a Game Session Frame Graph and
+to generate a reaction set R(Ax ) for each action. Thus providing us the ability to link Game Session Frame
+Graphs together. We can now introduce the Game Session Graph.
+
+
+Game Session Graph
+  The Game Session Graph is a simple oriented and connected graph GS. It possess nodes that are all the
+possible Game Session Frame Graphs for a given Escape Game. The edges linking the nodes together are all
+the possible actions sets generated by all the Game Session Frame Graphs.
+   A Game Session Graph can be dened as :
+
+
+                                             GS = (F, RA , A, M, ψ)
+   where:
+
+    GS is the Game Session Graph.
+    F is the Game Session Frame Graph set, containing all the game possibilities, each frame Fk is a node in
+      the Game Session Graph.
+
+    RA is the Full Reaction set. Each Reaction set R(Ax ) is an element of RA and is a node in the Game
+      Session Graph.
+
+    A is the Full Action set. Each Action set A(Fk ) is an edge in the Game Session Graph, linking an element
+     of F to an element of RA .
+
+    M is the modication set. Each modication m is an edge in the Game Session Graph, linking an element
+     of RA to an element of F .
+
+    ψ is the graph's incidence function.
+
+  The Game Session Graph will allow us to link several Game Session Frame graphs together. For each Game
+Session Frame Graph node Fk , there will be one leaving Action edge Ax from its action set A(Fk ). Those edges
+will go to a Reaction set node R(Ax ). Each possible reaction r in R(Ax ) generates a modication edge m ∈ M
+to the next node F k + 1.
+
+
+  The Game Session Graph is therefore a bi-colour tree, alternating Game Session Frame nodes and Reaction
+nodes. In this tree, the root node is the initialization node. This node is the starting situation, noted F0 and
+is a Game Session Frame Graph containing only the players and their skills. The action set A(F0 ) contains one
+possible action A0 , Enter , meaning players want to start the game. The reaction set R(A0 ) contains all the
+possible starting situations. If there is only one starting position, the reaction set contains only one element.
+However if multiple starting situations are possible, the reaction set contains them all.
+
+
+  Because it is a tree, the Game Session Graph contains leaves. Leaves are the nal game situation, oering
+a win to the players.    The last Game Session Frame Graph node Fk is a graph in which the Victory Meta-
+Information node returns a true condition. We didn't dene a loss condition, because we do not take time into
+account. It is therefore possible that the game never end. Indeed, players always have the possibility to search
+in any room, even if every item in it has been found. The Game Session Graph is an innite tree.
+
+
+
+3.6.1 The forest
+  We explained how the Game Session Graph is an innite tree. Its root is one starting situation : A player
+set. Provided that the Game request a minimum and maximum amount of players, it is then possible to dene
+all the possible starting situation.
+
+
+  If there is a maximum number of players and the skills are a nite set, then the numbers of way to start the
+game is a nite number. This number is large enough to understand that calculating every possible starting
+situation is not a realistic idea.
+
+
+  Because each possible combination of players and skills will generate its own Game Session Graph, we can
+say that the Full Game Session Graph is a forest, gathering all the possible Game Session Graphs.
+3.6.   THE GAME SESSION FOREST
+
+
+
+
+                                 50
+4              Discussion
+
+4.1 The Escape Game Framework
+Framework construction
+  The attempt that has been made here is intended to provide a way to formalize an Escape Game. The main
+concept from Escape Games have been extracted from literature and personal experience. Concepts involving
+the game mechanics have been selected for formalization, while the others have been left behind. We certainly
+do not want to say that they are of lesser importance. An Escape Game without a theme or a narrative would
+work, but would also probably be boring to play.
+
+
+
+  Once the concept have been selected. Graphs have been chosen to represent a Game. They are actually well
+suited for this task, as they represented objects and how they are connected together. We had to dene the
+connection rules. In order to present a basic framework, many things or ideas had to be abandoned. Those
+ideas are presented in section 4.2 Extensions.
+
+
+
+Framework validation
+  The presented Framework has been validated only with trivial examples, which means it hasn't been validated,
+but seems to work. A proper validation would be required. Collecting some real-life Escape Games in order to
+check whether the Framework really can model a Game would be a rst step in validating it.
+
+
+
+  Some known aws already exist and the section 4.2 Extensions mentions some of them.
+
+
+
+Usability
+  As such, the current framework is not of a real use. It is far too complex to be apprehended quickly and the
+generated Escape Game graphs are dicult to read. We introduced as example a very simple and short Escape
+Game but had to remove the skills and their connections for the sake of readability. However, we believe that
+the graphs and denitions can serve as a good basis for computer software. The rst step of writing software
+is usually to formalize the problem, which is what we tried to do. The Game Session Frame graph seems to be
+the most readable, but has been tested only with small examples.
+
+
+
+  Also, there exist ways of simplifying the graphs in order to ease the deciphering. A Domain Specic Language
+could be produced that would simplify the visual representation of the Escape Game Graph. As an example,
+we could imagine that rooms aren't nodes anymore, but rectangles whose perimeter goes around all items inside
+them. This would eliminate all edges going from nodes to rooms. Any item in the rectangle would be considered
+linked to the node room, easing the visual without modifying the semantics.
+
+
+
+Metrics
+  As it is, the Framework may already provide some interesting metrics.       It is indeed possible to calculate
+how many players are required or the overall required skill set.   It is possible to calculate how the skills are
+balanced in order to oer a varied experience to players. Those can be calculated directly from the graph and
+are therefore formally quantiable, provided that the game has been modelled correctly. Some other metrics
+require calculations that have not been developed here. For example, deciding if the game is possible probably
+requires a dedicated algorithm.
+                                 4.2.   EXTENSIONS
+
+
+
+
+  The Game Session Forest could also provide metrics. If a specic game is monitored, then lling up the Game
+Session Graphs along the dierent real-life sessions would allow to see which path players usually take, which
+clues they gather rst or which strategy they tend to use.
+
+
+
+4.2 Extensions
+  The extensions presented here are ideas and/or concepts that have been abandoned during the Framework
+building. Either because it was of lesser interest of because it would have made the calculations much more
+complicated. We however wanted to discuss them for future works, should someone nd an interest in any of
+them. They are presented in no particular order.
+
+
+
+4.2.1 Skill level
+  Two players possessing the same skill do not necessarily master it the same way.          Likewise, two puzzles
+requesting agility skills may not require the same skill level. An early abandoned extension to this framework
+would be to rate skills on a scale. While complicating the calculations to perform on puzzle attempts, it brings
+us closer to real life. Edges going from skills to roles could be labelled with a number, representing the required
+skill level. The same way, skills going to player nodes could also be labelled with a number, representing the
+player's skill level.
+
+
+  Educative Escape Games could benet out of it, because the goal in such games is to increase a skill or
+extend the player's knowledge. Player skill level could therefore increase while they are progressing in the game,
+providing quantiable metrics.
+
+
+  Of course, this would require to dene a standard for quantifying skill levels, which is far beyond the scope
+of this work.
+
+
+
+4.2.2 Time
+  Time is not involved in the pure game mechanics. However, an Escape Game in which you have an innite
+amount of time might never nish while if you put a time constraint, you ensure that it will end at some point.
+It would possible to implement time in the framework, using the Game Session Graph. If each Action costs
+some time, then time can be a decreasing integer. Every Action edge traversal would decrease the time amount
+and when it reaches zero, the game is lost.
+
+
+
+4.2.3 Player multithreading
+  When players must choose an action to perform, we decided that only one of them would perform the action
+while others would be waiting for its completion.      Real life is thankfully not working like that.    A player
+multi-threading extension would require to split the time even further, Game Session Frame Graphs would not
+represent an action result but a time frame. An action would take multiple time frames to be accomplished.
+Therefore a player starting an Action would be stuck for several frames in the action accomplishment.         The
+others having the possibility to start other actions in the meantime. Having worked in software development
+for over 10 years, the author did not want to try making it work.
+
+
+
+4.2.4 Non-Mandatory items
+  Sometimes, a puzzle possess non mandatory clues. If you take a padlock, requiring three digits in the proper
+order to be opened, you might think you need 4 clues (the 3 digits and the order). Reality is dierent, none
+of those clues are actually required. A padlock can be brute forced, like many other puzzles. Non-mandatory
+clues would be an extension exposing the brute force possibility. Only the edges going to the puzzle need to be
+modied to reect a non-mandatory clue. The calculation of puzzle attempting and solving would be modied
+in order to reect this.
+
+
+
+
+                                                                                                                52
+5              Conclusion
+
+  The original idea behind this work was to check whether Escape Games were dened in the mathematical
+world. After nding out they were not, we also discovered it was an actual need[31]. Few literature exists on
+Escape Game, as the eld of study is rather new.       Mainly it is focused on creating a specic Escape Game
+and evaluating it. The same articles seem to serve as a basis for everyone and it looks like there are very few
+denitions of what an Escape Game actually is.
+
+
+  With the objectives of formalizing Escape Games, decision has been made to use Graph Theory. It turned
+out graphs suit pretty well the needs and the construct of an Escape Game. Dening the nodes and the update
+rules has been a long work, and probably aws will be found here and there. Three graphs have been dened,
+each possessing their own node and edge types.
+
+
+  The Escape Game Graph represents a blueprint for a given Escape Game. It is the most important as the
+others can be derived from it. We attempted to reduce the node count as much as we could, but could not go
+below 6. In its original version, there were 3 edge types as well. In the current version, it seems rather complete.
+We hope it is a pace towards Escape Game formalization.
+
+
+  The Game Session Frame Graph is a snap shot of a real life game session and represent all the discovered
+items in a game at a given time. By itself, this graph doesn't mean much. Linked together by the Actions and
+Reaction mechanics, it brings an Escape Game alive.
+
+
+  The Game Session Graph is able to represent a full game session, from start to nish. To do so, Game Session
+Frame Graphs are linked together by player's actions and system's reactions. The Full Game Session Graph
+represent all the possible ways of playing the game. While very theoretical, it may provide usefulness.
+
+
+  Actions and reactions have been really dicult to build up, but we believe are the most interesting part.
+There are probably a few bugs and some of the functions might deserve a few corrections. However we trust
+they properly represent Escape Game mechanics.
+
+
+  When looking at annex B Game Session Illustration, the evolution of the Escape Game looks like a text-based
+RPG from the early computer times. In a way, we managed to create our own RPG game, with a small rule
+set.
+
+
+  A proper formalization is still required, as this work is only a step towards this goal.     However it allowed
+us to partially answer the question : Would it be possible to provide an escape game mathematical denition
+that includes the main aspects of an Escape Game and provide its evolution rules ?. The answer is that is it
+probably possible. That this work is an attempt at it. It still needs to be tested, and probably updated in order
+to be validated.
+54
+List of Tables
+
+ 3.1   Skill set from Puzzles Unpuzzled: Towards a Unied Taxonomy for Analog and Digital Escape
+       Room Games . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       22
+ 3.2   Allowed links for incidence function . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      25
+ 3.3   Allowed links for the Object Incidence Function . . . . . . . . . . . . . . . . . . . . . . . . . . . .         32
+ 3.4   The Find function     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   34
+ 3.5   Update function's rules     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   41
+LIST OF TABLES
+
+
+
+
+                 56
+List of Figures
+
+ 1.1   Number of articles by year on dierent search engines containing any of the words "Escape
+       Game", "Escape Room", "Exit Game" or "Exit Room"               . . . . . . . . . . . . . . . . . . . . . . .    8
+
+
+ 2.1   Puzzle taxonomy, from Krekhov, Andrey and Emmerich, Katharina and Rotthaler, Ronja and
+       Krueger, Jens (2021) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     12
+ 2.2   The Experience Pyramid Model, from Tarssanen (2009)            . . . . . . . . . . . . . . . . . . . . . . .   14
+ 2.3   The EscapED framework, from Clarke, Samantha and Peel, Daryl and Arnab, Sylvester and
+       Morini, Luca and Keegan, Helen and Wood, Oliver (2017) . . . . . . . . . . . . . . . . . . . . . .             14
+ 2.4   The Star Model, from Botturi, Luca and Babazadeh, Masiar (2020) . . . . . . . . . . . . . . . . .              15
+ 2.5   Model of ow (from Admiraal, Wilfried and Huizenga, Jantina and Akkerman, Sanne and Dam,
+       Geert (2011), adapted from Csikszentmihalyi (1990, 1997) . . . . . . . . . . . . . . . . . . . . . .           17
+
+
+ 3.1   Escape Game Graph Example . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .          28
+ 3.2   Game Session Graph Example . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         33
+ 3.3   Result of the Enter Action . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     43
+
+
+ B.1   The Full Escape Game Graph . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         64
+ B.2   A full Game Session (Part 1)     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   65
+ B.3   A full Game Session (Part 2)     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   66
+ B.4   A full Game Session (Part 3)     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   67
+LIST OF FIGURES
+
+
+
+
+                  58
+Bibliography
+
+ [1] 13     rules       for     escape      room      puzzle     design.               https://thecodex.ca/
+    13-rules-for-escape-room-puzzle-design/. Last Accessed : 2023-06-25.
+ [2] Game theory. https://en.wikipedia.org/wiki/Game_theory. Last Accessed: 2022-05-22.
+
+ [3] List of games in game theory. https://en.wikipedia.org/wiki/List_of_games_in_game_theory. Last
+    Accessed: 2022-05-22.
+
+ [4] Wilfried Admiraal, Jantina Huizenga, Sanne Akkerman, and Geert Dam. The concept of ow in collabo-
+    rative game-based learning.   Computers in Human Behavior, 27:11851194, 05 2011.
+ [5] Monica Arnal-Palacián, Juan Antonio Macías-García, and Isabel Duarte Tosso. Escape rooms as a way to
+    teach magnitudes and measure in degrees in education. 03 2019.
+
+ [6] Luca Botturi and Masiar Babazadeh.       Designing educational escape rooms:   validating the star model.
+    International Journal of Serious Games, 7(3):4157, 2020.
+ [7] Neysa Brown, Wendy Darby, and Helen Coronel. An escape room as a simulation teaching strategy.    Clinical
+    Simulation in Nursing, 30:16, 2019.
+ [8] Ming Ming Chiu and Sze Wing Kuo. Social metacognition in groups: benets, diculties, learning and
+    teaching. In   Metacognition: New research developments, pages 117136. Nova Science Publishers, Inc, 2009.
+ [9] Adam Clare.    Escape The Game: How to make puzzles and escape rooms. Smashwords Edition, 2016.
+[10] Samantha Clarke, Daryl Peel, Sylvester Arnab, Luca Morini, Helen Keegan, and Oliver Wood. Escaped:
+    A framework for creating educational escape rooms and interactive games to for higher/further education.
+    International Journal of Serious Games, 4, 09 2017.
+[11] Stephany Coman-Wolph, Kimberlyn Gray, and Marcia Pool. Designing an escape room game to develop
+    problem solving and spatial reasoning skills. 2018.
+
+[12] Clay Craig, Prisca S Ngondo, Michael Devlin, and Jennifer Scharlach. Escaping the routine: Unlocking
+    group intervention.   Communication Teacher, 34(1):1418, 2020.
+[13] Mihály Csíkszentmihályi.   Creativity: Flow and the Psychology of Discovery and Invention. HarperCollins,
+    1996.
+
+[14] Panagiotis Fotaris and Theodoros Mastoras. Escape rooms for learning: A systematic review. 10 2019.
+
+[15] The Escape Game.   The history of escape rooms (2021).       https://theescapegame.com/blog/
+    the-history-of-escape-rooms/, 2021. Last accessed: 19/05/2022.
+[16] Bernard Guerrien. A review on use of escape rooms in education  touching the void.   real-world economics
+    review, issue no. 83:3444, 03 2018.
+[17] Robert A Hearn and Erik D Demaine.      Games, puzzles, and computation. CRC Press, 2009.
+[18] Outi Heikkinen and Julia Shumeyko. Designing an escape room with the experience pyramid model. 2016.
+
+[19] Anne M Ho. Unlocking ideas: Using escape room puzzles in a cryptography classroom.     Primus, 28(9):835
+    847, 2018.
+
+[20] Ya-Hui Hsieh, Yi-Chun Lin, and Huei-Tse Hou. Exploring the role of ow experience, learning performance
+    and potential behavior clusters in elementary students' game-based learning.    Interactive Learning Envi-
+    ronments, 24:116, 12 2013.
+                                  BIBLIOGRAPHY
+
+
+
+
+[21] Raph Koster.    Theory of fun for game design. " O'Reilly Media, Inc.", 2013.
+[22] Andrey Krekhov, Katharina Emmerich, Ronja Rotthaler, and Jens Krueger. Puzzles unpuzzled: Towards
+    a unied taxonomy for analog and digital escape room games.       Proc. ACM Hum.-Comput. Interact., 5(CHI
+    PLAY), oct 2021.
+
+
+[23] Ángela Gómez López. The use of escape rooms to teach and learn english at university.   Research, Technology
+    and Best Practices in Education, pages 94101, 2019.
+[24] Alice Millot.   échappe-toi de la tour aux dragons. éditions Milan, oct 2018.
+[25] Scott Nicholson. Peeking behind the locked door: A survey of escape room facilities. 2015.
+
+
+[26] Scott Nicholson.     Ask why: Creating a better player experience through environmental storytelling and
+    consistency in escape room design.     Meaningful Play, pages 117, 2016.
+[27] Rui Pan, Henry Lo, and Carman Neustaedter. Collaboration, awareness, and communication in real-life
+    escape rooms. In      Proceedings of the 2017 conference on designing interactive systems, pages 13531364,
+    2017.
+
+
+[28] Ioannis Papadopoulos and Eirini Tenta.      Escape rooms as a collaborative problem-solving environment.
+    International Journal of Game-Based Learning (IJGBL), 11(4):5771, 2021.
+[29] Katriina Penttilä.   History of Escape Games. PhD thesis, Master's Thesis of University of Turku, 2018.
+[30] Robert Ross.     Design of an open-source decoder for educational escape rooms.    IEEE Access, 7:145777
+    145783, 2019.
+
+
+[31] Lene Taraldsen, Frode Haara, Mari Skjerdal Lysne, Pernille Jensen, and Eirik Jenssen. A review on use of
+    escape rooms in education  touching the void.     Education Inquiry, pages 116, 12 2020.
+[32] Sanna Tarssanen and Panu Räisänen.        Handbbok for experience stagers. Lapland Center of Expertise for
+    the Experience Industry, 2009.
+
+
+[33] Alice Veldkamp, Johanna Niese, Martijn Heuvelmans, Marie-Christine Knippels, and Wouter van Joolingen.
+    You escaped! how did you learn during gameplay?        British Journal of Educational Technology, 02 2022.
+[34] M Wiemker, E Elumir, and A Clare. Escape room games: Can you transform an unpleasant situation into
+    a pleasant one?. game based learning, 55, 2015.
+
+
+[35] M Wiemker, E Elumir, and A Clare.          Escape room games.     Game Based Learning. Vienna: Morawa
+    Lesezirkel GesmbH, pages 5568, 2017.
+
+
+
+
+                                                                                                                 60
+A                 Articles by year query data
+
+  The following table contains data used in order to generate the graphics from Figure 1.1. The search query
+on Google Scholar was "Escape Game" OR "Escape Room" OR "Exit Game" OR "Exit Room" and has been
+adapted to the other platforms in order to perform the same research. This work has been performed on May
+2, 2022.
+           Year   Google Scholar   ScienceDirect      Springer    ACM Digital Library        DBLP
+           1990               10                  -           1                          -         -
+           1991                9                  -           0                          -         -
+           1992               13                  -           3                          -         -
+           1993               14                  -           2                          -         -
+           1994               17                  -           1                          -         -
+           1995               22                  -           5                          -         -
+           1996               11                  -           1                          -         -
+           1997               18                 4            3                          -         -
+           1998               20                 2            3                          -         -
+           1999               18                 2            2                         1          -
+           2000               14                 2            1                         0          -
+           2001               25                 1            1                         1          -
+           2002               29                 3            1                         0          -
+           2003               47                 3            5                         1          -
+           2004               33                 1            2                         0          -
+           2005               48                 2            4                         2          -
+           2006               52                 3            6                         1          -
+           2007               69                 7            4                         2         1
+           2008               72                 7            5                         4         1
+           2009               58                11            5                         0         0
+           2010               84                 7            9                         0         2
+           2011               83                 5          13                          1         2
+           2012               90                 4            7                         0         2
+           2013              134                 3          11                          2         2
+           2014              147                12          22                          4         1
+           2015              181                 6          16                          3         1
+           2016              337                13          17                          8         3
+           2017              537                19          16                          8         3
+           2018             1120                28          38                         15         5
+           2019             1530                31          68                         17         9
+           2020             2100                55         107                         30         7
+           2021             2350                82         154                         34         7
+62
+B               Game Session Illustration
+
+  This annex describes an Escape Game played from start to end by 2 players. The Escape Game is the one
+presented as example in Figure 3.1. Since there is only one starting position, both players will start in the rst
+room. Figure B.1 is the Full Escape Game, with the skills. Some skill nodes have been cloned in order to keep
+the graph clean. Wherever two nodes skills have the same name, they are in fact the same node.
+
+
+
+
+B.1 A game session
+  Figures B.2, B.3 and B.4 illustrates a Game Session. Here are the actions performed by the players :
+
+
+  F0 Players P1 and P2 want to enter the game, they possess the required skills.
+
+  F1 Players have entered the game (from now on, skills won't be displayed), The start in room R1 .
+
+  F2 P1 searches the room, a door to R2 appears
+
+  F3 P2 moves to room R2
+
+  F4 P2 searches the room, clue C1.2 appears
+
+  F5 P1 searches the room, clue C2.1 appears
+
+  F6 P2 searches the room, clue C1.1 appears
+
+  F7 P2 searches the room, it is possible to move back to R1
+
+  F8 P2 searches the room, clue C1.3 appears
+
+  F9 P1 searches the room, clue C1.4 appears
+
+ F10 P1 memorizes clue C1.4
+
+ F11 P2 memorizes clue C1.1
+
+ F12 P2 memorizes clue C1.2
+
+ F13 P2 memorizes clue C1.3
+
+ F14 P2 moves to room R1
+
+ F15 P1 teaches clue C1.4 to P2
+
+ F16 P2 searches the room, puzzle Z1 appears
+
+ F17 P2 makes an attempt on puzzle Z1 , all conditions are met, it is a success. Reward C3.1 appears in the
+     room.
+
+
+ F18 P1 picks up clue C2.1
+
+ F19 P2 picks up clue C3.1
+
+ F20 P1 moves to room R2
+
+ F21 P1 searches the room, puzzle Z2 appears
+
+ F22 P2 moves to room R2
+                               B.1.   A GAME SESSION
+
+
+
+
+                                 Figure B.1: The Full Escape Game Graph
+
+
+
+
+F23 P2 searches the room, clue C2.2 appears
+F24 P1 picks up clue C2.2
+
+F25 P2 searches the room, puzzle Z3 appears
+F26 P1 makes an attempt on puzzle Z2 , all conditions are met, it is a success. Reward C3.2 appears in the
+    room.
+
+
+F27 P2 picks up clue C3.2
+
+F28 P2 gives clue C3.1 to P1
+F29 P1 and P2 make an attempt on puzzle Z3 , all conditions are met, it is a success. A door opens to room
+    R3
+F30 P1 moves to room R3 , he exits the game.
+
+F31 P2 moves to room R3 , he exits the game.
+   The game is won !
+
+
+
+
+                                                                                                       64
+APPENDIX B.      GAME SESSION ILLUSTRATION
+
+
+
+
+                      (a) F0                                              (b) F1
+
+
+
+
+       (c) F2                                   (d) F3                    (e) F4
+
+
+
+
+       (f) F5                                   (g) F6                    (h) F7
+
+
+
+
+        (i) F8                     (j) F9                     (k) F1 0
+
+
+                               Figure B.2: A full Game Session (Part 1)
+          B.1.   A GAME SESSION
+
+
+
+
+(a) F11                     (b) F12                    (c) F13
+
+
+
+
+(d) F14                     (e) F15                    (f) F16
+
+
+
+
+(g) F17                     (h) F18                    (i) F19
+
+
+
+
+(j) F20          (k) F21                   (l) F22
+
+
+            Figure B.3: A full Game Session (Part 2)
+
+
+
+
+                                                                 66
+APPENDIX B.   GAME SESSION ILLUSTRATION
+
+
+
+
+       (a) F23                              (b) F24                   (c) F25
+
+
+
+
+       (d) F26                              (e) F27                   (f) F28
+
+
+
+
+       (g) F29         (h) F30    (i) F31
+
+
+                           Figure B.4: A full Game Session (Part 3)
+An Escape Game Theory
+
+Errata
+
+p.7, § 6, instead of: “As of today, they exists”, read : “As of today, they exist”
+p.9, § 5, instead of: “A previously stated”, read : “As previously stated”
+p.12, 2.1.2, §1, instead of “course for nursing student”, read : “course for nursing students”
+p.19, 3, §1, instead of “define Escape Game”, read : “define Escape Games”
+p.20, 3.1.3, §1, instead of: “The following concept”, read: “The following concepts”
+p.22, 3.3.2, §2: instead of: “taxonomy built by Krekhov and all”, read: “taxonomy built by
+Krekhov et al.”
+p.25, 3.3.7, §2, instead of “That room represent”, read: “That room represents”
+p.25, 3.3.7, §3, missing section reference, read : “(see section 3.4.6 Players)”
+p.30, 3.4.6, §4, instead of : “Each player possess”, read : “Each player possesses”
+p.31, 3.4.8, §2, instead of: “Game Session Frame represent”, read: “Game Session Frame
+represents”
+p.31, 3.4.10, §1, instead of: “It represent”, read: “It represents”
+p.31, 3.4.10, §2, instead of : “Edges (Eo) ”, read : “Edges(Em) ”
+p.32, 3.4.12, §2, instead of : “All the puzzle”, read : “All the puzzles”
+p.35, next to last line, instead of: “M is a graph such a the one”, read: “M is a graph such as
+the one”
+p.36, Attempt, instead of: “a player or a group of player”, read: “a player or a group of
+players”
+p.39, §1, wrong formula. Instead of : “ (Find(Fk, ϕo, Location(Py) ∩ Cinfo)(Find(Fk, ϕo, Py)
+∩ Cinfo) ”, read : “ (Find(Fk, ϕo, Location(Py)) ∩ Cinfo) \ (Find(Fk, ϕo, Py) ∩ Cinfo) ”
+p.39, §1, wrong formula. Same reading as previous remark.
+p.39, Communicate, §2, instead of: “represent”, read: “represents”
+p.39, Communicate, §2, instead of: represent”, read: “represents”
+p.40, §2, instead of: “only pick”, read: “only picks”
+p.40, Function: Add, instead of: “added to game. The”, read: “added to game, the”
+p.42, §1, instead of : “action has bee defined as”, read : “action has been defined as”
+p.42, §6, last line, instead of: “illustrate”, read: “illustrates”
+p.42, §7, remove “Since”
+p.44, Connected Room, wrong formula. Instead of : “UndiscoveredRooms = (Py) = (Find(E,
+ϕ, Location(Py)) ∩ R)Rf”, read : “UndiscoveredRooms(Py) = (Find(E, ϕ, Location(Py)) ∩ R)
+\ Rf”
+p.49, §2, instead of : “It possess”, read : “It possesses”
+p.51, §2, instead of: “selected. Graphs”, read: “selected, graphs”
+p.52, 4.2.2, instead of : “It would possible”, read : “It would be possible”
+p.53, §4, instead of “represent”, read: “represents”
+p.53, §5, instead of “represent”, read: “represents”
+p.53, last §, instead of “provide”, read: “provides”
+

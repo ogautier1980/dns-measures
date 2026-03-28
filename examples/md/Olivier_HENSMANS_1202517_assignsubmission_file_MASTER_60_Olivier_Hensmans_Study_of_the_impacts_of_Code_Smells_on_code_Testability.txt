@@ -1,0 +1,3095 @@
+                          Institutional Repository - Research Portal
+                          Dépôt Institutionnel - Portail de la Recherche
+                   researchportal.unamur.be
+     University of Namur
+
+
+
+
+                                                      THESIS / THÈSE
+
+     MASTER IN COMPUTER SCIENCE
+
+
+     Study of the impacts of Code Smells on code Testability
+
+
+
+
+Author(s) - Auteur(s) :
+     HENSMANS, Olivier
+
+     Award date:
+     2023
+
+
+     Awarding institution:
+     University of Namur
+Supervisor - Co-Supervisor / Promoteur - Co-Promoteur :
+     Link to publication
+
+
+
+
+Publication date - Date de publication :
+
+
+
+Permanent link - Permalien :
+
+
+
+Rights / License - Licence de droit d’auteur :
+
+     General rights
+     Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+     and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+             • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+             • You may not further distribute the material or use it for any profit-making activity or commercial gain
+             • You may freely distribute the URL identifying the publication in the public portal ?
+     Take down policy
+     If you believe that this document breaches copyright please contact us providing details, and we will remove access to the work immediately
+     and investigate your claim.
+
+Bibliothèque   Universitaire
+     Download date: 23. mars. 2026Moretus Plantin
+                                   UNIVERSITÉ DE NAMUR
+                                      Faculté d'informatique
+                                  Année académique 2022-2023
+
+
+
+
+                  Study of the impacts of Code Smells on code
+                                  Testability
+
+                                      Olivier HENSMANS
+
+
+
+
+                 ........................ (Signature pour approbation du dépôt - REE art. 40)
+
+
+                 Promoteurs : Xavier DEVROEY & Benoît VANDEROSE
+
+
+
+
+Mémoire présenté en vue de l'obtention du grade de Master 60 en Sciences Informatiques
+
+
+
+
+                          Faculté d'Informatique  Université de Namur
+
+
+                 RUE GRANDGAGNAGE, 21 ● B-5000 NAMUR(BELGIUM)
+ Remerciements
+Je tiens à remercier mes deux promoteurs Xavier DEVROEY & Benoît VANDEROSE pour leur aide et relectures
+attentives.
+
+
+   Un très grand remerciement à Marie-Ange REMICHE, Vice-doyen de la faculté d'informatique de l'Unamur,
+pour son aide et ses explications, sans elle l'analyse statistique ne serait pas ce qu'elle est actuellement.
+
+
+   Je tiens également à remercier mes relecteurs, Adeline GRARD, Philippe HENSMANS, Robin MULKERS
+et Benoît SOBRIE pour leur aide à rendre ce mémoire compréhensible.
+
+
+   Merci à tous mes amis et ma famille pour leur soutien et encouragement toutes ses années et sans qui je
+n'aurais pas su faire des cours du soir.
+
+
+   Enn, un énorme merci à Nath pour son soutien sans failles et qui a toujours su écouter mes frustations et
+me pousser à aller de l'avant. Et évidemment pour toutes ses petites choses qui ont su me faire garder le cap.
+
+
+
+
+                                                                                                                2
+ Résumé
+Les Code Smells ont été étudiés depuis plus de 20 ans maintenant. Ils sont utilisés pour décrire intuitivement
+une mauvaise implémentation de design dans un programme. Dans cette étude, nous souhaitons identier les
+impacts de certains de ces Code Smells.    Et plus spéciquement, leur impacts potentiels sur la Testabilité.
+Pour ce faire, nous allons étudier le champ des recherches scientiques sur les deux concepts que sont les Code
+Smells et la Testabilité. Ces recherches nous permettrons de dénir les paramètres utilisés pour quantier les
+concepts. Avec ces informations, nous analyserons la distribution statistique de nos échantillons et essaierons
+de comprendre la relation entre les Code Smells et la testabilité sur un corpus de projets Java.
+
+
+Mots-clés : Code Smells, Testabilité, Etude d'impact, Mesure du code
+
+
+
+ Abstract
+Code Smells have been studied for more than 20 years now. They are used to describe a design aw in a program
+intuitively. In this study, we wish to identify the impact of some of these Code Smells. And, more specically,
+their potential impact on Testability. To do this, we will study the state of the research on both Code Smells
+and Testability. Using those studies, we will dene a scope of parameters to dene the two concepts. With that
+information, we will analyse the statistical distribution of our samples and try to understand the relationship
+between Code Smells and Testability in a corpus of Java projects.
+
+
+Keywords : Code Smells, Testability, Impact Study, Code Metrics
+4
+Contents
+1 Glossary                                                                                                                7
+
+2 Introduction                                                                                                           11
+
+3 Code Smells                                                                                                            13
+  3.1   Introduction to Code Smells . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        13
+  3.2   Denition of Code Smells       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   13
+        3.2.1   Duplicated Code or Code Clones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .           14
+        3.2.2   Long Method . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        14
+        3.2.3   Blob or God Class      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   14
+        3.2.4   Conditional Complexity       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   14
+        3.2.5   Complex Class      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   15
+        3.2.6   Feature Envy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       15
+        3.2.7   High Coupling      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   15
+        3.2.8   Message Chain      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   15
+        3.2.9   Shotgun Surgery      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   16
+        3.2.10 Spaghetti Code . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        16
+        3.2.11 Too Many Fields . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         16
+        3.2.12 Too Many Methods          . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   16
+        3.2.13 Synthesis    . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    17
+  3.3   Identication of Code Smells       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   17
+  3.4   Prioritization & criticality of Code Smells      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   18
+        3.4.1   Relationship between Code Smells and quality metrics . . . . . . . . . . . . . . . . . . . .             19
+        3.4.2   Relationship between application domains and quality metrics             . . . . . . . . . . . . . . .   20
+
+
+4 Testability                                                                                                            21
+  4.1   Introduction to Testability . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      21
+  4.2   Testability metrics   . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    23
+        4.2.1   Fish-bone model - Testability through all the cycle . . . . . . . . . . . . . . . . . . . . . .          23
+        4.2.2   Specialization of the sh-bone model for the implementation            . . . . . . . . . . . . . . . .   24
+  4.3   Testability eectiveness     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   26
+        4.3.1   Mutants . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      26
+        4.3.2   Code metrics and Testability eectiveness . . . . . . . . . . . . . . . . . . . . . . . . . . .          26
+
+
+5 Evaluation Setup                                                                                                       29
+  5.1   Projects . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     29
+  5.2   Code Smells . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      31
+        5.2.1   Complex Class      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   33
+        5.2.2   God Class . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      33
+        5.2.3   High Coupling      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   34
+        5.2.4   Too Many Fields . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        34
+        5.2.5   Too Many Methods         . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   34
+        5.2.6   Feature Envy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       34
+        5.2.7   Shotgun Surgery      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   35
+  5.3   Testability . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    35
+CONTENTS                                                                                                    CONTENTS
+
+6 Methodology                                                                                                            37
+  6.1   Metrics tools   . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    37
+  6.2   Parsing and storage of the metrics       . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   38
+  6.3   Statistical analysis   . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   39
+
+
+7 Results                                                                                                                41
+  7.1   Description of the dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       41
+  7.2   Distribution of the two testability metrics      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   42
+  7.3   Comparison with the Code Smells metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .            45
+        7.3.1   Complex Class      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   46
+        7.3.2   Critical Complex Class . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       47
+        7.3.3   God Class . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      48
+        7.3.4   Critical God Class     . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   49
+        7.3.5   Too Many Fields . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        50
+        7.3.6   Too Many Methods         . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   51
+        7.3.7   High Coupling      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   52
+        7.3.8   Feature Envy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       53
+        7.3.9   Shotgun Surgery      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   54
+  7.4   Challenging the results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      55
+
+
+8 Threats to validity                                                                                                    57
+9 Conclusion                                                                                                             59
+10 Bibliography                                                                                                          61
+11 Notations & Metrics                                                                                                   63
+  11.1 Notations    . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    63
+  11.2 Denition of metrics      . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   64
+
+
+
+
+                                                                                                                          6
+Chapter 1
+
+Glossary
+Access to Foreign Data "number of external classes from which a given class accesses attributes, directly or
+     via accessor-methods."[10]. 28, 60
+
+
+ALCM Average Line of Code per Method. 60
+ATFD Access to Foreign Data. 2830, 44, 49, 60
+Average Commit Size "Average number of classes that changed in commits involving a class."[13]. 60
+Average Line of Code per Method Average Line of Code per Method. 60
+AVG CS Average Commit Size. 14, 31, 60
+
+Blob "A large class implementing dierent responsibilities and centralizing most of the system processing"[8].
+     10, 1315, 23
+
+
+Brain Class class that centralizes a lot of intelligence. 16
+Brain Method method that centralizes the intelligence of a class. 16
+
+C3 Conceptual Cohesion of Classes. 29, 60
+CBO Coupling Between Objects. 14, 23, 2830, 43, 60
+CC Changing Classes. 60
+Changing Classes "The number of classes in which the methods that call the measured method"[10]. 60
+Changing Methods "The number of distinct methods that call the measured method"[10]. 60
+Class Data Should Be Private the data of the class should be accessed only by getter and setter. 22
+CM Changing Methods. 31, 60
+Code Clones same code structure in more than one place. 10, 13, 14
+Code Smells design aw in the code which may impacts its readability, maintainability and proneness to bugs.
+     7, 9, 10, 1215, 22, 23, 27, 28, 3335, 37, 38, 41, 45, 5356
+
+
+Complex Class class with a high Cyclomatic Complexity and very large in terms of Line of Code, a large class
+     including too many independent running paths or branches and too many loops.. 11, 1315, 22, 2729,
+     37, 42, 43, 51
+
+
+Conceptual Cohesion of Classes metric C3 - "Average cosine similarity computed among all method pairs
+     of a class."[13] . 60
+
+
+Conditional Complexity if and switch statements often lead to a duplication problem. Polymorphism should
+     be use in those cases.. 10, 11, 13, 14
+
+
+Controllability ability to control the input and internal states of the studied class, developed by Freedman
+     [7]. 19
+Glossary                                                                                             Glossary
+
+Coupling Between Objects metric assessing the dependency degree of a class by another one. 23, 28, 51, 60
+CYCLO cyclomatic complexity. 28, 31, 50, 60
+Cyclomatic Complexity Metrics calculating the number of distinct decision point or path it is possible to
+     take. 11, 13, 28, 60, 61, 63
+
+
+
+Data Class "These are classes that have elds, getting and setting methods for the elds, and nothing
+     else."[19]. 15, 16
+
+
+Depth of Inheritance Tree Metrics calculating the owned number of parents by a class. 22, 60
+Developer's Experience "Average number of commits of the committers of a class."[13] . 60
+Developer's Scattering Changes "Average number of distinct subsystems in which the committers of a class
+     made changes."[13] . 60
+
+
+DIT Depth of Inheritance tree. 22, 60
+dLOCC lines Of Code for Class - to be more precise: number of assert. 22, 27, 31, 61
+dNOTC number of Test Cases . 22, 27, 31, 61
+DSC Developer's Scattering Changes. 29, 60
+Duplicated Code same code structure in more than one place. 10, 13, 15
+
+EXP Developer's Experience. 29, 60
+
+Fan Out Metrics calculating the number of classes aected by a class. 22, 60
+FDP Foreign Data Providers. 28, 30, 49, 60
+Feature Envy "A method is more interested in a class other than the one it actually is in"[8]. 11, 13, 16, 23,
+     27, 28, 30, 49, 50, 54
+
+
+Foreign Data Providers "The number of classes in which the attributes accessed are dened"[10]. 28, 60
+FOUT Fan Out. 22, 60
+Functional Decomposition "A class where inheritance and polymorphism are poorly used, declaring many
+     private elds and implementing few methods"[8]. 23
+
+
+
+God Class (also called Blob) "A large class implementing dierent responsibilities and centralizing most of
+     the system processing"[8]. 10, 1316, 2729, 37, 44, 45, 53
+
+
+
+HALSTEAD metric calculating the complexity of individual line of code or statement. 23, 60
+High Coupling A class that a lot of other classes will access. 11, 13, 27, 28, 30, 48
+
+Inheritance Object-oriented principle where a class can inherit methods and properties from a parent class.
+     21
+
+
+Intensive Coupling method that calls many other methods from a few classes. 16
+Interest Probability metric calculating the number of occurrences of a Code Smells and the probability that
+     developers will change its code in the future. 14
+
+
+
+LAA Locality of Attribute Accesses. 28, 30, 49, 61
+Lack Of Cohesion Of Methods Metrics calculating "the non-proportion of elds of a class to be accessed
+     by all the methods of that same class" [3]. 22, 28, 60
+
+
+LCOM Lack Of Cohesion Of Methods. 22, 60
+
+                                                                                                            8
+Glossary                                                                                              Glossary
+
+LCOM5 LCOM5 = (a  kl) / (l  kl), where l is the number of attributes, k is the number of methods, and a
+     is the summation of the number of distinct attributes accessed by each method in a class [8]. 14, 28, 29,
+     31, 53
+
+Lines Of Code Per Class Metrics calculating the number of line in a class (or a method in LOCM). 28, 29,
+     60
+
+LOC Lines Of Code Per Class. 15
+Locality of Attribute Accesses "number of attributes from the method's denition class, divided by the
+     total number of variables accessed"[10]. 28
+
+LOCC Lines Of Code Per Class. 2830, 60
+Long Class a class that is too long. 10
+Long Method a method that is too long. 10, 1316, 23
+Long Parameter List self explanatory. 16
+
+McCABE cylcomatic complexity metric. 23
+Message Chain "You see message chains when a client asks one object for another object, which the client
+     then asks for yet another object, which the client then asks for yet another object, and so on. Navigating
+     in this way means that the client is coupled to the structure of the navigation.       Any change to the
+     intermediate relationships causes the client to have to change."[19]. 11, 13, 23, 27
+
+Message Passing Coupling metric measuring the numbers of messages passing among objects of the class..
+     23
+
+MPC Message Passing Coupling. 23
+Mutation score percentage of killed mutants by tests over the total number of source code mutants. 22
+Mutation testing concept to create altered versions of the source code to calculate a mutation score. 22, 27
+
+NCh Number of Changes. 14, 29, 31, 61
+NF Number of Bug Fixes. 29, 61
+NOC Number of Children. 22, 61
+NOF Number Of Fields. 22, 27, 28, 30, 61
+NOM Number Of Methods. 22, 2730, 44, 61
+Number of Bug Fixes "Number of bug xing activities performed on a class in the change history of the
+     system."[13]. 61
+
+Number of Changes "Number of commits in the change history of the system involving a class."[13] . 61
+Number of Children Metrics calculating the owned number of children by a class. 22, 61
+Number Of Fields Metrics calculating the owned number of elds by a class. 22, 28, 61
+Number Of Methods Metrics calculating the owned number of methods by a class. 22, 28, 61
+
+Observability the ability to check on the output of a studied class, developed by Freedman [7]. 19
+
+Pers. Persistence. 14, 31, 61
+Persistence "Number of subsequent major/minor releases in which a certain smell aects a class."[13] . 61
+Polymorphism object-oriented programming concept that give the ability of a variable, method or object to
+     take multiple forms often through the use of an interface or a parent class.. 10, 13, 21
+
+
+Read. Readability. 61
+Glossary                                                                                            Glossary
+
+Readability "Measure of source code readability based on 25 features, e.g., number of parentheses per line of
+     code."[13]. 14, 61
+
+
+Refused Parent Bequest "Subclasses get to inherit the methods and data of their parents, but they just use
+     a few of them." [19]. 16
+
+
+Response For Class Metrics calculating the number of method invoked by a class including its own methods.
+     22, 23, 28, 51, 61
+
+
+RFC Response For Class. 22, 23, 2830, 43, 61
+
+Shotgun Surgery "Every time you make a kind of change [in a class], you have to make a lot of little changes
+     to a lot of dierent classes.". 1216, 27, 28, 31, 50, 53, 54
+
+
+Spaghetti Code Class with complex methods interacting between them with global variables. 1215, 23, 27
+
+TCC Tight Class Cohesion. 2830, 44, 61
+Tight Class Cohesion percentage of pairs of public methods of the class with common attribute usage [8].
+     28, 61
+
+
+Too Many Fields A class with too many instance variables. 12, 13, 27, 28, 30, 46
+Too Many Methods A class including too many methods, gathering too many responsibilities. 12, 13, 27,
+     28, 30, 47
+
+
+Tradition Breaker class that does not use the protected members of its parent. 16
+
+Weighted Methods Per Class Metrics calculating the owned number of methods by a class weighted by
+     McCabe's [18] cyclomatic complexity number. 22, 28, 29, 61
+
+
+WMC Weighted Methods Per Class. 14, 22, 2831, 44, 50, 61
+
+
+
+
+                                                                                                          10
+Chapter 2
+
+Introduction
+Code Smells are lousy patterns in a code, bad structural constructions of the abstraction. Their usage is against
+the coding conventions. In this study, we want to understand if there is a relationship between those dierent
+anti-patterns and the eort needed to test the code.
+
+
+   At rst glance, it seems obvious that the bad usage of basic coding concepts might make tests harder to
+implement. However, is it the case? This is our research question.
+
+
+   In order to nd an answer to that question, we will rst dene the concept of Code Smells. We will uncover
+and explain in detail some Code Smells that were found in studies to have a link with the Testability.
+
+
+   We will then expose the state of the research on dening those concepts into metrics we can use to detect
+Code Smells. We will also look for more explanation about what could inuence the denition, the detection
+and the criticality of the Code Smells.
+
+
+   Our second concept is Testability: intuitively, the ease of testing a code. We will examine its denition and
+how the researchers have analysed the concept. After explaining the way we will consider the Testability in our
+study, we will translate the concept into code metrics. We will also check if a study exists about the relationship
+between Code Smells and other Testability characteristics such as the tests' eectiveness.
+
+
+   These items will allow us to understand the two concepts, and we will be able to declare the scope of our
+analysis :
+
+
+    The corpus of projects we will inspect
+
+    The Code Smells that we have selected and why
+
+    The Translation of the Code Smells into metrics and their threshold
+
+    The denition of the metrics for the Testability
+
+   We then explain the chosen methodology to transform our metrics into usable data: parsing the raw XML
+generated from the detection tools to a SQL database.      We will then describe our data populations and the
+processing we will carry out to extract all their information. We will draw conclusions about the relationship
+between the Code Smells studied and Testability using this information.
+
+
+   We will then describe the results of our analysis and conclude on the possible threats it contains and the
+next step it prepares.
+CHAPTER 2. INTRODUCTION
+
+
+
+
+                     12
+Chapter 3
+
+Code Smells
+3.1 Introduction to Code Smells
+Since the mid-nineties, the issue of quality evaluation of object-oriented systems has been raised. More speci-
+cally, the way we write source code aects the quality of the software. Multiple factors can explain the quality
+issue in software engineering[16]. We can mention some of them :
+
+
+    Software design is something abstract. Therefore, comparing its output with the expected one is complex.
+
+    Writing Code depends on the specication which in turn depends on the stakeholders of the software.
+      This means a direct dependency on human communication which always increases the complexity.
+
+
+    Software are meant to evolve continuously over time. Each update can lead to a degradation of the design
+      and an increase in complexity, resulting in an exponential decrease in quality and the need to continuously
+      rethink the software design.
+
+
+   In 1999, Fowler [6] identied patterns he named   bad smells in code. The idea was to identify and dene faulty
+structures, names, practices, responsibilities, and dependencies. This set would become the set of potentially
+faulty patterns. These denitions were based on practical experience in the eld, with no scientic study of the
+real impact of those patterns on software quality. In his book, Fowler dened 22 patterns or structures in the
+code, characterized them, and proposed mitigation or refactoring methods.
+Some classic examples of code smells, and their impacts are :
+
+
+    Duplicated Code: same code structure in more than one place, Fowler [6, p. 63] argues that by refactoring
+      it, the program would be better with a unied structure.
+
+
+    Long Method:      Fowler [6, p. 64] explains that making shorter methods make programs live better and
+      longer.
+
+
+   The term     Code Smells is now associated in the developer community with a design aw which impacts the
+readability, maintainability and proneness to bugs in the code[10].
+
+
+   Nevertheless, a more recent research study by Zhang et al [19] shows that those impacts do not exist for
+Code Smells or at least not for all the 22 patterns. Another research [14] expresses that existing studies on these
+impacts need to be more consistent and can not prove the existence of these impacts. Our study will attempt
+to partially ll this gap.
+
+
+
+
+3.2 Denition of Code Smells
+In order to work on the Code Smells, we need to dene some of those concepts. There are many of them. We
+will only dene those we are speaking about in this work. We invite the reader interested in the other Code
+Smells to refer to the work from Fowler [6] and also from Lanza & Marinescu [10].
+3.2. DEFINITION OF CODE SMELLS                                                   CHAPTER 3. CODE SMELLS
+
+3.2.1 Duplicated Code or Code Clones
+The Duplicated Code or Code Clones can be detected at all the levels of source code. It is one of the Code
+Smells with the easiest concept to understand. It shows the same code structure in more than one place.
+
+
+   This design is a complete violation of the Object Oriented design that looks for the reusability of the code
+instead of duplication.
+
+
+   Furthermore, having the same code at dierent places means that when we need to update that code, we
+must update it in dierent places. It makes the evolution and maintainability of the source code much more
+dicult[6].
+
+
+
+3.2.2 Long Method
+The Long Method can be detected at the method level but can also exist at the class level and is called Long
+Class. It is exactly what it is called: a too-long method.
+
+
+   Too many lines of code are bad for readability and understandability[6]. It is easier to deal with a few lines
+of code than with hundreds.
+
+
+
+3.2.3 Blob or God Class
+The God Class, also named Blob, can be detected at the class level. It can be dened as "A large class imple-
+menting dierent responsibilities and centralizing most of the system processing"[8].
+
+
+   One primary concept of Object Oriented language "is that one class should have one responsibility"[10,
+p. 80]. Having multiple responsibilities creates many issues as complexity or understandability.
+
+
+   The reusability of the code is also an essential concept in Object Oriented languages. The issue with that
+Smell is that when a class has all the responsibilities and delegates only a few to the other classes, it will be
+hard to understand and complicated to reuse. That complication also means that developers will be tempted
+to clone a part of the source code of the class instead of reusing it [6, p. 65], creating another Code Smells (see
+Duplicated Code).
+
+
+   Going further, software, in its life cycle, will evolve. The God Class will make that evolution much more
+complicated.
+
+
+   In other words, it brings complexity and bad understandability and is complicated to reuse and evolve.
+
+
+
+3.2.4 Conditional Complexity
+The Conditional Complexity can be detected at the method level. Conditions in the code are used to create a
+new behaviour, e.g.   if you have that value, then do an action; otherwise, do another action.
+   A method with too many "if" and "switch" statements leads to a duplication problem. Polymorphism should
+be used in those cases. It is even worst with switches. They create even more possible behaviours with their
+numerous dierent conditions.
+
+
+   Having many conditions will create a large method and could increase the complexity and lower the under-
+standability given the number of paths data could take given its value.
+
+
+   Through Polymorphism, we create a new class that inherited the behaviours of the rst class at which we add
+new specic behaviours. We could call our new class with the shared behaviours from the "mother" class and
+the specic behaviours we seek instead of calling it through a class with many forks and paths. Furthermore,
+not using that design, and working in only one class, often mean that we need to duplicate code to ensure some
+shared behaviour in the dierent paths taken.
+
+
+
+
+                                                                                                                14
+CHAPTER 3. CODE SMELLS                                                  3.2. DEFINITION OF CODE SMELLS
+
+3.2.5 Complex Class
+The Complex Class can be detected at the class level. This is a class with a high Cyclomatic Complexity and
+very large in terms of Line of Code, a large class including too many independent running paths or branches
+and too many loops.
+
+
+   There is no need to explain why many lines of code could be bad for readability, understandability and the
+ability to evolve the source code. It is easier to deal with a few lines of code than with hundreds.
+
+
+   However, the Complex Class is more than a large class. It also brings complexity through the existence of a
+great number of conditions and loops. It contains Conditional Complexity in its methods. There are multiple
+paths that data could take into the class depending on its value.
+
+
+
+3.2.6 Feature Envy
+The Feature Envy can be detected at the method level. "A method is more interested in a class other than the
+one it actually is in"[8].
+
+
+   This method will look for data on many other classes to realize its purpose.    It envies other classes. It is an
+issue because a class is supposed to be a package that contains data and its treatment. It is a logical unit.
+
+
+   Other classes must always extract some data from a class to make the system work properly.             After all,
+we need to know which client is linked to an account, but it shows a bad design when it happens too often.
+When there is a Feature Envy, we break this logical unit, which makes it dicult to understand what is being
+done with the data and how the code behaves. The mutual dependency between classes with the data and its
+treatment makes it harder to read, understand, and maintain.
+
+
+
+3.2.7 High Coupling
+The High Coupling can be detected at the class level. It is a class that a lot of other classes will access. The
+class is needed by many classes, creating lots of dependencies on our High Coupling class.
+
+
+   As described above, it is an issue because a class is supposed to be a package that contains data and its
+treatment. Therefore, it is a logical unit. A class gathering many responsibilities, it is the opposite. As for the
+Feature Envy, the mutual dependency between classes with the data and its treatment makes it harder to read,
+understand, and maintain.
+
+
+
+3.2.8 Message Chain
+The Message Chain can be detected at the method level. "You see message chains when a client asks one object
+for another object, which the client then asks for yet another object, which the client then asks for yet another
+object, and so on. Navigating in this way means that the client is coupled to the structure of the navigation.
+Any change to the intermediate relationships causes the client to have to change."[19]
+
+
+   Suppose a method uses a sequence of calls to other objects to perform its processing. In that case, it creates
+a direct dependency on the denition of the relationship between each sequence element. For example,      imagine
+a method A that calls the object B, make treatment and calls the object C on the data made with that treatment
+to get another data that will be treated with the help of the object D. In order to ensure that the sequence work,
+we need to have data structure denitions and treatments in each object to match between themselves. They
+have a high dependency.
+3.2. DEFINITION OF CODE SMELLS                                                 CHAPTER 3. CODE SMELLS
+
+3.2.9 Shotgun Surgery
+The Shotgun Surgery can be detected at the method level. Every time we change the method, we must make
+many little changes to many dierent classes.
+
+
+   It is a dependency from the inside to the outside of the method but also the other way around.         These
+dependencies make it more dicult to evolve the source code. As a result, there is always a risk of missing a
+change and creating faults and bugs.
+
+
+
+3.2.10 Spaghetti Code
+The Spaghetti Code can be detected at the class level. It is a class with complex methods interacting between
+them with global variables.
+
+
+   This Code Smells often appears in software evolution when there is very little software structure, and many
+people are working on that evolution. It results in a code with high complexity and unclear relationship between
+the methods.
+
+
+   Global variables are used to share data with other methods. That process makes it more complicated to
+understand the sequence of change of those variables. Everyone works on their part, producing unclear code,
+even for the developer who originally made it after a while.    It is hard to understand and maintain, and it
+becomes more and more complicated to reuse those objects in other code.
+
+
+
+3.2.11 Too Many Fields
+The Too Many Fields can be detected at the class level. It is a class with too many instance variables. "When
+a class has too many instance variables, duplicated code cannot be far behind"[6, p. 65]
+
+
+   It also shows the complexity of the maintenance of the code; each eld can be updated by each method in
+the class and even in all the other classes of our system if the variable is made public. Impacts occur when we
+want to modify those variables, we must be sure where and how they are updated.
+
+
+
+3.2.12 Too Many Methods
+The Too Many Methods can be detected at the class level. It is a class with too many methods. Each method
+is supposed to add functionality to our class.
+
+
+   Having too many functionalities can display a class gathering too many responsibilities. It means our design
+could improved and could be decomposed. Unfortunately, it also means it takes more work to maintain and
+evolve the code.
+
+
+
+
+                                                                                                             16
+CHAPTER 3. CODE SMELLS                                             3.3. IDENTIFICATION OF CODE SMELLS
+
+3.2.13 Synthesis
+The Table 3.1 shows the synthesis of the dierent denitions.
+
+
+ Code Smells Name                         Level      Description
+ Blob or God Class                        Class      "A large class implementing dierent responsibilities
+                                                     and centralizing most of the system processing"[8].
+ Complex Class                            Class      A class with a high Cyclomatic Complexity and very
+                                                     large in terms of Line of Code, a large class including
+                                                     too many independent running paths or branches and
+                                                     too many loops.
+ Conditional Complexity                   Method     A method with too many "if" and "switch" statements
+                                                     leads to a duplication problem.     Polymorphism should
+                                                     be used in those cases.
+ Duplicated Code or Code Clones           All        The same code structure in more than one place.
+ Feature Envy                             Method     "A method is more interested in a class other than the
+                                                     one it actually is in"[8].
+ High Coupling                            Class      Class to which many other classes will have access.
+ Long Method                              Method     A too-long method
+ Message Chain                            Method     "You see message chains when a client asks one object
+                                                     for another object, which the client then asks for yet an-
+                                                     other object, which the client then asks for yet another
+                                                     object, and so on. Navigating in this way means that
+                                                     the client is coupled to the structure of the navigation.
+                                                     Any change to the intermediate relationships causes the
+                                                     client to have to change."[19]
+ Shotgun Surgery                          Method     Every time we change the method, we must make many
+                                                     little changes to many dierent classes.
+ Spaghetti Code                           Class      Class with complex methods interacting between them
+                                                     with global variables.
+ Too Many Fields                          Class      Class with too many instance variables.
+ Too Many Methods                         Class      Class including too many methods, gathering too many
+                                                     responsibilities.
+
+
+                                         Table 3.1: Code Smells synthesis
+
+
+
+
+3.3 Identication of Code Smells
+The Code Smells concept is a design aw in the Code. However, software engineering is not an exact science
+with precise quality denitions. These quality denitions are concepts that need to be applied.
+
+
+     The understanding of the smells can also depend on the knowledge of the developers themselves [14]. Santos
+et   al [14] notes that even with a given denition of Code Smells, developers have trouble identifying them in the
+Code. They also pointed out that developers will only consider a lousy design with symptoms as problematic
+if they can not nd another way to implement it.
+
+
+     Therefore, the denition of Code Smells and its categorization can vary from one study to another or from
+one organization to another.
+3.4. PRIORITIZATION & CRITICALITY OF CODE SMELLS                                           CHAPTER 3. CODE SMELLS
+
+   On the other side, Lanza & Marinescu [10] dene a polymetric view to detect the possibility of bad smells
+and code design. They select a set of metrics and their thresholds for each Code Smells and structural design
+problems in order to create a detection strategy. But they also point that : "Now there are two dangers: rst
+there is the danger of thinking that because your code does not exhibit some of these bad smells you are safe;
+and second there is the danger of thinking the inverse." [10, p. 10]
+
+
+   All of those studies show us that it is complicated to identify a Code Smells. If detected with an automatic
+tool and polymetric, it does not even ensure the existence of a design problem. Furthermore, a Code Smells
+might not even be considered a problem by developers [14, 15].
+
+
+
+3.4 Prioritization & criticality of Code Smells
+Charalampidou et     al [4] tried to assess the priority to give to the Code Smells through the concept of Interest
+Probability that can be calculated by considering the number of occurrences of a Code Smells and the proba-
+bility that developers will change its Code in the future.
+
+
+   They worked on two open-source projects, and they found that:
+
+
+    Code Clones are the most frequently found Smell, and at the same time, they are the least modied into
+      a commit. Nevertheless, the fact that they are present in several methods means that they are counted
+      several times and induce an interest probability of 4.5%-14% per commit.
+
+
+    Long Method and Conditional Complexity are less frequently found in the methods but are more often
+     updated into commits giving respectively 1.0%-2.0% and 0.5%-3.5% of interest probability.
+
+
+They also note that Code Smells refactoring in commits is often hidden or mixed by developers with other
+programming changes.
+The study's limited scope cannot prove anything, but it lightens the fact that it is not because a Code Smells
+exists that it is critical.
+
+
+   On the other hand, Pecorelli et      al [13] tried to understand how developers categorize the criticality of Code
+Smells and prioritize them. They led a survey for six months on open source projects, asking questions after
+each commit to the developer who made it and to the rst developer who implemented the class. They also
+observed which set of classes were modied in the same commit.
+
+
+   They selected four Code Smells. The selection criteria were that they needed to be highly diused Code
+Smells with high studied impacts on maintainability, comprehensibility, and Testability. They used an automatic
+                                                               1
+tool to detect those Code Smells in the selected projects . They identify the way developers determine criticality
+is dierent for each Code Smells :
+
+
+    Blob (God Class): the criticality is determined by structural factors, but those factors are linked together.
+      One is not enough to dene criticality.
+
+
+    Complex Class: it is also the structure of the Code (CBO,WMC, LCOM5) but with a relevant impact
+      from readability too, showing us comprehensibility aect the prioritization.
+
+
+    Spaghetti Code: no structural factors for the Spaghetti Code, it is Readability the key factor.
+
+    Shotgun Surgery: the main factors are the process-related factors (the number of changes (NCh), the
+      number of co-changing classes (AVG CS)) but also the persistence of the Smell (Pers.).
+
+
+   Those two studies show that even if a Code Smells is present or even frequent, it does not mean that it
+will be critical. We can also understand that each Code Smells has its denition of criticality through multiple
+factors.
+
+
+
+
+  1 The denition of all these metrics can be found in the chapter 11 Notation & Metrics
+
+
+                                                                                                                  18
+CHAPTER 3. CODE SMELLS                              3.4. PRIORITIZATION & CRITICALITY OF CODE SMELLS
+                                     Code Smells      Metric        Mean      SKD-ESD
+                                                      RFC            0.65          68
+                                                      LCOM           0.57          66
+                                                      NF             0.56          66
+                                                      DSC            0.55          64
+                                     Blob
+                                                      CBO            0.45          64
+                                                      WMC            0.42          64
+                                                      C3             0.35          45
+                                                      LOC            0.34          41
+                                                      CBO            0.59          71
+                                                      WMC            0.54          69
+                                                      LCOM5          0.54          69
+                                     Complex          Read.          0.54          69
+                                     Class            NC             0.50          54
+                                                      DSC            0.49          51
+                                                      EXP            0.27          33
+                                                      RFC.           0.25          31
+                                                      Read.          0.65          53
+                                     Spaghetti
+                                                      NF             0.57          46
+                                     Code
+                                                      C3             0.38          41
+                                                      NC             0.32          44
+                                     Shotgun          LCOM5          0.31          39
+                                     Surgery          AVG_CS         0.24          33
+                                                      Pers.          0.17          21
+
+          Table 3.2: Pecorelli et al. information gain of the independent variable of their approach[13]
+
+
+
+
+3.4.1 Relationship between Code Smells and quality metrics
+Linares-Vasquez et    al [11] managed an extensive empirical study of 1,343 Java Mobile Edition applications in 13
+application domains to assess if there is a relationship between anti-patterns, Code Smells, application domains
+and quality metrics
+                      2 in object-oriented languages.
+
+
+   They found out that :
+
+
+    Between Code Smells and object-oriented metrics, there are no moderate or strong correlations, but they
+      showed a dierence between metrics in class with and without Code Smells.
+
+
+    Between categories3 and object-oriented metrics, there are no moderate or strong correlations, but between
+      categories, it showed a statistically signicant dierence.
+
+
+   The study suggested that the class with anti-patterns may be more complex than others, and "the presence
+of these anti-patterns may be a sign of a general poor decomposition of responsibilities, in which fewer, larger
+classes have too many responsibilities when compared to other classes." [11, p 8]
+They conclude "that code smells generally (though not uniformly) have a relationship with Object-Oriented
+metrics, similarly to anti-patterns, with coupling, cohesion, and design size, which also suggests a positive rela-
+tionship with fault-proneness."[11, p 8]
+
+
+   Arcelli Fontana et     al [1] used an automatic detection tool to assess 106 systems written in Java from the
+Qualitas Corpus [5]. Their goal was to know if specic domains contain more specics Code Smells and if Code
+Smells can be correlated with code quality metrics.
+They categorized them according to their size (LOC), and they focused on medium-sized systems (from 5,000
+to 99,999 lines), giving them 68 systems to study.
+
+
+   We must notice that their computation does not consider a possible relation between the Smells themselves
+and, in particular, their possible mutual exception. The most common Smells in their results are: Duplicated
+Code, Data Class, God Class, Schizophrenic Class and Long Method.
+
+  2 The denition of all these metrics can be found in the chapter Notation & Metrics
+  3 The authors used ShareJar categories in which developers qualify their applications into 13 dierent categories: Chat & SMS,
+Dictionaries, Free Time, Music, Science, Programming, ...
+3.4. PRIORITIZATION & CRITICALITY OF CODE SMELLS                                      CHAPTER 3. CODE SMELLS
+
+After detecting Code Smells by the tools, they only consider ten systems: the 5 with the smallest amount of
+Code Smells and the 5 with the biggest amount.
+
+
+   The authors [1] observed a high correlation between pairs of smells and metrics. The Code Smells detection
+method can explain some of the pairs using the same metrics.
+   Figure 3.3 shows us the metrics used for the detection and the metrics with the highest correlation they
+found.
+
+
+  Code Smells                     Metric included in detection strategy                            Metrics related
+  Brain Class                     LOC, WMC, TCC                                                    AMW
+  Data Class                      NOC                                                              NOC, ATFD
+  God Class                       WMC, TCC, ATFD                                                   NOC, WMC
+  Refused Parent Bequest          NProtM, BUR, BOvR                                                AMW
+  Refused Parent Bequest 2        AMW, WMC, NOM                                                    AMW
+  Schizophrenic Class             (unknown)                                                        AMW
+  Tradition Breaker               NAS, AMW, WMC, NOM,                                              AMW
+  Brain Method                    LOC, CYCLO, MAXNEST, NOAV                                        LOC, LAA
+  Extensive Coupling              (unknown)                                                        LAA, NOP, LOC
+  Feature Envy                    ATFD, LAA, FDP                                                   LOC, LAA, NOP
+  Intensive Coupling              MAXNEST, CINT, CDISP                                             LAA, LOC
+  Shotgun Surgery                 CM, CYCLO                                                        CYCLO
+  Long Method                     NOP                                                              LAA, LOC
+  Long Parameter List             NOP                                                              NOP
+
+
+                              Table 3.3: Fontana : Metrics related to Code Smells [1]
+
+
+
+   They concluded their analysis by:
+
+
+    Shotgun Surgery is an indicator of the high complexity and big size of the software
+
+    Brain Class and Brain Method is an indicator of the huge size of the software
+
+    Duplicated Code has no signicant correlation with any considered metrics
+
+3.4.2 Relationship between application domains and quality metrics
+Even if they are unsure why Linares-Vasquez et        al [11] observed a statistical dierence between domains and
+the presence of anti-patterns. Some of them are more common in certain domains than others.
+
+
+   They suppose it might come from the dierence in knowledge and convention among the developers of each
+domain. For example, a developer in the music domain
+                                                                 4 (the one with the most signicant variation) may be
+less procient in design and programming than a developer in the programming category.
+
+
+   Within the same idea, Arcelli Fontana et       al [1] when manually verifying the Code Smells detected by the
+tools, found a lot of false-positive results. More importantly, they discovered that false-positive proportions vary
+with the domain. Because some of those Code Smells are acceptable in some domains and are not considered a
+aw.
+
+
+   Another nding is that there is a domain-related variation in the correlation between the size and the com-
+plexity of software. For the Application Software domain, the more it grows, the higher the complexity, whereas
+others can show the opposite.
+
+
+
+
+  4 Domains and categories are used as synonyms by the authors
+
+
+                                                                                                                     20
+Chapter 4
+
+Testability
+4.1 Introduction to Testability
+Quality evaluation is a necessary process for all human activities to understand and improve the activity itself
+and its results. It will also allow to be able to repeat the activity in a more qualitative manner and ensure that
+the result of the activity matches what was expected.
+A quality model is necessary to address this problem.     It allows the evaluation of the matching between the
+expectations from the stakeholders and the produced software and also denes several characteristics that allow
+the measurement and evaluation of software.
+
+
+   It exists an international standard norm : the ISO norm 25010. It[9] denes      testability as the: "degree of
+eectiveness and eciency with which test criteria can be established for a system, product or component and
+tests can be performed to determine whether those criteria have been met". Another denition from Binder
+[2] explains it as: "the relative ease and expense of revealing software fault".    We can conclude from these
+denitions that testability is measurement of the eort needed to test a code.
+
+
+The Table 4.1 shows the denition of the eight qualities according the ISO norm 25010 [9].
+4.1. INTRODUCTION TO TESTABILITY                                               CHAPTER 4. TESTABILITY
+              Quality                   Denition
+              Functional Suitability    This characteristic represents the degree to which a
+                                        product or system provides functions that meet stated
+                                        and implied needs when used under specied conditions.
+              Performance eciency      This characteristic represents the performance relative
+                                        to the amount of resources used under stated conditions.
+              Compatibility             Degree to which a product, system or component can
+                                        exchange information with other products, systems or
+                                        components, andor perform its required functions while
+                                        sharing the same hardware or software environment.
+              Usability                 Degree to which a product or system can be used by
+                                        specied users to achieve specied goals with eective-
+                                        ness, eciency and satisfaction in a specied context of
+                                        use.
+              Reliability               Degree to which a system, product or component per-
+                                        forms specied functions under specied conditions for
+                                        a specied period of time.
+              Security                  Degree to which a product or system protects informa-
+                                        tion and data so that persons or other products or sys-
+                                        tems have the degree of data access appropriate to their
+                                        types and levels of authorization
+              Maintainability           This characteristic represents the degree of eectiveness
+                                        and eciency with which a product or system can be
+                                        modied to improve it, correct it or adapt it to changes
+                                        in environment, and in requirements.
+              Portability               Degree of eectiveness and eciency with which a sys-
+                                        tem, product or component can be transferred from one
+                                        hardware, software or other operational or usage envi-
+                                        ronment to another.
+
+
+                              Table 4.1: ISO 25010 denition of the qualities [9]
+
+
+
+
+The Maintainability is decomposed by the ISO norm 25010 [9] the into ve subsections shown in Table 4.2.
+
+
+                   Subsection      Denition
+                   Modularity      Degree to which a system or computer program is com-
+                                   posed of discrete components such that a change to one
+                                   component has minimal impact on other components.
+                   Reusability     Degree to which an asset can be used in more than one
+                                   system, or in building other assets.
+                   Analysability   Degree of eectiveness and eciency with which it is
+                                   possible to assess the impact on a product or system of
+                                   an intended change to one or more of its parts, or to
+                                   diagnose a product for deciencies or causes of failures,
+                                   or to identify parts to be modied.
+                   Modiability    Degree to which a product or system can be eectively
+                                   and eciently modied without introducing defects or
+                                   degrading existing product quality
+                   Testability     Degree of eectiveness and eciency with which test cri-
+                                   teria can be established for a system, product or compo-
+                                   nent and tests can be performed to determine whether
+                                   those criteria have been met.
+
+
+             Table 4.2: ISO 25010 denition of the subsections of the Maintainability quality [9]
+
+
+
+
+                                                                                                           22
+CHAPTER 4. TESTABILITY                                                            4.2. TESTABILITY METRICS
+
+4.2 Testability metrics
+Testability can give valuable information during the whole development cycle of an application (design, coding,
+testing, and quality insurance). However, there is no standard denition of metrics for assessing testability and
+few studies in this area link testability to metrics.
+
+
+   Furthermore, the testability is evaluated in some studies during in the software design phase [12, 17], others
+in the development phase [3]. A comprehensive model could be the sh-bone model of Binder [2], which assesses
+the testability through the whole life of the software.
+
+
+   As we look at the impact of a wrong code design on testability, we will focus on the denitions in the
+development phase. To explain the idea behind the study of Bruntink and van Deursen [3], we need rst to
+explain the sh-bone model of Binder [2].
+
+
+
+4.2.1 Fish-bone model - Testability through all the cycle
+Binder [2] proposes a sh-bone model throughout the life of the software to assess testability (Figure 4.1). For
+him, "A program's Testability is a prediction of its ability to hide faults when the program is black-box tested
+with inputs selected randomly from a particular input distribution. [2, p 89].
+
+
+   With that in mind, he uses the concept dened by Freedman [7] that two key facets of Testability and
+compliance exist: Controllability and Observability.
+Controllability is the ability to control the input and internal states of the studied class. Observability is the
+ability to check on the output.
+
+
+   Besides those two "primal" factors, the author adds all the organizational and technical factors needed to
+ensure Testability. He uses a dierent "bone" for each dimension with sub-dimensions to represent it. That
+draws the Fish-Bone Model.
+
+
+
+
+                                     Figure 4.1: Binder's sh-bone model [2]
+
+
+
+
+Majors factor of the sh-bone model
+The model is divided into six bones :
+
+
+    Representation: we cannot tell if a test is successful or failed without explicitly describing the expected
+      behaviour. Binder [2] divides that bone into four sub-branches: requirements, specications, traceability
+      and separation of concern.
+
+
+    Implementation: "An object-oriented program that complies with generally accepted principles of object-
+      oriented programming pose fewest obstacles to testing" [2, p 91]
+
+
+    Built-in test capabilities: the tests must be explicitly separated from the dierent functions of the software.
+      With that objective in mind, Binder [2] denes some rules to follow, like a state-based driver and class
+      allowing to be set or reset to the dierent states for the tests.
+
+
+    The test suite: test cases, the associated information and the strategy to use them.
+
+    The test support environment: management and strategy for all the tools needed to test
+4.2. TESTABILITY METRICS                                                         CHAPTER 4. TESTABILITY
+
+    Process capability: the software and organizational processes in which testing is conducted and its maturity
+     assessed
+
+
+As explained in the quote from the author in the implementation bone, an assumption about code smells and
+Testability exists. So we will look further into that dimension. Binder [2] divides that dimension into six sub-
+dimensions. (Figure 4.2)
+
+
+
+
+                           Figure 4.2: Binder's sh-bone model for implementation [2]
+
+
+
+
+    Structural: can be assessed by a few metrics indicating complexity, the scope of testing or both.
+
+    Fault sensibility: "Sensitivity is a product of three probabilities: frequency of statement execution, the
+     probability that a fault will result in incorrect data state, and the probability that a fault will result in
+     an incorrect output." [2, p 89]
+
+
+    Performance Tweaks: problems in performance tends to decrease the controllability and the observability.
+
+    External Interface: the more external interface exists, the more it needs to be initialised to realise the
+     test.
+
+
+    Determinism: dened by the proportion of not needing asynchronous cooperation with others.
+
+    Exception Handling: the need for a design strategy
+
+The structural part is what we will focus on. For each of the metrics, the author assesses if they are correlated
+with complexity, the test scope or both. The problem with those metrics is that they need to be clearly dened,
+and their correlation with the complexity and the scope is not tested nor measured.
+
+
+
+
+4.2.2 Specialization of the sh-bone model for the implementation
+Adapting the sh-bone model from Binder [2], Bruntink and van Deursen [3] focus on the third bone and pro-
+pose an implementation-centric model and metrics to assess the Testability of object-oriented code.       (Figure
+4.3). Their objective is to evaluate metrics and their correlation with Testability.
+
+
+They decompose the model into seven majors factors :
+
+
+    Testing Criterion: "(or code coverage criterion) that species which parts of the software have to be
+     tested" [3, p. 3]
+
+
+                                                                                                               24
+CHAPTER 4. TESTABILITY                                                          4.2. TESTABILITY METRICS
+
+
+
+
+             Figure 4.3: Bruntink and van Deursen's adaptation of Binder's sh-bone model [3]
+
+
+
+
+    Documentation: The capture of all expected behaviour (and not expected) from the software
+    Implementation: "the extent to which the implementation allows itself to be tested" [3, p. 3]. Determinism
+     is a critical aspect of that factor: a code implementation should always have the same behaviour and
+     consistently repeat the tests.
+
+    Test Suite: Set of test cases, documentation, and report on previous and existing tests.
+    Test Tools: Qualitative tools for testing can reduce and/or maximise the eort to test.
+    Process Capability: All the organisation's capacities to support the test: from the ability of the engineers
+     to the funding allowed for the project.
+
+To dene metrics, they distinguished two categories of source code factors of the Fish-bone model :
+
+    Test Case Generation Factors: aect the number of test cases required and dene what to test.            Two
+                                                               Inheritance (as a method can inherit methods
+     specics feature of object-oriented can inuence that factor:
+     from a parent class the number of methods to test increases ) and Polymorphism (increase the number
+     of behaviour for an object )
+    Test Case Construction Factors: aect the eort needed for each test case. e.g. The test of a class may
+     need to initialize members of other classes "this entails that the elds of (an object of ) a class are set to
+     the right values before a test case can be executed" [3, p. 4] and may need much eort.
+4.3. TESTABILITY EFFECTIVENESS                                                          CHAPTER 4. TESTABILITY
+
+Metrics to assess Testability
+The authors used two metrics on the JUnit side to assess the Testability of the code
+
+
+    dLOCC: Lines Of Code for Class - to be more precise: number of asserts
+
+    dNOTC: Number of Test Cases
+
+Impact of code metrics on Testability metrics
+The idea of Bruntink and van Deursen [3] is to evaluate the correlation between the Testability metrics and
+some code metrics
+                     1 . To make that evaluation, they use two dierent testing programs.
+
+
+What they found out:
+
+
+    The Fan Out (FOUT) is more correlated to dLOCC than to dNOTC. That could be explained by the fact
+     that a more "dispersed" class needs more elds to be initialized in the class that uses it to test it.
+
+
+    The Lack Of Cohesion Of Methods (LCOM) is correlated for one testing program but not for the other.
+     The explanation could be the dierence in signicance with The Number Of Fields (NOF) metric between
+     the two programs.
+
+
+    The Number Of Fields (NOF) is signicant in both programs but weak in one and moderate in the other.
+     That may be explained by the fact that the NOF denition does not count the elds inherited from the
+     ancestors.
+
+
+    The Number Of Methods (NOM) is signicant for both dLOCC and dNOTC. The authors note a dierence
+     between the two programs on dNOTC. It could be explained by the strong correlation between NOM and
+     NOF that aects more a program than the other.
+
+
+    Response For Class (RFC) : strong link with dLOCC and dNOTC.
+
+    Weighted Methods Per Class (WMC) is similar to the NOM weighted by McCabe's [18] cyclomatic com-
+     plexity number. Given the test parameters, the WMC is almost identical to the NOM.
+
+
+    For the inheritance metrics, neither the Depth of Inheritance Tree (DIT) nor the Number of Children
+     (NOC) is correlated to our two metrics.
+
+
+
+
+4.3 Testability eectiveness
+In their study, Grano et    al. [8] decided to use mutation testing to draw a framework of metrics to assess the
+Testability of a code. To be more precise, they try to evaluate the quality of the test suite.
+
+
+
+
+4.3.1 Mutants
+Mutants are created by mimicking faulty behaviour. Mutation testing is the idea of creating altered versions
+of the source code to calculate a Mutation score. The calculation is made by running the mutants against the
+test cases to see how many the test case kills.         It is the percentage of killed mutants over the total number
+of mutants. The authors consider this technic as very powerful but expensive because it needs to create and
+compile the mutant and go through all the test suits for each of them.
+They want their empirical study to be able to directly assess the Mutation score of a production code by using
+a set of dened code quality metrics.
+
+
+
+
+4.3.2 Code metrics and Testability eectiveness
+For the test of Code Smells, they selected 8 smells :
+
+
+    Class Data Should Be Private
+
+    Complex Class
+  1 The denition of all these metrics can be found in the chapter Notation & Metrics
+
+
+                                                                                                                 26
+CHAPTER 4. TESTABILITY                                                 4.3. TESTABILITY EFFECTIVENESS
+
+    Blob
+
+    Spaghetti Code
+
+    Message Chain
+
+    Long Method
+
+    Feature Envy
+
+    Functional Decomposition
+
+   Of the eight tested Code Smells, only two have a signicant negative relationship with mutation score: Mes-
+sage Chain and Feature Envy.
+There is a small dierence in the readability. Grano et   al. [8] suppose that less readable Code makes it harder
+to produce test code.
+
+
+The authors concluded that cohesion, coupling, and complexity are the most important factors for test-case
+eectiveness.
+
+
+The most contributing metric is McCABE Cyclomatic Complexity, "a high complexity of production code in-
+dicates the presence of several linearly independent paths "[8, p 12], which increases the diculty of having an
+eective test.
+
+
+   The second most important metric is Response For Class (RFC). Grano et         al. [8] remarks that the metric
+shows the complexity in terms of methods and can lead some mutants not to be killed because, given the com-
+plexity, some paths of the production code do not include a mutated instruction. We can conclude that this
+metric does not work well with mutants.
+
+
+   The same conclusion can be drawn for the Coupling-related Metrics Coupling Between Objects Classes
+(CBO) and Message Passing Coupling (MPC). A high value in those metrics indicates several external invoca-
+tions, which lead to several mutants not being killed.
+
+
+   HALSTEAD Metrics present the same type of problem. It measures the complexity by computing the num-
+ber of operands and operators. The test might not execute some operands; however, a mutant can be injected
+into an operand meaning the test might not be able to kill it.
+
+
+   The low contribution of Code Smells (only two on 8 had a signicant negative impact) into their model is
+explained by the test method that can be "limited by the co-presence of other complexity metrics" [8, p 10].
+   In other words, assessing the real impact of Code Smells on Testability is complicated, given their direct
+link with some code metrics. Nevertheless, they could be the tree hidden in the forest.
+   Their conclusion on the subject is that "the lower the number of code smells, the higher the ability of tests
+to nd faults"[8, p 7]
+4.3. TESTABILITY EFFECTIVENESS   CHAPTER 4. TESTABILITY
+
+
+
+
+                                                     28
+Chapter 5
+
+Evaluation Setup
+We are trying to evaluate if there is an impact of Code Smells on the code Testability.
+
+
+   For that study, we need to dene all the parameters we will use: Code Smells, Testability and Projects. For
+the rst two, we will also dene several metrics allowing us to evaluate them.
+
+
+   Using the study of Lanza & Marinescu [10] and the denition of dierent tools, we will also dene the
+threshold for those metrics.
+
+
+
+5.1 Projects
+Our rst idea was to use the Qualitas Corpus [5].             It is a collection of 112 Java projects made to give the
+academic world a repository allowing reproducible studies. However, that Corpus is old and was not renewed
+since 2013.
+
+
+   Since then, the practices have evolved. Moreover, many dependencies of those projects are now deprecated,
+making the build of those projects more complicated. We created a new corpus with 26 open-source projects
+selected from GitHub .
+                        1
+
+
+The selection criteria were :
+
+
+    Project using in majority Java language
+
+    Project with the most stars in GitHub2 .
+
+    Project being a source for software and not interviews nor videos
+
+    Project must have for licence Apache 2.03 or MIT4 .
+
+    Project must have Java written tests.
+
+    Project must be in English.
+
+We have chosen Java as language because it is the one most widely used in research in this eld.
+
+
+   The idea is to get the project with the most appreciation in Java to ensure their unit testing is ecient and
+complete. We downloaded the project on the 03/30/2023.
+
+
+
+
+  1 https://github.com/
+  2 The stars are used to show appreciation to a project, showing how many people are nding a worthwhile project or well written.
+  3 https://www.apache.org/licenses/LICENSE-2.0
+  4 https://opensource.org/license/mit/
+5.1. PROJECTS                                                              CHAPTER 5. EVALUATION SETUP
+
+The list of the selected projects are shown in Table 5.1.
+
+
+ Name                       Description                                                  URI
+ iluwatar/java-design-      Design patterns implemented in Java                          https://github.
+ patterns                                                                                com/iluwatar/
+                                                                                         java-design-patterns
+ spring-projects            Spring Boot                                                  https://github.com/
+ /spring-boot                                                                            spring-projects/spring-boot
+ elastic /elasticsearch     Free and Open, Distributed, RESTful Search Engine            https://github.com/elastic/
+                                                                                         elasticsearch
+ spring-projects            Spring Framework                                             https://github.com/
+ /spring-framework                                                                       spring-projects/
+                                                                                         spring-framework
+ TheAlgorithms /Java        All Algorithms implemented in Java                           https://github.com/
+                                                                                         TheAlgorithms/Java
+ ReactiveX /RxJava          RxJava  Reactive Extensions for the JVM  a library         https://github.com/
+                            for composing asynchronous and event-based programs          ReactiveX/RxJava
+                            using by using observable sequences.
+ square /retrot            A type-safe HTTP client for Android and the JVM              https://github.com/square/
+                                                                                         retrofit
+ apache /dubbo              Apache Dubbo is a high-performance, java based, open         https://github.com/apache/
+                            source RPC framework.                                        dubbo
+ PhilJay /MPAndroid-        A powerful Android chart view / graph view library,          https://github.com/PhilJay/
+ Chart                      supporting line- bar- pie- radar- bubble- and candlestick    MPAndroidChart
+                            chart
+ skylot /jadx               Dex to Java decompiler                                       https://github.com/skylot/
+                                                                                         jadx
+ airbnb /lottie-android     Render After Eects animations natively on Android           https://github.com/airbnb/
+                            and iOS, Web, and React Native                               lottie-android
+ bumptech /glide            An image loading and caching library for Android fo-         https://github.com/
+                            cused on smooth scrolling                                    bumptech/glide
+ alibaba /arthas            Alibaba   Java   Diagnostic   Tool   Arthas/Alibaba   Java   https://github.com/alibaba/
+                            Arthas                                                       arthas
+ netty /netty               Netty project - an event-driven asynchronous network         https://github.com/netty/
+                            application framework                                        netty
+ apollocong /apollo        Apollo is a reliable conguration management system          https://github.com/
+                            suitable for microservice conguration management sce-       apolloconfig/apollo
+                            narios.
+ SeleniumHQ        /sele-   A browser automation framework and ecosystem.                https://github.com/
+ nium                                                                                    SeleniumHQ/selenium
+ alibaba /nacos             Nacos (ocial site: nacos.io) is an easy-to-use platform     https://github.com/alibaba/
+                            designed for dynamic service discovery and congura-         nacos
+                            tion and service management.         It helps you to build
+                            cloud native applications and microservices platform
+                            easily.
+ JakeWharton       /but-    Bind Android views and callbacks to elds and methods.       https://github.com/
+ terknife                                                                                JakeWharton/butterknife
+ alibaba /fastjson          FASTJSON 2.0.x has been released, faster and more            https://github.com/alibaba/
+                            secure, recommend you upgrade.                               fastjson
+ alibaba /spring-cloud-     Spring Cloud Alibaba provides a one-stop solution for        https://github.com/alibaba/
+ alibaba                    distributed application development.       It contains all   spring-cloud-alibaba
+                            the components required to develop distributed appli-
+                            cations, making it easy for you to develop your applica-
+                            tions using Spring Cloud.
+ apache /kafka              Mirror of Apache Kafka                                       https://github.com/apache/
+                                                                                         kafka
+                                                Table 5.1: Selected projects.
+
+
+
+
+                                                                                                            30
+CHAPTER 5. EVALUATION SETUP                                                                 5.2. CODE SMELLS
+                                                  Continuation of Table 5.1
+ Name                         Description                                               URI
+ greenrobot /EventBus         Event bus for Android and Java that simplies commu-      https://github.com/
+                              nication between Activities, Fragments, Threads, Ser-     greenrobot/EventBus
+                              vices, etc.
+ signalapp         /Signal-   A private messenger for Android.                          https://github.com/
+ Android                                                                                signalapp/Signal-Android
+ TeamNewPipe /New-            A libre lightweight streaming front-end for Android       https://github.com/
+ Pipe                                                                                   TeamNewPipe/NewPipe
+ google /gson                 A Java serialization/deserialization library to convert   https://github.com/google/
+                              Java Objects into JSON and back                           gson
+ apache /skywalking           APM, Application Performance Monitoring System            https://github.com/apache/
+                                                                                        skywalking
+
+                                                 Table 5.1: Selected projects.
+
+
+
+
+   The global metrics for the selected projects are shown in the Table 5.2
+
+
+                                       Metric                          Quantity
+                                       Number of Line of Code         3, 293, 336
+                                       Number Of Abstract Classes        3, 412
+                                       Number Of Concrete Classes       66, 175
+                                       Number Of Interfaces              6, 259
+                                       Number Of Static Classes         14, 161
+                                       Number Of Test Asserts          228, 061
+                                       Number Of Test Cases             80, 486
+
+                                  Table 5.2: Global metrics for the selected projects
+
+
+
+
+5.2 Code Smells
+We saw that the Code Smells aecting testability are linked to the complexity of the code [8] and also that two
+Code Smells might have a relationship with Mutation testing : Feature Envy and Message Chain.
+
+
+   Thanks to Pecorelli et     al [13], we can also evaluate the criticality of four Code Smells: God Class, Complex
+Class, Spaghetti Code and Shotgun Surgery. These four Code Smells are linked to complexity.
+
+
+   Given the diculty in detecting the Message Chain and the Spaghetti Code, we decided not to work on it.
+
+
+   The Spaghetti Code is on the method level and is more complicated to assess. To be more precise, its de-
+nition of metrics is more complicated and will not use the metrics we use for our study. There was a possibility
+of using Ptidej
+                  5 detection tool to detect the Spaghetti Code, but the plugin is old and not maintained anymore.
+Therefore it could not be used on our selected projects.
+
+
+   With the gathered data, we also can detect three more anti-patterns: High Coupling, Too Many Fields and
+Too Many Methods. Those Code Smells are interesting because they show more "basic" issues in the design of
+our code and can be intuitively linked to testability. Furthermore and as explained before, Bruntink and van
+Deursen [3] have made a direct link between dLOCC, dNOTC and NOF and NOM.
+
+
+
+
+  5 https://www.ptidej.net/research/designsmells/
+5.2. CODE SMELLS                                                              CHAPTER 5. EVALUATION SETUP
+
+With all these pieces of information, we decided to select the following Code Smells:
+
+
+    Complex Class
+
+    God Class
+
+    High Coupling
+
+    Too Many Fields
+
+    Too Many Methods
+
+    Feature Envy
+
+    Shotgun Surgery
+
+To select the metrics to dene these Code Smells, we use the denition from Lanza & Marinescu [10] (also used
+in multiple detection tools) and complete it with the study of Arcelli Fontana et          al [1] when possible.
+   It was not possible to evaluate some of the Arcelli Fontana et     al [1] metrics in our study, given that we are
+not working on the evolution of the code. Good examples would be the number of commits or bug xes.
+
+
+   A short denition of the metrics we use for the Code Smells detection is shown in Table 5.3, and all the
+denitions can be found in chapter 11.
+
+
+
+  Metric abbreviation    Metric Name                         Denition
+  ATFD                   Access to Foreign Data              "number of external classes from which a given class ac-
+                                                             cesses attributes, directly or via accessor-methods."[10]
+  CBO                    Coupling     Between      Objects   "Number of classes in the system that call methods or
+                         Classes                             access attributes of a class."[13]
+  CYCLO                  Cyclomatic Complexity               Metrics calculating the number of distinct decision point
+                                                             or path it is possible to take
+  FDP                    Foreign Data Providers              "The number of classes in which the attributes accessed
+                                                             are dened"[10].
+  LAA                    Locality of Attribute Accesses      "number     of   attributes   from   the   method's   deni-
+                                                             tion class, divided by the total number of variables
+                                                             accessed"[10]
+  LCOM5                  Lack Of Cohesion Of Methods         measures the non-proportion of elds of a class to be
+                                                             accessed by all the methods of that same class
+  LOCC                   Lines Of Code Per Class             Number of lines of code of all the methods in the class,
+                                                             ignoring blank and comment lines
+  NOF                    Number Of Fields                    self-explanatory
+  NOM                    Number Of Methods                   self-explanatory
+  RFC                    Response For Class                  count of all the methods of all the class, c included,
+                                                             invoked by c
+  TCC                    Tight Class Cohesion                "relative number of methods directly connected via ac-
+                                                             cesses of attributes"[10]
+  WMC                    Weighted Methods Per Class          Metrics calculating the owned number of methods by a
+                                                             class weighted by McCabe's [18] cyclomatic complexity
+                                                             number
+
+
+                        Table 5.3: Metrics denition for the detection of Code Smells
+
+
+
+To assess the threshold for each metric, we use as much as possible the study of Lanza & Marinescu [10], and
+when not possible, we extract the rules from recognized detection tools.
+
+
+
+
+                                                                                                                        32
+CHAPTER 5. EVALUATION SETUP                                                              5.2. CODE SMELLS
+
+5.2.1 Complex Class
+The Complex Class is on the class level. We translate the denition of the concept into a class with a very high
+Lines Of Code Per Class and a very high Weighted Methods Per Class.
+
+
+   The threshold for these metrics comes from Lanza & Marinescu [10]
+
+
+                           Metric       Operator   Threshold            Source
+                           LOCC            >           195      Lanza & Marinescu[10]
+                           WMC             >           47       Lanza & Marinescu[10]
+
+
+                                       Table 5.4: Metrics for the Complex Class
+
+
+With the work of Pecorelli et   al [13] we can also add the denition of a critical Complex Class. The metrics
+LCOM5, NCh, DSC and EXP cannot be taken into account for this study.
+
+
+   The threshold denition for the CBO comes from the rule denition of the detection tool PMD .
+                                                                                                      6
+The LOCC threshold is the high value in Lanza & Marinescu [10].
+
+
+                           Metric       Operator   Threshold            Source
+                           LOCC            >           195      Lanza & Marinescu[10]
+                           WMC             >           47       Lanza & Marinescu[10]
+                            RFC            >           50          objectScript_Q
+                                                                                     7
+                            CBO            >           20               PMD
+                                                                            8
+
+
+                              Table 5.5: Metrics for the "critical" Complex Class
+
+
+
+
+5.2.2 God Class
+The God Class is on the class level. The denition of the three rst metrics comes from Lanza & Marinescu
+[10], and the fourth one is coming from the study of Arcelli Fontana et    al [1].
+   The threshold for these metrics comes from Lanza & Marinescu [10]
+
+
+                           Metric       Operator   Threshold            Source
+                           WMC             >           47       Lanza & Marinescu[10]
+                           ATFD            >            5       Lanza & Marinescu[10]
+                            TCC            <           1/3      Lanza & Marinescu[10]
+                            NOM            >           10       Lanza & Marinescu[10]
+
+
+                                         Table 5.6: Metrics for the God Class
+
+
+To dene the "critical" God Class, the LCOM5, NF and DSC metrics cannot be taken into account for this
+study, and the C3 cannot be calculated with detection tools.
+
+
+                                                                                                  9
+   The threshold denition for the CBO comes from the rule denition of the detection tool PMD . The LOCC
+threshold is the high value in Lanza & Marinescu [10].
+
+
+
+
+  6 https://pmd.github.io/
+  7 https://objectscriptquality.com/
+  8 https://pmd.github.io/
+  9 https://pmd.github.io/
+ 10 https://objectscriptquality.com/
+ 11 https://pmd.github.io/
+5.2. CODE SMELLS                                                           CHAPTER 5. EVALUATION SETUP
+                           Metric     Operator      Threshold            Source
+                           WMC              >           47        Lanza & Marinescu[10]
+                           ATFD             >           5         Lanza & Marinescu[10]
+                            TCC             <          1/3        Lanza & Marinescu[10]
+                           NOM              >           10        Lanza & Marinescu[10]
+                            RFC             >           50          objectScript_Q
+                                                                                       10
+                            CBO             >           20               PMD
+                                                                            11
+                           LOCC             >          130        Lanza & Marinescu[10]
+
+
+                                 Table 5.7: Metrics for the "critical" God Class
+
+
+
+
+5.2.3 High Coupling
+The High Coupling is on the class level. The denition of the metrics and the thresholds comes from Metric-
+sTree
+     12 .
+
+
+                                Metric      Operator    Threshold        Source
+                                 CBO            >            19       MetricsTree
+                                                                                  13
+
+
+                                     Table 5.8: Metrics for the High Coupling
+
+
+
+
+5.2.4 Too Many Fields
+The Too Many Fields is on the class level.          The denition of the metrics and the thresholds comes from
+MetricsTree
+            14 .
+
+
+                                Metric      Operator    Threshold        Source
+                                 NOF            >            14       MetricsTree
+                                                                                  15
+
+
+                                    Table 5.9: Metrics for the Too Many Fields
+
+
+
+
+5.2.5 Too Many Methods
+The Too Many Methods is on the class level.          The denition of the metrics and the thresholds comes from
+MetricsTree
+            16 .
+
+
+                                Metric      Operator    Threshold        Source
+                                NOM             >            9        MetricsTree
+                                                                                  17
+
+
+                                Table 5.10: Metrics for the Too Many Methods
+
+
+
+
+5.2.6 Feature Envy
+The Feature Envy is on the method level. The denition of the metrics and the thresholds comes from Lanza
+& Marinescu [10].
+
+
+                           Metric     Operator      Threshold            Source
+                            LAA           <            1/3        Lanza & Marinescu[10]
+                           ATFD           >             3         Lanza & Marinescu[10]
+                            FDP          <=            1/3        Lanza & Marinescu[10]
+
+
+                                     Table 5.11: Metrics for the Feature Envy
+
+
+
+ 12 https://github.com/b333vv/metricstree
+ 14 https://github.com/b333vv/metricstree
+ 16 https://github.com/b333vv/metricstree
+
+
+                                                                                                            34
+CHAPTER 5. EVALUATION SETUP                                                           5.3. TESTABILITY
+
+5.2.7 Shotgun Surgery
+The Shotgun Surgery is on the method level. The denition of the metrics comes from Arcelli Fontana et   al
+[1], they include CM and CYCLO. According Lanza & Marinescu [10], the CM can be replace by the WMC
+metric. The denition of the thresholds comes from Lanza & Marinescu [10].
+
+
+                          Metric    Operator   Threshold            Source
+                          WMC          >           47       Lanza & Marinescu[10]
+                          CYCLO        >          0.24      Lanza & Marinescu[10]
+
+
+                                Table 5.12: Metrics for the Shotgun Surgery
+
+
+To dene the "critical" Shotgun Surgery, the LCOM5, NCh, AVG CS and Pers. metrics cannot be taken into
+account for this study.
+
+
+
+5.3 Testability
+We use the metrics used by Bruntink and van Deursen [3] to measure the testability.
+
+
+    dLOCC: Lines Of Code for Class - to be more precise: number of asserts
+
+    dNOTC: Number of Test Cases
+5.3. TESTABILITY   CHAPTER 5. EVALUATION SETUP
+
+
+
+
+                                            36
+Chapter 6
+
+Methodology
+6.1 Metrics tools
+We selected two tools to analyze our projects. There are both plugins for the IntelliJ IDE. First, the Metric-
+sTree
+     1 plugin allows us to retrieve all the metrics related to the Code Smells. Secondly, the MetricsReloaded2
+plugin allows us to retrieve all the metrics related to Testability.
+
+
+   For the Testability metrics, we planned to retrieve the number of asserts and the number of test cases. The
+issue with the MetricsReloaded plugin was that it only worked with the basic junit framework. But the current
+                                                                                            3
+projects are also using other frameworks to do their unit testing: junit.jupiter and Mockito .
+
+
+   The plugin is open source and uses a visitor pattern to get the metrics from the code. In order to get more
+accurate data from our projects, we decided to create new rules for the visitor.    In italics, you will nd the
+previous conguration of the plugin.
+
+
+The test cases and the number of asserts will consider the classes that import:
+
+
+    junit.framework.TestCase
+
+    junit.jupiter.api.Assertions
+
+    mockito.Mockito
+
+    junit.jupiter.params
+
+The test cases and the number of asserts will consider the method with the following annotations:
+
+
+    org.junit.Test
+
+    org.junit.jupiter.api.Test
+
+    org.junit.jupiter.params.ParameterizedTest
+
+    or with a name starting with "test"
+
+The number of asserts will be counted based on the following:
+
+
+    Method name starting with "assert"
+
+    Method name equals to "fail"
+
+    Method name starting with "verify"
+
+    Method name starting with "andExpect"
+
+    Method name starting with "expect"
+
+    Method name equals to "andReturn"
+  1 https://github.com/b333vv/metricstree
+  2 https://github.com/BasLeijdekkers/MetricsReloaded
+  3 https://site.mockito.org/
+6.2. PARSING AND STORAGE OF THE METRICS                                       CHAPTER 6. METHODOLOGY
+
+    Method name equals to "then"
+
+   Both plugins allowed to export of the results in the form of an XML le. The idea was to export them into
+a GitHub repository
+                      4 for this work. The size of the dierent XML is too big for Github and can not be shared
+that way.
+
+
+   As a result, we have used Zenodo to put our data online, which can be accessed at the following URL:
+https://zenodo.org/record/7979009
+
+
+6.2 Parsing and storage of the metrics
+We decided is to store the data on a SQL database to allow easy manipulation while being sure not to alter the
+data. Another reason is navigating through our data's relationships (see Figure 6.1).
+
+
+
+
+                                    Figure 6.1: Scheme of the SQL database
+
+
+
+   The relationships have been atted at the package level. The packages being a composite item, they can
+compose other packages. As we do not use package metrics in our analysis, we do not need information about
+the composition of the package. Nevertheless, we kept the dierent packages and the construction of their name.
+For example, if a package "org" contains a package "src", we do not have a key from src to org, but we know
+that the "src" package name is "org.src". Moreover, we kept all the specic information about both packages.
+
+
+                                                                          5
+   We wrote a small script in Python (see parseXML.py in the repository ) to parse the XML les into queries
+for the database.
+The script also mixes the Testability metrics with Code Smells metrics into the query.
+
+
+
+
+  4 https://github.com/Ohensmans/ThesisTestabilityCodeSmells
+  5 https://github.com/Ohensmans/ThesisTestabilityCodeSmells
+
+
+                                                                                                            38
+CHAPTER 6. METHODOLOGY                                                          6.3. STATISTICAL ANALYSIS
+
+   The naming convention of a test Class is to add "Test" to its name. While inspecting our selected projects,
+we discovered that some projects had dierent naming conventions. Furthermore, as the data come from two
+dierent plugins, we needed to link the test classes with the class they are testing.
+We have chosen on some matching rules. We stop at the rst rule being true :
+
+
+  1. The same Class name exists in the test XML and the Code Smells XML.
+
+
+  2. A Class name in the test XML that matches the Class name + "Test" in the Code Smells XML exists.
+
+
+  3. A Class name in the test XML that matches the Class name + "Tests" in the Code Smells XML exists.
+
+
+  4. A Class name in the test XML that matches the Class name + "tests" in the Code Smells XML exists.
+
+
+  5. A Class name in the test XML that matches the Class name + "test" in the Code Smells XML exists.
+
+
+
+6.3 Statistical analysis
+We transformed the data from the database into a csv le.
+
+
+We used R
+            6 to calculate all the statistics and to do the diagrams based on our csv le.
+
+
+
+
+  6 https://www.r-project.org/
+6.3. STATISTICAL ANALYSIS   CHAPTER 6. METHODOLOGY
+
+
+
+
+                                                40
+Chapter 7
+
+Results
+7.1 Description of the dataset
+                                                                                                        1
+We used a SQL query to transform our data into our dataset(see Query DataSet.sql in the repository ). Table
+7.1 gives information about our dataset's size and content.
+
+
+                            Metric                                             Quantity
+                            Number of Classes linked to at least a unit test     9, 152
+                            Number of Test Asserts                              228, 061
+                            Number of Test Cases                                80, 486
+                            Count of "Complex Class"                              954
+                            Count of "Critical Complex Class"                     677
+                            Count of "God Class"                                   38
+                            Count of "Critical God Class"                          30
+                            Count of "Feature Envy"                              4, 768
+                            Count of "Shotgun Surgery"                            174
+                            Count of "Too Many Fields"                           1, 311
+                            Count of "Too Many Methods"                          3, 248
+                            Count of "High Coupling"                             2, 307
+
+                                     Table 7.1: Global description of the dataset
+
+
+   It is important to note that we count the occurrences of Code Smells.
+
+
+   The metrics Complex Class, Critical Complex Class, God Class, Critical God Class, Too Many Fields, Too
+Many Methods and High Coupling are Code Smells at the class level. It means their value by class is zero or
+one,   e.g. a class is complex or is not complex.
+   The other metrics are calculated at the method level. Therefore, they can have a value by class higher than
+one if more than one method in the class has the Code Smells.
+
+
+   We know that the critical Code Smells are included in the count of their non-critical counterpart.
+
+
+   We can already do some observations, the God Class is not often present in our dataset, but when it does, it
+is usually a "critical" one, about 78, 9%. The same thing can be said about the Complex Class, 70, 9% of those
+are "critical" ones.
+
+
+   The quality of the projects we have chosen to observe could explain that large portion of critical Code Smells
+in the code. As we mentioned before, a Code Smells might not even be considered a problem by developers
+[14, 15] if they have no other way of implementing the functionality.
+
+
+
+
+  1 https://github.com/Ohensmans/ThesisTestabilityCodeSmells
+7.2. DISTRIBUTION OF THE TWO TESTABILITY METRICS                                      CHAPTER 7. RESULTS
+
+   An explanation of our extensive "critical" portion could be that the Code Smells could not be avoided. But
+this is a highly speculative hypothesis that would deserve a specic study to understand whether the developers
+who produced the code were aware of the code smells and did not nd another solution.
+
+
+
+7.2 Distribution of the two testability metrics
+In this section, we will comment on the distribution of our data given the two testability metrics: dLOCC and
+dNOTC.
+
+
+   For the dLOCC, the number of asserts for a class in almost all the dataset, is less or equal to 100. For the
+dNOTC, most of the values are less or equal to 40.
+
+
+   This situation can create problems in the analysis of our distribution. We should point out that in almost all
+observational data sets, if not all, there are extreme observations, with values outside normality, or even false.
+It is therefore more dicult to nd a predictive model with these values, and they can signicantly inuence
+the mean of our variables.
+
+
+We show in Figure 7.1a the Histogram of dLOCC and the Figure 7.1b shows the Histogram of dNOTC.
+
+
+
+
+                (a) Histogram of dLOCC                                   (b) Histogram of dNOTC
+
+
+                                  Figure 7.1: Histogram of our 2 populations
+
+
+
+Nevertheless, we nd a more comprehensible model if we remove those extreme values.
+
+
+   For the dLOCC, the dierence in population between the two samples is just 4.33%. This corresponds to
+396 observations out of 9152.
+
+   For the dNOTC, the population of the removed data is 2.41% of the full population. This corresponds to
+207 observations out of 9152.
+
+
+
+
+                                                                                                               42
+CHAPTER 7. RESULTS                           7.2. DISTRIBUTION OF THE TWO TESTABILITY METRICS
+
+The Table 7.2a shows us the means for the two samples of dLOCC and, the Table 7.2b for the dNOTC.
+
+
+                Sample             Mean                                  Sample             Mean
+                All the data       24.92                                 All the data        8.62
+                dLOCC <= 100       17.08                                 dNOTC <= 40         7.16
+           (a) Means for the dLOCC sampling                         (b) Means for the dNOTC sampling
+
+
+                                      Table 7.2: Means of our populations
+
+
+   It is a dicult decision to suppress these extremes values. They may have real meaning and not just be
+noise. It could be fascinating to study these extreme cases, looking deep into the code to understand why a class
+would require more than a hundred assertions to ensure that its behaviour matches the specication. However,
+our study focuses on the generic impact of Code Smells on the testability of code. Consequently, we will be
+looking at the average and not the extreme cases.
+
+
+Figures 7.2a and 7.2b show the Histogram of dLOCC <= 100 and dNOTC <= 40.                  In both diagrams, the
+distribution look like an inverse exponential.
+
+
+
+
+            (a) Histogram of dLOCC <= 100                             (b) Histogram of dNOTC <= 40
+
+
+                               Figure 7.2: Distribution of the reduced populations
+
+
+The next diagram we can use to get a better understanding of our dataset is the boxplot.
+
+
+   In the rectangle, the lower horizontal line represents the limit of the rst quartile and, therefore, the rst
+twenty-ve per cent of the data. The thicker horizontal line represents the median, and the rectangle's upper
+line represents the third quartile's separation. The top line of the graph corresponds to the value of the third
+quartile plus the value of the interquartile range, i.e. the distance between the rst quartile and the third quar-
+tile multiplied by 1.5. Each point above the top horizontal line corresponds to a class well above the observed
+values and represents only a tiny fraction of our data.
+7.2. DISTRIBUTION OF THE TWO TESTABILITY METRICS                                          CHAPTER 7. RESULTS
+
+Figure 7.3 shows the boxplots for the two samples.
+
+
+
+
+              (a) Boxplot of dLOCC <= 100                              (b) Boxplot of dNOTC <= 40
+
+
+                                     Figure 7.3: Boxplots for our two samples
+
+
+We can observe, for the dLOCC, that 75% our data is equal to or less than 22.
+
+
+   For dNOTC, we consider that 75% of our data are equal to or less than nine. The median is lower than the
+mean, with a value of ve.
+
+
+   That reassures us in removing the data with a dLOCC higher than 100 or a dNOTC higher than 40; those
+data were really out of scale.
+
+
+   Table 7.3 shows us the value of the quartiles for the observed population.
+
+
+            0%    25%    50%     75%    100%                          0%   25%      50%    75%   100%
+             1     4      10      22     100                           1    2        5      9     40
+           (a) Quartiles for the dLOCC <= 100                      (b) Quartiles for the dNOTC <= 40
+
+
+                                 Table 7.3: Quartiles for the reduced populations
+
+
+We can also test our hypothesis about the distribution of our two populations using a Q-Q plot test. This test
+compares our distribution to a normal distribution using quartiles.
+Figure 7.4 shows the results of the Q-Q Plot test. If we get a straight line, we have a normal distribution. We
+can see that our distributions are not normal.
+
+
+   We can conclude this section by knowing that we have eliminated the extreme cases in our two metrics. This
+gives us an inverse exponential distribution curve for both. This knowledge will enable us to choose the right
+statistical tools to continue our analysis.
+
+
+   Looking more closely in the data we have excluded from our samples, we can see that 156 of the observations
+rejected as too extreme have a dLOCC value greater than 100 and a dNOTC value greater than 40.
+This represents 75.36% of the cases eliminated for dNOTC and 39.39% for dNLOCC.
+The percentages are logical, given that there will be at least one assert per test case. The more dNOTC we
+have, the more likely we have a high dLOCC.
+
+
+
+
+                                                                                                            44
+CHAPTER 7. RESULTS                                7.3. COMPARISON WITH THE CODE SMELLS METRICS
+
+
+
+
+        (a) Normal Q-Q Plot for dLOCC <= 100                      (b) Normal Q-Q Plot for dNOTC <= 40
+
+
+                                Figure 7.4: Normal Q-Q Plot for our two samples
+
+
+
+
+7.3 Comparison with the Code Smells metrics
+Our idea is to assess whether there is a relationship between each Code Smells and the two individual testability
+metrics. We will rst start the reading with the Code Smells located on the class level. They have the advantage
+of describing a boolean situation. It is present, or it is not.
+To do that, we will only take our two reduced Testability samples and compare the distributions when the Code
+Smells are present or not.
+
+
+   We will do the same exercise with the two Code Smells linked to methods. To do this, we will only consider
+their presence in a class. It would undoubtedly be interesting to study the variations as a function of the number
+of occurrences of a Code Smell in the same class, but that is outside the scope of this study. We want to know
+whether the presence of Code Smells has an impact on the Testability.       Studying these variations requires a
+more qualitative study, checking the lines of code and categorising the possible reasons for these variations and
+the impact on testability.
+
+
+   Since we know that our distributions are not normal, we need to use a non-parametric test to estimate the
+probability that we are wrong in our reading of a signicant result. The test we will use is the Wilcoxon-Mann-
+Whitney test.
+
+
+   We will use this tests to check whether the medians of our two populations are equal. We are interested in
+the case where this hypothesis of equality is not satised, the counter-hypothesis, where we observe a dierence
+in Testability between the presence or absence of a Code Smells. The test gives us an indicator p. If its value
+is less than 5%, we can reject the medians' equality hypothesis with reasonable certainty.
+7.3. COMPARISON WITH THE CODE SMELLS METRICS                                          CHAPTER 7. RESULTS
+
+7.3.1 Complex Class
+The Complex Class is present in our dataset 954 times on 9, 152. We can compare now the distribution for our
+two reduced samples.
+
+
+                Complex Class presence    Min.    1st Qu.   Median    Mean     3rd Qu.   Max.
+                           0                1        4           10   17.18      23       100
+                           1                1        4           10   16.17      23       100
+
+                    Table 7.4: Distribution of the Complex Class for the dLOCC <= 100
+
+
+
+
+                Complex Class presence    Min.    1st Qu.   Median    Mean     3rd Qu.   Max.
+                           0                1        2           5    7.226       9       40
+                           1                1        2           4    6.603       9       40
+
+                    Table 7.5: Distribution of the Complex Class for the dNOTC <= 40
+
+
+   For none of the considered populations, can we observe a signicant dierence in the distribution between
+cases of the presence or absence of the Complex Class pattern.
+
+
+Figure 7.5 shows us the boxplots for our populations, there is almost no dierence.
+
+
+
+
+       (a) Boxplot of dLOCC with Complex Class                (b) Boxplot of dNOTC with Complex Class
+
+
+                                   Figure 7.5: Boxplots for Complex Class
+
+
+   We do not observe a signicant dierence.     In consequence, there is no need to do the Wilcoxon-Mann-
+Whitney test.
+
+
+
+
+                                                                                                         46
+CHAPTER 7. RESULTS                             7.3. COMPARISON WITH THE CODE SMELLS METRICS
+
+7.3.2 Critical Complex Class
+The Critical Complex Class is present in our dataset 677 times on 9, 152. 70.96% of the Complex Class are also
+Critical Complex Class.
+
+
+   We can compare now the distribution for our two reduced samples.
+
+
+           Critical Complex Class presence    Min.     1st Qu.    Median    Mean     3rd Qu.   Max.
+                           0                    1         4          9       15.93     21       100
+                           1                    1        15          30      35.99     54       100
+
+                Table 7.6: Distribution of the Critical Complex Class for the dLOCC <= 100
+
+
+
+
+           Critical Complex Class presence    Min.     1st Qu.    Median    Mean     3rd Qu.   Max.
+                           0                    1        2           4       6.66       8        40
+                           1                    1        6          11.5     14.5      21        40
+
+                Table 7.7: Distribution of the Critical Complex Class for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the Critical Complex Class is present. The
+mean goes from 15.93 to 35.99 and from 6.66 to 14.5.
+
+
+Figures 7.6 show us the boxplots for our populations, we can see more clearly the dierence.
+
+
+
+
+   (a) Boxplot of dLOCC with Critical Complex Class          (b) Boxplot of dNOTC with Critical Complex Class
+
+
+                               Figure 7.6: Boxplots for Critical Complex Class
+
+
+   The obtained p-values are shown in Table 7.8.      We can assert that there is an inuence of the Critical
+Complex Class on the Code Testability.
+
+
+                                         Population            p-value
+                                         dLOCC <= 100          2.2e−16
+                                         dNOTC <= 40           2.2e−16
+
+                       Table 7.8: p-value of the Wilcox test for Critical Complex Class
+
+
+The dierence between Complex Class and Critical Complex Class are two metrics : CBO and RFC.
+7.3. COMPARISON WITH THE CODE SMELLS METRICS                                             CHAPTER 7. RESULTS
+
+7.3.3 God Class
+The God Class is present in our dataset 38 times on 9, 152.
+
+
+   We can compare now the distribution for our two reduced samples.
+
+
+                  God Class presence      Min.   1st Qu.   Median       Mean    3rd Qu.    Max.
+                           0               1         4        10        17.02     22       100
+                           1               2        17        25        32.94     43        86
+
+                      Table 7.9: Distribution of the God Class for the dLOCC <= 100
+
+
+
+
+                  God Class presence      Min.   1st Qu.   Median       Mean    3rd Qu.    Max.
+                           0               1        2          5        7.143      9        40
+                           1               2        6         8.5       11.75    14.75      34
+
+                      Table 7.10: Distribution of the God Class for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the God Class is present. The mean goes from
+17.02 to 32.94 and from 7.143 to 11.75.
+
+Figure 7.7 shows us the boxplots for our populations, we can see the dierence.
+
+
+
+
+         (a) Boxplot of dLOCC with God Class                        (b) Boxplot of dNOTC with God Class
+
+
+                                       Figure 7.7: Boxplots for God Class
+
+
+   The obtained p-values are shown in Table 7.11. We can assert that there is an inuence of the God Class
+on the Code Testability.
+
+
+                                           Population         p-value
+                                           dLOCC <= 100       6.27e−7
+                                           dNOTC <= 40        1.34e−5
+
+                               Table 7.11: p-value of the Wilcox test for God Class
+
+
+The God Class is using four metrics : WMC, ATFD, TCC and NOM.
+
+
+
+
+                                                                                                          48
+CHAPTER 7. RESULTS                                7.3. COMPARISON WITH THE CODE SMELLS METRICS
+
+7.3.4 Critical God Class
+The Critical God Class is present in our dataset 30 times on 9, 152.       78.95% of the God Class are also Critical
+God Class.
+
+
+   We can compare now the distribution for our two reduced samples.
+
+
+              Critical God Class presence   Min.      1st Qu.     Median      Mean    3rd Qu.    Max.
+                           0                  1         4           10        17.03      22      100
+                           1                  2         17          25        32.94      45       86
+
+                  Table 7.12: Distribution of the Critical God Class for the dLOCC <= 100
+
+
+
+
+              Critical God Class presence   Min.      1st Qu.     Median      Mean    3rd Qu.    Max.
+                           0                  1         2            5        7.151      9        40
+                           1                  2         6            8        10.30    10.75      29
+
+                  Table 7.13: Distribution of the Critical God Class for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the Critical God Class is present. The mean
+goes from 17.03 to 32.94 and from 7.151 to 10.30.
+
+
+Figure 7.7 shows us the boxplots for our populations, we can see more clearly the dierence.
+
+
+
+
+     (a) Boxplot of dLOCC with Critical God Class               (b) Boxplot of dNOTC with Critical God Class
+
+
+                                 Figure 7.8: Boxplots for Critical God Class
+
+
+   The obtained p-values are shown in Table 7.14. We can assert that there is an inuence of the Critical God
+Class on the Code Testability.
+
+
+                                         Population              p-value
+                                         dLOCC <= 100           1.749e−5
+                                         dNOTC <= 40            0.0004955
+
+                         Table 7.14: p-value of the Wilcox test for Critical God Class
+
+
+We can see that we have less certainty with Critical God Class than with God Class, the distribution of dLOCC
+is almost the same as the God Class; we see more dierence with the dNOTC metric but the count of both
+Code Smells is low which could explain the dierence between the God Class and the Critical God Class.
+7.3. COMPARISON WITH THE CODE SMELLS METRICS                                        CHAPTER 7. RESULTS
+
+7.3.5 Too Many Fields
+The Too Many Fields is present in our dataset 1, 311 times on 9, 152.
+
+
+   We can compare now the distribution for our two reduced samples.
+
+
+              Too Many Fields presence     Min.    1st Qu.   Median     Mean    3rd Qu.   Max.
+                           0                 1        4         9       15.09     21       100
+                           1                 1        7        16       24.91     36       100
+
+                   Table 7.15: Distribution of the Too Many Fields for the dLOCC <= 100
+
+
+
+
+              Too Many Fields presence     Min.    1st Qu.   Median     Mean    3rd Qu.   Max.
+                           0                 1        2         4       6.667      8       40
+                           1                 1        3         7        10.2     14       40
+
+                   Table 7.16: Distribution of the Too Many Fields for the dNOTC <= 40
+
+
+   For both populations, we observe a signicant dierence when the Too Many Fields is present. The mean
+goes from 15.09 to 24.91 and from 6.667 to 10.2.
+Figure 7.9 shows us the boxplots for our populations : we can see the dierence more clearly.
+
+
+
+
+      (a) Boxplot of dLOCC with Too Many Fields              (b) Boxplot of dNOTC with Too Many Fields
+
+
+                                  Figure 7.9: Boxplots for Too Many Fields
+
+
+   The obtained p-values are shown in Table 7.17. We can assert that there is an inuence of the Too Many
+Fields on the Code Testability.
+
+
+                                         Population          p-value
+                                         dLOCC <= 100        2.2e−16
+                                         dNOTC <= 40         2.2e−16
+
+                         Table 7.17: p-value of the Wilcox test for Too Many Fields
+
+
+
+
+                                                                                                         50
+CHAPTER 7. RESULTS                             7.3. COMPARISON WITH THE CODE SMELLS METRICS
+
+7.3.6 Too Many Methods
+The Too Many Methods is present in our dataset 3, 248 times on 9, 152.
+
+
+   We can compare now the distribution for our two reduced samples.
+
+
+             Too Many Methods presence      Min.    1st Qu.     Median   Mean    3rd Qu.   Max.
+                           0                  1        4           8     13.16      16      100
+                           1                  1        8          17      24.8      36      100
+
+                 Table 7.18: Distribution of the Too Many Methods for the dLOCC <= 100
+
+
+
+
+             Too Many Methods presence      Min.    1st Qu.     Median   Mean    3rd Qu.   Max.
+                           0                  1        2           4     5.645       7      40
+                           1                  1        3           7      10.5      14      40
+
+                 Table 7.19: Distribution of the Too Many Methods for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the Too Many Methods is present.
+
+
+   The mean goes from 13.16 to 24.8 and from 5.645 to 10.5.
+Figure 7.10 shows us the boxplots for our populations, we can see more clearly the dierence.
+
+
+
+
+     (a) Boxplot of dLOCC with Too Many Methods               (b) Boxplot of dNOTC with Too Many Methods
+
+
+                                Figure 7.10: Boxplots for Too Many Methods
+
+
+   The obtained p-values are shown in Table 7.20. We can assert that there is an inuence of the Too Many
+Methods on the Code Testability.
+
+
+                                         Population           p-value
+                                         dLOCC <= 100         2.2e−16
+                                         dNOTC <= 40          2.2e−16
+
+                        Table 7.20: p-value of the Wilcox test for Too Many Methods
+7.3. COMPARISON WITH THE CODE SMELLS METRICS                                          CHAPTER 7. RESULTS
+
+7.3.7 High Coupling
+The High Coupling is present in our dataset 2, 307 times on 9, 152.
+
+
+   We can compare now the distribution for our two reduced samples.
+
+
+                High Coupling presence      Min.   1st Qu.   Median    Mean    3rd Qu.   Max.
+                           0                  1          4     8       14.7      19       100
+                           1                  1          8     17      24.8      36       100
+
+                    Table 7.21: Distribution of the High Coupling for the dLOCC <= 100
+
+
+
+
+                High Coupling presence      Min.   1st Qu.   Median    Mean    3rd Qu.   Max.
+                           0                  1          2     4       6.38      8        40
+                           1                  1          3     7       9.588     13       40
+
+                    Table 7.22: Distribution of the High Coupling for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the High Coupling is present. The mean goes
+from 14.7 to 24.8 and from 6.38 to 9.588.
+
+
+Figure 7.11 shows us the boxplots for our populations, we can see more clearly the dierence.
+
+
+
+
+       (a) Boxplot of dLOCC with High Coupling                 (b) Boxplot of dNOTC with High Coupling
+
+
+                                   Figure 7.11: Boxplots for High Coupling
+
+
+   The obtained p-values are shown in Table 7.23. We can assert that there is an inuence of the High Coupling
+on the Code Testability.
+
+
+                                            Population       p-value
+                                            dLOCC <= 100     2.2e−16
+                                            dNOTC <= 40      2.2e−16
+
+                           Table 7.23: p-value of the Wilcox test for High Coupling
+
+
+
+
+                                                                                                           52
+CHAPTER 7. RESULTS                               7.3. COMPARISON WITH THE CODE SMELLS METRICS
+
+7.3.8 Feature Envy
+The Feature Envy is present in 992 classes out of 9, 152.
+
+
+   We can compare now the distribution for our two reduced samples. We will do our analysis by checking only
+whether the Code Smells is present or not in a class, and not by the number of times it is present.
+
+
+                  Feature Envy value    Min.     1st Qu.    Median     Mean     3rd Qu.   Max.
+                            0             1        4           9        16.47     21       100
+                           >= 1           1        7          15         22.5     31       100
+
+                      Table 7.24: Distribution of Feature Envy for the dLOCC <= 100
+
+
+
+
+                  Feature Envy value    Min.     1st Qu.    Median     Mean     3rd Qu.   Max.
+                            0             1        2          5         6.983      9       40
+                           >= 1           1        3          6         8.655     12       40
+
+                     Table 7.25: Distribution of the Feature Envy for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the Feature Envy is present. The mean goes
+from 16.47 to 22.5 and from 6.983 to 8.655.
+
+
+Figure 7.12 shows us the boxplots for our populations, we can more clearly see the dierence. Once again, we
+create two categories: Feature Envy is not present in the class or Feature Envy is present.
+
+
+
+
+        (a) Boxplot of dLOCC with Feature Envy                     (b) Boxplot of dNOTC with Feature Envy
+
+
+                                    Figure 7.12: Boxplots for Feature Envy
+
+
+   The obtained p-values are shown in Table 7.26. We can assert that there is an inuence of the Feature Envy
+on the Code Testability.
+
+
+                                         Population           p-value
+                                         dLOCC <= 100         2.2e−16
+                                         dNOTC <= 40         7.467e−15
+
+                            Table 7.26: p-value of the Wilcox test for Feature Envy
+
+
+The Feature Envy is using three metrics : LAA, ATFD and FDP.
+7.3. COMPARISON WITH THE CODE SMELLS METRICS                                              CHAPTER 7. RESULTS
+
+7.3.9 Shotgun Surgery
+The Shotgun Surgery is present in 130 classes out of 9, 152.
+
+
+   We can compare now the distribution for our two reduced samples. As we did for the Feature Envy, we will
+carry out our analysis based solely on whether or not Smells code is present in a class, and not on the number
+of times it is present.
+
+
+                  Shotgun Surgery value   Min.     1st Qu.     Median      Mean    3rd Qu.   Max.
+                           0                1          4         10        16.92     22      100
+                          >= 1              1          9        25.5       31.74     48       96
+
+                      Table 7.27: Distribution of Shotgun Surgery for the dLOCC <= 100
+
+
+
+
+                  Shotgun Surgery value   Min.     1st Qu.     Median      Mean    3rd Qu.   Max.
+                           0                1          2          5        7.082      9       40
+                          >= 1              1          4         11        13.66     22       39
+
+                     Table 7.28: Distribution of the Shotgun Surgery for the dNOTC <= 40
+
+
+   For both populations we observe a signicant dierence when the Shotgun Surgery is present. The mean
+goes from 16.92 to 31.74 and from 7.082 to 13.66.
+
+
+Figure 7.13 shows us the boxplots for our populations, we can see the dierence. Once again we create two
+categories : Shotgun Surgery is not present in the class or Shotgun Surgery is present.
+
+
+
+
+       (a) Boxplot of dLOCC with Shotgun Surgery                (b) Boxplot of dNOTC with Shotgun Surgery
+
+
+                                   Figure 7.13: Boxplots for Shotgun Surgery
+
+
+   The obtained p-values are shown in Table 7.29.      We can assert that there is an inuence of the Shotgun
+Surgery on the Code Testability.
+
+
+                                          Population            p-value
+                                          dLOCC <= 100         4.324e−9
+                                          dNOTC <= 40          1.588e−11
+
+                            Table 7.29: p-value of the Wilcox test for Feature Envy
+
+
+The Shotgun Surgery is using three metrics : WMC and CYCLO.
+
+
+                                                                                                            54
+CHAPTER 7. RESULTS                                                      7.4. CHALLENGING THE RESULTS
+
+7.4 Challenging the results
+These results should now be read with caution.     Inuencing Testability does not mean that this inuence is
+direct.   An unknown factor could inuence both Testability and the Code Smells studied.       Our anti-pattern
+would no longer be a cause, but a consequence of another factor, and the increase in eort to perform the test
+would also result from this unknown factor.
+
+
+   Given these limitations, it is interesting to note that almost all the Code Smells studied have an impact on
+the Testability of the code.   We can see in our distributions a dierence, sometimes signicant, between the
+number of unit tests and test cases and the presence or absence of certain Code Smells.
+
+
+   The case of the Complex Class is the more interesting as there is a signicant dierence with the critical
+complex class. This case highlights the importance of the 'Coupling Between Objects Classes' and 'Response
+For Class' metrics.
+
+
+   These two metrics refer to the behaviour linked to other classes, i.e. the number of external classes that
+call the methods and attributes of our class and the number of methods accessed (internally and externally) by
+the class. This could mean that it is more complicated to test behaviours linked to classes outside the class for
+which the tests are being carried out.
+
+
+   For the rest of our analysis, it would seem that the intuition that an anti-pattern creates an additional
+diculty, a greater eort to test the code, has been conrmed.
+7.4. CHALLENGING THE RESULTS   CHAPTER 7. RESULTS
+
+
+
+
+                                               56
+Chapter 8
+
+Threats to validity
+Both the Code Smells and Testability are qualitative measurements. Those measurements are estimated through
+metrics. We used that estimation to estimate the relationship between our two concepts. Unfortunately, there
+was a lot of guesswork to conrm of our result.
+
+
+   To deepen that concern, we know that the Code Smells are not perfectly dened concepts. And even on the
+more globally accepted and dened patterns, we saw that there are not always considered as an anti-pattern
+given the situation.
+
+
+   The thresholds are dierent for each metric depending on the language.          It shows us the complexity of
+working with metrics and that they can also be relative to the person that denes them.
+
+
+   Our calculation was not done by hand, nor by evaluating the classes one by one and checking if their concept
+corresponded to a Code Smells. We also did not asked the developers for their opinion on the code. We only use
+metrics to indicate the presence of anti-patterns. This use can create false positives or leave undetected patterns.
+
+
+   The tools we used to assess the metrics could not calculate all of them. A good example is the LCOM5 that
+requires calculating the number of   distinct attributes accessed by each method in a class. That is, right now,
+not possible with the existing tools.
+
+
+   Testability measures are also a compromise; we try to measure eort objectively. The best way to make
+the measurement would be to ask one person to be sure that the knowledge does not inuence the score and
+to do a test of all the projects. In reality, it is impossible; it would require a deep knowledge of many dierent
+systems, logic and domains. That would require a long time to test enough projects, and we could argue that
+that person would learn one thing or two in that long time, making him more eective on later projects than
+on earlier ones.
+
+
+   The choice of the projects has been a complicated decision. Choosing only the more qualitative projects
+might show us projects with much less Code Smells.       However, on the other side, we might have better test
+coverage, granting us good tests. We could imagine a less qualitative project with many Code Smells and not
+all the needed test cases and asserts or the opposite with way too much tests.
+
+
+   Some Code Smells were barely represented in our sample.         God Class, for example, was only present 38
+times out of 9152 classes. This represents less than 0.4% of classes. The same can be said for Shotgun Surgery,
+which was only present in 130 cases (1.42% of cases), and of course, for Critical God Class, which is an over-
+interpretation of God Class.
+                                                                    CHAPTER 8. THREATS TO VALIDITY
+
+   It would be necessary to do a more extensive study to see if this low presence represents reality and if our
+impact study on the distribution of testability measures repeats with more observations.
+
+
+   We have also limited our analysis of Feature Envy and Shotgun Surgery patterns to whether or not they
+are present in a class. Therefore, we cannot say whether their impact is directly linked to their number. As
+explained earlier, it would require an in-depth study of the code to answer this question.
+
+
+   Another limitation of our study is that we used metrics to detect Code Smells automatically.      We would
+have to do a qualitative study with manual detection of Code Smells, according to clear denitions, to analyze
+their possible impact on Testability. It may be that the links we have discovered are related more to indicators
+than to concepts that are not initially dened by metrics but by other concepts.
+
+
+
+
+                                                                                                             58
+Chapter 9
+
+Conclusion
+This study assessed the relationship between Code Smells and Testability.
+
+
+   We rst tried to understand the concept of Code Smells. We discovered that Fowler[6] has worked on the
+concept since 1999, and we dened some of those anti-patterns.
+
+
+   Nevertheless, we also discovered that there are not many studies on the subject and that the identication
+of Code Smells is complex. These concepts can be interpreted dierently by each developer and organisation.
+
+
+   Lanza & Marinescu[10] have worked on translating the Code Smells concepts into metrics allowing us to
+detect them more easily. But it is still a concept; even if its characteristics are shown in a code, it does not
+mean it exists.
+
+
+   We then tried to understand whether there were more critical Code Smells and found that they were a more
+restrictive denition of our concepts. We also found that it is not the most frequent Code Smells that are the
+most critical or the highest priority for the developer. We can also add that whether illness of code are a Code
+Smell depends on the context of the software. If it cannot be avoided, it is not considered a Code Smell by the
+developers
+
+
+   To conclude our study of the concept of Code Smells, we addressed the issue of detection tools that may
+not use all related metrics to detect code smells. They also could have a lot of false positives in detection tools
+given the domain of the observed system.
+
+
+   We then dened our second concept: Testability.
+
+
+   We saw that it was a dened quality of software by the ISO 25010[9] and that it conceptualises an eort
+measurement.
+We then tried to understand how to evaluate Testability. We have explained how Testability can be taken into
+account in the dierent phases of the software life cycle. We then described the Testability metrics related to
+the implementation phase.
+
+
+   We also found that assessing Testability eectiveness using mutants can allow us to establish strong links
+between Testability eectiveness and code metrics. However, Grano et       al.[8] did not nd a relationship between
+the existence of Code Smells and the eectiveness of the corresponding tests. The only thing that the authors of
+the study can conclude is "the lower the number of code smells, the higher the ability of tests to nd faults"[8, p 7]
+
+
+   With both our concepts dened, we determined the scope of our analysis. Finally, we selected open-source
+projects for our corpus. We picked the most relevant Code Smells to study and transformed them into metrics.
+We added the metrics uncovered by Arcelli Fontana et         al [1] linked with the Code Smells. When possible,
+we also added the metrics discovered by Pecorelli et     al [13] to create a critical class of Code Smells. We also
+characterised the three metrics used to evaluate the Testability.
+
+
+   Our next step was to determine how we would get the values for our metrics for all the selected projects.
+We also dened all the processes that the measured data would go through to enable us to carry out our analysis.
+                                                                                CHAPTER 9. CONCLUSION
+
+   Our analysis does not allow us to say more that there is a signicant dierence in our samples when most
+of the Code Smells observed are present. It exists an impact between some Code Smells and the Testability.
+Unfortunately, we are not in a position to calculate the amplitude of this impact.
+
+
+   As explained in the previous chapter, the fact that both parameters of our analysis are qualitative makes
+it more complicated to assess. It creates another layer of complexity in the understanding of the possible rela-
+tionship between Code Smells and Testability.
+
+
+   We can ask whether Testability is not directly related to code metrics rather than Code Smells. The rela-
+tionship between the two concepts may come from a few metrics that compose our denition of Code Smells. It
+is what happened with the Complex Class and the Critical Complex Class. This means that we should perhaps
+focus more on certain attributes of the code to improve Testability than on the existence of an anti-pattern.
+That requires a complete study on the subject to nd if that relationship is more robust and what those related
+metrics and their threshold would be.
+
+
+   Our analysis shows the importance of studying the subject to better understand Code Smells and to provide
+a more accurate and accepted denition. The same can be said about code metrics and their threshold. We
+need to be able to better characterise code and its properties. But it should also be recognised that this would
+be a complicated task given the speed of evolution of techniques and practices in our eld.
+
+
+
+
+                                                                                                             60
+Chapter 10
+
+Bibliography
+ [1] Francesca Arcelli Fontana, Vincenzo Ferme, Alessandro Marino, Bartosz Walter, and Paweª Martenka.
+    Investigating the impact of code smells on system's quality: An empirical study on systems of dierent
+    application domains. pages 260269, 09 2013.
+
+ [2] Robert Binder. Design for testability in object-oriented systems.   Commun. ACM, 37:87101, 09 1994.
+ [3] M. Bruntink and A. van Deursen. Predicting class testability using object-oriented metrics. In   Source Code
+    Analysis and Manipulation, Fourth IEEE International Workshop on, pages 136145, 2004.
+ [4] Soa Charalampidou, Apostolos Ampatzoglou, Alexander Chatzigeorgiou, and Paris Avgeriou. Assessing
+    code smell interest probability: A case study. In   Proceedings of the XP2017 Scientic Workshops, XP '17,
+    New York, NY, USA, 2017. Association for Computing Machinery.
+
+ [5] E. Tempero et al. The qualitas corpus: A curated collection of java code for empirical studies.     Proc. of
+    17th Asia PacicSoftware Engineering Conference (APSEC 10), IEEE, pages 336345, 2010.
+ [6] Martin Fowler.   Refactoring: Improving the Design of Existing Code. Addison-Wesley, Boston, MA, USA,
+    1999.
+
+ [7] Roy S. Freedman. Testability of software components.     IEEE Trans. Software Eng., 17:553564, 1991.
+ [8] Giovanni Grano, Fabio Palomba, and Harald C. Gall.        Lightweight assessment of test-case eectiveness
+    using source-code-quality indicators.   IEEE Transactions on Software Engineering, 47(4):758774, 2021.
+ [9] ISO/IEC 25010. ISO/IEC 25010:2011, systems and software engineering  systems and software quality
+    requirements and evaluation (square)  system and software quality models, 2011.
+
+[10] Michele Lanza and Radu Marinescu.     Object-Oriented Metrics in Practice: Using Software Metrics to
+    Characterize, Evaluate, and Improve the Design of Object-Oriented Systems. 01 2006.
+[11] Mario Linares-Vásquez, Sam Klock, Collin McMillan, Aminata Sabané, Denys Poshyvanyk, and Yann-Gaël
+    Guéhéneuc. Domain matters: Bringing further evidence of the relationships among anti-patterns, appli-
+                                                                   Proceedings of the 22nd International
+    cation domains, and quality-related metrics in java mobile apps. In
+    Conference on Program Comprehension, ICPC 2014, page 232243, New York, NY, USA, 2014. Association
+    for Computing Machinery.
+
+[12] Mohd Nazir, Dr. Raees A. Khan, and Dr. K. Mustafa. Testability estimation framework.  International
+    Journal of Computer Applications, 2(5):914, June 2010. Published By Foundation of Computer Science.
+[13] Fabiano Pecorelli, Fabio Palomba, Foutse Khomh, and Andrea De Lucia.   Developer-Driven Code Smell
+    Prioritization, page 220231. Association for Computing Machinery, New York, NY, USA, 2020.
+[14] José Amancio M. Santos, João B. Rocha-Junior, Luciana Carla Lins Prates, Rogeres Santos do Nascimento,
+    Mydiã Falcão Freitas, and Manoel Gomes de Mendonça.          A systematic review on the code smell eect.
+    Journal of Systems and Software, 144:450477, 2018.
+[15] Leonardo Sousa, Anderson Oliveira, Willian Oizumi, Simone Barbosa, Alessandro Garcia, Jaejoon Lee,
+    Marcos Kalinowski, Rafael de Mello, Baldoino Fonseca, Roberto Oliveira, Carlos Lucena, and Rodrigo
+    Paes.  Identifying design problems in the source code: A grounded theory. In Proceedings of the 40th
+    International Conference on Software Engineering, ICSE '18, page 921931, New York, NY, USA, 2018.
+    Association for Computing Machinery.
+                                                                           CHAPTER 10. BIBLIOGRAPHY
+
+[16] Benoît Vanderose. Génie logiciel [ihdcm031]. In   Unamur Master 60 en Sciences Informatiques en horaire
+    décalé, 2022-2023.
+                                                                                  Journal of Systems and
+[17] Jerey M. Voas and Keith W. Miller. Semantic metrics for software testability.
+    Software, 20(3):207216, 1993. Oregon Metric Workshop on Software Metrics, 1992.
+[18] Arthur Watson, Thomas J. McCabe, and Dolores R. Wallace. Structured testing: A testing methodology
+    using the cyclomatic complexity metric. 1996.
+
+
+[19] Min Zhang, Tracy Hall, and Nathan Baddoo. Code bad smells: a review of current knowledge.    Journal of
+    Software Maintenance and Evolution: Research and Practice, 23(3):179202, 2011.
+
+
+
+
+                                                                                                         62
+Chapter 11
+
+Notations & Metrics
+11.1 Notations
+To examine the proposed metrics we need to extract some denitions[3, p. 4] :
+
+
+    "Denition 1 (Classes) An object-oriented system consists of a set of classes, C. For every class c ∈ C we
+have :
+
+
+     P arent(c) ⊂ C , the parent class of c.
+
+     Children(c) ⊂ C , the set of classes that inherit directly from c.
+
+     Ancestors(c) ⊂ C , the set of classes from which c inherits either directly or indirectly.
+
+
+    Denition 2 (Methods) Let c ∈ C , then we have:
+     MIn (c), the set of methods that c inherits.
+
+     MD (c), the set of methods that c newly declares, i.e. m ∈ MD (c) i m is declared in c and m ̸∈ MIn .
+
+     MIm (c), the set of methods that c implements, i.e. c denes a body for m. Clearly, for each m ∈ MIm (c)
+      either m ∈ MIn or m ∈ MD .
+
+
+     M (c) = MD (c) ∪ MIn (c), the set of methods of c.
+
+     M (C) = ∪c∈C M (c), the set of all methods.
+
+
+    Denition 3 (Method Invocations) Let c ∈ C , m ∈ MIm (c) and m′ ∈ M (C), then we have:
+     MI(m), the set of methods invoked by m. m′ ∈ M I(m) i the body of m contains an invocation of method
+        m'.
+
+
+
+    Denition 4 (Fields) Let c ∈ C , then we have:
+     FIn (c), the set of elds that c inherits.
+
+     FD (c), the set of elds that c newly declares, i.e. f ∈ FD (c) i f is declared in c and f ̸∈ FIn .
+
+     F (c) = FIn ∪ FD , the set of elds of c.
+
+     F (C) = ∪c∈C F (c), the set of all elds.
+
+
+    Denition 5 (Field References) Let m ∈ MIm (c) for some c ∈ C and f ∈ F (C), then we have:
+     f ∈ F R(m) i the body of m contains a reference to f .
+
+"
+11.2. DEFINITION OF METRICS                                           CHAPTER 11. NOTATIONS & METRICS
+
+11.2 Denition of metrics
+   Access to Foreign Data - ATFD: "number of external classes from which a given class accesses at-
+    tributes, directly or via accessor-methods."[10]
+
+   Average Commit Size - AVG CS: "Average number of classes that changed in commits involving a
+    class."[13]
+
+   Average Line of Code per Method - ALCM: Average Line of Code per Method
+   Changing Classes - CC: "The number of classes in which the methods that call the measured method"[10]
+   Changing Methods - CM: "The number of distinct methods that call the measured method"[10]
+   Conceptual Cohesion of Classes - C3: "Average cosine similarity computed among all method pairs
+    of a class."[13]
+
+   Coupling Between Objects Classes - CBO: "Number of classes in the system that call methods or
+    access attributes of a class."[13]
+
+   Cyclomatic Complexity - CYCLO: Metrics calculating the number of distinct decision point or path
+    it is possible to take
+
+   Depth of Inheritance Tree - DIT
+
+                                              DIT (c) = |Ancestors(c)|
+
+    That metric is specic for languages like Java which don't allow more than one parent class. Otherwise,
+    it doesn't work.
+
+   Developer's Experience - EXP: "Average number of commits of the committers of a class."[13]
+   Developer's Scattering Changes - DSC: "Average number of distinct subsystems in which the com-
+    mitters of a class made changes."[13]
+
+   Fan Out - FOUT measures how many classes, a class can aect
+
+                                         F OU T (c) = |d ∈ C − c : uses(c, d)|
+
+    the predicates uses(c;d) is dened by:
+
+
+     uses(c; d) ↔ (∃m ∈ MIm (c) : ∃m′ ∈ MIm (d) : m′ ∈ M I(m)) ∨ (∃m ∈ MIm (c) : ∃a ∈ F (d) : a ∈ F R(m))
+
+   Foreign Data Providers- FDP: "The number of classes in which the attributes accessed are dened"[10].
+   HALSTEAD : metric calculating the complexity of individual line of code or statement.
+   Lack Of Cohesion Of Methods - LCOM measures the non-proportion of elds of a class to be accessed
+    by all the methods of that same class
+
+
+                                                       ( a1
+                                                              P
+                                                              f ∈FD (c) µ(f )) − n
+                                         LCOM (c) =
+                                                                  1−n
+    where :
+
+       a = |FD (c)|,
+       n = |MIm (c)| and
+       µ(g) = |m ∈ MIm (c) : g ∈ F R(m)|, the number of implemented methods of c that have a reference
+         to a eld g
+
+    A value of 0 indicates that the cohesion is perfect and the 1 value indicates the exact opposite.
+
+   Lines Of Code Per Class - LOCC
+                                                              X
+                                            LOCC(c) =                 LOC(m)
+                                                          m∈MIm (c)
+
+    where : LOC(m) is the number of lines of code of method m ignoring blank and comment lines
+
+
+                                                                                                        64
+CHAPTER 11. NOTATIONS & METRICS                                          11.2. DEFINITION OF METRICS
+
+   Lines Of Code for Class in Unit Testing - dLOCC: to be more precise: number of asserts
+
+   Locality of Attribute Accesses - LAA: "number of attributes from the method's denition class,
+    divided by the total number of variables accessed"[10]
+
+
+   Number of Bug Fixes - NF: "Number of bug xing activities performed on a class in the change history
+    of the system."[13]
+
+
+   Number of Changes - NCh: "Number of commits in the change history of the system involving a
+    class."[13]
+
+
+   Number of Children - NOC
+                                             N OC(c) = |Children(c)|
+
+   Number Of Fields - NOF
+                                                N OF (c) = |FD (c)|
+
+   Number Of Methods - NOM
+                                               N OM (c) = |MD (c)|
+
+   Number of Test Cases in Unit Testing - dNOTC
+
+   Persistence - Pers.:"Number of subsequent major/minor releases in which a certain smell aects a
+    class."[13]
+
+
+   Readability - Read.      :   "Measure of source code readability based on 25 features, e.g., number of
+    parentheses per line of code."[13]
+
+
+   Response For Class - RFC: count of all the methods of all the class, c included, invoked by c
+
+                                         RF C(c) = |M (c) ∪m∈M (c) M I(m)|
+
+   Tight Class Cohesion - TCC : "relative number of methods directly connected via accesses of attributes"[10]
+
+   Weighted Methods Per Class - WMC:
+                                                          X
+                                           W M C(c) =           V G(m)
+                                                        m∈MIm (c)
+
+
+    where : V G(m) is McCabe's [18] Cyclomatic Complexity number for m.
+

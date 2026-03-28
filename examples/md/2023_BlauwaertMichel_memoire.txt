@@ -1,0 +1,3199 @@
+                          Institutional Repository - Research Portal
+                          Dépôt Institutionnel - Portail de la Recherche
+                   researchportal.unamur.be
+     University of Namur
+
+
+
+
+                                                      THESIS / THÈSE
+
+     MASTER EN SCIENCES INFORMATIQUES
+
+
+     Développement d'un outil d'étude basé sur les cartes isochrones
+
+
+
+
+Author(s) - Auteur(s) :
+     BLAUWAERT, Michel
+
+     Award date:
+     2023
+
+
+     Awarding institution:
+     Universite de Namur
+Supervisor - Co-Supervisor / Promoteur - Co-Promoteur :
+     Link to publication
+
+
+
+
+Publication date - Date de publication :
+
+
+
+Permanent link - Permalien :
+
+
+
+Rights / License - Licence de droit d’auteur :
+
+     General rights
+     Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+     and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+             • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+             • You may not further distribute the material or use it for any profit-making activity or commercial gain
+             • You may freely distribute the URL identifying the publication in the public portal ?
+     Take down policy
+     If you believe that this document breaches copyright please contact us providing details, and we will remove access to the work immediately
+     and investigate your claim.
+
+Bibliothèque   Universitaire
+     Download date: 23. mars. 2026Moretus Plantin
+                        Université de Namur
+                         Faculté d’informatique
+                      Année académique 2022–2023
+
+
+
+
+          Développement d’un outil d’étude basé sur les
+                      cartes isochrones
+
+
+                              Michel Blauwaert
+
+
+
+
+Maître de stage :   Bruno Dumas
+
+    Promoteur :                           (Signature pour approbation du dépôt - REE art. 40)
+
+
+
+ Co-promoteur :     Antoine Clarinval
+
+
+
+          Mémoire présenté en vue de l’obtention du grade de
+                 Master en Sciences Informatiques.
+                                                                              1
+
+
+Remerciements
+
+Je tiens à remercier Monsieur Bruno Dumas en tant que promoteur et lecteur,
+qui grâce à lui m’a donné l’opportunité de développer ce mémoire.
+Monsieur Antoine Clarinval, mon lecteur et mon conseiller dans cette dé-
+marche, pour toute son aide inestimable tout au long de l’édition de ce mé-
+moire. Il m’a apporté des éclaircissements et des conseils avisés pour mener
+au mieux ce travail. Sa disponibilité et son efficacité ont été extrêmement
+bénéfiques tout au long de ce travail, sans parler de sa patience inébran-
+lable.
+Je tiens également à exprimer ma gratitude envers l’Université de Namur
+pour m’avoir accordé l’accès aux diverses technologies nécessaires à la collecte
+d’informations et à l’obtention des renseignements qui ont contribué à la
+rédaction de ce travail.
+Et pour finir, je désire exprimer ma sincère gratitude envers Joël, qui se
+reconnaîtra, pour son soutien psychologique durant les moments de grande
+solitude.
+                                                                               2
+
+
+Résumé
+
+Face à une société en constante évolution, la gestion des villes devient de
+plus en plus complexe, accentuant ainsi la nécessité de répondre aux besoins
+croissants de la population. Parmi ces besoins, la santé et l’accès aux ser-
+vices de première nécessité jouent un rôle crucial. Les trajets et les délais
+de déplacement ont un impact direct sur l’accessibilité de ces ressources ur-
+baines essentielles. Les moyens de mobilité sont de plus en plus variés, et nos
+conditions climatiques imposent des contraintes de plus en plus strictes sur
+l’environnement.
+Pour relever ces défis, l’utilisation des cartes isochrones émerge comme un
+outil prometteur. Ces cartes présentent les zones atteignables dans un temps
+donné depuis un point précis, offrant ainsi une vision claire des zones acces-
+sibles à pied, à vélo, en transports en commun ou en voiture, en fonction des
+contraintes de temps.
+L’intégration des cartes isochrones dans l’aménagement urbain peut per-
+mettre d’identifier les zones mal desservies et de prendre des mesures pour
+améliorer l’accessibilité. Cela facilite également la planification des infra-
+structures, des services et des équipements afin de répondre aux besoins des
+résidents, en particulier dans les quartiers les plus éloignés ou négligés.
+Ces cartes isochrones aident également les responsables urbains à prendre des
+décisions éclairées concernant les investissements dans les transports publics,
+les services de santé, les centres commerciaux et autres infrastructures essen-
+tielles, en prenant en compte les caractéristiques de chaque individu.
+Au cœur de ce message, qui souligne la complexité des enjeux liés à l’acces-
+sibilité, l’intégration des cartes isochrones se révèle impérative pour éclairer
+les prises de décisions. Cependant, une analyse des outils existants révèle
+souvent une complexité qui n’est pas adaptée aux décideurs issus d’un pu-
+blic plus vaste. Ces outils nécessitent fréquemment une expertise spécifique
+et une maîtrise technique qui ne sont pas à la portée de tous.
+C’est dans ce contexte que j’ai conçu et développé une solution novatrice,
+dotée d’une interface conviviale, afin de combler cette lacune. L’outil répond
+non seulement aux besoins des décideurs, mais démontre également son po-
+tentiel à travers des cas d’utilisation concrets, illustrant ainsi son efficacité
+et sa pertinence. Les cas exposés commenceront par une analyse de l’implan-
+tation des pharmacies dans une région, suivie de l’évaluation de leur confor-
+mité. Le deuxième cas portera sur la distribution des points de paiement
+Bancontact et explorera la possibilité d’améliorer leur accessibilité.
+                                                                              3
+
+
+Abstract
+
+Faced with a constantly changing society, the management of cities is be-
+coming more and more complex, thus accentuating the need to meet the
+growing needs of the population. Among these needs, health and access to
+essential services play a crucial role. Routes and travel times have a direct
+impact on the accessibility of these essential urban resources. The means
+of mobility are more and more varied, and our climatic conditions impose
+increasingly strict constraints on the environment.
+To address these challenges, the use of isochrone maps emerges as a promising
+tool. These maps present the areas reachable in a given time from a specific
+point, thus offering a clear vision of the areas accessible on foot, by bicycle,
+by public transport or by car, according to time constraints.
+Integrating drive-time maps into urban planning can help identify under-
+served areas and take steps to improve accessibility. It also facilitates the
+planning of infrastructure, services and amenities to meet the needs of resi-
+dents, especially in the most remote or neglected neighborhoods.
+These isochrone maps also help city officials make informed decisions about
+investments in public transport, health services, shopping centers and other
+essential infrastructure, taking into account the characteristics of each indi-
+vidual.
+At the heart of this message, which underlines the complexity of the issues
+related to accessibility, the integration of isochrone maps is essential to cla-
+rify decision-making. However, an analysis of existing tools often reveals a
+complexity that is not suitable for decision makers from a wider audience.
+These tools frequently require specific expertise and technical mastery that
+are not within everyone’s reach.
+It is in this context that I designed and developed an innovative solution,
+equipped with a user-friendly interface, in order to fill this gap. The tool not
+only meets the needs of decision-makers, but also demonstrates its potential
+through concrete use cases, thus illustrating its effectiveness and relevance.
+The cases presented will begin with an analysis of the establishment of phar-
+macies in a region, followed by the assessment of their conformity. The second
+case will focus on the distribution of Bancontact payment points and will
+explore the possibility of improving their accessibility.
+Table des Matières
+
+1 Introduction                                                              6
+
+2 État de l’art                                                              8
+  2.1 Accessibilité . . . . . . . . . . . . . . . . . . . . . . . . . .      8
+      2.1.1 Définitions de l’accessibilité . . . . . . . . . . . . . . .     8
+  2.2 Isochrones . . . . . . . . . . . . . . . . . . . . . . . . . . . .     9
+      2.2.1 Définitions et historiques . . . . . . . . . . . . . . . . .     9
+      2.2.2 Techniques de calcul et de visualisation . . . . . . . .        13
+             2.2.2.1 Calcul des isochrones . . . . . . . . . . . . .        14
+             2.2.2.2 Visualisation des isochrones . . . . . . . . . .       19
+      2.2.3 Visualisation de l’accessibilité . . . . . . . . .              24
+             2.2.3.1 Le choix des couleurs . . . . . . . . . . . . .        24
+             2.2.3.2 Mise en place de la zone de chalandise. . . .          25
+             2.2.3.3 Format des coordonnées géographiques . . .             25
+      2.2.4 Relation isochrone et zone de chalandise . . . . . . . .        27
+      2.2.5 Exemples d’application . . . . . . . . . . . . . . . . . .      28
+             2.2.5.1 Les catégories d’isochrones et leurs caracté-
+                      ristiques . . . . . . . . . . . . . . . . . . . . .   28
+             2.2.5.2 Outils existants utilisant les solutions iso-
+                      chrones . . . . . . . . . . . . . . . . . . . . .     32
+             2.2.5.3 Cas d’étude dans des contextes spécifiques .           37
+
+3 Résultats                                                              45
+  3.1 Présentation de l’outil . . . . . . . . . . . . . . . . . . . 45
+      3.1.1 Choix de la zone de chalandise . . . . . . . . . . . . . 47
+            3.1.1.1 Explications sur les modes de transport . . . 48
+      3.1.2 Méthode pour extraire les données de géolocalisation . 49
+            3.1.2.1 Influence de l’état des routes . . . . . . . . . 49
+      3.1.3 Isochrones avec OpenRouteService . . . . . . . . . . . 50
+      3.1.4 Interface de l’outil . . . . . . . . . . . . . . . . . . . . 50
+      3.1.5 Conception du produit . . . . . . . . . . . . . . . . . . 50
+  3.2 Problématique . . . . . . . . . . . . . . . . . . . . . . . . . . 52
+Table des Matières                                                             5
+
+
+         3.2.1 Application au concept de l’accessibilité . . . . . . . .      54
+         3.2.2 Utilisation de l’isochronie pour l’accessibilité . . . . . .   55
+   3.3   Validation de l’outil . . . . . . . . . . . . . . . . . . . . .      55
+         3.3.1 Présentation de l’existant . . . . . . . . . . . . . . . .     56
+         3.3.2 Validation . . . . . . . . . . . . . . . . . . . . . . . . .   58
+   3.4   Étude de cas . . . . . . . . . . . . . . . . . . . . . . . . . . .   62
+         3.4.1 Premier cas d’étude : la localisation des pharmacies . .       62
+               3.4.1.1 Choix de la zone de chalandise . . . . . . . .         62
+               3.4.1.2 Méthode pour extraire les données de géolo-
+                         calisation . . . . . . . . . . . . . . . . . . . .   64
+               3.4.1.3 Isochronie avec OpenRouteService . . . . . .           69
+               3.4.1.4 Résultat . . . . . . . . . . . . . . . . . . . . .     73
+         3.4.2 Deuxième cas d’étude : la localisation des automates
+               à Bruxelles . . . . . . . . . . . . . . . . . . . . . . . .    73
+               3.4.2.1 Choix de la zone de chalandise . . . . . . . .         73
+               3.4.2.2 Méthode pour extraire les données de géolo-
+                         calisation . . . . . . . . . . . . . . . . . . . .   74
+               3.4.2.3 Isochronie avec OpenStreeService . . . . . . .         74
+               3.4.2.4 Résultat . . . . . . . . . . . . . . . . . . . . .     74
+
+4 Discussion                                                             77
+  4.1 Implications théoriques et pratiques . . . . . . . . . . . . . . . 77
+  4.2 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . 79
+  4.3 Travaux futurs . . . . . . . . . . . . . . . . . . . . . . . . . 80
+      4.3.1 Suggestion pour l’amélioration de l’outil . . . . . . . . 81
+
+5 Conclusion                                                                  83
+
+Bibliographie                                                                 85
+
+Annexes                                                                    91
+  .1  Liste des pharmacies . . . . . . . . . . . . . . . . . . . . . . . 91
+  .2  Site web . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 91
+  .3  Exemple de fichiers json . . . . . . . . . . . . . . . . . . . . . 91
+  .4  Liste des distributeurs dans la ville de Bruxelles . . . . . . . . 92
+  .5  Ecran principal de l’outil . . . . . . . . . . . . . . . . . . . . . 92
+Chapitre 1
+
+Introduction
+
+La mobilité et l’accessibilité sont profondément impactées par les change-
+ments actuels dans notre société en évolution. Avec une population en crois-
+sance constante, un éventail varié de moyens de transport qui ne cesse de
+s’élargir, et des coûts en constante augmentation. Malheureusement, la dis-
+ponibilité des services devient de moins en moins accessible en raison de
+disparités croissantes.
+L’inégalité entre les différentes catégories sociales et régions géographiques
+met en évidence les défis croissants liés à l’accessibilité aux services. Les
+contraintes environnementales obligent de plus en plus de personnes à repen-
+ser leurs modes de déplacement. La confiance dans les transports en commun
+diminue, avec des prix de billets en constante hausse pour des services en
+déclin.
+Face à ces défis, de nombreux individus sont confrontés à des difficultés pour
+atteindre leurs destinations quotidiennes. L’amélioration de la mobilité et
+de l’accessibilité devient ainsi un enjeu crucial pour répondre aux besoins
+changeants de la société.
+Les études d’accessibilité jouent un rôle crucial dans notre société moderne
+en garantissant l’égalité des chances et en facilitant la participation de tous
+les individus à la vie quotidienne. Ces études visent à identifier, évaluer et
+améliorer l’accessibilité des environnements physiques, sociaux et culturels,
+afin de rendre possible l’inclusion des personnes en situation de handicap,
+des personnes âgées et de toute personne confrontée à des obstacles.
+Les études d’accessibilité doivent être envisagées de manière holistique,
+car elles englobent divers domaines de la vie humaine. Cela inclut l’ac-
+cessibilité physique des bâtiments, des transports publics et des espaces
+extérieurs[1].
+                                                                             7
+
+
+Pour répondre à des questions pertinentes, telles que la meilleure localisation
+d’un point d’intérêt, le développement de l’outil présenté permet de se situer
+dans l’espace et le temps par rapport à cet objectif. Bien que l’importance
+des études sur l’accessibilité soit largement reconnue et documentée dans la
+littérature, un vide persiste dans le domaine des outils conviviaux destinés
+aux décideurs. Dans cette optique, une solution logicielle a été développée
+pour non seulement combler cette lacune, mais aussi fournir un outil centré
+sur l’utilisateur pour répondre à la demande en matière d’analyses d’acces-
+sibilité complètes et exploitables.
+L’exploitation des cartes isochroniques nous offre la possibilité d’une obser-
+vation accrue du potentiel d’accessibilité des réseaux, partant d’un point de
+départ spécifique pour rejoindre des points d’intérêt déterminés au moyen de
+modes de transport variés tels que la voiture, le vélo, ou la marche.
+D’un point de vue sociétal, il est crucial de déterminer si l’emplacement
+choisi est adéquat pour fournir un service à la majorité de la population
+résidant dans la zone. L’objectif de ce document est de proposer un outil
+simple permettant de répondre à ce type de question.
+Le document est organisé en trois sections distinctes pour une meilleure
+compréhension. La première section se concentre sur la présentation de l’état
+actuel, explique les différents termes et méthodes utilisées pour y parvenir,
+et explore les techniques existantes ainsi que les moyens mis en œuvre pour
+obtenir des résultats viables et efficaces. La section suivante, dédiée aux
+résultats, expose les éléments ayant contribué à la création de l’outil, qui
+sera minutieusement décrit dans la deuxième partie de cette section. Enfin,
+la dernière section, intitulée "Discussion", engagera une réflexion autour des
+choix techniques, des méthodes employées, des possibilités d’amélioration et
+de l’adéquation de l’approche par rapport aux attentes et besoins.
+Chapitre 2
+
+État de l’art
+
+2.1     Accessibilité
+2.1.1    Définitions de l’accessibilité
+L’accessibilité assure la capacité de tous et toutes, quel que soit le handicap,
+d’avoir accès, d’utiliser et de bénéficier de leur environnement. Cela signifie
+qu’il faut veiller à ce que les personnes vivant avec un handicap aient accès
+à leur environnement physique, aux transports, à l’information, aux commu-
+nications et à tout autre service ou infrastructure qui sont ouverts et offerts
+au public, sur un pied d’égalité avec les autres.
+L’accessibilité signifie avoir les conditions nécessaires pour réduire ou éli-
+miner les barrières qui entravent la participation active et efficace des per-
+sonnes vivant avec un handicap, et ce, à égalité avec les autres personnes [2]
+[3].
+D’un point de vue général, les définitions présentent le problème d’accessi-
+bilité appelé aussi problème d’atteignabilité, un problème algorithmique qui
+consiste à déterminer si dans un système, une situation finale est accessible
+(ou atteignable) depuis une situation initiale.
+Si on ramène le principe à la mobilité, les travaux conduits par Andrienko et
+ses collaborateurs [4] se penchent sur l’analyse des flux de déplacements au
+fil du temps en mettant en place des modèles. L’idée centrale est d’observer
+comment un point A évolue vers un point B à travers des intervalles réguliers.
+En enregistrant les différentes positions que l’objet traverse en chemin, il
+devient possible de calculer la trajectoire suivie et ainsi de démontrer la
+faisabilité d’atteindre le point B. Cette approche permet de tracer la courbe
+reliant ces deux points.
+En outre, ces travaux intègrent la notion de contexte défini par des pro-
+Isochrones                                                                   9
+
+
+priétés du mouvement. Ces propriétés peuvent englober des données spatio-
+temporelles, telles que l’heure de la journée. Ces propriétés peuvent être de
+nature statique, incluant par exemple l’état des routes, une déviation sur
+un tronçon, des déplacements diurnes ou nocturnes, pendant les périodes
+scolaires ou les week-ends.
+Elles peuvent également être plus dynamiques, en fonction de situations
+comme la météo ou la survenue d’un accident sur la route. L’analyse visuelle
+couplée à la technologie des processeurs actuelle apporte une solution plus
+efficace sur l’analyse des mouvements. Les moyens mis en place permettent
+de mieux comprendre les comportements des individus.
+Ce comportement catégorise la manière dont un individu souhaite se rendre à
+un endroit précis. L’utilisation de la voiture peut être une option, tout comme
+se rendre a pied ou en transport en commun à un endroit précis.
+La lecture attentive d’un ensemble d’articles [5][6][7] peut révéler quatre
+approches distinctes mais complémentaires pour l’analyse de la trajectoire
+idéale en vue d’atteindre une destination :
+
+  1. Analyse de l’environnement dans son ensemble pour déterminer la tra-
+     jectoire idéale, en prenant en considération les contraintes d’espace et
+     de temps.
+  2. Identification du segment de trajectoire le plus adapté pour parcourir
+     la distance requise.
+  3. Établissement des contraintes environnementales pour prendre en
+     compte le temps et la distance à parcourir, ce qui nous amène di-
+     rectement à l’étape 4.
+  4. Prise en compte des propriétés environnementales définies par le
+     contexte.
+
+L’association entre l’analyse visuelle et le traitement informatique permet
+d’améliorer considérablement la précision de la détermination de l’accessibi-
+lité.
+
+
+2.2     Isochrones
+2.2.1    Définitions et historiques
+L’isochrone est une particularité de l’isochromie, un procédé par lequel dif-
+férentes couleurs sont imprimées successivement sur une surface. Chacune
+de ces couleurs renseigne l’observateur sur une évolution à partir d’un point
+central, ce qui constitue l’isochronie.
+La notion d’isochrone peut être appliquée aux points suivants [8] :
+Isochrones                                                                  10
+
+
+  1. Se produisant à des intervalles de temps égaux.
+  2. Décrivant des formations géologiques ayant le même âge.
+  3. S’appliquant à une courbe sur laquelle un mouvement périodique a la
+     même période, peu importe son point de départ.
+Selon une autre définition, le terme « isochrone », tel que défini par Le
+Petit Robert 1 , est associé à des phénomènes "se produisant en des temps
+égaux".
+Dans le cadre de cette étude, c’est le point 1 qui sera abordé. L’isochronie
+est utilisée dans notre cas pour créer des cartes isochrones. Ces cartes iso-
+chrones existent depuis le 19e siècle et ont été employées notamment pour la
+planification des transports 2 . L’évolution du numérique a permis d’utiliser
+cette méthode en utilisant des sources de données telles que l’open data 3 .
+Cette évolution a élargi les domaines d’application des cartes isochrones,
+qui peuvent être utilisées aussi bien dans le secteur de l’aménagement du
+territoire que dans la planification urbaine [9].
+Isochrone provient du mot grec (isókhronos) composé du mot "égal" pour
+isos et du mot "temps" pour kronos. La représentation de l’isochrone peut
+se faire à l’aide de courbe, droite ou surface.
+Le but de l’isochrone est de rassembler des points dans l’espace qui se situe à
+égale distance d’un point central. L’isochrone détermine l’endroit où on peut
+se rendre dans un laps de temps définis. L’isochronie est un concept qui se
+réfère à la régularité temporelle d’un phénomène, c’est-à-dire la constance
+de la durée ou de l’intervalle entre les événements.
+C’est en 1881 avec la publication de Francis Galton dans "Proceedings of
+Royal Geographical Society" que la première carte isochrone est dessinée.
+Voir figure 2.1
+
+
+
+
+  1. ROBERT ET AL., 2015
+  2. Carte isochrone — Wikipédia
+  3. Données ouvertes — Wikipédia
+Isochrones                                                                  11
+
+
+
+
+Figure 2.1 – La première carte isochrone « carte de passage » par Francis
+Galton en 1881[10]
+
+
+Cette carte prend Londres comme point de départ et met en évidence le
+temps qu’un voyageur mettrait pour atteindre un endroit du globe en bateau
+à vapeur. Le choix du trajet ne repose pas sur la distance la plus courte, mais
+plutôt sur la route la plus rapide.
+Quelques années plus tard, cette technique fut utilisée pour observer et dé-
+finir une zone d’influence potentielle pour les futurs aménagements dans les
+grandes villes. Ce procédé permet de planifier l’aménagement des espaces
+urbains et de garantir une accessibilité minimale pour les transports. Avec
+l’accroissement de la population, il devient donc essentiel de délimiter des
+zones d’accessibilité.
+La carte ci-dessous illustre concrètement l’utilité de cette méthode analy-
+tique. Dans l’exemple qui suit, une étude a été menée pour évaluer l’acces-
+sibilité depuis Berlin vers différentes régions de la province de Brandebourg
+en Allemagne. L’échelle isochronique à droite montre le temps en heures re-
+quis pour atteindre différentes zones de la province. Les intervalles de temps
+débutent de 0 à 1 heure, puis de 2 à 3 heures, et ainsi de suite, s’étendant
+jusqu’à 34 heures. Pour une visualisation complète, veuillez vous référer à la
+Figure ??.
+Isochrones                                                                   12
+
+
+
+
+Figure 2.2 – Carte isochrone de la province de Brandebourg pour l’année
+1819, par W. Schjerning, 1903 [11]
+
+
+Il est pertinent de remarquer que la carte illustre de manières distinctes la
+différence entre la distance parcourue et le temps de trajet, mettant ainsi en
+avant l’impact crucial de l’infrastructure. Cette visualisation cartographique
+révèle clairement que certains points demeurent inaccessibles sous une limite
+de 34 heures, tandis que d’autres, bien que plus éloignés, demeurent acces-
+sibles en raison de leur meilleure connexion aux routes principales
+La figure 2.3 montre l’évolution et la modification de l’infrastructure routière
+qui a permis d’améliorer la mobilité tout au long des années.
+
+
+
+
+Figure 2.3 – Carte isochrone de la province de Brandebourg, par W. Schjer-
+ning, pour l’année 1851,1875,1899, by W. Schjerning, 1903 [11]
+Isochrones                                                                    13
+
+
+2.2.2    Techniques de calcul et de visualisation
+Dans cette section, nous aborderons d’abord les technologies mises en place
+pour le calcul des isochrones, puis nous examinerons la visualisation des
+cartes isochrones.
+De manière générale, on retrouve dans la figure 2.4 les deux chemins qui
+combinent les cartes isochrones avec la visualisation du réseau structurel.
+Les cartes isochrones permettent d’observer le temps mis pour atteindre un
+point d’intérêt ; c’est une information grossière. Tandis que la visualisation du
+réseau routier via des outils qui informent sur l’état des routes permet d’avoir
+une observation plus détaillée en temps réel. Les deux éléments combinés
+permettent d’observer de manière assez précise les informations de parcours
+pour se déplacer d’un point A vers un point B.
+
+
+
+
+          Figure 2.4 – Combinaison isochrone - Plan détaillé [12]
+
+
+Sans entrer dans les détails que vous pouvez retrouver dans l’article [12], la
+consolidation de l’image cartographique relie des informations en trois étapes,
+visibles par les chiffres rouges dans le schéma. Ces étapes sont expliquées ci-
+dessous.
+
+   1. Étape de rendu du Réseau : cette étape pixelise la géométrie du réseau
+      en une représentation G-Buffer [13]. Elle suit les travaux de Schoedon
+      et al. [14] et ne sera donc pas détaillée dans ce travail.
+   2. Étape de Génération d’Isochrone : cette étape comprends une phase
+      d’initialisation pour produire une texture initiale en entrée pour les
+      étapes ultérieures d’inondation, lesquelles répartissent les temps de tra-
+      jet sur la carte pour obtenir les isochrones.
+   3. Étape de Génération du Masque : cette étape crée une texture de
+      masque qui représente le rendu (lentilles magiques ou frontières) et est
+      activée par l’interaction de l’utilisateur.
+
+En suivant ces trois étapes, le rendu final est la carte isochronique que l’on
+peut observer dans la figure 2.4.
+Isochrones                                                                  14
+
+
+La méthode repose sur l’utilisation des tampons glTF fournis par le backend,
+qui contiennent les informations sur le réseau routier et les durées de trajet
+associées. Une fois que ces données sont initialement structurées, il est pos-
+sible de créer une représentation du contexte en partant de la représentation
+centrée, tout en mettant en œuvre un algorithme complexe de distribution
+d’informations.
+
+2.2.2.1   Calcul des isochrones
+D’un point de vue théorique et algorithmique, la technique utilisée est basée
+sur l’tilisation des graphes routiers pour déterminer le plus court chemin
+entre un point d’origine et les autres points de destination.
+
+  — Utilisation des graphes routiers
+
+Le schéma ci-dessous représente un graphe de représentation de l’accessi-
+bilité. Il est constitué de routes, appelées tronçons, de nœuds et de points.
+Chaque tronçon commence par un nœud et se termine par un autre. Un nœud
+représente une occurrence spécifique liée à la route, tel qu’un carrefour, un
+changement de voies, ou des modifications de la vitesse [15].
+Les tronçons représentent des arêtes géolocalisées par un point qui marque
+la position exacte de la route. Voir la figure 2.5
+
+
+
+
+     Figure 2.5 – Représentation de la structure d’un graphe routier
+
+
+Le nœud est à un élément fondamental d’un graphe, représentant un empla-
+cement distinct ou un point d’intersection où les arêtes (tronçons) du graphe
+se connectent. Les nœuds peuvent représenter des entités telles que des villes,
+des intersections routières, des bâtiments ou d’autres emplacements signifi-
+catifs. Un autre aspect du nœud qui peut être pris en compte est la manière
+dont le Code de la route peut être modifié, notamment en ce qui concerne
+les limitations de vitesse.
+Isochrones                                                                  15
+
+
+Le point quant à lui permet de localiser de manière précise l’emplacement
+géographique d’un objet ou d’un nœud indéterminé, à la différence du
+nœud qui représente une entité contextualisée.
+
+  — Zone de chalandise
+
+Une zone de chalandise est définie par plusieurs facteurs qui influent sur
+l’attraction géographique d’une entreprise ou d’un point de vente vis-à-vis
+d’une clientèle potentielle. Les zones de chalandise désignent les régions géo-
+graphiques ou les territoires à partir desquels une entreprise, un point de
+vente ou un service tire sa clientèle ou son potentiel de marché. Elles repré-
+sentent les zones d’influence ou d’attraction de clients pour une entreprise
+donnée [16]. Les zones de chalandise peuvent être représentées graphique-
+ment sous la forme de cartes, en délimitant les zones d’influence autour de
+chaque point de vente ou de chaque site. Cette représentation permet de
+visualiser les zones qui génèrent le plus de trafic ou d’activité.
+L’analyse des zones de chalandise est essentielle pour les entreprises, car
+elle guide les décisions stratégiques en matière d’implantation, d’expansion,
+de ciblage de la clientèle et d’optimisation des opérations commerciales. Elle
+permet de mieux comprendre le marché local, de mieux répondre aux besoins
+des clients et de maximiser les chances de succès.
+Les zones de chalandise sont définies soit de manière isométrique, soit de
+manière isochronique. Dans le premier cas, on calcule la distance qu’il faut
+parcourir pour atteindre le point principal. Cette approche permet de vi-
+sualiser le nombre de kilomètres à parcourir pour accéder à notre objectif
+[17]. En revanche, dans le deuxième cas, on indique le temps nécessaire pour
+parcourir la même distance. La perspective isochronique est plus complexe,
+car elle dépend du mode de transport, de l’état de la route, de l’heure de la
+journée et même des conditions météorologiques.
+Pour créer la zone de chalandise, il faut prendre en compte trois zones.
+Ces zones sont définies par une zone primaire, une zone secondaire et une
+zone tertiaire [18]. La zone primaire doit répondre aux besoins de 50% de
+la population située à moins de x minutes de l’endroit. La zone secondaire
+doit satisfaire au minimum 30% de la population nécessitant l’accès au même
+endroit. Enfin, la zone tertiaire englobe le reste de la population. Ainsi, on
+peut dire que les zones primaire et secondaire peuvent répondre aux besoins
+de 80% de la population environnante.
+Isochrones                                                                   16
+
+
+
+
+           Figure 2.6 – Zone isochrone vs Zone isométrique [19]
+
+
+Voici les principaux éléments qui contribuent à la définition d’une zone de
+chalandise [20] :
+   1. Localisation du point de vente : La position géographique du point de
+      vente est un facteur clé pour définir la zone de chalandise. La distance
+      physique par rapport au point de vente est généralement utilisée comme
+      critère pour délimiter la zone.
+   2. Densité de population : La densité de population dans une région don-
+      née est un indicateur important de l’attraction potentielle d’une zone
+      de chalandise. Les zones avec une densité de population élevée ont
+      tendance à avoir une plus grande clientèle potentielle.
+   3. Caractéristiques démographiques : Les caractéristiques démogra-
+      phiques de la population environnante, telles que l’âge, le revenu, le
+      niveau d’éducation et les habitudes de consommation, peuvent influen-
+      cer la définition de la zone de chalandise. Par exemple, une entreprise
+      de luxe peut cibler une zone avec une population aisée.
+   4. Concurrence : La présence de concurrents dans une région donnée peut
+      influencer la définition de la zone de chalandise. Les entreprises peuvent
+      ajuster leurs zones de chalandise en tenant compte de la concurrence
+      existante pour maximiser leur part de marché.
+   5. Accessibilité et infrastructures : L’accessibilité aux infrastructures de
+      transport, comme les routes, les transports en commun, ainsi que la
+      disponibilité de parkings, peuvent également jouer un rôle dans la dé-
+      finition de la zone de chalandise. Une bonne accessibilité peut attirer
+      une clientèle plus large[21].
+   6. Comportement des consommateurs : Les données sur le comportement
+      des consommateurs, telles que les habitudes d’achat, les préférences et
+Isochrones                                                                      17
+
+
+      les tendances de consommation, peuvent être utilisées pour affiner la
+      définition de la zone de chalandise. L’objectif étant de fidéliser le client.
+Ces facteurs sont souvent combinés et analysés en utilisant des techniques
+géospatiales et des outils d’analyse de données pour délimiter précisément les
+zones de chalandise et comprendre leur potentiel commercial [20] [22].
+D’une manière ou d’une autre, l’analyse tient compte du temps pour définir
+au mieux la zone de chalandise, que ce soit en favorisant la distance à par-
+courir ou le temps nécessaire pour se rendre à la destination. Il est donc plus
+judicieux de choisir une zone de chalandise basée sur l’isochrone plutôt que
+d’utiliser un outil cartographique qui se fonde sur des données géographiques
+pour calculer la distance entre deux points.
+
+  — Calcul de l’accessibilité et de l’isochrone
+
+Dans ce processus, chaque segment reçoit une valeur dépendant de ses carac-
+téristiques d’accessibilité, certaines valeurs étant pondérées plus lourdement
+que d’autres. Une valeur élevée pour un segment indique une durée de trajet
+plus longue.
+Ensuite, un algorithme est utilisé pour décomposer l’ensemble des segments,
+du point de départ de la zone isochrone jusqu’aux points d’arrivée, en passant
+par tous les segments et nœuds intermédiaires. Cette démarche provoque le
+calcul de l’accessibilité.
+Cependant, même après la fin du calcul d’accessibilité, la zone isochrone
+n’est pas encore générée. Lors de la progression de l’algorithme à travers les
+segments, chaque nœud reçoit également des valeurs de temps et de distance.
+Afin d’obtenir des courbes isochrones (isolignes), il est nécessaire de transfor-
+mer la distribution de points résultant du calcul d’accessibilité en une grille.
+L’intervalle de cette grille est déterminé par la densité des points, ce qui per-
+met d’interpoler les valeurs des points en fonction des nœuds environnants à
+l’aide de la méthode du plus proche voisin. Ce dernier processus est illustré
+dans la Figure 2.7.
+Isochrones                                                                     18
+
+
+
+
+Figure 2.7 – Création de l’isochrone par interpolation des valeurs des
+nœuds, via les points du semi, produit par le calcul d’accessibilité [23]
+
+
+Les cartes isochrones que l’on va observer seront une ligne de temps qui
+connecte différents points qui sont équidistants à un point donné. La dis-
+tance est mesurée en "temps de parcours" d’un point à l’autre selon une
+variante simple. La variante prise en compte est simplement la contrainte de
+circulation et/ou de l’état des routes. (travaux, déviations. . .)
+Le "temps de parcours" pourrait être incrémenté par d’autres paramètres
+importants qui augmenteraient la durée totale nécessaire pour se déplacer
+d’un point A à un point B, par exemple en tenant compte de tous les arrêts
+et retards éventuels en cours de route. Cela peut inclure des pauses, des
+attentes, des détours ou d’autres facteurs qui prolongent la durée du trajet.
+Cependant, le "temps de parcours" se réfère spécifiquement à la durée de
+déplacement active, c’est-à-dire le temps réellement passé en mouvement
+d’un point à un autre. Il exclut les pauses et les retards involontaires.
+Pour illustrer cette différence, supposons que vous prévoyiez de faire un
+voyage en voiture de votre domicile au travail. Le temps de trajet serait
+la durée totale du début à la fin du trajet, y compris les arrêts pour prendre
+le petit-déjeuner, faire le plein d’essence ou déposer les enfants à l’école.
+Tandis que le cas présenté ici ne tient, quant à lui, uniquement le temps
+réellement passé à conduire sans tenir compte des pauses et des activités
+supplémentaires.
+Au-delà du calcul de l’accessibilité, il est intéressant de pouvoir enrichir l’ob-
+servation de la cartographie en indiquant le nombre d’individus présents dans
+la zone définie. Cette donnée quantifiée permet de déterminer si la zone cou-
+verte par la population est suffisamment accessible ou non. Cela permettra
+de mettre en évidence l’intérêt en termes d’optimisation de l’emplacement de
+la structure [24][25]. Le calcul de l’isochrone en tenant compte de la popula-
+Isochrones                                                                  19
+
+
+tion se fait en fonction de la couverture de la population qui être satisfaite.
+La formule mathématique peut être définie comme suit :
+
+
+                 φk = (P opulationCovered k)/P opulation
+
+Où k indique la partie de 5 minutes.
+Cette recherche combine des données spatio-temporelles sur le trafic et la
+répartition de la population dans une carte isochrone dynamique. Elle vise
+à analyser le nombre de personnes ayant accès à une zone donnée ou un
+lieu dans un temps donné. L’idée est d’associer le temps de parcours à la
+densité de population. Grâce aux technologies de GPS que l’on a sur nos
+téléphones mobiles, il est dès lors possible de déterminer les emplacements de
+la population ainsi que de prévoir leurs déplacements. Associé à la densité de
+circulation, on pourrait déterminer l’affluence pour atteindre un point donné
+[26]. Un avantage de lier l’information spatio-temporelle et la couverture de
+la population à un moment donné serait de pouvoir déterminer combien de
+personnes se trouvent à un endroit donné, ce qui permettrait d’adapter les
+heures d’ouverture en fonction de l’affluence.
+
+2.2.2.2   Visualisation des isochrones
+L’utilisation des cartes isochrones comporte deux problèmes : elles ne
+tiennent pas compte des contours géographiques et l’information qu’elles
+fournissent est souvent statique, ne reflétant pas avec précision la réalité à
+un moment donné. Cette immobilité peut conduire à des conclusions erro-
+nées sur une situation observée. De plus, l’intégration de données spatio-
+temporelles dans les cartes isochrones présente un avantage majeur pour
+l’analyse des lieux, tant dans le domaine de l’investissement que de la plani-
+fication. Cependant, il est nécessaire d’introduire un élément de dynamisme
+dans ces cartes. Une solution proposée ci-dessous vise à atteindre cet objec-
+tif. Dans cette optique, la composante dynamique des cartes doit prendre en
+compte divers facteurs, tels que la densité de trafic et les conditions météo-
+rologiques, tandis que la partie statique concerne l’état des routes et l’accès
+aux transports en commun.
+L’image 2.8 suivante montre le flux appliqué pour apporter la solution aux
+isochrones. Le flux est décomposé en trois parties distinctes [27] :
+Isochrones                                                                20
+
+
+
+
+             Figure 2.8 – Processus de création de l’isochrone
+
+ — (a) la récolte de l’information à partir des données de transports en
+   commun (GTFS 4 Data) comprenant des informations d’horaire et les
+   coordonnées des stations, un réseau routier (OSM 5 Data). Les don-
+   nées d’entrée sont préparées en effectuant un prétraitement sur les
+   structures de graphes qui peuvent être réutilisées pour créer plusieurs
+   cartes.
+ — (b) la composante de routage utilise un algorithme pour trouver le
+   chemin le plus court afin de déterminer quels endroits on peut atteindre
+   depuis un point de départ S à un moment précis. Si une partie d’un
+   chemin n’est que partiellement accessible depuis ce point de départ S,
+   on ajoute un point supplémentaire pour rendre cette partie accessible à
+   une distance de temps de S. Ensuite, on colore les chemins : les chemins
+   accessibles sont en bleu, les inaccessibles en rouge. Voir la figure 2.9.
+
+
+
+
+                   Figure 2.9 – Résultat du composant 2
+
+ — (c) la prorogation est la partie du flux qui améliore la visualisation des
+   éléments et des bordures en périphérie. Voir la figure 2.10. Il s’agit du
+   dernier composant, responsable de la création des fuseaux horaires sur
+
+  4. GTFS - General Transit Feed Specification
+  5. OSM – Open street map
+Isochrones                                                                     21
+
+
+      la carte des temps de trajet. Il utilise le réseau routier planarisé R ainsi
+      que la coloration des arêtes obtenue grâce au composant précédent,
+      pour chaque temps de trajet r ∈ T . Il génère un ensemble de polygones
+      schématiques qui contiennent exactement toutes les arêtes accessibles
+      dans R. Si plusieurs temps de trajet sont considérés, cette approche
+      intègre la création des fuseaux horaires de manière cohérente. Voir la
+      figure 2.10.
+
+
+
+
+                   Figure 2.10 – Création des polygones
+
+Ce qui permet, après traitement, d’obtenir le résultat suivant, voir la figure
+2.11.
+On remarque que sous la lettre (a) l’isochrone ne suit pas la topographie du
+terrain tandis que l’autre cas (b), il est correctement délimité. En appliquant
+à ce procédé le traitement des fuseaux horaires, on peut obtenir des variations
+de trafic. Voir la figure 2.12.
+
+
+
+
+                      Figure 2.11 – Barrière naturelle
+Isochrones                                                                       22
+
+
+
+
+             Figure 2.12 – Barrière naturelle & fuseau horaire
+
+
+Maintenant que les donnée sont disponible, il faut les afficher sur l’écran
+de l’utilisateur, l’utilisation des librairies graphiques webGi et l’interface
+web HTML5 va permettre d’atteindre l’objectif et offrir un meilleur confort.
+D’une part l’emploi du tampon GPU pour la partie statique du réseau géo-
+graphique. Et d’autre part l’optimisation du côté client pourra être appliquée
+à l’aide d’un jump flooding.
+Le jump flooding est un algorithme qui construit un diagramme de Voronoï 6
+[28].
+Le diagramme de Voronoï est efficace du côté client, car c’est une représen-
+tation graphique d’un ensemble de points dans un espace donné. Il divise cet
+espace en régions continues, appelées cellules de Voronoï.Il ne traite que les
+points qui lui sont proches donc il utilise peu de données en local pour se défi-
+nir. En subdivisant l’espace en plus petites cellules, le diagramme de Voronoï
+permet de réduire considérablement la quantité de données à transférer entre
+
+   6. Gueorgui Feodossievitch Voronoï (28 avril 1868-20 novembre 1908) est un mathé-
+maticien connu pour son diagramme de Voronoï qui permet de diviser une surface en
+polygones convexes
+Isochrones                                                                      23
+
+
+le serveur et le client. Seules les données relatives aux points d’origine et aux
+frontières des cellules sont nécessaires. Les calculs nécessaires pour détermi-
+ner à quelle cellule appartient un point donné sont généralement simples et
+peuvent être exécutés efficacement côté client, ce qui réduit la charge sur le
+serveur.
+Un exemple de diagramme de Voronoï se trouve ci-dessous (voir figure
+2.13).
+
+
+
+
+                    Figure 2.13 – Diagramme de Voronoï
+
+
+Les cellules sont souvent représentées sous forme de lignes et de polygones. Le
+diagramme de Voronoï présente essentiellement deux propriétés intéressantes
+dans le cadre de ce mémoire. Premièrement, chaque point qui se trouve à
+l’intérieur de la cellule se situe à la distance la plus proche du centre de celle-
+ci. Deuxièmement, les frontières entre les cellules représentent les lieux où
+les centres sont à égale distance. À l’aide de ces deux propriétés, l’algorithme
+de Voronoï permet de rechercher les plus proches voisins en rapport avec un
+point donné. Pour arriver au but, il faut obtenir la répartition spatiale des
+établissements sur la base des données POI (Point Of Interest), calculée par
+les centroïdes de population des données de positionnement des téléphones
+basés sur les secteurs de recensement et estimer les temps de trajet entre les
+centroïdes de population et chaque établissement.
+Il est important de considérer les facteurs tels que la distance, le temps, les
+coûts, l’accessibilité et les préférences personnelles lors du choix du mode de
+déplacement le plus approprié pour se rendre à un point donné [21].
+Isochrones                                                                     24
+
+
+2.2.3     Visualisation de l’accessibilité
+2.2.3.1    Le choix des couleurs
+Après pour visualiser le résultat, il est important de bien choisir les cou-
+leurs pour les cartes isochrones, car cela peut avoir de l’importance. Deux
+approches sont possibles, soit on associe des couleurs totalement différentes
+dites complémentaires, soit on fait évoluer une teinte par rapport à une cou-
+leur choisie.
+Le choix entre l’utilisation de couleurs complémentaires ou de nuances de
+couleurs en isochronie dépend des objectifs et des préférences visuelles de
+l’utilisateur cible. Il serait intéressant, dans un autre contexte que ce travail,
+de prendre le temps d’établir un sondage auprès des utilisateurs pour avoir
+leur opinion.
+Les couleurs complémentaires sont des couleurs opposées (voir la figure 2.14)
+sur le cercle chromatique. Elles créent un fort contraste visuel, ce qui peut
+aider à différencier clairement les zones d’isochronie, les unes, des autres. Les
+couleurs complémentaires peuvent être efficaces pour attirer l’attention sur
+les frontières et les limites des zones.[29] [30]
+D’un autre côté, l’utilisation de nuances de couleurs (voir la figure 2.15) crée
+une transition graduelle entre les différentes zones d’isochronie. Cela permet
+de représenter en douceur les variations. Les nuances de couleurs peuvent
+donner une impression de continuité et faciliter la perception des différences
+subtiles entre les zones. On jouera davantage sur la teinte, la saturation et la
+luminosité de la couleur. La dégradation de la couleur va offrir une meilleure
+visibilité sur la carte.
+Il est important de prendre en compte certains facteurs lors du choix des
+couleurs pour une représentation en isochronie. Tout d’abord, il est essen-
+tiel de garantir une bonne lisibilité et une distinction claire entre les diffé-
+rentes zones. Les couleurs doivent être choisies de manière à être facilement
+identifiables, même pour les personnes atteintes de déficience visuelle ou de
+daltonisme.
+De plus, il est recommandé de respecter les principes de conception visuelle
+tels que l’utilisation de couleurs harmonieuses et l’évocation d’une significa-
+tion intuitive. Par exemple, utiliser des couleurs plus vives ou chaudes pour
+représenter des zones d’isochronie plus courtes et des couleurs plus foncées
+ou froides pour représenter des zones plus longues [31].
+Isochrones                                                                  25
+
+
+
+
+Figure 2.14 – Carte avec couleur          Figure 2.15 – Carte avec couleur
+complémentaire                            nuancée
+
+
+2.2.3.2   Mise en place de la zone de chalandise.
+Les zones de chalandise sont étroitement liées aux coordonnées géogra-
+phiques, car elles sont déterminées en fonction de la localisation géographique
+des clients potentiels ou des points d’intérêt. Les coordonnées géographiques,
+telles que la latitude et la longitude, permettent de situer précisément un
+point ou une zone sur la surface terrestre.
+Lorsqu’un point d’intérêt établit des zones de chalandise, elle prend en
+compte la proximité géographique des clients existants ou potentiels par
+rapport à ses points de vente ou à ses services. Cela implique d’utiliser les
+coordonnées géographiques pour définir les limites de ces zones.
+Les coordonnées géographiques servent également à représenter les zones
+de chalandise sur des cartes ou des systèmes d’information géographique
+(SIG).
+En utilisant les coordonnées géographiques des points d’intérêts, ainsi que
+des données démographiques ou de comportement des consommateurs, il
+est possible de délimiter et de visualiser les zones d’influence autour de ses
+emplacements.
+
+2.2.3.3   Format des coordonnées géographiques
+Les coordonnées géographiques les plus répandues sont celle de la norme
+ETRS89 (European Terrestrial Reference System 1989) et de Lambert 2008.
+Ces deux systèmes de référence géodésique sont utilisés en Europe pour dé-
+terminer les coordonnées géographiques.[32]
+Plus précisément, une géodésique est une courbe qui, à l’échelle locale, relie
+les points en minimisant la distance. Cependant, son comportement global
+peut être plus complexe, comme dans le cas des grands cercles sur une sphère
+ou des hélices sur un cylindre. De plus, si la notion de distance est modi-
+fiée dans un espace donné, les géodésiques peuvent prendre des formes très
+Isochrones                                                                     26
+
+
+différentes. 7 .
+ETRS89 est un système de référence géodésique basé sur le système
+WGS84 (World Geodetic System 1984), spécifiquement adapté pour l’Eu-
+rope. Il fournit des coordonnées géographiques précises pour les positions
+en Europe, en utilisant un ellipsoïde de référence commun et des méthodes
+de calcul cohérentes. ETRS89 est largement utilisé pour des applications
+géodésiques et cartographiques en Europe. [33]
+Lambert2008 (LB08) est une projection cartographique principalement
+utilisée en France et dans d’autres pays francophones, adoptée récemment
+par la Belgique. Elle est basée sur la projection conique conforme de Lambert,
+qui permet de représenter avec précision les distances et les angles locaux
+dans la région couverte par la projection. Lambert 2008 utilise des coordon-
+nées en mètres et est adapté aux besoins spécifiques de la cartographie en
+Europe.
+Ainsi, bien que tous deux utilisés en Europe, ETRS89 et Lambert2008 dif-
+fèrent par leurs méthodes de calcul et leurs applications spécifiques. ETRS89
+se concentre sur les coordonnées géographiques globales, tandis que Lam-
+bert2008 est une projection cartographique spécifique à la France et à
+d’autres pays francophones.
+En Europe, différentes normes pour les coordonnées GPS sont couramment
+utilisées, telles que WGS84 et ETRS89. Ces normes diffèrent en raison des
+références distinctes qu’elles utilisent pour représenter les coordonnées. Cette
+différence réside dans les ellipsoïdes de référence utilisés, entraînant de lé-
+gères variations dans les mesures de latitude et de longitude. De plus, les
+conventions de représentation des coordonnées diffèrent également.
+La norme WGS84 est le système géodésique mondial depuis 1984. Utilisée
+par les appareils GPS, elle divise la Terre en lignes de latitude et de longitude,
+et est celle aodptée par Google Maps.
+La norme ETRS89 est un système de référence géodésique utilisé par l’Union
+européenne. Différente de WGS84, elle se base sur un autre ellipsoïde. Ainsi,
+une transformation est nécessaire pour l’Union européenne, et ETRS89 est
+de plus en plus utilisé à des fins de cartographie.
+La norme ETRS89 est relativement statique et évolue peu, tandis que la
+norme WGS84 prend de plus en plus d’importance dans le domaine des
+systèmes géodésiques.
+Il existe donc des outils qui permettent de transformer les coordonnées
+Lambert2008 (LB08) en appliquant une formule de projection de Lambert
+
+
+   7. Géodésique — Wikipédia, l’encyclopédie libre
+Isochrones                                                                    27
+
+
+vers des coordonnées géographiques ETRS89 et vice versa. Voir la figure
+2.16. 8
+
+
+
+
+                      Figure 2.16 – Projection Lambert
+
+
+2.2.4    Relation isochrone et zone de chalandise
+Les concepts d’isochronie et de zone de chalandise sont couramment utilisés
+dans les domaines du commerce et de la géographie pour analyser la distri-
+bution de la clientèle et des marchés potentiels. Bien qu’ils diffèrent dans
+leur approche, ils présentent d’importantes similitudes :
+
+  1. Définition :
+        — Zone de chalandise : Une zone de chalandise désigne la région
+          géographique autour d’un point de vente ou d’une entreprise où
+          la majorité des clients actuels et potentiels sont susceptibles d’être
+          localisés. Cette délimitation peut être établie en tenant compte de
+          divers facteurs tels que la distance, l’accessibilité, les habitudes de
+          consommation et la concurrence locale.
+        — Isochronie : L’isochronie est une représentation cartographique
+          des zones atteignables depuis un point donné dans un intervalle
+          de temps égal. Contrairement à la zone de chalandise, l’isochro-
+          nie met l’accent sur l’accessibilité géographique en montrant les
+          régions qui peuvent être atteintes dans des délais identiques, gé-
+          néralement exprimés en minutes ou en heures.
+  2. Analyse Géographique :
+        — Les deux concepts sont utilisés pour analyser des emplacements
+          géographiques spécifiques. Les zones de chalandise sont détermi-
+          nées à travers des études de marché approfondies qui évaluent les
+          caractéristiques des clients potentiels dans une région donnée. En
+          revanche, l’isochronie, se concentre davantage sur la mobilité et
+          la connectivité des lieux, en se basant sur les infrastructures de
+          transport existantes.
+  3. Facteurs d’influence :
+
+  8. Documentation prise sur le site de l’IGN
+Isochrones                                                                  28
+
+
+        — Les zones de chalandise sont influencées par des facteurs tels que
+          la densité de population, le niveau de revenu, les préférences cultu-
+          relles et les comportements d’achat. Ces éléments déterminent la
+          taille et l’étendue de la zone de chalandise.
+        — L’isochronie, en revanche, est influencée par les infrastructures de
+          transport et les modes de déplacement disponibles. Les régions
+          bien desservies par les routes, les transports en commun ou les
+          autoroutes auront tendance à présenter des isochrones plus vastes.
+  4. Utilisation pratique :
+        — les zones de chalandise sont utilisées par les entreprises pour dé-
+          terminer où concentrer leurs efforts de marketing, d’expansion et
+          de distribution. Cela aide à optimiser les ressources et à cibler les
+          publicités de manière plus efficace.
+        — l’isochronie est utilisée par les urbanistes, les responsables de
+          la planification des transports et les entreprises pour évaluer la
+          connectivité et l’accessibilité des lieux. Cela peut aider à décider
+          où construire de nouvelles infrastructures, établir des centres com-
+          merciaux ou des points de service pour atteindre un public plus
+          large.
+
+En somme bien que les zones de chalandise et l’isochronie soient des concepts
+distincts, ils partagent un objectif commun d’analyser la distribution géogra-
+phique des clients et des marchés, en adoptant des approches différentes -
+l’une axée sur les individus et l’autre sur la connectivité géographique.
+
+2.2.5     Exemples d’application
+L’isochrone est une représentation graphique qui illustre toutes les positions
+accessibles à partir d’un point spécifique dans un intervalle de temps donné.
+À la suite de la consultation de plusieurs articles et recherches en ligne,
+diverses applications pratiques des isochrones ont été identifiées. Avant d’en-
+trer dans les détails des cas d’utilisation des isochrones, explorons d’abord
+les différentes catégories d’isochrones ainsi que leurs caractéristiques. Nous
+illustrerons nos explications à l’aide d’exemples simples. Ensuite, nous discu-
+terons des solutions disponibles pour générer des isochrones. Pour conclure,
+nous présenterons quelques études de cas concrets qui démontreront l’utilité
+des isochrones dans des contextes pratiques.
+
+2.2.5.1    Les catégories d’isochrones et leurs caractéristiques
+Isochrone simple : Il s’agit de déterminer toutes les positions accessibles
+à partir d’un point spécifique dans un certain laps de temps, en prenant en
+compte des contraintes de déplacement telles que la vitesse et les obstacles.
+Cette catégorie est largement utilisée pour la planification d’itinéraires, de
+Isochrones                                                                   29
+
+
+trajets ou d’activités dans une zone donnée. C’est essentiellement la fonc-
+tion de base d’un logiciel de navigation tel que nous le connaissons aujour-
+d’hui..
+Illustrons un exemple en utilisant l’outil Smappen.fr, Imaginons que nous
+partions de la ville de Rochefort et souhaitons explorer les destinations acces-
+sibles en nous déplaçant vers l’extérieur pendant une période de 30 minutes.
+Cela nous permettra de visualiser les zones que nous pouvons atteindre dans
+un rayon de 30 minutes à partir de Rochefort.
+Il est important de noter que les résultats peuvent varier en fonction du
+mode de transport choisi (voiture, transports en commun, etc.) ainsi que
+des conditions de circulation et d’autres facteurs. Les informations fournies
+sont basées sur les données disponibles et les paramètres sélectionnés dans
+l’outil.
+
+
+
+
+                         Figure 2.17 – Smappen.fr
+
+
+Comme montré dans l’image ci-dessus, les zones accessibles dans un rayon
+de 30 minutes à partir de Rochefort comprennent certaines parties des villes
+environnantes ainsi que des zones rurales adjacentes.
+Cet exemple met en évidence la manière dont les isochrones peuvent être
+utilisées pour visualiser les zones accessibles à partir d’un point spécifique
+dans un laps de temps donné. Cette visualisation est utile pour la plani-
+fication des déplacements, de la logistique ou même de l’aménagement du
+territoire.
+Un autre exemple d’utilisation des isochrones concerne les temps de trajet
+Isochrones                                                                   30
+
+
+disponibles en vélo. C’est le site web GRACQ - Les Cyclistes quotidiens. 9
+qui fournit les outils pour déterminer les trajet possibles à vélo.
+
+
+
+
+                      Figure 2.18 – Routes cyclables
+
+
+L’outil du GRACQ s’appuie sur les données d’OpenStreetMap (OSM) pour
+produire des cartes illustrant les routes cyclables dans un intervalle de temps
+donné. Par exemple, la figure 2.18 montre les routes cyclables accessibles dans
+un certain laps de temps à partir d’un point spécifique. Cette visualisation
+permet aux cyclistes de planifier leurs trajets en fonction du temps de par-
+cours à vélo, ce qui peut être particulièrement utile pour les déplacements
+quotidiens ou les loisirs.
+La carte des routes cyclables illustre clairement les itinéraires accessibles en
+fonction du temps de parcours, aidant ainsi les cyclistes à planifier leurs
+trajets de manière efficace et sécurisée.
+Isochrone à multidestination : Dans ce cas, le problème consiste à trou-
+ver les zones accessibles depuis plusieurs points de départ dans un certain
+laps de temps. Cet approche est utile pour planifier des itinéraires ou des
+tournées pour impliquant plusieurs destinations, comme la livraison de colis
+ou la gestion des flottes de véhicules [34]. Un exemple concret d’utilisation
+d’isochrones à multidestination est illustré dans la figure 2.19.
+
+
+
+
+  9. Site Gracq
+Isochrones                                                                   31
+
+
+
+
+                       Figure 2.19 – Multi-isochrone
+
+
+L’image de gauche indique la zone à analyser et l’image de droite donne le ré-
+sultat. Il s’agit d’observer les arrêts de bus accessible en un temps déterminé
+autour d’une zone délimitée.
+Isochrone en temps réel : Ce problème implique la création d’isochrones
+dynamiques qui sont mises à jour en temps réel en fonction des conditions de
+circulation, des retards ou d’autres facteurs changeants. Cela peut être utilisé
+dans les applications de navigation pour fournir des estimations d’arrivée
+actualisées en fonction des conditions actuelles. Cette solution est souvent
+couplée avec d’autres systèmes tels que le guidage par GPS qui permet de
+récupérer en temps réel l’information de circulation.
+Un exemple de l’utilisation d’isochrones en temps réel est présenté à travers
+l’outil développé par Atelier01. Les temps de trajet nécessaires pour quitter
+le centre de Paris en utilisant les transports en commun sont représentés
+dans la figure 2.20.
+
+
+
+
+          Figure 2.20 – Délai pour quitter le centre de Paris [35]
+
+
+L’outil développé se limite au métro, l’idée est de savoir en partant de paris
+combien de temps il faut pour arriver dans les zones avoisinantes.
+Isochrones                                                                        32
+
+
+Isochrone pondérée : Dans ce cas, les isochrones sont pondérés en fonc-
+tion de certains critères ou préférences. Par exemple, on peut attribuer des
+poids différents aux différents modes de transport (voiture, marche, trans-
+ports en commun) ou tenir compte de la topographie, des infrastructures ou
+d’autres facteurs pour créer des isochrones personnalisées [36]. Ils prennent
+en compte la mobilité variable dans une région pour calculer les zones acces-
+sibles dans un certain laps de temps en utilisant des vitesses de déplacement
+différentes.
+Isochrone avec contraintes spécifiques : Dans certains cas, des
+contraintes spécifiques peuvent être ajoutées aux problèmes d’isochrone.
+Par exemple, on peut vouloir trouver les positions accessibles depuis un
+point donné dans un certain temps, mais en évitant certaines zones spéci-
+fiques ou en tenant compte d’autres restrictions particulières. Ces contraintes
+peuvent inclure une densité de population plus élevée, des infrastructures
+spécifiques ou des services particuliers. Ces isochrones prennent en compte
+l’idée que l’accessibilité peut varier même si les temps de déplacement sont
+similaires.
+En somme, les différentes catégories d’isochrones, qu’elles soient simples,
+multidestination, en temps réel, pondérées ou avec des contraintes spéci-
+fiques, élargissent les possibilités d’analyse et de prise de décision. Elles per-
+mettent de répondre à des besoins variés et de mieux comprendre les aspects
+géographiques et temporels des déplacements et de l’accessibilité.
+
+2.2.5.2    Outils existants utilisant les solutions isochrones
+Ce chapitre présente plusieurs outils qui permettent l’utilisation de l’iso-
+chronie pour étudier l’accessibilité des lieux et services. Chacun d’entre eux
+propose des fonctionnalités pour calculer un isochrone.
+C’est en ligne sur Internet que plusieurs de ces outils sont disponibles pour
+créer des isochrones. Une liste non exhaustive vous est présentée ci-dessous.
+La description ci-dessous permet de parcourir ce qui existe et montre que
+souvent les produits sont orientés vers un objectif commercial.
+D’autres produits permettent de compléter des informations dans une base
+de données pour les enrichir, mais demandent de la manipulation par l’uti-
+lisateur à partir d’informations souvent plus techniques.
+Il existe notamment les outils suivants :
+La société Targomo 10 est une entreprise spécialisée dans l’analyse géospa-
+tiale et les solutions de localisation. Elle fournit des outils et des services basés
+sur les données géographiques pour aider les entreprises et les organisations
+
+ 10. Targomo
+Isochrones                                                                    33
+
+
+à prendre des décisions éclairées en matière de planification, d’optimisation
+des ressources, de marketing et d’analyse de la clientèle.
+Targomo propose des solutions logicielles avancées qui intègrent des don-
+nées géographiques, des algorithmes d’optimisation et des outils d’analyse
+pour permettre aux utilisateurs de visualiser, d’analyser et de modéliser des
+données géospatiales. Leurs solutions permettent de résoudre des problèmes
+complexes tels que l’optimisation des réseaux de transport, la planification
+territoriale, l’analyse des zones de chalandise, la localisation de points de
+vente, etc. L’entreprise utilise des technologies telles que les systèmes d’in-
+formation géographique (SIG), les données cartographiques, les données dé-
+mographiques, les données de mobilité, ainsi que des algorithmes et des mo-
+dèles avancés pour fournir des informations précises et exploitables à ses
+clients. Targomo travaille avec des clients issus de différents secteurs tels que
+le commerce de détail, les transports, l’immobilier, les collectivités locales,
+les entreprises de logistique, les compagnies d’assurance, etc. Leurs solutions
+aident ces clients à prendre des décisions stratégiques basées sur des données
+géographiques, ce qui leur permet de mieux comprendre leur environnement
+et d’optimiser leurs activités.
+Cet outil offre un panel de librairies API qui peuvent être utilisées par des
+développeurs.
+On retrouve des bibliothèques pour créer une carte isochrone. Voir la figure
+2.21.
+
+
+
+
+                    Figure 2.21 – API pour la création
+
+
+D’autres bibliothèques permettent de réaliser des analyses, voir la figure
+2.22.
+Isochrones                                                                     34
+
+
+
+
+                      Figure 2.22 – API pour l’analyse
+
+
+Et pour terminer, il existe des bibliothèques pour la navigation, voir la figure
+2.23.
+
+
+
+
+                   Figure 2.23 – API pour la navigation
+
+
+Si l’on souhaite utiliser directement leurs outils, il faut passer par leur inter-
+face cliente. Voir la figure 2.24.
+Isochrones                                                                     35
+
+
+
+
+                        Figure 2.24 – Interface client
+
+
+Le site smappen.fr 11 est un outil en ligne qui offre des fonctionnalités pour les
+isochrones. C’est une société française qui permet entre autres de mener des
+études de géomarketing, de visualiser des maillages territoriaux, de créer des
+zones de chalandise et bien d’autres fonctionnalités liées à la géomatique. Les
+solutions proposées reposent essentiellement, comme d’autres sites, sur une
+approche commerciale. Elles visent à évaluer les performances des magasins
+et à cibler les individus.
+
+
+
+
+                          Figure 2.25 – smappen.fr
+
+ 11. smappen.fr
+Isochrones                                                                              36
+
+
+Ils offrent également la possibilité d’introduire manuellement ses propres
+données. Pour ce faire il suffit de créer un document au format CSV et de
+l’importer dans leur système. Une fois les données introduites, il est possible
+de choisir une configuration pour afficher les isochrones.
+Cela reste néanmoins orienté vers des utilisateurs expérimentés ayant des
+connaissances dans le géomarketing.
+Le site web Iso4app.net 12 propose un service qui se base sur les données
+OSM. Son objectif est de fournir des isodistances et des isochrones sur un
+réseau routier, des cartes thématiques avec des données démographiques ou
+d’autres données, une matrice de distance et des iso distances marines. La
+société propose des technologies prêtes à l’emploi dans une application web
+ou sous forme de service logiciel via des bibliothèques JavaScript ou des API
+REST. Il est intéressant de noter que ce site s’appuie sur les données de
+Statbel pour avoir des informations thématiques sur différent domaine. Voir
+la figure 2.26
+
+
+
+
+                            Figure 2.26 – Iso4app.net
+
+
+Le site Géoservices 13 a été conçu pour faciliter l’accès aux géodonnées et aux
+services web de l’IGN. Il propose une variété de données et de services adaptés
+à vos besoins, avec différentes sections telles que le catalogue, les usages et
+les services web. Chaque section est accompagnée d’une documentation pour
+vous aider à les utiliser efficacement. Voir figure 2.27
+
+
+
+
+ 12. Carte des Isochrones (carte du temps de trajet), carte des isodistances et isodistance
+marine (5.4.0) (iso4app.net)
+ 13. Géoservices
+Isochrones                                                                 37
+
+
+
+
+             Figure 2.27 – Carte provenant du site Géoservice
+
+
+2.2.5.3   Cas d’étude dans des contextes spécifiques
+L’utilisation des cartes isochrones s’est répandue au fil du temps dans dif-
+férents domaines, tels que la biologie, la géographie, la science de la terre,
+l’informatique et les télécommunications, les mathématiques, la physique et
+l’horlogerie 14 .
+Étant donné que notre mémoire est axée sur le thème de l’accessibilité,
+seuls les exemples pertinents en relation avec cette problématique seront
+pris en considération. En conséquence, nous exclurons les illustrations liées
+à d’autres domaines.
+Dans le domaine du commerce
+Un exemple concernant la localisation des installations de distribution dans
+le système urbain suédois est un enjeu stratégique crucial pour répondre
+efficacement à la demande des consommateurs et soutenir la croissance éco-
+nomique du pays.
+Les facteurs tels que la proximité des marchés, les infrastructures de trans-
+port, les coûts immobiliers et la main-d’œuvre qualifiée sont essentiels pour
+
+ 14. Isochrone — Wikipédia
+Isochrones                                                                  38
+
+
+une prise de décision éclairée. Toutefois, les défis tels que la congestion ur-
+baine et la durabilité environnementale nécessitent une approche innovante
+et responsable. En combinant une planification logistique adaptée aux évolu-
+tions du marché avec une vision durable, la Suède pourra optimiser la loca-
+lisation de ses installations de distribution et maintenir son système urbain
+performant [37].
+L’exemple illustré dans la figure 2.28 montre sa portée dans la ville d’Am-
+sterdam à 8h00 du matin. Cependant, l’analyse de la même ville à une autre
+heure, comme le montre la figure 2.29 à 17h00, met en évidence des variations
+dans les temps de déplacement.
+Un outil permettant une analyse périodique des évolutions temporelles pour-
+rait mettre en lumière les changements au fil du temps et offrir des perspec-
+tives essentielles pour l’élaboration d’une nouvelle structure.
+
+
+
+
+ Figure 2.28 – Isochrone à 8h00            Figure 2.29 – Isochrone à 17h00
+
+
+La figure suivante montre la différence entre les moments de la journée pour
+accéder au magasin. Il est important de noter que l’exemple de la figure 2.30
+montre l’information inverse de l’isochrone, en indiquant le temps nécessaire
+pour atteindre le centre de l’isochrone depuis la frontière.
+Isochrones                                                                           39
+
+
+
+
+               Figure 2.30 – Magasin Ikea - délai de parcours
+
+
+Dans le domaine de la mobilité et de l’infrastructure
+Les isochrones pour les temps de trajet en voiture particulière vers les centres
+des villes des Voïvodies 15 :
+En 2012, une étude approfondie a été menée pour déterminer les temps
+de trajet en voiture particulière vers les centres des villes des Voïvodies en
+Pologne. Cette étude a utilisé des données géographiques, des statistiques
+de trafic et des modèles de déplacement pour établir des isochrones. Voir la
+figure 2.31 16 .
+
+
+
+
+  15. Une voïvodie est une unité de division administrative de premier niveau de la Po-
+logne.
+  16. Traduit de l’anglais Isochrones for journey times by private car to the centres of
+voivodship cities, as of 2012
+Isochrones                                                                    40
+
+
+
+
+Figure 2.31 – Isochrones pour les temps de trajet en voiture particulière
+vers les centres des villes de voïvodie, à partir de 2012
+
+
+L’objectif de cette étude était de comprendre les schémas de déplacement
+et d’identifier les défis liés à la mobilité dans chaque voïvodie du pays. Les
+résultats ont été précieux pour les planificateurs urbains et les décideurs poli-
+tiques, car ils ont fourni des informations essentielles sur les temps de trajet,
+permettant ainsi d’identifier les zones où des améliorations de l’infrastructure
+de transport étaient nécessaires.
+Les isochrones ont révélé des différences significatives entre les voïvodies en
+termes de temps de trajet. Dans certaines régions densément peuplées, les
+temps de trajet étaient relativement courts, grâce à une meilleure infrastruc-
+ture routière et à des systèmes de transport plus efficaces. En revanche, dans
+les zones plus éloignées ou moins développées, les temps de trajet étaient
+souvent plus longs, ce qui pouvait constituer un obstacle à l’accessibilité
+des services et des opportunités économiques. À l’aide des isochrones, les
+Isochrones                                                                             41
+
+
+autorités du pays ont pu identifier les axes routiers les plus importants né-
+cessitant des améliorations pour réduire les temps de trajet et améliorer la
+connectivité entre les centres urbains et ruraux. Cela a également permis de
+mieux planifier les projets d’urbanisation et d’expansion des infrastructures
+de transport. Néanmoins il est essentiel de noter que les données de l’article
+datent de 2012 et que depuis lors, des changements significatifs ont pu se
+subvenir en matière de développement urbain et d’infrastructure. Des mises
+à jour régulières de la visualisation des isochrones sont donc nécessaires pour
+suivre l’évolution de la mobilité dans chaque voïvodie[38].
+Dans le domaine de la santé
+Un autre exemple montre une carte isochrone à multipoints.
+Chaque centre représenté par différentes couches de couleurs indiquant la
+position d’un centre de traumatologie et la durée nécessaire pour atteindre
+l’extrémité de la zone délimitée. Voir la figure 2.32 17 .
+
+
+
+
+Figure 2.32 – Isochrones de 10 minutes autour des centres de traumatologie
+en Suisse après validation
+
+
+Cet isochrone est utilisé par les hôpitaux en Suisse pour déterminer le temps
+nécessaire pour se rendre sur les lieux en cas d’urgence et ainsi apporter les
+soins le plus rapidement possible[39].
+Un autre exemple d’étude utilise les isochrones pour évaluer l’accessibilité des
+médecins généralistes et des médecins spécialistes en se déplaçant en voiture
+et en transports en commun dans une région rurale d’Allemagne [40]. Les
+  17. Traduit de l’anglais Isochrones of 10-minute travel times to trauma centers in Swit-
+zerland after validation
+Isochrones                                                                   42
+
+
+mesures de l’isochrone ont été calculées à l’aide d’une méthode de chalandise
+flottante en 2 étapes.
+Tout d’abord, il s’agit de déterminer les zones accessibles dans un temps
+donné en voiture et en transports en commun à partir de différents établis-
+sements de soins médicaux.
+La deuxième étape consiste à diviser la population en deux parties distinctes.
+C’est à ce moment-là que l’on utilise la méthode de chalandise flottante en
+deux étapes.
+La première étape est la détermination de la chalandise primaire, c’est-à-dire
+la zone géographique où se trouve la majorité des personnes âgées et des ha-
+bitants de la région rurale. Cela permet de concentrer l’analyse sur les zones
+les plus pertinentes pour le contexte donné. Une fois la chalandise primaire
+définie, la deuxième étape consiste à effectuer une segmentation plus appro-
+fondie pour déterminer la chalandise secondaire. Cela implique de diviser la
+chalandise primaire en segments plus spécifiques en fonction de critères tels
+que la distance aux établissements de soins médicaux, les infrastructures de
+transport en commun disponibles, etc. Cette approche permet de mesurer
+l’accessibilité des médecins généralistes et spécialistes sélectionnés en pre-
+nant en compte à la fois les moyens de transport individuels (voiture) et
+les transports en commun. Cela revêt une importance particulière dans les
+régions rurales peu peuplées, où l’accessibilité des établissements de soins
+médicaux est cruciale pour les personnes âgées, qui constituent souvent une
+part importante de la population dans ces régions. Une fois les zones de
+chalandise déterminées, il faut calculer la zone selon deux approches, la pre-
+mière est l’approche isométrique, ce sont des mesures basées sur une distance
+métrique. Exemple je sors de chez moi, je dois parcourir 500 mètres pour
+atteindre l’arrêt de bus. La deuxième approche est une mesure isochrone,
+cela correspond au temps de trajet qu’il faudra pour parcourir la distance.
+Pour satisfaire ces deux perspectives, la décision d’adopter l’algorithme de
+Dijkstra a été prise. Ce procédé permet d’identifier le trajet le plus court
+afin d’atteindre une nouvelle destination en considérant la configuration du
+réseau routier.
+Les personnes âgées ont des risques de morbidité plus élevés et une demande
+plus élevée de soins médicaux. Bien que les déplacements en voiture privée
+soient le mode de circulation dominant dans les régions rurales, l’accessibilité
+par les transports publics est de plus en plus importante, en particulier en
+raison de la mobilité limitée des personnes âgées.
+Isochrones                                                                    43
+
+
+
+
+       Figure 2.33 – Valeurs de l’indice d’accessibilité à Augsbourg
+
+
+L’objectif de l’étude était de déterminer l’accessibilité, à la fois en voiture
+et en transports en commun, pour les médecins généralistes et les médecins
+spécialistes sélectionnés dans toute une région, ainsi que de détecter les zones
+peu ou pas accessible dans le comté de Vorpommern-Greifswald, qui est une
+région rurale et peu peuplée à l’extrême nord-est de l’Allemagne [41].
+Dans la figure 2.33, on peut observer que les points noirs représentent les mé-
+decins généralistes et les zones isochrones, c’est à dire le taux d’accessibilité
+aux soins de santés.
+L’étude des prestataires de services médicaux a utilisé les points centraux
+des districts qui sont donc représentés par les points noirs, comme origines
+pour les voyages. Pour déterminer les zones de temps de déplacement égaux
+aux cabinets médicaux (dans les catégories de distance de 5 minutes), l’outil
+d’analyse de réseau "Nouvelle zone de service" a été utilisé afin de déterminer
+le temps de déplacement jusqu’au cabinet en minutes. Les valeurs de distance
+exactes (en minutes ainsi qu’en mètres) entre les points centraux des districts
+et les cabinets médicaux ont été calculées à l’aide de l’outil Network Analyst
+« OD cost matrix ». Ces valeurs ont été utilisées pour calculer la distance
+moyenne, l’écart-type et la distance maximale.
+Pour résumer, une partie de la méthode étudiée s’est effectuée en trois
+Isochrones                                                                  44
+
+
+étapes :
+  1. Rassembler la distance entre l’arrêt de bus ou la voiture et un centroïde
+     pondéré en fonction de la population.
+  2. Déterminer le nombre de cabinets de médecins généralistes situés dans
+     un temps de seuil de x minutes.
+  3. Définir l’accès mesuré à l’aide de techniques améliorées de zone de
+     chalandise flottante en deux étapes (FCA).
+Une fois que toutes les données ont été intégrées dans un outil d’analyse et
+de prise de décision, les résultats ont indiqué ce qui suit : l’étude a observé
+une disparité entre la disponibilité des médecins dans des environnements
+privilégiés par rapport à des environnements moins favorisés. Dans les zones
+périurbaines, où le principal moyen de transport est la voiture privée, l’ac-
+cessibilité aux services médicaux est réduite, tandis que dans les régions dé-
+favorisées, où les options de transport sont plus variées, l’accès aux médecins
+demeure moins favorable. Il a également été noté que certaines zones à forte
+attraction touristique offrent une meilleure accessibilité aux professionnels
+de la santé que d’autres endroits à densité de population plus élevée. Voir la
+figure 2.33.
+Pour résumer, aucun de ces outils ne parvient véritablement à proposer un
+service accessible aux individus ayant des connaissances informatiques mini-
+males, spécifiquement pour l’analyse des lieux à travers des isochrones.
+Cependant, pour exploiter toutes les fonctionnalités que ces plateformes
+offrent, il est essentiel de maîtriser la manipulation avancée des données.
+De plus, si l’objectif est d’utiliser les options avancées présentées par ces
+plateformes, il devient impératif d’avoir une connaissance approfondie des
+API (Interfaces de Programmation Applicative), telles que les appels REST
+(Architecture d’Application Répartie) ou SOAP (Protocole Simple d’Accès
+à des Objets), qui sont des techniques axées sur les développeurs.
+C’est dans ce contexte que l’idée de créer l’outil exposé dans le chapitre
+suivant a pris forme.
+Chapitre 3
+
+Résultats
+
+3.1     Présentation de l’outil
+L’outil que nous allons vous présenter a pour objectif d’exploiter de ma-
+nière interactive et visuelle les données de mouvement. Son utilisation vise
+à analyser les déplacements, les trajectoires et les comportements de per-
+sonnes, d’objets ou d’entités en utilisant des méthodes de visualisation et
+d’interaction.
+L’outil peut être utilisé dans divers domaines tels que les transports, la lo-
+gistique, la santé, la sécurité publique, etc. Il souligne également les défis
+associés à l’exploitation de grandes quantités de données de mouvement et
+la nécessité de développer des outils et des méthodes appropriés pour les
+analyser.
+Plusieurs approches et techniques sont présentées, notamment la cartogra-
+phie animée, les diagrammes spatio-temporels, les graphes de mouvement et
+les outils d’exploration interactive. Il est important de faire intervenir de l’in-
+teractivité pour permettre aux utilisateurs d’explorer les données de manière
+dynamique et d’obtenir des informations pertinentes.
+L’outil que nous allons présenter a été conçu pour être ouvert, convivial et
+complet. Son objectif est de permettre une visualisation rapide des infor-
+mations recherchées, quelle qu’elles soient, du moment qu’elles sont géolo-
+calisables sur la planète. Les données pourront être intégrées et exploitées.
+La contrainte la plus importante sera le choix judicieux du traitement de
+l’information, de ce que l’on peut en faire et de leur faisabilité. C’est là
+qu’intervient, sans garde-fous, l’expertise humaine.
+Dans les prochaines phases de cette étude, nous illustrerons son utilisation
+à travers des exemples concrets concernant l’accessibilité, notamment en ce
+qui concerne la localisation des pharmacies et la disponibilité des distribu-
+Présentation de l’outil                                                     46
+
+
+teurs de billets. Cet outil est conçu pour faciliter la prise de décision et
+fournir une représentation visuelle de la situation actuelle en termes d’opti-
+misation.
+Le choix pour la couleur sera basé sur une palette de nuances. Cet approche
+permet de mieux observer le glissement du temps de parcours entre les dif-
+férentes zones. Il ne s’agit pas de contraster des informations, mais bien de
+montrer une transition harmonieuse du temps de trajet. Pour plus d’expli-
+cations, veuillez vous référer à la section 2.2.3.1.
+La figure 3.1 montre une vue globale des fonctionnalités mises en avant dans
+l’application. L’interface client est l’outil d’aide à la décision. À partir de
+cette application, les utilisateurs peuvent importer des données dans dif-
+férents formats tels que le CSV, le PDF, pour les convertir en un format
+commun en JSON afin de faciliter l’intégration dans l’outil. Cela crée une
+indépendance totale entre le format des données fournies par les responsables
+et celui de l’application. Une fois les coordonnées saisies dans l’application,
+il est possible de les convertir en format GPS, si elles ne l’ont pas déjà
+été.
+
+
+
+
+                    Figure 3.1 – Présentation de l’outil
+
+
+Maintenant que nous disposons des données sources, il est nécessaire d’inter-
+roger le réseau routier. Cette tâche peut être accomplie en utilisant diverses
+sources de données mises à disposition. Suite à des recherches sur Internet,
+Présentation de l’outil                                                       47
+
+
+j’ai identifié plusieurs catégories pertinentes.
+
+  — Il y a les sources de données populaires comme Google Maps et Waze
+    qui collectent des données en temps réels auprès des utilisateurs.
+  — Les entreprises spécialisées dans la collecte et la fourniture de données
+    de navigation comme TomTom, OpenStreetMap et MapQuest. Elles
+    proposent un ensemble d’API pour accéder à leurs données. Les diffé-
+    rentes sources de données peuvent inclure des données d’utilisateurs,
+    des caméras embarquées ou des partenariats avec d’autres entreprises.
+  — Les systèmes de navigation embarqués, les fabricants de systèmes de
+    navigation embarqués, tels que Garmin, TomTom et Here, fournissent
+    des données de navigation pour leurs appareils. Ces données peuvent
+    inclure des cartes, des informations sur le trafic, des points d’intérêt et
+    d’autres fonctionnalités.
+  — Les données fournies par des agences gouvernementales qui proposent
+    des services et des données via des plateformes d’open data. Cependant,
+    il est important de noter que ce dernier point ne se fait pas encore dans
+    tous les pays.
+
+Bien que l’utilisation de Google Maps et d’autres outils de cartographie offre
+des solutions pratiques pour visualiser des points géolocalisés en Belgique, la
+mise en œuvre automatisée est entravée par les restrictions d’accès aux API
+de géolocalisation.
+Le choix de la solution d’OpenStreetService s’est imposé de manière intuitive.
+En plus d’être gratuit, ce service de géolocalisation offre des fonctionnalités
+telles que le calcul des isochrones, qui sont absentes ou totalement indispo-
+nibles sur d’autres plateformes similaires.
+
+3.1.1    Choix de la zone de chalandise
+La première étape consiste à définir une zone de chalandise. La zone de
+chalandise est la zone jusqu’où il est possible d’aller pour un temps de trajet
+déterminé.
+Pour ce faire il faut choisir un point d’intérêt qui sera le centre de départ de
+la courbe isochrone.
+Le choix se porte naturellement vers une carte avec des courbes isochroniques
+plutôt que des courbes isométriques. La solution des courbes isométriques
+est restrictive, car elle se situe à une distance égale de notre point d’intérêt.
+Cependant, prendre la route par un ou l’autre moyen de transport a un
+impact différent sur le délai pour atteindre notre objectif.
+Le choix peut se faire à l’aide de l’écran montré dans la figure 3.2.
+Présentation de l’outil                                                   48
+
+
+
+
+       Figure 3.2 – Choix de la courbe et paramétrage de la durée
+
+
+Maintenant que le choix de l’observation se base sur l’isochrone, il est né-
+cessaire de déterminer le mode de déplacement. En effet, si l’on effectue le
+trajet à pied, en voiture ou en transport en commun), le temps de trajet
+varie considérablement.
+
+3.1.1.1   Explications sur les modes de transport
+Dans la fenêtre de paramétrage, vous trouverez une liste contenant différents
+modes de transport. Ces modes de transport sont principalement répartis en
+deux catégories distinctes pour les déplacements :
+
+  — Motorisés
+    Ces modes de transport sont plus rapides et plus coûteux et ils sont
+    souvent utilisés, en milieu urbain. Les transports en commun sont plus
+    sollicités surtout chez les personnes âgées et les étudiants. Les avan-
+    tages offerts par les transports en commun sont un atout dans ce genre
+    de milieu. En quittant le centre urbain pour se diriger vers un envi-
+    ronnement plus rural, l’accès au transport en commun devient moins
+    disponible. Ce qui amène les usagers à utiliser leur voiture. Dans les
+    deux cas, la capacité de l’usager à se déplacer influence la pertinence
+    de l’implantation d’un point d’intérêt à cet endroit.
+  — Non Motorisé
+    Cette catégorie englobe les déplacements à vélo non électrique et à pied.
+    Ces modes de transport sont adaptés essentiellement à un environne-
+    ment urbain. En milieu extra-urbain ou rural, la distance à parcourir
+    pour atteindre un service serait trop importante pour la plupart des
+    personnes. De plus, il convient de prendre en compte les problèmes de
+    mobilité potentiels chez les personnes âgées.
+Présentation de l’outil                                                       49
+
+
+3.1.2     Méthode pour extraire les données de géolocalisa-
+          tion
+La solution choisie pour extraire les données consiste à reprendre la liste
+des données géolocalisées au format X et à les convertir dans un format
+compréhensible par les systèmes de cartographie.
+A partir du moment où les données sont correctement géolocalisées, nous
+interrogeons un moteur de cartographie pour obtenir un résultat sous forme
+d’isochrone. Pour rappel, notre choix s’est porté vers le service OpenRoute-
+Service.
+
+3.1.2.1    Influence de l’état des routes
+Le résultat obtenu peut être influencée par l’état des routes, qui exerce une
+influence significative sur le calcul de l’isochrone. Il est important de prendre
+en compte la qualité, la congestion, les limitations de vitesse et d’autres
+conditions des routes lors de la création d’un isochrone.
+Voici quelques éléments à considérer :
+
+  — Qualité des routes : La qualité des routes, notamment en termes
+    de revêtement, de marquage et d’entretien, peut affecter la vitesse de
+    déplacement des véhicules. Des routes en mauvais état peuvent ralentir
+    le trafic et augmenter les temps de trajet, ce qui aura un impact direct
+    sur la précision de l’isochrone.
+  — Congestion : La congestion routière peut considérablement ralentir
+    les déplacements, surtout aux heures de pointe. Il est important de
+    prendre en compte les heures de pointe et les zones à forte densité
+    de trafic lors du calcul de l’isochrone, car cela peut significativement
+    augmenter les temps de trajet dans certaines zones. Les périodes de
+    vacances ou d’examens sont d’autres facteurs qui peuvent influencer la
+    durée du déplacement.
+  — Limitations de vitesse : Les limitations de vitesse sur les routes
+    doivent être prises en compte pour estimer les délais de déplacement.
+    Les vitesses moyennes utilisées pour calculer l’isochrone doivent être
+    ajustées en fonction des limites de vitesse en vigueur sur les différentes
+    portions du trajet.
+  — Conditions météorologiques : Les conditions météorologiques,
+    telles que la pluie, la neige ou le brouillard, peuvent affecter la visi-
+    bilité et la sécurité sur les routes, ce qui peut entraîner des réductions
+    de vitesse et des retards. Il est important de tenir compte de ces condi-
+    tions pour obtenir des résultats plus précis dans le calcul de l’isochrone.
+
+D’autres situations sporadiques peuvent également influencer la durée du
+déplacement, comme des festivités, des travaux routiers, des accidents, des
+Présentation de l’outil                                                     50
+
+
+changements de circulation, etc. En somme, la prise en compte de l’état des
+routes, de la congestion, des limitations de vitesse et des conditions météo-
+rologiques permet mieux refléter la réalité des déplacements et d’obtenir des
+résultats plus précis lors du calcul de l’isochrone.
+
+3.1.3    Isochrones avec OpenRouteService
+OpenRouteService est un service qui propose une interface API exploitant
+les données de OpenStreetMap, une carte mondiale créée par des contribu-
+teurs sans but lucratif et utilisable librement sous licence ouverte. Ce ser-
+vice a été choisi pour représenter les éléments dans notre outil. Ces cartes
+sont construites en se basant sur des informations locales. La plupart des
+contributeurs utilisent des images aériennes, des appareils GPS et des cartes
+topographiques pour s’assurer que les données cartographiques sont réguliè-
+rement mises à jour et précises.
+
+3.1.4    Interface de l’outil
+Dans cette section nous vous présentons l’interface principale de l’outil. Voir
+la figure 3.3.
+
+
+
+
+                Figure 3.3 – Interface principale de l’outil
+
+
+L’ecran complet est disponible en annexe .5
+
+3.1.5    Conception du produit
+Dans cette section, nous présentons une description de l’environnement et
+des outils utilisés dans la conception du produit.
+Présentation de l’outil                                                      51
+
+
+L’environnement de développement
+L’environnement de développement choisi est Windows, une plateforme stan-
+dard qui ne demande pas beaucoup de ressources et qui dispose d’un accès
+à Internet. Le choix de Windows s’est imposé car aucune machine Linux
+n’était disponible, et en plus de cela, je maîtrise moins l’environnement Li-
+nux. Cependant, en me basant sur les connaissances que j’ai, l’application
+peut être développée de manière similaire sur les deux environnements. Le
+protocole de communication avec le moteur cartographique est commun aux
+deux environnements, ce qui permettrait une certaine flexibilité dans le choix
+de la plateforme de développement.
+Le service OpenRouteService
+OpenRouteService est un service web fondé par l’Institut Heidelberg Ins-
+titute for Geoinformation Technology (HeiGIT) basé sur OpenStreetMap,
+une carte mondiale ouverte et participative.
+
+
+Cet outil est gratuit et libre d’utilisation, permettant de calculer des iti-
+néraires, des distances entre un point d’intérêt, le temps nécessaire pour le
+parcourir, ou encore la distance qui sépare les deux points. L’intérêt majeur
+de ce web service réside dans son accessibilité via des API Java qui sont
+libres d’accès. Pour éviter de surcharger leurs serveurs, le nombre de tran-
+sactions est limité. Les données de sources consultées proviennent d’OpenS-
+treetMap.
+OpenStreetMap (OSM) 1 est un projet de collaboration mondial visant à
+créer une carte libre d’utilisation et gratuite couvrant l’ensemble de la pla-
+nète. Cette base de données géographiques ouverte, alimentée par des contri-
+buteurs du monde entier, est constamment mise à jour, ce qui peut parfois
+prendre du temps. Les utilisateurs peuvent accéder aux données d’OpenS-
+treetMap via le site web d’OSM ou en téléchargeant les données pour les
+utiliser dans leurs propres applications ou projets. Ces données peuvent être
+utilisées localement ou en ligne. OpenStreetMap est utilisé dans de nombreux
+domaines tels que la navigation, la planification urbaine, l’analyse géospatiale
+et la cartographie en ligne.
+La suite logicielle de développement multi-plateforme Win-
+Dev
+WinDev est un environnement de développement intégré (IDE) et un langage
+de programmation dédiés à la création rapide d’applications logicielles pour
+les plateformes Windows. Développé par la société française PC SOFT, Win-
+Dev propose une gamme complète d’outils, de fonctionnalités et de compo-
+
+  1. OpenStreetMap® is open data, licensed under the Open Data Commons Open
+Database License (ODbL) by the OpenStreetMap Foundation (OSMF).
+Problématique                                                                52
+
+
+sants visuels qui facilitent la conception, le développement et le déploiement
+d’applications pour les domaines bureautiques, web et mobiles.
+Le langage propriétaire W-Language a été utilisée pour créer la composante
+cliente de l’application. Ce langage de quatrième génération offre la possibi-
+lité de créer rapidement un prototype en intégrant toutes les bibliothèques
+nécessaires pour accomplir une tâche donnée. Il simplifie la gestion des as-
+pects réseau et des connexions aux services en proposant une multitude de
+fonctionnalités de base pour manipuler aisément et efficacement les fichiers
+JSON. De plus, il intègre des fonctionnalités avancées permettant d’interro-
+ger les services web en mode HTTP, ce qui nous affranchit des complexités
+des couches inférieures du modèle OSI 2 . Ainsi, notre attention se focalise
+principalement sur la couche de présentation.
+Enfin, WinDev offre une interface conviviale WYSIWYG 3 , permettant de
+visualiser le résultat final pendant le processus de conception.
+L’application cConvert
+Le programme cConvert 4 permet de convertir des coordonnées entre les dif-
+férents systèmes de référence utilisés en Belgique, ainsi que les projections
+cartographiques correspondantes :
+ Systèmes de référence                                        Projections
+ ETRS89 (European Terrestrial Reference System 1989)          Lambert 2008
+ BD72 (Belgian Datum 1972)                                    Lambert 1972
+ ED50 (European Datum 1950)                                   UTM
+ ETRS_LCC
+ ETRS_LAEA
+Cet outil sera essentiellement utilisé pour convertir les données sources pro-
+venant des points d’intérêt en coordonnées GPS.
+
+
+3.2    Problématique
+L’élément central de cette recherche est l’accessibilité. En général, il existe
+une absence d’outils simples permettant d’observer et de fournir des
+informations adéquates pour prendre des décisions concernant l’accessibi-
+lité des services. Les applications informatiques existantes, principalement
+en ligne, ne parviennent pas à répondre de manière efficace et intuitive aux
+besoins d’analyse en matière de disponibilité. Actuellement, il n’existe pas
+d’option conviviale et facile à utiliser. La plupart des produits dis-
+ponibles offrent des fonctionnalités pour créer des isochrones personnalisés,
+
+  2. Open Systems Interconnection
+  3. What You See Is What You Get
+  4. cConvert est une application fournie par l’IGN
+Problématique                                                                 53
+
+
+mais leur utilisation nécessite une connaissance et parfois l’exigence d’une
+expertise spécifique. De plus, les outils dotés d’interfaces sont souvent
+complexes à manipuler.
+Par ailleurs, les données disponibles sur ces plateformes sont généralement
+mises à jour de manière sporadique et se limitent souvent à des catégo-
+ries prédéfinies, principalement liées aux données officielles de l’administra-
+tion.
+Cependant, l’approche adoptée par l’outil que nous allons vous présenter se
+rapproche davantage des services de proximité essentiels, tels que les
+soins de santé, les distributeurs de billets, les boulangeries, les garages, etc.
+Cette approche se focalise sur des données concrètes et accessibles dans la
+vie quotidienne. L’outil a pour objectif de simplifier la manière d’observer
+et de prendre des décisions en fonction de divers choix d’accessibilité, tout
+en offrant la possibilité de vérifier et de répondre à des contraintes spéci-
+fiques.
+Un cas d’étude présenté démontrera si l’agencement actuel des pharma-
+cies facilite l’accès aux soins de santé. Les modes de transport seront
+pris en considération lors de cette étude, notamment les déplacements en
+voiture privée, les modes de transport doux tels que le vélo ou la marche. En
+Belgique, l’emplacement des pharmacies est soumis à des lois régissant leur
+nombre et leur implantation, en tenant compte de la distance et du nombre
+d’habitants dans la région (voir tableau 3.1). Toutefois, la disposition ac-
+tuelle des pharmacies ne prend pas en compte le temps nécessaire pour s’y
+rendre [42].
+La situation actuelle ne permet pas de déterminer si le choix d’implantation
+des pharmacies optimise la couverture des soins de santé, car aucun
+outil n’évalue si une pharmacie est située au meilleur endroit pour desservir
+un maximum de personnes en termes de distance et de temps.
+Les statistiques concernant ’âge de la population seront un bon moyen
+de déterminer la couverture qui englobe le plus de personnes à mobilité
+réduite. La loi en vigueur impose une certaine contrainte d’emplacement,
+mais elles ne seront pas abordées dans le cadre de cette étude ; elles pourront
+faire partie de règles supplémentaires pour la prise de décision de
+l’emplacement d’une officine.
+Un autre exemple de cas d’étude portera sur les distributeurs automa-
+tiques de billets. Dans ce cas, l’objectif sera de proposer des emplacements
+potentiels pour améliorer la disponibilité des services à la population
+environnante. Nous illustrerons qu’il existe actuellement des distributeurs
+dans différents endroits, mais que certaines zones ne sont pas bien desservies.
+En envisageant l’ajout d’un nouveau distributeur, nous pourrons démontrer
+comment cela améliorera le service offert à la population.
+Problématique                                                                54
+
+
+3.2.1    Application au concept de l’accessibilité
+Définir l’application au concept de l’accessibilité se définit selon deux ap-
+proches bien distinctes. Tout d’abord, il y a une volonté de développer des
+applications à distance que l’on retrouve sous forme de petits programmes
+à installer sur un mobile, une tablette ou un ordinateur. Ces applications
+permettent déjà de donner un premier diagnostic simple sur différentes pa-
+thologies. À l’aide de l’IA, un ensemble de questions vous est proposé. En
+fonction de vos réponses, l’application vous orientera ou non vers les urgences
+ou le médecin généraliste, voire même vers un traitement médicamenteux
+[43].
+Ensuite, la deuxième approche est de fournir un moyen de locomotion efficace
+pour atteindre son objectif. Ce deuxième point demande un système de pla-
+nification, et surtout une volonté de mettre en place une solution viable, mais
+surtout peut-être parfois plus coûteuse en matière d’infrastructure. C’est à
+ce niveau que l’utilisation des cartes isochrones prend tout son sens, car elle
+permettra de mieux visualiser les dispositions , les délais et les difficultés à
+se diriger vers une destination. Il est à remarquer que le premier point reste
+une solution peu utilisée par les personnes âgées.
+Selon une étude [44], la technologie mise au service des personnes âgées ap-
+porte une indépendance à leur égard. Les solutions mises en avant apportent
+une certaine aide dans leur vie quotidienne. La prise en charge des personnes
+âgées s’en trouve améliorée quand celles-ci restent à domicile, en réponse
+au manque de place et au coût que demande le placement des personnes
+âgées dans les maisons de repos. Les technologies sont déjà présentes dans
+de nombreux secteurs médicaux et sanitaires tels que la télémédecine, le télé-
+diagnostic..., ces technologies se répandent de plus en plus au domicile même
+des individus. Elles fournissent des moyens de surveillance et d’assistance qui
+ont pour but d’améliorer le confort de vie des personnes âgées.[45] Malgré
+une multitude de solutions technologiques qui apportent une aide non né-
+gligeable au quotidien des personnes âgées, le vieillissement lui ne s’arrête
+pas, il continue à dégrader les fonctions humaines de manière différente d’un
+individu à l’autre. Quand on parle de vieillissement normal ou dit classique,
+on conserve plus ou moins bien ses capacités à s’en sortir, mais un vieillis-
+sement avec certaines pathologies même si elles sont gérables ne facilite pas
+l’utilisation des outils technologiques. On peut être sourd, avoir une mau-
+vaise vue, des difficultés à manipuler des objets, toutes ces dégénérescences
+des capacités humaines font que l’utilisation des moyens technologiques s’en
+trouve diminuée, voire même exclue.
+Il convient donc de trouver des solutions les plus simples possibles en termes
+d’utilisation et de fonctionnalité pour aborder une demande explicite et
+simple pour obtenir l’information voulue.
+Validation de l’outil                                                              55
+
+
+3.2.2    Utilisation de l’isochronie pour l’accessibilité
+Le choix de prendre une carte isochrone nous semble la meilleure représenta-
+tion pour visualiser les emplacements des points d’intérêt. Ce genre de carte
+nécessite de déterminer une zone de chalandise autour d’un point central, ce
+qui correspond à notre besoin actuel. Cette zone de chalandise isochrone re-
+présente une zone géographique contenue à l’intérieur d’une limite de temps
+par rapport à notre point central. La difficulté de cette représentation sera
+la structure et les obstacles du terrain. [46] [47]
+Il existe bien d’autres facteurs que l’on pourrait introduire dans le calcul de la
+courbe isochronique. À noter que la qualité du résultat des cartes isochrones
+dépend de nombreuses autres informations.
+Nous vous en donnons une liste exhaustive ci-dessous :
+
+  — la structure du réseau routier et sa qualité 5 .
+  — Les réglementations de vitesse
+  — Les caractéristiques différentes selon le type de véhicule (voiture, bus,
+    . . .)
+  — L’heure et la conjoncture de circulation à un instant T
+  — Le moment pris en compte, comme la période de congé, la période
+    hivernale, le week-end, en semaine, etc.
+  — La topographie pour les déplacements non motorisés.
+
+C’est sur la base des caractéristiques routières de l’accessibilité que les iso-
+chrones sont calculées. Le principe consiste à retrouver le chemin le plus
+intéressant entre le point d’origine et diverses destinations, rendu possible
+grâce à la technique du graphe routier.
+
+
+3.3     Validation de l’outil
+Cette section du document mettra en évidence l’outil ainsi que notre étude
+de cas, en mettant l’accent sur les contraintes définies dans le cahier des
+charges pour la mise en place des pharmacies.
+Dans la première partie, nous présenterons les contraintes liées à l’ouver-
+ture d’une pharmacie. Dans la deuxième partie, nous présenterons l’outil en
+tenant compte de ces contraintes.
+
+
+
+
+  5. La qualité informe sur la manière dont les routes sont classifiées, par exemple :
+nombre de voies, état de la route, etc.
+Validation de l’outil                                                       56
+
+
+3.3.1    Présentation de l’existant
+La disposition des officines doit se faire par l’introduction d’une demande
+officielle. La première contrainte c’est que la demande d’ouverture de l’offi-
+cine se fait dans un lieu public. Les coordonnées géographiques référencées
+indiqueront l’endroit où l’officine souhaite s’implanter. Le document doit être
+accompagné de l’étude du géomètre. L’implantation de l’officine se fait en
+prenant contact avec le cadastre qui s’occupera de déterminer la faisabilité
+de l’implantation souhaitée de la part de l’officine. Plusieurs cas peuvent se
+présenter, pour l’installation d’une officine. On parle d’une ouverture d’offi-
+cine quand il n’existe aucune pharmacie dans la région. Le transfert d’une
+officine à une autre personne et enfin la fusion entre deux officines. Si on
+parle d’ouverture d’une officine, les différentes étapes sont décrites dans les
+points ci-contre :
+  1. L’officine doit être autorisée par le ministre de la Santé publique
+  2. L’emplacement de la nouvelle officine par rapport à l’environnement.
+  3. L’officine se situe à x km d’une autre officine,
+  4. L’officine doit subvenir d’au moins 5000 habitants minimum
+Il est important de noter qu’à aucun moment, la décision de l’emplacement
+de l’officine ne tient compte de l’accessibilité à celle-ci. On satisfait à la
+contrainte qu’il faille au moins fournir le service à un certain nombre d’ha-
+bitants pour éviter d’avoir une pénurie de soins de santé, mais en aucun
+cas, le choix de la situation géographique ne tient compte des moyens d’y
+accéder. Selon les différents articles de lois, le nombre de pharmaciens par
+commune ne peut être supérieur au quotient de la division du nombre total
+d’habitants. [42]
+
+   Nombre d’habitants     Dividende    Quotient (Nombre de Pharmacies)
+   >30000                   3000                                  >30
+   7500 à 30000             2500                                1 à 12
+   <7500                    2000                                   <4
+
+        Table 3.1 – Nombre de pharmacies autorisées par habitant
+
+
+L’ouverture d’une officine doit respecter le nombre autorisé dans la commune,
+si le quotient (nombre d’officines dans la commune) ne dépasse pas le nombre
+d’habitants divisé par 5000.
+L’autorisation d’une officine supplémentaire est acceptée si les conditions
+suivantes sont respectées
+Validation de l’outil                                                          57
+
+
+ Distance la plus proche                                 Officine autorisée)
+ < 1 km et habitant >= 2500                                      OK
+ < 3 km et couvre un nombre d’habitants >= 2000                  OK
+
+
+Le résultat obtenu sera arrondi vers le bas. Les étapes pour ouvrir une officine
+doivent passer obligatoirement par 3 étapes.
+  1. Procédure relative à l’autorisation de l’implantation.
+  2. Ensuite la procédure d’enregistrement
+  3. Pour terminer la procédure d’autorisation d’exploitation.
+Pour déterminer l’implantation, on vérifie la distance la plus courte mesu-
+rée au milieu de la voie publique entre deux officines ouvertes au public, à
+savoir la distance entre les intersections de la perpendiculaire la plus courte
+des coordonnées géographiques de l’officine au milieu de la voie publique à
+laquelle se situe l’adresse administrative. Il est à remarquer qu’il n’est pas
+tenu compte de la circulation ou de l’accessibilité.
+Il s’agit de bien distinguer les deux informations suivantes pour l’établisse-
+ment d’une officine,
+
+  1. La zone d’influence démographique : il s’agit du nombre d’habi-
+     tants dans la zone d’influence géographique d’une officine ouverte au
+     public.
+  2. La zone d’influence géographique : il s’agit de l’ensemble des rues
+     et des portions de rues situées dans la zone autour d’une officine ouverte
+     au public et qui est délimitée par les demi-distances par la route par
+     rapport aux lieux d’implantation des autres officines.
+  3. La proximité immédiate : ce sont tous les points géographiques
+     situés dans la zone délimitée par un cercle d’un rayon de 100 mètres
+     autour du lieu d’implantation de l’officine concernée ou dans la zone
+     délimitée par les officines environnantes sur la base de la méthode,
+     nommée la règle des 25%.
+  4. Le rayon : on appelle "rayon" la distance à vol d’oiseau à partir du
+     lieu d’implantation d’une officine.
+  5. Le lieu d’implantation : c’est la parcelle cadastrale pour laquelle une
+     officine est autorisée à être ouverte au public et qui est identifiée par
+     les coordonnées géographiques qui se situent ou qui sont réputées se
+     situer dans l’espace ouvert au public de l’officine autorisée ou projetée.
+  6. Lors de l’ouverture, le nombre d’officines dans la commune concernée
+     ne dépasse pas le quotient de la division de la population par 5000.
+
+Pour obtenir davantage d’informations, il est possible de consulter l’Agence
+Fédérale des Médicaments et des Produits de Santé.[48]
+Validation de l’outil                                                    58
+
+
+3.3.2   Validation
+Il s’agit d’observer, si dans un premier temps, deux pharmacies situées dans
+la même région respectent les contraintes.
+
+  1. Pour un nombre d’habitants compris entre 7500 et 30000, le nombre
+     de pharmacies dans la région doit être compris entre 1 et 12.
+     Si on se renseigne sur le site de la commune, 6 , on peut voir que le
+     nombre d’habitants est de 12 648.
+     Le nombre de pharmacies dans la commune de Rochefort est de 4. Voir
+     la figure 3.4
+
+
+
+
+          Figure 3.4 – Nombre de pharmacies dans la commune
+
+     Cette règle est respectée.
+  2. La position de deux pharmacies doit être supérieure à 3 km si cela
+     concerne moins de 2000 habitants.
+
+
+
+
+  Figure 3.5 – Zone couverte par la pharmacie en termes de population
+
+
+
+
+  6. Commune de Rochefort
+Validation de l’outil                                                     59
+
+
+
+
+            Figure 3.6 – Distance entre les deux pharmacies
+
+     On peut remarquer qu’à 3 km, la zone de couverture des pharmacies se
+     superpose, on respecte donc la règle, car on apporte des soins pour plus
+     de 2000 habitants. Dans le premier cas, c’est 2727, et dans le deuxième
+     cas, c’est 4826.
+
+Maintenant pour le cas d’étude on ajoute une pharmacie supplémen-
+taire...
+
+
+
+
+              Figure 3.7 – Distance entre trois pharmacies
+
+
+On observe que la pharmacie est bien trop proche en termes de service d’une
+autre pharmacie et ne respecte plus les règles établies.
+La distance la plus proche entre deux pharmacies à moins de 1 km est autori-
+sée si le nombre d’habitants est supérieur à 2500. Voir le tableau 3.3.1.
+Dans le cas qui nous occupe, le nombre d’habitants est inférieur. Voir la
+figure :
+Validation de l’outil                                                       60
+
+
+
+
+              Figure 3.8 – Nombre d’individus dans la zone
+
+
+Naturellement, la décision de maintenir ou de supprimer une pharmacie peut
+également être influencée par d’autres facteurs, notamment la prestation de
+services à la population. Si une seule pharmacie est ouverte, il peut être
+difficile de répondre aux besoins de tout le monde en un temps raisonnable.
+Cependant, cela reste un sujet distinct qui pourrait faire l’objet d’une étude
+ultérieure.
+D’autres cas d’exemple peuvent être pris en considération. On souhaite four-
+nir un service de soins de santé à des personnes qui habitent à 5, 10 et 15
+minutes d’une pharmacie.
+Le résultat obtenu est le suivant :
+On choisit le paramétrage de la zone de chalandise, comme suit. Voir la figure
+3.9.
+
+
+
+
+             Figure 3.9 – Propriété des délais de déplacement
+
+
+Le résultat indique que la couverture s’étend d’ouest en est si l’on utilise un
+véhicule privé, allant de Ciergnon à Marche-en-Famenne.
+Validation de l’outil                                                      61
+
+
+
+
+              Figure 3.10 – Distance entre trois pharmacies
+
+
+Si on prend le même paramétrage, mais qu’on décide de se déplacer à pied,
+on obtient le résultat suivant. Voir la figure 3.11.
+
+
+
+
+            Figure 3.11 – Délai pour atteindre une pharmacie
+
+
+On peut constater que bien que, la durée du trajet reste constante, cela li-
+mite la plage de possibilités pour accéder à une pharmacie. Pour les résidents
+de Jemelle qui se déplacent à pied, cela pourrait engendrer des défis supplé-
+mentaires pour se rendre à Rochefort en vue d’obtenir leurs médicaments,
+notamment si la pharmacie de Jemelle est fermée et en l’absence de moyen
+de transport personnel.
+Étude de cas                                                                62
+
+
+3.4       Étude de cas
+Dans cette section, nous allons concrètement utiliser l’outil pour deux scéna-
+rios spécifiques. Le premier exemple aborde l’analyse de l’emplacement des
+pharmacies en Belgique, tandis que le second se penche sur la situation des
+distributeurs automatiques de billets à Bruxelles.
+Le premier scénario ayant déjà été couvert lors de la validation de l’outil, la
+présentation ci-dessous mettra davantage l’accent sur les interactions avec le
+logiciel et démontrera son utilisation.
+
+3.4.1     Premier cas d’étude : la localisation des pharma-
+          cies
+3.4.1.1    Choix de la zone de chalandise
+La liste des pharmacies qui existent en Belgique est disponible sur le site de
+l’Agence fédérale des médicaments et des produits de santé (afmps.be) 7 . Voir
+l’annexe .1 pour des informations essentielles telles que les adresses postales
+et les coordonnées Lambert (format 2008) des pharmacies répertoriées. Pour
+visualiser ces données de manière géographique, plusieurs outils sont dispo-
+nibles directement sur leur site. Par exemple, des plateformes comme Topo-
+MapViewer (accessible via le lien : https://topomapviewer.ngi.be/) ou encore
+CadGis (disponible à l’adresse : https://eservices.minfin.fgov.be/ecad-web/)
+permettent de cartographier les pharmacies sur une carte IGN. Cependant,
+ce processus peut s’avérer fastidieux lorsqu’il s’agit de positionner un grand
+nombre de pharmacies.
+L’objectif est de décrire et de démontrer les méthodes permettant de pré-
+senter la disponibilité des soins de santé, en mettant l’accent sur l’accès aux
+pharmacies en quelques manipulations à l’aide de l’outil.
+Si vous souhaitez avoir un aperçu du contenu du fichier contenant la liste
+des pharmacies, celui-ci est disponible en annexe .1
+Dans notre situation, appliquer cet outil aux soins de santé est une nou-
+velle approche. Le but ici n’est pas d’atteindre un maximum de personnes
+susceptibles de venir acheter un produit et de réaliser des bénéfices, mais
+bien d’observer si l’emplacement de la pharmacie répond aux normes et aux
+besoins d’un nombre important de personnes. L’état de santé des individus
+étant une information discrète, il est difficile de déterminer si l’emplacement
+défini par la pharmacie est optimal. La population existant autour d’une
+officine permet de déterminer l’âge via les données civiles, mais ne permet
+pas de déterminer l’état de santé de ceux-ci. Il est possible d’installer une
+officine dans un endroit où peu de personnes âgées sont en mauvaise santé. A
+
+  7. Agence fédérale des médicaments et des produits de santé
+Étude de cas                                                                63
+
+
+l’inverse, on pourrait laisser un endroit libre avec moins de personnes, mais
+qui demande des soins de santé plus réguliers et plus importants. Il serait
+difficile et inopportun de réaliser un sondage pour déterminer l’état de santé
+de la population avoisinante. Des études pourraient être menées dans ce sens,
+pour expliquer selon l’endroit, la précarité ou non, proximité d’usines ou de
+la campagne, l’état de santé de la population existante. Mais cette étude ne
+fait pas partie de ce travail.
+À l’aide d’une routine algorithmique, nous avons obtenu la liste des phar-
+macies à partir du document PDF, que nous avons converti dans le format
+standard utilisé par l’application.
+Afin d’éviter des cycles de modification et de reconstruction de l’application,
+l’idée de convertir le document source en un format d’entrée plus standardisé
+pour l’application a été mise en place. Cette démarche fournit une structu-
+ration des données à analyser, aboutissant à une totale indépendance de
+l’application vis-à-vis des systèmes externes.
+Dans ce cas précis, le document source se présente sous forme de fichier
+PDF. Nous procéderons à l’extraction des données afin de les transformer
+en un document au format JSON 8 , accessible et convivial pour le forma-
+tage des données. Le format JSON persiste en tant que solution aisée et
+largement répandue pour la transmission de données entre des systèmes hé-
+térogènes.
+La structure du document JSON a la forme suivante :
+
+  — Identification de la coordonnée
+  — Une description concernant les coordonnées, cela peut être un nom,
+    une adresse, les deux, ou autre.
+  — les coordonnées Lambert
+
+Après avoir inséré les données dans l’outil en utilisant l’option du menu
+décrite à la section 3.12, une liste des pharmacies est générée dans un format
+tabulaire. Cette disposition est illustrée dans la figure 3.13.
+
+
+
+
+  8. Pour un exemple, vous pouvez consulter l’annexe ??
+Étude de cas                                                                           64
+
+
+
+
+                      Figure 3.12 – Routine de conversion
+
+
+
+
+                       Figure 3.13 – Liste des pharmacies
+
+
+Un exemple de format standard est disponible en annexe .3.
+
+3.4.1.2    Méthode pour extraire les données de géolocalisa-
+           tion
+Comme indiqué précédemment, nous avons obtenu la liste et la localisation
+des pharmacies implantées en Belgique, telles que les coordonnées postales
+(nom et adresse) ainsi que les coordonnées géographiques conformément à la
+norme Lambert 2008 (LB08) 9 .
+
+   9. Lambert 2008 est la nouvelle projection cartographique nationale, elle remplace Lam-
+bert 72.
+Étude de cas                                                                65
+
+
+Pour une approche plus technique, l’utilisation de l’outil Google Maps offre
+une solution pour géolocaliser les pharmacies selon leurs coordonnées déci-
+males.
+Idéalement, cette procédure pourrait être automatisée pour gagner en effica-
+cité. Cependant, il convient de noter qu’actuellement, la plupart des logiciels
+offrant la fonctionnalité de géolocalisation via les coordonnées demandent
+l’accès à une API. Malheureusement, la gratuité de ces services est de plus en
+plus limitée, nécessitant soit une clé d’activation, soit un abonnement men-
+suel en fonction de l’utilisation. Pour plus de détails, vous pouvez consulter
+le site : The World Coordinate Converter (twcc.fr).
+En convertissant les coordonnées Lambert en données décimales, il devient
+possible d’intégrer ces informations directement dans l’application Google
+Maps. Cette méthode permet d’afficher les emplacements des pharmacies
+sur la carte de manière interactive. L’intérêt de Google Maps réside dans le
+fait qu’il informe en temps réel sur l’état des routes. Cependant, il ne permet
+pas de réaliser des calculs isochrones.
+Comme nous ne souhaitons pas utiliser Google Maps, il va falloir conver-
+tir les données dans un autre format. L’utilisation de l’application cConvert
+fournie par l’IGN est la solution choisie pour convertir les données du for-
+mat Lambert 2008 aux coordonnées GPS au format ETRS89. Voir la figure
+3.14.
+
+
+
+
+Figure 3.14 – Application cConvert de l’Institut national géographique
+(IGN)
+
+
+Ce logiciel est disponible gratuitement sur le site de l’IGN, société belge à
+Étude de cas                                                                  66
+
+
+la pointe des connaissances pour la conversion des coordonnées. Il permet
+de transformer aisément les données au format Lambert 2008 en données
+géographiques. Cela nous évite de réécrire un algorithme de conversion.
+Afin d’utiliser efficacement l’application cConvert, il est nécessaire de lui
+fournir en entrée un fichier qu’elle puisse comprendre. Ainsi, nous allons
+transformer les informations sur les pharmacies comme suit :
+
+         Colonne 0 :   Identifiant de la localisation (optionnel)
+         Colonne 1 :   Coordonnées Lambert 2008 en abscisse (x)
+         Colonne 2 :   Coordonnées Lambert 2008 en ordonnée (y)
+         Colonne 3 :   Coordonnées Lambert 2008 en hauteur (h)
+
+
+Dans notre cas, la colonne H vaut 0.
+En option, il est possible d’ajouter une colonne 0 qui contient un descriptif
+de la ligne à ajouter. Ce descriptif est intéressant car il permet de reconnaître
+de manière unique une géolocalisation par un libellé et non pas à l’aide de
+ses coordonnées géographiques.
+Dans notre cas, la colonne 0 sera remplie par la description unique de la
+pharmacie, typiquement la clé primaire. Veuillez consulter le tableau 3.2
+pour référence.
+Les données seront extraites du tableau contenant la liste des pharma-
+cies (voir figure 3.13), qui aura été préalablement rempli, pour créer le fi-
+chier.
+Les données obtenues peuvent être directement utilisables par des logiciels
+SIG 10 pour visualiser sur une carte le point géolocalisé.
+
+
+
+
+ 10. Système d’Information Géographique
+Étude de cas                                                           67
+
+
+ Description   Coordonnées    Lambert    Coordonnées    Lambert    Coordonnées   Lambert
+               2008 (X)                  2008 (Y)                  2008 (Z)
+ 913007        699195.0625               606744.8125               0
+ 923702        674963                    609546.375                0
+ 123502        673917                    689533                    0
+ 263209        690256.125                666107.625                0
+ 430401        604599.6875               716691.75                 0
+ 525804        657580.875                627904.875                0
+ 461401        623537.4375               699425.75                 0
+ 626308        735562.125                646162.125                0
+ 613110        710492.625                635674.625                0
+ 246003        700256.25                 660746.125                0
+ 450202        590131.6875               665179.3125               0
+ 411405        626115.1875               677917.5625               0
+ 422001        618954.0625               686698.8125               0
+ 420203        637193.8125               691127.875                0
+ 235104        648182.0625               683131.0625               0
+ 124203        649375.375                694403.125                0
+
+               Table 3.2 – Coordonnées en Lambert 2008
+
+
+Ci-dessous, le tableau 3.3 obtenu après conversion au format ETRS89.
+# DATUM : ETRS89
+# PROJECTION : NONE
+# COORDINATES : GEOGRAPHIC
+# LAT/LONG : Deg.
+#
+Étude de cas                                                               68
+
+
+     Description    Coordonnées Latitudes      Coordonnées       Longi-
+                                               tudes
+     913007         50.269622042               5.058724441
+     923702         50.296363097               4.719008222
+     123502         51.015475752               4.709625503
+     263209         50.803978326               4.939850898
+     430401         51.258385458               3.718478795
+     525804         50.461914569               4.475450765
+     461401         51.104348267               3.990984231
+     626308         50.619747173               5.577864495
+     613110         50.528630519               5.221902436
+     246003         50.754993226               5.080972283
+     450202         50.794062834               3.519583060
+     411405         50.911119187               4.029153284
+     422001         50.989724941               3.926603946
+     420203         51.030206750               4.186241641
+     235104         50.958447837               4.342905378
+     124203         51.059775135               4.359891595
+
+      Table 3.3 – Coordonnées converties en latitudes et longitudes
+
+
+À ce stade, nous avons déterminé nos points centraux. Il est maintenant né-
+cessaire de déterminer la manière de calculer les coordonnées de l’isochrone,
+en prenant en compte des points qui influenceront la durée du parcours.
+Les points essentiels à considérer lors du calcul de l’isochrone sont les sui-
+vants :
+Ce paramétrage peut être effectué à l’aide de l’écran ci-dessous (voir figure
+3.15). Comme nous avons choisi une courbe isochrone, l’intervalle 11 est en
+secondes et non plus en mètres.
+
+
+
+
+ 11. Range
+    Étude de cas                                                                 69
+
+
+
+
+          Figure 3.15 – Écran de propriétés pour le calcul de l’isochrone
+
+
+    Dans cet écran, il est possible de choisir entre des isochrones isométriques et
+    des isochrones en temps de trajet, en modifiant le "range type".
+
+    3.4.1.3   Isochronie avec OpenRouteService
+    Dans cette partie, les interactions avec le service OpenRouteService sont
+    détaillées. Ces interactions visent à obtenir un résultat en fonction d’un point
+    d’intérêt particulier et d’un calcul d’isochrone.
+    Pour des raisons académiques, j’ai divisé cette interaction en deux étapes
+    distinctes (Post et Résultat), afin de mieux mettre en évidence les traitements
+    en cours. Consultez la figure 3.16 pour une visualisation.
+
+
+
+
+                Figure 3.16 – Action Post vers OpenRouteService
+
+       • L’action Post
+    Cette action interroge le service OpenRouteService pour obtenir les fonction-
+    nalités correspondant à notre calcul d’isochrone.
+1   stRequ ê te est une httpRequ ê te
+2   stRequ ê te .. URL            = " https :// api . openrouteservice . org /
+        v2 / isochrones / " + gstCur_Param . provileId
+3   stRequ ê te .. M é thode      = httpPost
+4   stRequ ê te .. ContentType    = typeMimeJSON
+     Étude de cas                                                                    70
+
+
+ 5   stRequ ê te .. UserAgent             = ""
+ 6   stRequ ê te .. User                  = ""
+ 7   stRequ ê te .. MotDePasse            = ""
+ 8   stRequ ê te .. Ent ê te [ " Accept " ] = " application / json , application /
+         geo + json , application / gpx + xml , img / png ; charset = utf -8 "
+ 9   stRequ ê te .. Ent ê te [ " Authorization " ] = " 5
+         b3ce3597851110001cf62484584bcbf91984ec4a8d3f8e105c1f393 "
+10   stRequ ê te .. Destination           = " c :\\ temp \\ GeoJson . json "
+11
+12
+13   // Url à pied : https :// api . openrouteservice . org / v2 /
+         isochrones / foot - walking
+14
+15   Sablier ( True )
+16   note est une cha î ne
+17
+18   POUR TOUTE LIGNE DE TABLE_Officines
+19
+20     SI ( COL_Select [ TABLE_Officines ] = True ) ALORS
+21
+22         note = RetireLesApostrophes ( COL_Info [ TABLE_Officines ]) + " \
+               n " + COL_Longitude [ TABLE_Officines ] + " ," +
+               COL_Latitude [ TABLE_Officines ]
+23
+24         gstCur_Point       = SetLongLat ( COL_Longitude [
+               TABLE_Officines ] , COL_Latitude [ TABLE_Officines ] , note )
+25
+26         gstCur_Pos . rLongitude = gstCur_Point . rGeo_Lon
+27         gstCur_Pos . rLatitude = gstCur_Point . rGeo_Lat
+28         gstCur_Pos . sLibelle    = gstCur_Point . sGeo_Lib
+29
+30         gtabMes_Points . Ajoute ( gstCur_Pos )
+31
+32     FIN
+33
+34   FIN
+35
+36   sjs       est une cha î ne
+37   sTmpPoint est une cha î ne
+38
+39   rLatMoy      est un r é el     = 0
+40   rLongMoy     est un r é el     = 0
+41   nbPoint      est un entier     = 0
+42
+43   sjs = [
+44     { " locations " :[
+45   ]
+46
+47   POUR TOUT stCur_pos DE gtabMes_Points
+48     SI sTmpPoint = " " ALORS
+49       sTmpPoint = " [ " + stCur_pos . rLongitude + " ," + stCur_pos .
+             rLatitude + " ] "
+50     SINON
+51       sTmpPoint = sTmpPoint + " ," + " [ " + stCur_pos . rLongitude +
+     Étude de cas                                                                        71
+
+
+                " ," + stCur_pos . rLatitude + " ] "
+52     FIN
+53
+54     rLatMoy    = rLatMoy + stCur_pos . rLatitude
+55     rLongMoy = rLongMoy + stCur_pos . rLongitude
+56     nbPoint ++
+57   FIN
+58
+59   sjs = sjs + sTmpPoint + [
+60     ] , " range " :[%1 ,%2 ,%3] , " attributes " :[ " total_pop " ," reachfactor "
+             ] , " location_type " : " start " ," interval " :0.5 , " options " :{ "
+              avoid_borders " : " all " } , " range_type " : " %4 " ," smoothing " :0.1 , "
+              area_units " : " %5 " ," units " : " %5 " }
+61   ]
+62
+63   sjs = Cha î neConstruit ( sjs , gstCur_Param . aRange [1] , gstCur_Param .
+         aRange [2] , gstCur_Param . aRange [3] , gstCur_Param . rangeType ,
+         gstCur_Param . unitMeasure )
+64
+65   stRequ ê te .. Contenu = sjs
+66
+67   stR é ponse est une httpR é ponse = HTTPEnvoie ( stRequ ê te )
+                             Listing 3.1 – Code source du Post
+
+
+      Ligne    Description du code
+      1-10     L’en-tête de la requête qui sera envoyée au service OpenRouteService.
+               L’en-tête contient l’adresse du serveur de destination, le type de format
+               utilisé et la clé d’activation qui autorise l’utilisation des appels.
+      18-34    Les coordonnées GPS des points à consulter sont ajoutées à la liste pour
+               un traitement ultérieur.
+      47-57    Les coordonnées GPS sont introduites dans la requête pour la demande
+               au service OpenRouteService.
+      59-65    Formatage de la demande pour qu’elle soit compréhensible par le moteur
+               OpenRouteService.
+      67       Envoi de la demande au serveur OpenRouteService.
+
+                             Table 3.4 – Description du code
+
+        • L’action Résultat
+     Le bouton de résultat récupère les données obtenues par OpenRouteService,
+     telles que le nombre d’habitants dans la zone couverte par la demande pré-
+     cédente.
+     Cela permet de remplir le tableau avec le nombre d’habitants. Voir la figure
+     3.17. Le tableau indique qu’il y a 1036 personnes qui sont recensées dans la
+     zone des 500 mètres autour du point central.
+     Étude de cas                                                            72
+
+
+
+
+               Figure 3.17 – Population présente dans la zone couverte
+
+ 1   fPositionne ( hdF ,0 , fpD é but )
+ 2
+ 3   SI hdF >1 ALORS
+ 4    monFichierJson = fLit ( hdF , fTaille ( hdF ) )
+ 5
+ 6    SI monFichierJson . Error .. Existe ALORS
+ 7     Info ( " Code d ’ erreur : " + monFichierJson . Error . Code + RC +
+           monFichierJson . Error . Message )
+ 8     RETOUR
+ 9    FIN
+10
+11    SI monFichierJson <> Null ALORS
+12
+13     POUR TOUT feature DE monFichierJson .. Membre [4]
+14      TableAjoute ( TABLE_Resume )
+15      iTable = TableOccurrence ( TABLE_Resume )
+16
+17         SI iTable >1 ALORS
+18          SI ( COL_ResumeLat [ iValue ] = feature . properties . center [2])
+                 ET ...
+19           ( COL_ResumeLong [ iValue ] = feature . properties . center [1])
+                  ALORS
+20
+21          SINON
+22           iValue     = iTable
+23           COL_ResumeLat [ iValue ] = feature . properties . center [2]
+24           COL_ResumeLong [ iValue ] = feature . properties . center [1]
+25          FIN
+26         SINON
+27          iValue     = iTable
+28          COL_ResumeLat [ iValue ] = feature . properties . center [2]
+29          COL_ResumeLong [ iValue ] = feature . properties . center [1]
+30         FIN
+31
+32      COL_Range [ iTable ] = feature . properties . value
+33      COL_TotPop [ iTable ] = feature . properties . total_pop
+34     FIN
+35
+36    FIN
+37
+38   FIN
+                          Listing 3.2 – Code source du résultat
+Étude de cas                                                             73
+
+
+ Ligne    Description du code
+ 1-9      Le résultat obtenu est un fichier JSON. On vérifie son existence.
+ 13-36    Pour tous les éléments récupérés depuis le service OpenRouteService, on
+          ajoute une ligne dans la table.
+
+                      Table 3.5 – Description du code
+
+
+3.4.1.4    Résultat
+Pour finir et après avoir introduit toutes les données, nous obtenons un ré-
+sultat final.
+
+
+
+
+                       Figure 3.18 – Résultat final
+
+
+3.4.2     Deuxième cas d’étude : la localisation des automates à
+          Bruxelles
+3.4.2.1    Choix de la zone de chalandise
+La liste des automates disponibles est obtenue grâce au site open data de
+Bruxelles. Le format du fichier apparaît au format JSON. Une routine algo-
+rithmique permet d’extraire les données du fichier JSON pour les intégrer
+dans le système.
+Le paramètre pour la sélection de la zone de chalandise est visible dans la
+figure 3.19.
+Étude de cas                                                                 74
+
+
+
+
+                      Figure 3.19 – Définir la distance
+
+
+Le choix se porte sur un service accessible en 5, 10 et 15 minutes à pied.
+Pour les détails, on peut relire la section 3.4.1.1.
+
+3.4.2.2   Méthode pour extraire les données de géolocalisa-
+          tion
+Cette partie est également expliquée en détail dans la section 3.4.1.2.
+
+3.4.2.3   Isochronie avec OpenStreeService
+Les appels au service OpenStreetService sont également expliqués en détail
+dans la section 3.4.1.3.
+
+3.4.2.4   Résultat
+On obtient un résultat dans la figure 3.20.
+Étude de cas                                                              75
+
+
+
+
+                  Figure 3.20 – Position des distributeurs
+
+
+On peut remarquer qu’il manque plusieurs services autour des points dispo-
+nibles.
+On décide d’ajouter un distributeur dans la zone où se trouve la place d’Yser
+pour améliorer l’accessibilité au distributeur.
+On obtient ainsi le résultat suivant, voir la figure 3.21.
+Étude de cas                                                     76
+
+
+
+
+        Figure 3.21 – Emplacement des distributeurs de billets
+
+
+On remarque que l’ajout d’un distributeur augmente l’accès au ser-
+vice.
+Chapitre 4
+
+Discussion
+
+4.1     Implications théoriques et pratiques
+Opter pour les courbes isochroniques représente notre choix privilégié, bien
+que l’alternative des courbes isométriques conserve également ses avan-
+tages.
+L’outil d’analyse des isochrones que nous avons développé présente des impli-
+cations à la fois théoriques et pratiques dans le domaine de la géolocalisation
+et de la prise de décision. Sur le plan théorique, cet outil s’appuie sur des
+concepts géospatiaux avancés, tels que la modélisation des déplacements, les
+algorithmes de recherche de chemins optimaux et la représentation cartogra-
+phique. Il intègre ces notions théoriques pour calculer efficacement les zones
+accessibles à partir d’un point de départ donné dans un délai spécifié.
+D’un point de vue pratique, notre outil trouve des applications concrètes pour
+la planification urbaine, la logistique, les services d’urgence et d’autres do-
+maines nécessitant une compréhension précise de l’accessibilité. Par exemple,
+les urbanistes pourraient l’utiliser pour identifier les zones mal desservies en
+termes de services de santé ou de transports publics. Les entreprises de li-
+vraison pourraient optimiser leurs itinéraires en fonction des contraintes de
+temps. Les services d’urgence pourraient évaluer les temps de réponse dans
+différentes régions.
+Sur le plan théorique, l’outil que nous avons développé possède la capacité
+d’apporter une analyse précieuse à divers secteurs ou activités. Une liste
+d’exemples est présentée ci-dessous, démontrant les domaines où l’utilité de
+l’outil peut être mise en évidence :
+
+  — Les voyageurs peuvent utiliser l’outil pour visualiser des endroits qu’ils
+    peuvent atteindre dans un laps de temps déterminé. Depuis leur empla-
+Implications théoriques et pratiques                                          78
+
+
+      cement actuel, ils peuvent en un laps de temps découvrir de nouveaux
+      endroits accessibles pour des excursions.
+  — Les agents immobiliers et les acheteurs peuvent utiliser les isochrones
+    pour évaluer la proximité des propriétés par rapport à divers équipe-
+    ments et services tels que les transports en commun, les écoles, les
+    commerces, etc. Tous ces points pourraient influencer la décision de
+    l’achat d’un bien.
+  — Les autorités communales, fédérales et bien d’autres peuvent utiliser
+    les isochrones pour étudier le déplacement de la population et planifier
+    les infrastructures publiques de manière à améliorer l’accessibilité et
+    la mobilité dans la région. Ils peuvent également analyser les zones à
+    problèmes.
+  — Les sociétés de logistique et de livraison peuvent, à l’aide des iso-
+    chrones, optimiser leurs opérations pour desservir dans des délais bien
+    spécifiques et raisonnables.
+  — Au niveau des soins de santé, les services d’urgence, les officines ou
+    bien d’autres services peuvent utiliser les isochrones pour évaluer la
+    meilleure couverture géographique lors de leur intervention ou voire
+    même d’accessibilité. Cela permettra de mieux cerner les zones mal
+    desservies.
+  — Le tourisme peut également, à l’aide des isochrones, montrer des at-
+    tractions ou des lieux d’intérêt accessibles depuis différents points de
+    départ.
+  — Le marketing utilise déjà les isochrones pour cibler des points commer-
+    ciaux en fonction de la proximité des clients existants ou futurs.
+
+Il est clairement compréhensible que l’outil puisse apporter de nombreuses
+informations utiles à différents secteurs d’activités afin d’analyser les données
+spatiales et de mieux comprendre les relations d’accessibilité entre différents
+points.
+Sur le plan concret, il est essentiel de soutenir le décideur lorsqu’il prend
+des décisions stratégiques. L’atout de cet outil réside dans sa capacité à
+fournir des informations et à autoriser la personnalisation des paramètres en
+fonction des éléments qu’il souhaite analyser. Cela équivaut à créer un outil
+conçu pour faciliter le processus décisionnel. Cependant, son usage repose
+entre les mains de l’utilisateur qui donnera sa décision finale.
+En somme, notre outil illustre l’interaction entre la théorie géospatiale
+avancée et son application pratique dans des scénarios du monde réel. Il
+offre une perspective théorique enrichissante tout en fournissant des solu-
+tions concrètes pour améliorer l’efficacité et la prise de décision dans divers
+contextes professionnels.
+Limitations                                                                  79
+
+
+4.2     Limitations
+L’outil présente également plusieurs limitations et réflexions importantes à
+prendre en compte lors de l’étude et de l’analyse des résultats observés.
+L’outil propose des fonctionnalités de base en utilisant au mieux les outils
+existants.
+Un point important à prendre en considération est le mode de transport.
+Les isochrones sont basées sur un mode de transport spécifique, tels que la
+marche, les déplacements en voiture ou l’utilisation des transports en com-
+mun. Chaque mode de transport a ses propres limitations de vitesse, accès
+aux routes ou lignes de transport, et cela peut influencer considérablement
+l’aspect et l’étendue des isochrones. La possibilité d’intégrer les travaux pla-
+nifiés de l’infrastructure routière pourrait offrir une vision plus complète.
+Cela nécessiterait d’obtenir le planning du réseau routier.
+De plus, le calcul de l’isochrone ne prend pas en compte les transports en
+commun. L’horaire des transports n’étant pas intégré dans OpenRouteSer-
+vice, il n’est pas possible de le prendre en compte lors du calcul.
+Les données de trafic et d’infrastructure : les isochrones sont sensibles aux
+conditions de circulation et aux infrastructures disponibles. Les données sur
+le trafic routier ne sont pas mises à jour en temps réel, ce qui signifie que
+les isochrones peuvent ne pas refléter avec précision les temps de trajet
+réels.
+Le relief et la topographie d’une région peuvent avoir un impact sur la vitesse
+de déplacement et donc sur la forme des isochrones. Les zones montagneuses
+ou accidentées peuvent entraîner des temps de trajet plus longs par rapport
+aux zones plates. Il faut s’assurer que le calcul des isochrones prenne en
+compte le relief.
+Les frontières administratives peuvent constituer un obstacle à la représen-
+tation des isochrones. Des réglementations peuvent empêcher la disponibilité
+des informations nécessaires au calcul de la courbe, en particulier lorsque les
+données privées ou liées à la sécurité sont impliquées.
+Les isochrones sont généralement créées pour des intervalles de temps spéci-
+fiques (par exemple, 15 minutes, 30 minutes, 1 heure). Cependant, le temps
+de déplacement réel peut varier en fonction de l’heure de la journée, du jour
+de la semaine, des périodes de congés scolaires, des jours fériés et des condi-
+tions météorologiques. Il n’est pas possible de paramétrer des calculs pour
+une période précise. Il faudrait que le système de cartographie prenne en
+compte ce type de spécification.
+Dans le même ordre d’idées, la sauvegarde des résultats de calcul peut appor-
+ter un avantage lors de l’expertise. Il sera possible de visualiser l’évolution
+Travaux futurs                                                                 80
+
+
+d’une zone au cours du temps.
+Les applications de cartes isochrones dépendent souvent d’une connexion
+Internet pour calculer les données en temps réel. L’absence de connexion
+Internet limite l’utilisation de l’application dans certaines situations, car elle
+nécessite un accès en ligne pour interroger OpenRouteService.
+La précision des données géospatiales utilisées pour générer les isochrones
+peut influencer la fiabilité des résultats. Des erreurs dans les données peuvent
+conduire à des isochrones inexactes. L’utilisation d’un outil externe pour
+calculer les coordonnées dépend de l’intérêt que les développeurs mettront à
+maintenir cet outil à jour.
+Malgré ces limitations, l’outil reste un moyen puissant pour la visualisation
+et l’analyse de la mobilité dans de nombreux contextes. Il est important de
+comprendre ces limitations lors de l’utilisation de l’application basée sur les
+isochrones et de considérer ces facteurs pour des analyses plus précises.
+
+
+4.3     Travaux futurs
+  — Un élément crucial à souligner est que l’outil n’a pas encore été validé
+    auprès d’un panel d’utilisateurs. Cette étape est essentielle pour obtenir
+    des retours concernant l’efficacité et la convivialité de l’outil.
+    Néanmoins, une première approche sans succès a été effectuée auprès
+    de la commune de ma région et d’une pharmacie. Le but était d’en
+    apprendre un peu plus sur la manière d’effectuer les contrôles sur le
+    terrain et les outils dont ils disposaient. Après plusieurs contacts, j’ai
+    rencontré une personne qui, en fin de compte, n’avait rien à voir avec
+    ma recherche, et une autre plus proche de ce que je désirais mais qui n’a
+    pas répondu. J’ai alors continué en parallèle à contacter la pharmacie.
+    Le pharmacien m’a plus ou moins indiqué ce que l’on retrouve sur le
+    site de l’afmps ou dans le Moniteur Belge, mais il m’a également dit que
+    je pouvais contacter une personne à l’afmps. Cependant, sans succès,
+    j’ai donc laissé mes coordonnées pour qu’on me rappelle, mais je n’ai
+    jamais reçu de rappel non plus. J’ai donc abandonné par manque de
+    temps et par souci de ne pas vouloir harceler.
+  — L’approche implémentée dans l’outil pour déterminer la zone de chalan-
+    dise est basique. Celle-ci peut être améliorée par en intégrant d’autres
+    critères tels que les conditions de vies et de santé des habitants, le
+    revenu moyen, l’augmentation ou non de la densité de population, le
+    nombre de commerces, etc. Ces informations pourraient améliorer ou
+    faciliter la prise de décision.
+  — Un point qui pourrait être abordé dans le cadre de la zone de chalandise
+    est la possibilité d’augmenter la limite à plus de 5 points d’intérêt. Cela
+Travaux futurs                                                               81
+
+
+    permettrait de créer des multi-isochrones et ainsi offrir la possibilité
+    d’établir une planification routière plus détaillée.
+ — Un autre développement potentiel serait de pouvoir recenser en temps
+   réel le nombre de personnes habitant ou se situant dans la superfi-
+   cie étudiée. Cette tâche pourrait être facilitée grâce aux mobiles et
+   aux puces GPS. L’utilisation des données des opérateurs téléphoniques
+   pourrait permettre de quantifier la densité de population à un moment
+   donné. Il serait également possible de déterminer si la densité de popu-
+   lation varie en fonction des périodes saisonnières. La combinaison des
+   adresses postales de la population d’une commune ainsi que le recen-
+   sement de la densité de la population via un opérateur téléphonique
+   pourrait fournir des informations précieuses sur la zone couverte. Cette
+   fonctionnalité améliorerait considérablement la précision de l’outil.
+ — Dans le cas où toutes ces informations pourraient être rendues ano-
+   nymes et enregistrées dans une base de données à des fins d’historique,
+   l’outil serait en mesure d’améliorer davantage l’analyse et la prise de
+   décision. Il serait capable de prendre en compte des périodes spéci-
+   fiques, telles que les vacances scolaires, les jours de pluie, de neige et
+   d’autres événements extérieurs, qui ont une incidence sur les résultats
+   en matière d’accessibilité.
+ — Une amélioration envisageable du produit consisterait à introduire les
+   contraintes structurelles dans l’outil. Ces contraintes pourraient être
+   de différents niveaux, allant du plus général au plus spécifique, tout
+   comme c’est le cas pour l’emplacement des pharmacies. Les contraintes
+   pourraient inclure par exemple, l’obligation d’avoir une pharmacie par
+   commune, ou de ne pas avoir deux pharmacies à moins de x kilomètres
+   l’une de l’autre, etc. L’objectif consisterait à indiquer la localisation ac-
+   tuelle ou future d’un point d’intérêt, tout en fournissant un moyen tech-
+   nique pour déterminer si la position actuelle est optimale compte tenu
+   des contraintes structurelles et formelles liées à l’accessibilité. Cette
+   approche s’avèrerait précieuse pour guider une prise de décision.
+
+4.3.1   Suggestion pour l’amélioration de l’outil
+ — Afficher une équerre pour mesurer la distance entre deux points définis
+ — Permettre la saisie l’adresse de départ et de destination pour détermi-
+   ner le meilleur trajet entre deux points. Cette option existe déjà dans
+   d’autres outils, mais l’intégrer dans celui-ci serait un plus pour finaliser
+   la démarche et mieux définir le temps de trajet final.
+ — Améliorer l’application pour qu’elle puisse intégrer la saisie de plusieurs
+   activités entre elles. Cela permettrait de comparer différents secteurs
+   et service entre eux. On pourrait également indiquer des contraintes
+   telles que des préférences entre les éléments.
+Travaux futurs                                                               82
+
+
+Il est important de mettre en évidence les perspectives de l’analyse visuelle
+des mouvements, notamment l’intégration de l’apprentissage automatique et
+de l’intelligence artificielle pour améliorer la détection de motifs et la prise
+de décision[49].
+Chapitre 5
+
+Conclusion
+
+L’objectif de ce mémoire est de présenter un outil fonctionnel et convivial,
+dont la première mission consiste à analyser la structure existante des don-
+nées géographiques de divers services. Dès lors qu’un service peut être géo-
+localisé, il devient possible d’en étudier la configuration. L’objectif est éga-
+lement d’assister au mieux l’utilisateur dans la prise de décisions liées à
+la mobilité et à l’accessibilité, que ce soit pour des points d’intérêt variés.
+Dans notre exemple avec une pharmacie, cette approche pourrait s’appli-
+quer à d’autres services essentiels tels que les soins de santé, l’alimentation,
+le chauffage ou les divertissements culturels et sociaux.
+L’approche des isochrones s’est révélée pertinente, car elle permet d’appré-
+hender instantanément la couverture d’une zone et observer les changements
+si on modifie l’emplacement d’un point d’interêt. À notre époque, où les
+informations cartographiques sont abondantes et de grande qualité, obtenu
+gratuitement ou moyennant paiement, cet atout est considérable pour l’étude
+détaillée des zones touchées.
+Les cartes isochroniques, utilisées depuis plusieurs décennies dans les études
+d’observation, offrent une visualisation rapide et claire du temps requis pour
+se rendre d’un point précis à partir de n’importe quel endroit sur une carte.
+Elles permettent de visualiser les trajets les plus rapides pour accéder à
+des points d’intérêt variés. Bien que l’utilisation des cartes isochroniques
+se concentre souvent sur des objectifs commerciaux, visant à déterminer le
+meilleur emplacement pour proposer un service à la majorité des individus
+en un temps donné, notre approche vise à fournir cet outil sans nécessiter
+une expertise approfondie dans le traitement des données. L’outil ne requiert
+pas d’expertise particulière pour consulter et fournir rapidement une analyse
+sur un sujet spécifique.
+Cet outil facilitera l’analyse non seulement de l’existant, mais également la
+                                                                             84
+
+
+prise de décisions concernant l’emplacement optimal pour proposer un service
+à la population, en tenant compte des contraintes législatives potentielles.
+Ces contraintes pourraient améliorer l’application en apportant une expertise
+plus détaillée pour le choix de l’emplacement.
+Personnellement, mon entourage est composé de personnes qui se trouvent
+confrontées à ce genre de problématique. Leur santé et leur mobilité dimi-
+nuent avec l’âge, ce qui rend leurs déplacements de plus en plus difficiles et
+les rend dépendantes des autres. Pouvoir mettre à disposition un moyen de
+déterminer le délai idéal pour accéder à des services tels que les pharmacies,
+les distributeurs de billets, les épiceries, voire des lieux culturels ou de di-
+vertissement, constituent une source d’aide précieuse. L’idée découle de là :
+fournir un logiciel accessible, ne requérant pas de compétences informatiques
+avancées - une problématique souvent délicate pour les personnes âgées - tout
+en offrant un support décisionnel. L’application se veut simple, conviviale et
+facile à utiliser.
+Le but de cet outil est de répondre au mieux à la question "Où puis-je me
+trouver pour répondre au mieux de mes besoins ?".
+Bibliographie
+
+[1] John Farrington and Conor Farrington. Rural accessibility, social inclu-
+    sion and social justice : towards conceptualisation. Journal of Transport
+    Geography, 13(1) :1–12, 2005. Sustainability and the Interaction Bet-
+    ween External Effects of Transport (Part Special Issue, pp. 23-99).
+
+[2] Equitas Community of Practice, Nov 2021.
+
+[3] Karen Lucas. Providing transport for social inclusion within a frame-
+    work for environmental justice in the uk. Transportation Research Part
+    A : Policy and Practice, 40(10) :801–809, 2006.
+
+[4] Christine Parent, Stefano Spaccapietra, Chiara Renso, Gennady An-
+    drienko, Natalia Andrienko, Vania Bogorny, Maria Luisa Damiani, Aris
+    Gkoulalas-Divanis, Jose Macedo, Nikos Pelekis, Yannis Theodoridis, and
+    Zhixian Yan. Semantic trajectories modeling and analysis. ACM Com-
+    put. Surv., 45(4), aug 2013.
+
+[5] Xiaogang Wang, Kinh Tieu, and Eric Grimson. Learning semantic scene
+    models by trajectory analysis. In Computer Vision–ECCV 2006 : 9th
+    European Conference on Computer Vision, Graz, Austria, May 7-13,
+    2006, Proceedings, Part III 9, pages 110–123. Springer, 2006.
+
+[6] Xiuli Yu, Mingshuai Dong, and Weimin Yin. Time-optimal trajec-
+    tory planning of manipulator with simultaneously searching the optimal
+    path. Computer Communications, 181 :446–453, 2022.
+
+[7] Jonathan Muckell, Jeong-Hyon Hwang, Vikram Patil, Catherine T Law-
+    son, Fan Ping, and SS Ravi. Squish : an online approach for gps tra-
+    jectory compression. In Proceedings of the 2nd international conference
+    on computing for geospatial research & applications, pages 1–8, 2011.
+
+[8] Larousse. Isochrone, 2019.
+
+[9] Sylvain Genevois. Construire et analyser des cartes isochrones, 2018.
+    Cartograhie(s) Numerique(s).
+Bibliographie                                                                86
+
+
+[10] Anne Bretagnolle. De la théorie à la carte : histoire des représentations
+     géographiques de l’espace-temps, 2005.
+
+[11] Barney Warf. Time-space compression : Historical geographies, vo-
+     lume 23. Routledge, 2008.
+
+[12] Marc Listemann, Matthias Trapp, and Jürgen Döllner. Lens-based fo-
+     cus+ context visualization techniques for interactive exploration of web-
+     based reachability maps. 2019.
+
+[13] Takafumi Saito and Tokiichiro Takahashi. Comprehensible rendering of
+     3-d shapes. In Proceedings of the 17th annual conference on Computer
+     graphics and interactive techniques, pages 197–206, 1990.
+
+[14] Alexander Schoedon, Matthias Trapp, Henning Hollburg, and Jürgen
+     Döllner. Interactive web-based visualization for accessibility mapping
+     of transportation networks. In EuroVis (Short Papers), pages 79–83,
+     2016.
+
+[15] Magali Di Salvo. Calculs d’accessibilité : impact des spécifications du
+     réseau routier sur les calculs d’accessibilité. Données sources méthodes.
+     PhD thesis, Centre d’études sur les réseaux, les transports, l’urbanisme
+     et les . . ., 2006.
+
+[16] Ronald L. Hess, Ronald S. Rubin, and Lawrence A. West. Geographic
+     information systems as a marketing information system technology. De-
+     cision Support Systems, 38(2) :197–212, 2004.
+
+[17] Jean-Philippe Croizean* and Dany Vyt. Temps subjectif et temps me-
+     suré : faut-il revoir la définition des zones de chalandise ? Géographie
+     Économie Société, 17(2) :201–224, 2015.
+
+[18] Hyun-Mi Kim and Mei po Kwan. Space-time accessibility measures :
+     A geocomputational algorithm with a focus on the feasible opportunity
+     set and possible activity duration. Journal of Geographical Systems,
+     5 :71–91, 2003.
+
+[19] La relation commerciale et les unités commerciales. Technical report,
+     2018.
+
+[20] Jean-Philippe Croizean and Dany Vyt. Temps subjectif et temps me-
+     suré : faut-il revoir la définition des zones de chalandise ? Géographie,
+     économie, société, 17(2) :201–224, 2015.
+
+[21] Jueyu Wang and Xinyu Cao. Exploring built environment correlates of
+     walking distance of transit egress in the twin cities. Journal of Transport
+     Geography, 64 :132–138, 2017.
+Bibliographie                                                             87
+
+
+[22] Erick Guerra, Robert Cervero, and Daniel Tischler. Half-mile circle :
+     Does it best represent transit station catchments ? Transportation Re-
+     search Record, 2276(1) :101–109, 2012.
+
+[23] Erwan Bocher, Gwendall Petit, and Mireille Lecoeuvre. H2Network :
+     un outil pour la modélisation et l’analyse de graphes dans le Systeme
+     d’Information Géographique OrbisGIS. PhD thesis, IRSTV FR CNRS
+     2488 ; IFSTTAR, 2014.
+
+[24] Todor Kesarovski and Fabio Hernández-Palacio. Time, the other dimen-
+     sion of urban form : Measuring the relationship between urban density
+     and accessibility to grocery shops in the 10-minute city. Environment
+     and Planning B : Urban Analytics and City Science, 50(1) :44–59, 2023.
+
+[25] Milhan Chaze, Eric Langlois, Laurent Mériade, and Corinne Rochette.
+     Intérêts et limites d’une approche cartographique et géographique pour
+     le management des parcours de soins en santé : l’exemple de l’auvergne.
+     Revue d’Économie Régionale & Urbaine, (1) :397–420, 2021.
+
+[26] Joris van den Berg, Barend Köbben, Sander van der Drift, and Luc
+     Wismans. Towards a dynamic isochrone map : Adding spatiotemporal
+     traffic and population data. Springer, 2018.
+
+[27] Axel Forsch, Youness Dehbi, Benjamin Niedermann, Johannes Oehr-
+     lein, Peter Rottmann, and Jan-Henrik Haunert. Multimodal travel-time
+     maps with formally correct and schematic isochrones. Transactions in
+     GIS, 25(6) :3233–3256, 2021.
+
+[28] Marc Listemann, Matthias Trapp, and Jürgen Döllner. Lens-based fo-
+     cus+context visualization techniques for interactive exploration of web-
+     based reachability maps. volume 27, 05 2019.
+
+[29] Laurent Jégou. Représentation des couleurs d’une carte pour l’alanyse
+     - proportions, relations, harmonie ? Dépt. de Géographie, Université de
+     Toulouse-Le Mirail, 2012.
+
+[30] CA Brewer. Color use guidelines for mapping and visualization. visua-
+     lization in modern cartography, 1994.
+
+[31] Elisabeth Chesneau. Propositions méthodologiques pour l’amélioration
+     automatique des contrastes de couleur-application aux cartes de risque.
+     Cybergeo : European Journal of Geography, 2006.
+
+[32] Zuheir Altamimi. Euref technical note 1 : relationship and transfor-
+     mation between the international and the european terrestrial reference
+     systems. Pubblicato da EUREF, 2018.
+Bibliographie                                                              88
+
+
+[33] Zuheir Altamimi and Claude Boucher. The itrs and etrs89 relationship :
+     new results from itrf2000. In Report on the Symposium of the IAG
+     Subcommission for Europe (EUREF), Dubrovnik, 2001.
+
+[34] Harvey J Miller. Measuring space-time accessibility benefits within
+     transportation networks : Basic theory and computational procedures.
+     Geographical analysis, 31(1) :187–212, 1999.
+
+[35] Olivier Lecrivain. Atelier 01, 2016.
+
+[36] Karst T Geurs and Bert Van Wee. Accessibility evaluation of land-use
+     and transport strategies : review and research directions. Journal of
+     Transport geography, 12(2) :127–140, 2004.
+
+[37] Joris Berg, Barend Köbben, Sander Drift, and Luc Wismans. Towards a
+     Dynamic Isochrone Map : Adding Spatiotemporal Traffic and Population
+     Data, pages 195–209. Springer, 01 2018.
+
+[38] Przemysław Śleszyński. A synthetic index of the spatio-temporal acces-
+     sibility of communes in poland. Geographia Polonica, 89 :567–574, 01
+     2016.
+
+[39] Raphael Victor Diserens, Clotilde Marmy, Mathieu Pasquier, Tobias
+     Zingg, Stéphane Joost, and Olivier Hugli. Modelling transport time to
+     trauma centres and 30-day mortality in road accidents in switzerland :
+     an exploratory study. Swiss medical weekly, 151(3536) :w30007–w30007,
+     2021.
+
+[40] Wei Luo and Fahui Wang. Measures of spatial accessibility to health
+     care in a gis environment : Synthesis and a case study in the chicago
+     region. Environment and Planning B : Planning and Design, 30 :865–
+     884, 11 2003.
+
+[41] Gary Higgs, Renee Zahnow, Jonathan Corcoran, Mitchel Langford, and
+     Richard Fry. Modelling spatial access to general practitioner surge-
+     ries : does public transport availability matter ? Journal of Transport &
+     Health, 6 :143–154, 2017.
+
+[42] Belgien. 21 JANVIER 2009. - Arrêté royal portant instructions pour
+     les pharmaciens. Direction du Moniteur belge, chaussée d’Anvers 53,
+     1000 Bruxelles - Directeur : WILFRIED VERREZEN, 2009. 30-01-
+     2009 numéro : 2009018031 page : 7229 PDF : version originale version
+     consolidée Dossier numéro : 2009-01-21/32.
+
+[43] Rtbf. Santé & bien être. Rtbf, 2015.
+
+[44] Marc-Eric BOBILLIER CHAUMON and Raluca OPREA CIOBANU.
+     The new technologies in the benefit of the elders : Between promises
+Bibliographie                                                                  89
+
+
+     and questions-reviewing questions. Psychologie Francaise, 54(3) :271–
+     285, 2009.
+
+[45] Gary Higgs, Renee Zahnow, Jonathan Corcoran, Mitchel Langford, and
+     Richard Fry. Modelling spatial access to general practitioner surge-
+     ries : Does public transport availability matter ? Journal of Transport
+     & Health, 6 :143–154, 2017.
+
+[46] David O’Sullivan, Alastair Morrison, and John Shearer. Using desktop
+     gis for the investigation of accessibility by public transport : an isochrone
+     approach. International Journal of Geographical Information Science,
+     14(1) :85–104, 2000.
+
+[47] Rade Stanojevic, Sofiane Abbar, and Mohamed Mokbel. Mapreuse :
+     Recycling routing api queries. In 2019 20th IEEE International Confe-
+     rence on Mobile Data Management (MDM), pages 279–287. Institute of
+     Electrical and Electronics Engineers (IEEE), 2019.
+
+[48] Agence Fédérale des Médicaments et des Produits de Santé. Arrêté
+     Royal/Décret relatif aux médicaments et produits de santé. Moniteur
+     Belge, 2022. Numéro du Moniteur Belge : 2021043531.
+
+[49] Natalia Andrienko and Gennady Andrienko. Visual analytics of mo-
+     vement : An overview of methods, tools and procedures. Information
+     Visualization, 12(1) :3–24, 2013.
+Annexes
+Liste des pharmacies                                                        91
+
+
+.1    Liste des pharmacies
+La liste des pharmacies est disponible sous l’url suivante LstP harmaciee xt.pdf
+
+
+
+
+                      Figure 1 – Liste des pharmacies
+
+
+.2    Site web
+Une liste de site pour la conversion de données est disponible Outils de
+conversion
+
+
+.3    Exemple de fichiers json
+
+
+
+
+                    Figure 2 – Fichier json standardisé
+Liste des distributeurs dans la ville de Bruxelles             92
+
+
+.4   Liste des distributeurs dans la ville de Bruxelles
+
+
+
+
+           Figure 3 – Liste des distributeurs dans bruxelles
+
+
+.5   Ecran principal de l’outil
+                                            Ecran principal de l’outil
+
+
+
+
+Figure 4 – Interface principal de l’outil
+                                            93
+

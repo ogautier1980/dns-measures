@@ -1,0 +1,2319 @@
+                          Institutional Repository - Research Portal
+                          Dépôt Institutionnel - Portail de la Recherche
+                   researchportal.unamur.be
+     University of Namur
+
+
+
+
+                                                      THESIS / THÈSE
+
+     MASTER EN SCIENCES INFORMATIQUES
+
+
+     Reconception de QUIC pour supporter le zero-copy similaire à TCPLS
+
+
+
+
+Author(s) - Auteur(s) :
+     SOSSON, Thomas
+
+     Award date:
+     2024
+
+
+     Awarding institution:
+     Universite de Namur
+Supervisor - Co-Supervisor / Promoteur - Co-Promoteur :
+     Link to publication
+
+
+
+
+Publication date - Date de publication :
+
+
+
+Permanent link - Permalien :
+
+
+
+Rights / License - Licence de droit d’auteur :
+
+     General rights
+     Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+     and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+             • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+             • You may not further distribute the material or use it for any profit-making activity or commercial gain
+             • You may freely distribute the URL identifying the publication in the public portal ?
+     Take down policy
+     If you believe that this document breaches copyright please contact us providing details, and we will remove access to the work immediately
+     and investigate your claim.
+
+Bibliothèque   Universitaire
+     Download date: 23. mars. 2026Moretus Plantin
+                                UNIVERSITÉ DE NAMUR
+                                  Faculté d’informatique
+                                Année académique 2022-2023
+
+
+
+
+                    Reconception de QUIC pour supporter le
+                         zero-copy similaire à TCPLS
+
+
+                                       Thomas Sosson
+
+
+
+
+                 ........................ (Signature pour approbation du dépôt - REE art. 40)
+
+                 Promoteur : Florentin Rochet
+
+
+
+
+Mémoire présenté en vue de l’obtention du grade de Master 60 en Sciences Informatiques
+
+
+
+
+                       Faculté d’Informatique – Université de Namur
+
+               RUE GRANDGAGNAGE, 21 ● B-5000 NAMUR(BELGIUM)
+ Remerciements
+    Je voudrais remercier dans un premier temps mon promoteur de mémoire Mr. Florentin ROCHET
+qui a cadré et validé ce travail, mais qui a également été très disponibilite et encourageant durant la
+réalisation de celui-ci.
+
+   Béatrice LEDGER, pour avoir relu et corrigé mon mémoire. Ses conseils de rédaction ont été très
+précieux ainsi que son support moral.
+
+
+
+
+                                                                                                     2
+ Résumé
+    Ce mémoire explore l’application de l’optimisation zero-copy, initialement développée pour le pro-
+tocole TCPLS, au protocole QUIC. L’objectif est d’améliorer les performances de QUIC en réduisant
+le nombre de copies de données lors de la réception, tout en démontrant la faisabilité de transposer
+cette technique entre protocoles. L’étude commence par une analyse approfondie des protocoles exis-
+tants (TCP, UDP, TLS) et leurs limitations, notamment en termes de latence et d’extensibilité. Elle
+examine ensuite les nouveaux protocoles TCPLS et QUIC, conçus pour surmonter ces limitations. Avec
+une attention particulière portée au mécanisme de zero-copy dans TCPLS afin de mieux comprendre
+les conditions d’application de cette optimisation réseau. Cette étude réalisée a permis de contribuer
+à la documentation du zero-copy et d’établir un plan d’action afin de transposer cette optimisation
+à QUIC. Un début de l’implémentation du zero-copy dans QUIC a été réalisé dans la librairie Java
+Kwik. Les principales étapes ont inclus l’ajout d’une nouvelle version QUIC, l’inversion des frames pour
+permettre la lecture des données de droite à gauche, et la modification du système de buffer. Des tests
+unitaires et d’intégration ont été développés pour valider ces changements. Les résultats montrent que
+l’inversion des frames, première étape vers l’implémentation complète du zero-copy, n’a pas eu d’impact
+négatif sur les performances de QUIC. Cela suggère que l’application complète du zero-copy pourrait
+potentiellement améliorer les performances sans compromettre l’efficacité existante du protocole.
+
+Mots-clés : Zero-copy, QUIC, TCPLS, Optimisation réseau, Protocoles
+
+
+
+
+ Abstract
+    This study explores the application of zero-copy optimization, initially developed for the TCPLS
+protocol, to the QUIC protocol. The objective is to improve QUIC’s performance by reducing the
+number of data copies during reception, while demonstrating the feasibility of transposing this tech-
+nique between protocols. The study begins with an in-depth analysis of existing protocols (TCP, UDP,
+TLS) and their limitations, particularly in terms of latency and extensibility. It then examines the new
+TCPLS and QUIC protocols, designed to overcome these limitations. Special attention is given to the
+zero-copy mechanism in TCPLS to better understand the conditions for applying this network optimi-
+zation. This study has contributed to the documentation of zero-copy and established an action plan
+to transpose this optimization to QUIC. An initial implementation of zero-copy in QUIC was carried
+out using the Java library Kwik. The main steps included adding a new QUIC version, inverting frames
+to allow right-to-left data reading, and modifying the buffer system. Unit and integration tests were
+developed to validate these changes. The results show that the frame inversion, the first step towards
+full zero-copy implementation, did not negatively impact QUIC’s performance. This suggests that the
+complete application of zero-copy could potentially improve performance without compromising the
+protocol’s existing efficiency.
+Keywords : Zero-copy, QUIC, TCPLS, Network optimisation, Protocols
+
+
+
+
+                                                                                                      3
+Table des matières
+1 Introduction                                                                                          7
+
+2 Objectifs de la recherche                                                                             8
+
+3 Présentation des technologies clés                                                                     8
+  3.1 TCP (Transmission Control Protocol) . . . . . . . . . . . . . . . . . . . . . . . . . . .          8
+      3.1.1 Principes de fonctionnement . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        8
+      3.1.2 Caractéristiques clés . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      9
+      3.1.3 Structure des segments TCP . . . . . . . . . . . . . . . . . . . . . . . . . . . .          10
+      3.1.4 Utilisation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   11
+  3.2 UDP (User Datagram Protocol) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        11
+      3.2.1 Principes de fonctionnement . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       11
+      3.2.2 Caractéristiques clés . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     11
+      3.2.3 Structure des datagrammes UDP . . . . . . . . . . . . . . . . . . . . . . . . . .           11
+      3.2.4 Utilisation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   12
+  3.3 TLS (Transport Layer Security) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      12
+      3.3.1 Principes de fonctionnement . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       12
+      3.3.2 Caractéristiques clés . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     12
+      3.3.3 Utilisation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   13
+  3.4 Les problèmes du TCP/TLS . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        13
+  3.5 TCPLS (Transmission Control Protocol Layer Security) . . . . . . . . . . . . . . . . .            14
+      3.5.1 Améliorations du TCP . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        14
+      3.5.2 En résumé . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     15
+  3.6 QUIC (Quick UDP Internet Connections) . . . . . . . . . . . . . . . . . . . . . . . . .           15
+      3.6.1 Handshake . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       16
+      3.6.2 Multiplexing des streams . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        18
+      3.6.3 Authentification et chiffrement . . . . . . . . . . . . . . . . . . . . . . . . . . .       19
+      3.6.4 Gestion des pertes de paquets . . . . . . . . . . . . . . . . . . . . . . . . . . . .       20
+      3.6.5 Contrôle de flux . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      21
+      3.6.6 Contrôle de congestion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      21
+      3.6.7 Migration de connexion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        21
+
+4 Zero-copy                                                                                             21
+  4.1 Zero-copy TCPLS . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       21
+  4.2 Conditions d’application du zero-copy TCPLS . . . . . . . . . . . . . . . . . . . . . . .         22
+  4.3 Particularité du TCPLS permettant le zero-copy . . . . . . . . . . . . . . . . . . . . .          23
+  4.4 Problèmes avec QUIC et le zero-copy . . . . . . . . . . . . . . . . . . . . . . . . . . . .       25
+
+5 Implémentation du zero-copy                                                                           25
+  5.1 Les modifications à prévoir . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     26
+  5.2 Préparatif avant implémentation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       26
+      5.2.1 Choix de la librairie QUIC . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      27
+      5.2.2 Tests de la stack . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     27
+  5.3 Implémentation des frames inversées dans Kwik . . . . . . . . . . . . . . . . . . . . . .         30
+      5.3.1 Ajout d’une nouvelle version QUIC . . . . . . . . . . . . . . . . . . . . . . . . .         30
+      5.3.2 Inversion des entiers à longueur variable . . . . . . . . . . . . . . . . . . . . . .       31
+      5.3.3 Inversion des frames . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      36
+  5.4 Test de l’inversion des frames . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    39
+  5.5 Tests de performance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    43
+      5.5.1 Ajout de métriques . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      44
+      5.5.2 Implémentation des tests . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        44
+
+
+                                                                                                         4
+         5.5.3   Résultat des tests . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   45
+
+6 Travaux futures                                                                                           47
+  6.1 Positionnement des frames de contrôle . . . . . . . . . . . . . . . . . . . . . . . . . . .           47
+  6.2 Exposition de l’ID du stream . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .          49
+  6.3 Gestion de l’ordre de réception des paquets . . . . . . . . . . . . . . . . . . . . . . . .           49
+  6.4 Points manquants . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        50
+
+7 Discussion                                                                                                50
+
+8 Conclusion                                                                                                50
+  8.1 Rappel de la recherche . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        50
+  8.2 Démarche . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        51
+  8.3 Résultats . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       51
+  8.4 Limites de l’étude . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      51
+  8.5 Annexes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       54
+      8.5.1 Code du projet . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .          54
+
+
+
+
+                                                                                                             5
+Acronymes
+
+  API Application Programming Interface
+
+  CA Certificate authority
+
+  CLI Command Line Interface
+
+  CPU Central Processing Unit
+
+  IDE Integrated Development Environment
+
+  IP Internet Protocol
+
+  NAT Network Address Translation
+
+  QUIC Quick UDP Internet Connections
+
+  SSL Secure Sockets Layer
+
+  TCP Transmission Control Protocol
+
+  TCPLS Transmission Control Protocol Layer Security
+
+  TLS Transport Layer Security
+
+  UDP User Datagram Protocol
+
+
+
+
+                                                       6
+1    Introduction
+      Les protocoles réseaux évoluent à travers les années afin d’améliorer leurs efficacités. Quand
+on parle d’efficacité, on parle de la réduction en terme de latence. Effectivement, cette latence freine
+l’amélioration de l’expérience utilisateur [14] mais également l’expansion des applications web à grande
+échelle [8]. Un autre facteur qui nous intéresse plus particulièrement dans ce travail est l’amélioration
+de la vitesse de traitement des données.
+
+       Un facteur limitant à cette amélioration de l’efficacité est le protocole TCP qui est majoritai-
+rement utilisé dans l’échange des données sur Internet car il est le protocole sous-jacent à HTTP
+[19][4][24]. Ce protocole possède peu de marge d’amélioration car les changements sont très complexes
+dû à l’ossification du protocole. Beaucoup de systèmes intermédiaires interagissent avec le protocole,
+ce qui veut dire que dans le cas d’une mise à jour du TCP, ces systèmes intermédiaires doivent éga-
+lement être mis à jours afin de supporter cette nouvelle version. L’ossification de l’implémentation
+du TCP réduit également les possibilités d’amélioration. La librairie TCP se trouve dans le kernel,
+c’est-à-dire dans le coeur des systèmes. Ceci implique que le système entier doit être mis à jour afin
+de mettre à jour TCP. TCP permet des améliorations via les extensions mais celles-ci sont limitées en
+nombre à cause de la taille du header TCP. TCP possède un problème d’ambiguïté de retransmission.
+Les segments retransmis portent les mêmes numéros, ce qui porte à confusion. Le multiplexage TCP,
+permettant la transmission de plusieurs flux de données sur une même connexion, présente également
+des inconvénients. En cas de problème de transmission sur un flux, c’est l’ensemble des données qui se
+retrouve en attente, impactant ainsi l’efficacité globale du transfert.
+
+       De nouvelles méthodes d’optimisation des protocoles de communication sont continuellement
+recherchées et développées afin d’améliorer l’efficacité des réseaux. Ce mémoire va se pencher plus par-
+ticulièrement sur deux nouveaux protocoles qui ont vu le jour. D’un côté le protocole TCPLS [23] qui
+va non seulement intégrer TLS directement dans le protocole TCP, ceci afin de profiter de la fiabilité
+de la transmission des données du TCP mais également de l’aspect sécurité du TLS tout en réduisant
+le nombre d’échanges avant la première transmission de données. Ce protocole va également résoudre
+les problèmes liés au TCP tels que l’ossification du protocole et de son implémentation, le délai de
+blocage en tête de ligne et le délai de retransmission de segment mais aussi la limite du nombre d’ex-
+tensions. TCPLS va également ajouter de nouvelles fonctionnalités telles que la migration de connexion
+et la multi-connexion. Une dernière amélioration qui sera la plus importante pour ce mémoire est le
+zero-copy. Celui-ci réduit, si les conditions sont remplies, le nombre de copies des données entre les
+buffers afin d’optimiser la réception des données. Et de l’autre côté le protocole QUIC [16], qui vise
+également à réduire la latence non pas en se basant sur TCP mais sur UDP. Malgré un design basé
+sur UDP, QUIC possède les propriétés du TCP comme la fiabilité de transmission, le multiplexage,
+la détection d’erreur, le contrôle de flux, le contrôle de congestion mais également la sécurité du TLS
+(authentification, confidentialité, intégrité). Ceci tout en résolvant les différents problèmes du TCP.
+
+      Ce mémoire se penche plus particulièrement sur l’application de l’optimisation de zero-copy in-
+troduite par Rochet et al. [23] avec le protocole TCPLS, au protocole QUIC. Et plus précisément à
+son implémentation Java nommée Kwik. Cette optimisation, permettrait de faire un pas de plus dans
+l’amélioration de la vitesse de transfert de données et dans ce cas-ci la vitesse de réception des données.
+Le but de cette recherche est, premièrement, de rassembler les informations nécessaire afin d’appliquer
+l’optimisation dans un nouveau contexte. Et démontrer la faisabilité de transposer aisément cette opti-
+misation de zero-copy à QUIC. Ce protocole largement utilisé sur le web et faisant partie de la nouvelle
+RFC HTTP3 et qui tend à améliorer les performances des transfert de données, le zero-copy serait un
+pas de plus vers cette amélioration. La pertinence de cette recherche est soulignée par cette nécessité
+croissante de la réduction du coup du traitement des données des communications réseau.
+
+     Après cette introduction, le document expliquera l’objectif du mémoire. Il présentera ensuite de
+manière détaillée les technologies clés telles que TCP, UDP, TLS, TCPLS et QUIC. Un focus sera mis
+
+                                                                                                         7
+sur l’explication approfondie du principe de zero-copy. Le document décrira ensuite l’implémentation
+pratique de cette optimisation au sein de la librairie Kwik. Une évaluation des performances de cette
+implémentation suivra. La conclusion synthétisera les résultats obtenus. Elle discutera également des
+implications de ces découvertes pour la recherche future.
+
+
+
+2     Objectifs de la recherche
+       Cette recherche est principalement motivée par la volonté de démontrer la faisabilité de l’ap-
+plication de l’optimisation de zero-copy au protocole QUIC. Le but premier de cette optimisation est
+d’améliorer les performances lors de la réception de données. Ces performances seront étudiées afin de
+valider cette amélioration. L’intégration de cette optimisation se fera dans Kwik, une implémentation
+du protocole QUIC écrite en Java. Le but est également d’approfondir la compréhension du zero-copy
+de TCPLS et de documenter les étapes nécessaires à sa transposition dans un nouveau protocole. Plus
+globalement, cette recherche a également pour but de promouvoir l’adoption plus large de techniques
+d’optimisation avancées dans le développement de logiciels réseau, en mettant en lumière leur impact
+bénéfique sur les performances des systèmes de communication.
+
+        La recherche se déroulera comme suit :
+
+    1. L’étude des différents protocoles réseaux actuellement utilisés sur le web tel que TCP, UDP, TLS
+       et leurs problèmes. Mais aussi l’étude des nouveaux protocoles TCPLS et QUIC afin de mieux
+       les comprendre et d’implémenter au mieux l’optimisation de zero-copy.
+    2. L’étude du zero-copy du TCPLS, ces conditions d’application ainsi qu’une réflexion sur son
+       application dans le protocole QUIC.
+    3. Début de l’implémentation du zero-copy dans Kwik et la mise en oeuvre de tests afin d’assurer
+       du bon fonctionnement de la librairie.
+    4. L’élaboration et l’implémentation de scénarios de tests dans la librairie Kwik.
+    5. Test de l’impacte en terme de performance de ce début d’implémentation du zero-copy via les
+       scénarios de tests précédemment créés.
+    6. Analyse des résultats.
+    7. Conclusion.
+
+
+
+3     Présentation des technologies clés
+       Le but de cette section est de parcourir les différentes technologies réseaux actuellement utilisées
+dans le transfert de données et de présenter leurs faiblesses. Les nouveaux protocoles réseaux tels que
+TCPLS et QUIC qui tendent à résoudre les problèmes de latence web vont ensuite être présentés
+ainsi que les améliorations qu’ils apportent Cette étude des protocoles permettra de mieux comprendre
+l’environnement dans lequel le zero-copy a été appliqué et l’environnement dans lequel il doit être
+appliqué.
+
+3.1     TCP (Transmission Control Protocol)
+3.1.1     Principes de fonctionnement
+      Le Transmission Control Protocol (TCP), défini dans la RFC 9293 [13], est le protocole de com-
+munication le plus utilisé sur internet. Il assure une transmission fiable et ordonnée des données entre
+applications. TCP est conçu pour fonctionner par dessus le protocole IP [2], offrant une couche d’abs-
+traction qui simplifie le développement d’applications réseau.
+
+
+
+
+                                                                                                         8
+      TCP établit une connexion entre l’émetteur et le récepteur afin de permettre le transfert de
+données. Ceci en utilisant un mécanisme appelé "three-way handshake". Ce processus garantit que les
+deux parties sont prêtes à communiquer et synchronisent leurs numéros de séquence initiaux, établissant
+ainsi une connexion bidirectionnelle.
+
+3.1.2     Caractéristiques clés
+        TCP possède les caractéristiques suivantes :
+
+  — Orienté connexion : TCP est un protocole orienté connexion, ce qui signifie qu’une connexion
+    doit être établie entre les deux extrémités (client et serveur) avant que les données puissent être
+    échangées. Cette connexion est établie grâce au « three-way handshake ». Il implique un échange
+    de messages SYN (synchronisation) et ACK (acknowledgment) entre le client et le serveur pour
+    synchroniser les numéros de séquence initiaux et confirmer l’établissement de la connexion.
+
+
+
+
+                                 Figure 1 – Three-way handshake [13]
+
+
+  — Transmission fiable : TCP assure la fiabilité de la transmission. Chaque segment de données
+    envoyé est accusé de réception par le destinataire. Cette accusé de réception est fait via une
+    opération appelé ACK. Si l’émetteur ne reçoit pas d’accusé de réception dans un certain délai, il
+    retransmet le segment.
+
+  — Contrôle de flux : Le contrôle de flux permet d’empêcher le récepteur d’être submergé de
+    données lors d’une communication avec un émetteur. TCP utilise un système de "window" pour
+    éviter de submerger le récepteur. Le récepteur annonce sa capacité de réception, permettant à
+    l’émetteur d’ajuster son débit. Ceci est fait en indiquant, lors de l’envoi des ACK, les numéros
+    de séquences qui sont acceptés. Ce qui limite le nombre de byte qui peuvent être envoyés.
+
+  — Contrôle de congestion : Le contrôle de congestion est un mécanisme qui permet d’ajuster
+    constamment le débit d’émission des données en fonction des conditions du réseau. Ceci afin de
+    maximiser l’utilisation de celui-ci en évitant de le surcharge. Actuellement, les implémentations
+    TCP des stacks Linux, Windows et Apple utilisent CUBIC[26] comme algorithme de gestion de
+    contrôle par défaut.
+
+  — Segmentation des données : Les données sont segmentées en blocs plus petits pour la trans-
+    mission. Chaque segment contient un header TCP qui comprend des informations importantes
+    comme les numéros de séquence et d’accusé de réception, les flags de contrôle, et les tailles de
+    fenêtre.
+
+  — Correction d’erreur : Le checksum contenu dans le header TCP permet de détecter des erreurs
+    dans les headers et les données. Si une erreur est détectée, le segment est rejeté et doit être
+    retransmis.
+
+
+
+
+                                                                                                     9
+3.1.3    Structure des segments TCP
+        Un segment TCP se compose d’un header et d’une section de données (Voir figure 2).
+
+
+
+
+                               Figure 2 – Format de l’entête TCP[13]
+
+  — Source Port (16 bits) : Le port de la source
+
+  — Destination Port (16 bits) : Le port la destination.
+
+  — Numéro de séquence (32 bits) : Position du premier octet de données dans ce segment.
+
+  — Numéro d’accusé de réception (32 bits) : Si le bit de contrôle "ACK" est présent, ce champs
+    contient la valeur du numéro de séquence du prochain segment.
+
+  — Data offset (4 bits) : Indique la taille de l’entête en mots de 32 bits.
+
+  — Reserved (4 bits) : Ces bits sont réservés pour une utilisation future.
+
+  — Flags (6 bits) : Contrôlent divers aspects de la connexion (par exemple : SYN, ACK, FIN).
+
+  — Window (16 bits) : Nombre d’octets que le récepteur est prêt à accepter.
+
+  — Checksum (16 bits) : Vérifie l’intégrité du header et des données.
+
+  — Urgent Pointer (16 bits) : Indique la présence de données urgentes.
+
+  — Options (variable) : Les options qui se trouvent en fin de header ont une taille variable mais
+    elles restent un multiple de 8bits. La liste des options est définie et maintenue par l’IANA. La
+    valeur du data offset, qui représente la taille du header, est de maximum 4 bits. La valeur maximal
+    est donc 15, ce qui veut dire un header de maximum 4*15 byte donc 60 bytes. La taille d’un
+    header standard hors options est de 20 bytes ce qui laisse la place à 40 bytes d’options.
+
+  — Data (variable) : Données utilisateur transportées par le segment.
+
+      Cette structure permet à TCP de gérer efficacement le flux de données, d’assurer la fiabilité de
+la transmission et de s’adapter aux conditions du réseau.
+
+
+
+                                                                                                    10
+3.1.4     Utilisation
+      TCP est largement utilisé pour de nombreuses applications internet, notamment le web (HTTP/HTTPS),
+le transfert de fichiers (FTP), et les e-mails (SMTP, IMAP, POP3). Sa robustesse et sa fiabilité en
+font un choix privilégié pour les applications nécessitant une transmission de données sans erreur, bien
+que cela s’accompagne d’une certaine complexité et d’une surcharge par rapport à des protocoles plus
+simples comme UDP. TCP possède également son lot de problèmes décrit plus tard dans la section 3.4.
+
+3.2     UDP (User Datagram Protocol)
+3.2.1     Principes de fonctionnement
+      L’User Datagram Protocol (UDP), défini dans la RFC 768 RFC768 [1], est un protocole de
+transport simple et léger. Contrairement à TCP, UDP offre un service de datagrammes non fiable et
+sans connexion, privilégiant la rapidité et la simplicité plutôt que la fiabilité.
+
+3.2.2     Caractéristiques clés
+        UDP fonctionne selon les principes suivants :
+
+  — Sans connexion : UDP n’établit pas de connexion préalable entre l’émetteur et le récepteur.
+    Chaque datagramme est traité indépendamment des autres.
+
+  — Sans confirmation : Aucun accusé de réception est envoyé lorsque le destinataire reçoit un
+    datagram.
+
+  — Non fiable : Il n’y a pas de garantie de livraison, d’ordre de réception, ou de protection contre
+    les doublons. Les datagrammes peuvent être perdus, dupliqués ou arriver dans le désordre.
+
+  — Simple et rapide : L’absence de mécanismes complexes de contrôle de flux et de congestion
+    permet une transmission rapide avec une faible latence.
+
+
+3.2.3     Structure des datagrammes UDP
+
+
+
+
+                        Figure 3 – Format d’un header de datagramme UDP[1]
+
+  — Source Port : Le port source est un champ facultatif. Lorsqu’il est significatif, il indique le port
+    du processus d’envoi et peut être considéré comme le port auquel une réponse doit être adressée
+    en l’absence de toute autre information. S’il n’est pas utilisé, la valeur zéro est insérée.
+
+  — Destination Port : Le port de destination dans le contexte d’une adresse de destination internet
+    particulière.
+
+  — Length : Lenght est la taille de l’user datagram, comprenant le header et les data. La valeur
+    minimum étant 8.
+
+                                                                                                     11
+  — Checksum : La somme de contrôle est une valeur calculée qui permet de vérifier l’intégrité
+    des données envoyées dans un réseau. Cette valeur est calculée en divisant le datagram udp en
+    segment de 16 bits. Si le nombre total de bits n’est pas un multiple de 16, des zéros sont ajoutés à
+    la fin pour compléter le dernier segment. Les segments sont ensuite additionnés. Dans le cas d’un
+    débordement, le bit de trop est rajouté à droite de l’addition. Le complément de cette somme est
+    ensuite calculé (inversion des bits). Cette valeur calculée est le checksum. Ce chesksum reste une
+    faible protection car il est simple d’avoir le bon checksum malgré des erreurs dans le datagram.
+
+
+3.2.4     Utilisation
+       L’UDP est utilisé dans les applications qui nécessitent un transfert de données rapide et qui n’ont
+pas besoin de retransmission en cas d’erreur. Par exemple, UDP est parfait par les télécommunications
+ou la lecture de vidéo. En résumé, UDP est un protocole simple et rapide grâce à son envoi de données
+sans connexion. Toutefois, il arrive que des paquets se perdent.
+
+3.3     TLS (Transport Layer Security)
+3.3.1     Principes de fonctionnement
+      Le Transport Layer Security (TLS), défini dans la RFC 8446 [20] pour sa version la plus récente
+(TLS 1.3), est un protocole cryptographique conçu pour sécuriser les communications sur les réseaux
+informatiques. Ceci grâce à ses capacités de chiffrement et d’authentification. TLS est le successeur de
+SSL (Secure Sockets Layer) et est largement utilisé pour sécuriser le trafic web, les e-mails, et d’autres
+protocoles de communication.
+
+3.3.2     Caractéristiques clés
+        Les principales caractéristiques du TLS sont les suivantes :
+
+  — Négociation de la Connexion : Le processus débute par un handshake TLS, au cours duquel
+    le client et le serveur s’accordent sur les paramètres de la session. Cela inclut le choix d’un
+    algorithme de chiffrement, l’échange de clés cryptographiques et la vérification de l’identité du
+    serveur (et éventuellement du client) à l’aide de certificats numériques.
+
+  — Chiffrement des données : Après la négociation réussie, les données transmises entre le client
+    et le serveur sont chiffrées selon les paramètres convenus. Cela empêche les écoutes indiscrètes et
+    garantit que seuls le client et le serveur peuvent lire le contenu des messages.
+
+  — Intégrité des données : TLS fournit également des mécanismes pour s’assurer de l’intégrité
+    des données, s’assurant que les données n’ont pas été altérées pendant le transit.
+
+  — Utilisation de certificats numériques : Les certificats numériques, généralement émis par des
+    autorités de certification (CA), jouent un rôle crucial dans la sécurisation des connexions TLS.
+    Ils permettent la vérification de l’identité du serveur (et éventuellement du client), contribuant
+    ainsi à prévenir les attaques de type "homme du milieu".
+
+  — Successeur de SSL : TLS est le successeur de SSL (Secure Sockets Layer). Bien que souvent
+    utilisés de manière interchangeable dans le langage courant, TLS et SSL sont techniquement
+    différents, TLS étant une version améliorée et plus sécurisée de SSL.
+
+
+
+
+                                                                                                       12
+3.3.3    Utilisation
+     Le TLS est devenu une norme de sécurité sur internet, protégeant la confidentialité et l’intégrité
+des données échangées entre des millions d’utilisateurs et de serveurs chaque jour. Les navigateurs
+bloquent d’ailleurs par défaut les pages internet non sécurisées.
+
+3.4     Les problèmes du TCP/TLS
+      Les problèmes suivant vont motiver l’apparition de nouveaux protocoles tels que QUIC [17] et le
+TCPLS [23]. Ces protocoles visent à proposer des solutions aux limitations des protocoles actuels. Le
+protocole le plus commun est le TCP et voici quelques problèmes liés :
+
+  — Ossification du protocole : Les middleboxes sont devenus accidentellement un frein au change-
+    ment des protocoles réseaux. Par exemple, le firewall bloque les messages qui ne sont pas familiers
+    pour des raisons de sécurités. Le NAT qui réécrit le header de la couche transport. Toutes ces
+    interventions au niveau protocole obligent les nouveaux protocoles a explicitement ajouter le
+    support de ces intermédiaires. Toute donnée non protégée telle que le header du segment TCP
+    peut être inspecté et modifié par les intermédiaires ce qui rend le TCP compliqué à changer sans
+    les impacter. Il est donc difficile d’introduire une nouvelle version d’un protocole ou un nouveau
+    protocole car cela obligerait les systèmes intermédiaire de se mettre à jour. L’adoption peut être
+    très longue et complexe. Le TCP souffre également d’un problème d’extensibilité dû à la restric-
+    tion de taille de l’entête [5].
+
+  — Ossification de l’implémentation : Internet évolue en permanence et les attaques dans les
+    différentes couches réseaux sont toujours un danger. Le TCP devrait pouvoir être facilement mis
+    à jour afin de patcher les brèches si nécessaire ou simplement être amélioré. Malheureusement
+    l’implémentation du TCP se trouve au niveau du kernel du système d’exploitation. Ce qui veut
+    dire que chaque déploiement d’une nouvelle version du TCP requière une mise à jour du système
+    d’exploitation. Ce couplage alourdit les mises à jours TCP.
+
+  — Délais du handshake : La stack TCP et TLS sont de plus en plus utilisés avec la généralisation
+    du HTTPS (Figure 4). Cependant, l’ajout d’une couche de sécurité supplémentaire augmente
+    la latence sur le web. Le TCP a besoin au minimum d’un round-trip avant qu’une application
+    puisse envoyer des données. Le TLS, qui permet de sécuriser les échanges de données, rajoute
+    deux round-trip avant leurs échanges (réduit à un round-trip avec TLS 1.3 [20] et TCP Fast
+    Open [7]). Il y a donc au minimum deux round-trip utilisés uniquement pour la création de la
+    connexion avant même d’échanger les données, ce qui impacte fortement l’échange des petites
+    données.
+
+
+
+
+               Figure 4 – Augmentation du trafique sécurisé des serveurs Google [17]
+
+
+  — Délais de retransmission de segment : Un numéro de séquence est attribué à chaque segment
+
+                                                                                                    13
+        TCP. Ce numéro permet d’augmenter la fiabilité lors du transfert car celui-ci représente l’ordre
+        des segments. Un segment manquant est facilement identifiable : si l’on reçoit le paquet numéro
+        3 et que le segment précédent était le numéro 1, on sait que le 2 est manquant et qu’il va devoir
+        être de nouveau transféré. Le problème de TCP est que le segment manquant va être transféré
+        avec le même numéro de séquence que le segment original. Le récepteur d’un ACK TCP ne peut
+        pas déterminer si l’ACK a été envoyé pour la transmission originale ou pour une retransmission,
+        et la perte d’un segment retransmis est généralement détectée via un délai d’attente coûteux.
+        Cette confusion provoque le problème d’ambiguïté de retransmission.
+
+  — Délais de blocage en tête de ligne : Le protocole HTTP/1.1 [19] recommande aux clients
+    de limiter le nombre de connexion TCP afin de réduire la latence. Pour réduire cette latence, le
+    HTTP/2 [24] va introduire le multiplexe et conseiller aux client d’utiliser qu’une seule connexion
+    TCP 7. Le problème avec ce multiplexe est que le stream est complètement bloqué lorsqu’il y
+    a une perte de donnée. Donc lorsque trois réponses sont envoyées via HTTP/2 dans le même
+    stream TCP, s’il y a une perte d’un paquet, le stream est bloqué en attendant le renvoi de la
+    donnée. Ce qui augmente la latence.
+
+  — Taille du header : Le nombre de bytes dans le header du TCP alloué aux extensions est limité
+    à 40. Ce qui limite rapidement le nombre d’améliorations possible.
+
+      Tous ces problèmes participent à la latence croissante du web et réduisent les possibilités d’in-
+novations du TCP.
+
+3.5     TCPLS (Transmission Control Protocol Layer Security)
+      Le TCPLS [23] est un protocole visant à intégrer TLS directement dans le protocole TCP. Ceci
+afin de profiter de la fiabilité de la transmission des données du TCP mais également de l’aspect sécurité
+du TLS qui permet de sécuriser les communications réseau. Cette combinaison n’a pas pour seul but
+de sécuriser la couche réseau mais permet également de l’améliorer. Pour ce qui est de la structure du
+TCPLS, les frames sont inclus dans un record TLS. Un record peut contenir une ou plusieurs frames.
+
+3.5.1     Améliorations du TCP
+      Un des changements qui va permettre de fluidifier le TCP est le système de stream proposé par
+TCPLS. Les streams sont une abstraction manipulée par l’application qui possède son buffer et sa
+connexion TCP. Le TCP amène également un nouveau concept de session qui peut contenir plusieurs
+connexion TCP. Ceci est possible en étendant le TLS handshake. L’application a le pouvoir de mani-
+puler librement les différents streams TCPLS. TCPLS apporte d’autre améliorations telles que :
+
+  — Suppression de l’ossification : Les frames TCPLS étant contenus dans les records TLS chiffrés
+    permettent de toujours être compatible avec les middleboxes. Car une fois le handhshake terminé
+    les middleboxes ne savent pas faire la différence entre le TLS et le TCPLS. Le TCPLS ne modifie
+    pas le format du TCP afin d’être résistant aux middleboxes. Ceci permet de répondre au problème
+    d’ossification du réseau. Un autre avantage est que la librairie TCPLS se trouve dans l’espace
+    utilisateur et non dans le kernel. Cette particularité permet de répondre au problème d’ossification
+    de l’implémentation de TCP.
+
+  — Extension du nombre d’option : Les records TLS étant placés dans le payload de TCP, les
+    nouvelles options n’ont plus cette restriction de taille telles que les options du header TCP.
+
+  — Zero-copy : TCPLS introduit un nouveau concept de zero-copy. Celui-ci permet une amélioration
+    des performances en terme de traitement des données en diminuant le nombre de copies de celles-
+    ci. Ceci étant fait en plaçant les frames de contrôle inutiles à l’application en fin de record. Cette
+
+
+
+                                                                                                       14
+        manipulation permet de décrypter les records directement dans le buffer de l’application en
+        écrasant les frames de contrôle grâce à une manipulation de son offset.
+
+  — Multiplexage des streams : TCPLS permet le multiplexage de multiples stream de données
+    sur une seule connexion TCP. Cela peut améliorer l’efficacité de la transmission de données, en
+    particulier dans les scénarios où de nombreux petits messages ou requêtes doivent être envoyés.
+    Un stream TCPLS est constitué d’une séquence de stream de record TCPLS chiffrés avec leurs
+    contextes cryptographiques. Ce contexte cryptographique séparé permet de chiffrer et décrypter
+    des données en concurrence par stream et dans une même session.
+
+  — Migration de connexion : Avec TCPLS, il est possible de migrer une session TCP d’une adresse
+    IP à une autre sans interrompre la connexion. Cela est particulièrement utile pour les appareils
+    mobiles qui changent de réseau (par exemple, passer d’un réseau Wi-Fi à un réseau téléphonique).
+    Ceci est possible grâce à la session TCPLS qui permet de joindre plusieurs connexions TCP à
+    une même session. Si une connexion s’arrête ou ne fonctionne plus, la session peut être reprise
+    via une nouvelle connexion TCP (failover). Les streams étant manipulables par l’application,
+    l’application elle même pourrait déclencher une migration de connexion. Par exemple dans le
+    cas ou un smartphone a le choix entre une connexion LTE et une connexion Wifi, il pourrait
+    choisir de passer par le plus rapide et donc de créer une nouvelle connexion. Ceci permet une
+    augmentation des performances.
+
+  — Multi-connexion : TCPLS permet aux applications de contrôler plusieurs connexions TCP
+    utilisées dans l’échange de données via la session et les streams comme expliqué ci-dessus. La
+    particularité des streams TCPLS est d’exposer les connexions directement à l’application via son
+    API. L’application peut gérer les connexions comme elle le souhaite ce qui permet de diriger ou
+    router les flux de données dans un réseau ou entre des composants informatiques afin d’optimiser
+    la performance et la gestion des ressources. Cette optimisation de performance peut se faire via
+    l’agrégation de bande passante. Cette technique consiste à combiner plusieurs connexions réseau
+    afin d’augmenter la capacité totale de transfert de données disponibles, ce qui peut améliorer la
+    vitesse de connexion globale ou la redondance du réseau.
+
+        Toutes ces améliorations sont configurables via l’API du TCPLS.
+
+3.5.2     En résumé
+      Le TCPLS est un nouveau protocole innovant qui combine la robustesse et la fiabilité de TCP
+avec la sécurité de TLS, offrant des améliorations potentielles en termes de sécurité, de performance
+et de flexibilité pour les communications.
+
+3.6     QUIC (Quick UDP Internet Connections)
+       QUIC Langley et al. [17] est un protocole réseau permettant d’améliorer les performances du trafic
+HTTPS et qui permet l’évolution des protocoles réseaux. Ce protocole remplace la stack traditionnel
+TCP, TLS et HTTP et a été designé sur une base UDP. Il possède les propriétés de TCP comme
+la fiabilité de transmission, le multiplexage, la détection d’erreur, le contrôle de flux, le contrôle de
+congestion mais également la sécurité du TLS (authentification, confidentialité, intégrité). Bien que
+peu connu, QUIC est un protocole déjà très présent sur internet (Voir figure 5).
+
+
+
+
+                                                                                                      15
+Figure 5 – Ligne du temps montrant le pourcentage d’utilisation de QUIC par le trafic de Google
+[17]
+
+
+      QUIC est conçu pour atteindre plusieurs objectifs, incluant la facilité de déploiement, la sécurité,
+et la réduction des délais lors de l’établissement de la connexion et du blocage en tête de ligne. Le
+protocole QUIC combine les phases de négociation cryptographique et de transport pour minimiser les
+RTTs de configuration. Il multiplexe plusieurs requêtes/réponses sur une seule connexion en fournissant
+à chacune son propre flux, de sorte qu’aucune réponse ne puisse être bloquée par une autre. Il chiffre
+et authentifie les paquets pour éviter les altérations par les intermédiaires et pour limiter l’ossification
+du protocole. Il améliore la récupération des pertes de données en utilisant des numéros de paquets
+uniques pour éviter l’ambiguïté des retransmissions et en utilisant un signal explicite dans les ACKs
+pour des mesures précises du RTT. Il permet aux connexions de migrer à travers des changements
+d’adresse IP en utilisant un ID de connexion pour identifier les connexions au lieu du tuple IP/port à
+5 champs. Il fournit un contrôle de flux pour limiter la quantité de données en mémoire tampon chez
+un récepteur lent et assure qu’un seul flux ne consomme pas toute la mémoire tampon du récepteur
+en utilisant des limites de contrôle de flux par flux.
+
+     Les paquets sont cryptés de manière séparée, comme les records de TLS. Le payload des paquets
+QUIC sont chiffrés avec TLS [25] mais une particularité de QUIC est d’également chiffré une partie du
+header (Voir figure 8).
+
+3.6.1   Handshake
+       Le protocole QUIC utilise une combinaison de négociations cryptographiques et de transport
+pour établir une connexion de transport sécurisée. Lors d’un handshake réussi, le client conserve des
+informations concernant l’origine des clé cryptographiques. Une origine est identifiée par l’ensemble du
+schéma URI, du nom d’hôte et du numéro de port. Lors de connexions ultérieures au même serveur,
+le client est capable d’établir une connexion cryptée sans round-trip supplémentaires, permettant ainsi
+l’envoi immédiat de données juste après le paquet du handshake client et sans attendre de réponse du
+serveur (voir figure 6). QUIC alloue un flux fiable et dédié spécifiquement pour réaliser cette négocia-
+tion cryptographique.
+
+
+
+
+                                                                                                         16
+Figure 6 – Ligne du temps des handshakes QUIC. L’initial 1-RTT, un subsequent 0-RTT et un 0-RTT
+en erreur [17]
+
+
+      Lors handshake initiale, le client n’a pas d’information concernant le serveur. Le client va de-
+voir envoyer un message "inchoate client hello" (inchoate CHLO) afin de recevoir un message "reject"
+(REJ). Ce REJ message contient la configuration du serveur qui inclut :
+
+  — Valeur publique du Diffie-Hellman public long terme : Cette valeur est utilisé dans l’al-
+    gorithme d’échange de clé de Diffie-Hellman. Celle-ci permet l’échange de clé cryptographiques
+    via un réseau publique.
+
+  — Chaîne de certificat : Cette chaîne de certificat permet d’authentifier le serveur.
+
+  — Signature du serveur : Le serveur signe la configuration utilisant une clé privée d’un certificat
+    feuille de la chaîne.
+
+  — Jeton d’adresse source : C’est un bloc de chiffrement authentifié qui inclut l’adresse IP pu-
+    bliquement visible du client ainsi qu’un horodatage effectué par le serveur. Lors de connexions
+    ultérieures, le client renvoie ce jeton au serveur, ce qui démontre la propriété de son adresse IP.
+    Ce mécanisme aide à vérifier que le client est bien le détenteur de l’adresse IP utilisée lors des
+    échanges précédents.
+
+       Une fois que le client a reçu cette configuration, il peut la vérifier à l’aide de la chaîne de certificat
+et la signature. Le client peut ensuite envoyer un message "complete client hello" (complete CHLO)
+qui contient la valeur publique et éphémère Diffie-Hellman. Toutes les clés pour une connexion sont
+établies en utilisant Diffie-Hellman. Après avoir envoyé un message "complete CHLO" le client est en
+possession des clés initiales de connexion car il peut calculer les valeurs partagées par le serveur via
+la valeur publique long terme de Diffie-Hellman et sa propre clé Diffie-Hellman privée éphémère. A
+partir de là, le client peut envoyer des données applicatives au serveur. En conservant la configuration
+du serveur et le jeton d’adresse source, lors d’une nouvelle connexion au même origine,le client peut
+maintenant envoyer des données en 0-RTT en envoyant des données chiffrés avec les clés initiales avant
+même d’attendre une réponse du serveur.
+
+      Du côté du serveur, si le handshake se passe bien, il retourne un message un message "serveur
+hello" (SHLO). Ce message est chiffré en utilisant les clés initiales et il contient la valeur Diffie-Hellman
+
+
+                                                                                                              17
+publique et éphémère du serveur. Avec la valeur publique éphémère de l’autre partie en possession, les
+deux côtés peuvent calculer les clés finales ou sécurisées pour la connexion. Lorsque le serveur envoie
+un message SHLO, il commence immédiatement à envoyer des paquets chiffrés avec les clés sécurisées.
+De même, lorsque le client reçoit ce message SHLO, il passe également à l’envoi de paquets chiffrés
+avec ces clés sécurisées. Ce processus assure que la communication entre les deux parties est protégée
+par un chiffrement renforcé dès l’établissement de la connexion. La cryptographie de QUIC offre donc
+deux niveaux de confidentialité : les données initiales du client sont chiffrées à l’aide de clés initiales,
+tandis que les données ultérieures du client et toutes les données du serveur sont chiffrées avec des
+clés sécurisées avancées. Les clés initiales offrent une protection similaire à la reprise de session TLS
+avec des tickets de session, tandis que les clés sécurisées avancées, qui sont éphémères, fournissent une
+protection encore plus grande. Finalement, le jeton d’adresse source ou la configuration du serveur
+peut expirer, ou le serveur peut changer de certificats, ce qui peut entraîner un échec de la négociation,
+même si le client envoie un CHLO complet. Dans ce cas, le serveur répond avec un message REJ,
+comme si le serveur avait reçu un CHLO incomplet et la négociation reprend à partir de là.
+
+       Un autre mécanisme intéressant de QUIC durant le handshake est la négociation de version.
+Il permet aux client et aux serveurs d’ajuster la version du protocole lors de l’établissement d’une
+connexion. Un client QUIC propose une version pour la connexion dans le premier paquet envoyé et
+utilise cette version proposée pour le reste de la négociation. Si le serveur ne prend pas en charge la
+version choisie par le client, il initie une négociation de version en renvoyant au client un paquet de
+négociation de version contenant toutes les versions supportées par le serveur, entraînant ainsi un délai
+d’un aller-retour avant l’établissement de la connexion. Ce mécanisme supprime la latence d’un aller-
+retour lorsque la version choisie par le client est compatible avec le serveur, et encourage les serveurs
+à rester à jour avec les versions les plus récentes pour éviter des retards de négociation. Pour prévenir
+les attaques par rétrogradation, la version initialement demandée par le client et la liste des versions
+supportées par le serveur sont intégrées dans la fonction de dérivation des clés utilisée par le client et
+le serveur pour générer les clés finales.
+
+3.6.2   Multiplexing des streams
+       Comme énoncé dans la section concernant les problèmes QUIC, le TCP permet d’envoyer plu-
+sieurs données dans un même stream. C’est ce que l’on appelle le multiplexage de stream. Etant donné
+que plusieurs données peuvent envoyer dans un même stream, le problème de délais de blocage en tête
+de ligne se pose. Si un fragment d’une donnée est perdu, tout le monde attend que celle ci soit renvoyé.
+Pour éviter ce problème, QUIC supporte de multiples flux au sein d’une même connexion, garantissant
+qu’un paquet UDP perdu n’affecte que les streams dont les données étaient contenues dans ce paquet.
+Les données reçues ultérieurement sur d’autres flux peuvent continuer à être rassemblées et livrées à
+l’application. Les stream QUIC offre un flux d’octets bidirectionnel fiable. Les flux sont identifiés par
+des identifiants de stream, les ID impairs pour les stream initiés par le client et les ID pairs pour ceux
+initiés par le serveur afin d’éviter les collisions. La création de stream est implicite lors de l’envoi des
+premiers octets sur un stream encore inutilisé, et la fermeture d’un stream est indiquée à l’autre partie
+par la mise en place d’un bit "FIN" sur la dernière frame. Si l’émetteur ou le récepteur détermine que
+les données sur un stream ne sont plus nécessaires, ce stream peut être annulé sans devoir mettre fin
+à toute la connexion QUIC. Bien que les stream soient fiables, QUIC ne retransmet pas les données
+d’un stream qui a été annulé.
+
+
+
+
+                                                                                                         18
+        Figure 7 – Le stream multiplexe de HTTP/2 est limité par une seule connexion TCP [9]
+
+       Un paquet QUIC est composé d’un header et d’une ou plusieurs frames (Voir figure 8). Un ou
+plusieurs paquets peuvent être encapsulés dans un datagram UDP. Le multiplexage des flux QUIC est
+réalisé en encapsulant les données des flux dans une ou plusieurs frames, et un seul paquet QUIC peut
+transporter des frames de plusieurs flux.
+
+
+
+
+Figure 8 – Structure d’un paquet QUIC de la version 35 de l’implémentation QUIC de Google. En
+rouge, le header publique authentifié mais pas chiffré. En vert, le body chiffré. [17]
+
+
+3.6.3     Authentification et chiffrement
+      Les paquets QUIC sont sécurisés par authentification et chiffrement (en grande partie). Unique-
+ment les paquets initiaux et de ré-initialisation ne le sont pas. Dans la figure 8, on peut apercevoir
+en rouge certaines informations du header qui sont bien sécurisées par authentification mais elles ne
+sont pas chiffrées. En effet, les flags, l’ID de connexion, la version et le nonce de diversification ne le
+sont pas car ils sont nécessaire au routage et au déchiffrement des paquets. Une partie du header est
+
+                                                                                                        19
+quand même protégé, en particulier le numéro du paquet, en utilisant une clé dérivée différente que
+celle utilisée pour la protection du paquet lui-même. Cette clé est utilisée est la "hp" différente de la
+IV et key.
+
+      Cette protection utilise l’algorithme AEAD (Authenticated Encryption with Associated Data)
+[25] qui est également utilisé par TLS. QUIC ne protège pas de la même manière tous les paquets :
+
+  — Paquets "Version Negotiation" : Ces paquets ne sont pas protégés cryptographiquement.
+
+  — Paquets "Retry" : Les paquets de type "Retry" utilisent l’algorithme "AEAD_AES_e128_GCM",
+    ce qui protège le paquet contre les éventuelles modifications accidentelles (les paquets corrom-
+    pues) et garanti que seule une entité ayant observé un paquet Initial peut émettre un paquet
+    Retry valide.
+
+  — Paquets "Initial" : Les paquets de type "Initial" utilisent également l’algorithme "AEAD_AES_128_GCM"
+    avec des clés dérivées de l’id de connexion de la destination du premier paquet envoyé par le client.
+
+  — Les autres paquets : Tous les autres paquets bénéficient des protections cryptographiques
+    assurant leur confidentialité et leur intégrité, en utilisant des clés et des algorithmes négociés par
+    TLS.
+
+      Les flags permettent de savoir si l’ID de connexion est présent et la longueur du champs de
+numéro de paquet. L’ID de connexion est utilisé par les load balancers pour diriger le trafic de la
+connexion vers le bon serveur et par le serveur pour récupérer l’état de la connexion. Les champs nu-
+méro de version et nonce de diversification ne sont présents que dans les premiers paquets. Le serveur
+génère le nonce de diversification et l’envoi au client dans le paquet SHLO pour ajouter de l’entropie
+à la génération de clés. Le client et le serveur utilisent le numéro de paquet comme nonce par paquet,
+ce qui est nécessaire pour authentifier et déchiffrer les paquets. Le numéro de paquet permet donc de
+déchiffrer des paquets reçus dans le désordre, de manière similaire à DTLS [21].
+
+       Toute information envoyée dans des paquets du handshake non chiffrés, telle que dans le paquet
+de négociation de version, est incluse dans la dérivation des clés de connexion finales. La manipulation
+des paquets de handshake par le réseau fait que les clés de connexion finales sont différentes chez les
+pairs, provoquant l’échec de la connexion sans le déchiffrement réussi de données d’application par
+l’une ou l’autre des parties. Les paquets de réinitialisation, envoyés par un serveur sans les clés de la
+connexion suite à des changements de routage ou des redémarrages, sont transmis sans chiffrement ni
+authentification.
+
+3.6.4   Gestion des pertes de paquets
+       QUIC assigne un nouveau numéro à chaque paquet , y compris ceux qui transportent des données
+retransmises. Ce design élimine le besoin d’un mécanisme séparé pour distinguer l’ACK d’une retrans-
+mission de celui d’une transmission originale, évitant ainsi le problème d’ambiguïté de retransmission
+de TCP. Le champs "offset" d’un paquet de type "stream" est utilisé pour l’ordonnancement de la
+livraison.
+
+      Les accusés de réception QUIC encodent explicitement le délai entre la réception d’un paquet et
+l’envoi de son accusé de réception. En combinaison avec des numéros de paquet croissants, cela permet
+une estimation précise du temps de trajet aller-retour (RTT) du réseau, ce qui aide à la détection des
+pertes. Une estimation précise du RTT peut également aider les contrôleurs de congestion sensibles
+aux délais tels que BBR [6] et PCC [10]. Les accusés de réception de QUIC prennent en charge jusqu’à
+256 blocs ACK, rendant QUIC plus résilient au réordonnancement et à la perte que TCP avec SACK
+[15].
+
+
+                                                                                                       20
+3.6.5    Contrôle de flux
+       Lorsqu’une application lit lentement les données du buffer de réception de QUIC, le contrôle
+de flux limite la taille du buffer que le récepteur doit maintenir. Un flux qui se vide lentement peut
+consommer l’ensemble du buffer de réception de la connexion, empêchant l’expéditeur d’envoyer des
+données sur d’autres flux. QUIC atténue ce potentiel blocage en tête de file entre les flux en limitant
+le buffer qu’un seul flux peut consommer. Ainsi, QUIC utilise un contrôle de flux au niveau de la
+connexion, qui limite le buffer global qu’un expéditeur peut consommer chez le récepteur sur tous les
+flux, et un contrôle de flux au niveau du stream, qui limite le buffer qu’un expéditeur peut consommer
+sur un flux donné.
+       De manière similaire à HTTP/2 [3], QUIC emploie un contrôle de flux basé sur des crédits. Un
+récepteur QUIC annonce le décalage de byte dans chaque flux jusqu’auquel le récepteur est prêt à
+recevoir des données. Au fur et à mesure que les données sont envoyées, reçues et livrées sur un flux
+particulier, le récepteur envoie périodiquement des frames de mise à jour de fenêtre qui augmentent la
+limite de décalage annoncée pour ce flux, permettant au pair d’envoyer plus de données sur ce flux. Le
+contrôle de flux au niveau de la connexion fonctionne de la même manière que le contrôle de flux au
+niveau du flux, mais les bytes livrés et le décalage le plus élevé reçu sont agrégés sur tous les streams.
+
+3.6.6    Contrôle de congestion
+     Le protocole QUIC ne propose pas de nouveau algorithme de contrôle de congestion. Tout comme
+TCP, QUIC utilise CUBIC [26].
+
+3.6.7    Migration de connexion
+      Les connexions QUIC sont identifiées par un ID de connexion de 64 bits. Ces ID permettent aux
+connexions de survivre à des changements d’adresse IP et de port du client. Ces changements peuvent
+être causés par un délai d’expiration et une reconnexion NAT ou par un changement de connectivité
+réseau du client vers une nouvelle adresse IP.
+
+
+4     Zero-copy
+       Le concept du zero-copy dans le contexte des réseaux informatiques fait référence à une technique
+d’optimisation visant à réduire le nombre de copies de données lors de la réception de celles-ci. Lors
+d’un transfert de données dans une communication client serveur, les données sont copiées plusieurs
+fois dans des buffers intermédiaires. Le zero-copy est particulièrement pertinent dans le cadre des com-
+munications à haut débit où chaque opération de copie représente un coût en termes de performances.
+
+
+4.1     Zero-copy TCPLS
+     Le zero-copy apporté par TCPLS s’applique uniquement lors de la réception de données. Cette
+optimisation permet d’éviter une copie intermédiaire lors du déchiffrement des records TLS (Voir figure
+9).
+
+
+
+
+                                                                                                       21
+                   Figure 9 – Exemple de l’application du zero-copy par TCPLS
+
+
+      Cette simplification est possible grâce à une API de TCPLS. Celle-ci permet à l’application de
+fournir un buffer, contrairement à l’API de TCP qui est plus conventionnelle car c’est la librairie du
+protocole qui fourni un pointeur vers un buffer dans lequel l’application peut aller lire les données.
+Cette modification permet au protocole d’avoir un meilleur contrôle sur le buffer.
+
+4.2   Conditions d’application du zero-copy TCPLS
+       L’application du zero-copy n’est pas toujours possible sans modification préalable. TCPLS per-
+met au receveur de traiter les records TLS en mode “zero-copy” si certaines conditions sont respectées
+[22] :
+
+  — Ordonnancement des frames : Les frames d’un stream doivent arriver dans l’ordre séquentiel.
+    Dans le cas contraire, il ne sera pas possbile de déchiffrer les frames directement dans le buffer
+    de l’application. Si les frames arrivent via plusieurs connexions TCP, il est probable que celles-ci
+    arrivent dans le désordre. Dans ce cas, le contenu des frames est placé dans un "reordering heap"
+    afin de les réordonnées. Ceci est possible grâce au numéro de séquence contenu dans l’AEAD
+    Nonce.
+
+  — Unicité des stream frames : Chaque record TLS ne doit contenir qu’une seule stream frame
+    par stream TCPLS. Cette contrainte simplifie le traitement des données en garantissant qu’il n’y
+    a pas de fragmentation au sein d’un même record pour un stream donné.
+
+  — Positionnement des frames : Les stream frames doivent être positionnées au début du record,
+    suivies par les frames de contrôle si nécessaire. Cette structure est essentielle car elle permet
+    d’écraser les frames de contrôle lors du déchiffrement en ajustant l’offset. Les frames de contrôle,
+
+                                                                                                     22
+      n’étant pas nécessaires à l’application, peuvent ainsi être ignorées.
+
+  — Maximisation du zero-copy : Dans le cas où plusieurs frames de type stream sont présentes
+    dans le record, la frame la plus grande devrait être placée au début. Cette organisation maximise
+    l’efficacité du zero-copy en permettant de traiter la plus grande quantité de données possible en
+    une seule opération.
+
+      Lorsque ces conditions sont réunies le zero-copy est possible. Mais uniquement grâce à d’autres
+particularités spécifiques au TCPLS.
+
+4.3   Particularité du TCPLS permettant le zero-copy
+      Une particularité du TCPLS qui permet cet écrasement des frames de contrôle est que les frames
+contenu dans le payload sont inversées par rapport à des frames plus standard tel que TCP. Ce qui
+veut dire que le header se trouve à droite de la frame et les données à gauche (Figure 10).
+
+
+
+
+                      Figure 10 – Composition d’une stream frame TCPLS [22]
+
+      Le payload du record étant composé d’une séquence de frame. Une fois déchiffré ce payload est
+parcouru de droite à gauche (Figure 11) car le type de la frame se trouvant à droite de celle-ci. Les
+bytes qui le précède sont les données spécifiques au type.
+
+
+
+
+Figure 11 – Le parcours des frames TCPLS contenu dans un record TLS commence par la fin [22]
+
+      Les frames de contrôle étant à la fin du record, elles peuvent se faire écraser en ajustant le offset
+lors du décryptage du record (Figure 12). C’est grâce au type et avec la connaissance de la taille de la
+frame que l’offset du buffer va pouvoir être adapté en conséquence.
+
+
+
+
+                                                                                                        23
+                             Figure 12 – Exemple de zero-copy avec QUIC
+
+
+       L’exemple de zero-copy représenté dans la figure 12 montre une application du zero-copy. Le
+premier paquet est déchiffré et les frames contenu dans le payload sont placé dans le buffer. Une fois
+lu, on connait la taille de la frame de contrôle. Le offset est adapté afin de pointé vers la fin de la stream
+frame contenu dans le premier paquet. Le second payload est ensuite placer au niveau de l’offset. Ce
+qui écrase la frame de contrôle du premier paquet. Une fois les frames de contrôle du 2ème paquet
+parcouru, l’offset est de nouveau adapté et l’on insère le payload du 3ème paquet qui écrase la frame
+de contrôle du 2ème paquet.
+
+      Une autre particularité du TCPLS importante est que l’ID du stream lié au record ainsi que
+le numéro de séquence du record sont contenus dans le vecteur AEAD, ce qui permet un accès à ces
+données sans avoir à déchiffrer toute la frame. Ceci permet également de déchiffrer directement dans
+le bon buffer. Ces valeurs ne sont pas directement contenues dans le header du record mais elles sont
+déduites implicitement du AEAD Nonce (figure 13).
+
+
+
+
+              Figure 13 – Nonce AEAD des streams TCPLS est dérivé de TLS 1.3 [23]
+
+      AEAD [18] signifie "Authenticated Encryption with Associated Data" (Chiffrement Authentifié
+avec Données Associées). C’est un mode de chiffrement qui combine deux fonctions cryptographiques
+essentielles :
+
+  — Confidentialité : Il chiffre les données pour les rendre illisibles aux parties non autorisées.
+
+
+                                                                                                           24
+    — Intégrité et authenticité : Il fournit un mécanisme pour vérifier que les données n’ont pas été
+      altérées et qu’elles proviennent de l’expéditeur prévu.
+
+       Les algorithmes AEAD permettent également d’inclure des données supplémentaires (les "don-
+nées associées") qui sont authentifiées mais non chiffrées. Cela est particulièrement utile pour protéger
+des métadonnées ou des headers qui doivent rester lisibles mais dont l’intégrité doit être garantie. Dans
+le contexte de TCPLS et QUIC, l’AEAD est utilisé pour sécuriser les communications. Le vecteur
+AEAD mentionné dans le document fait référence aux données utilisées pour initialiser l’algorithme de
+chiffrement, qui dans ce cas inclut des informations cruciales comme l’ID du stream et le numéro de
+séquence du record. Cette approche permet un déchiffrement efficace directement dans le bon buffer,
+ce qui est essentiel pour l’implémentation du zero-copy.
+
+     Ce sont ces particularités du TCPLS combiné aux différentes conditions vu précédemment qui
+permettent l’application du zero-copy.
+
+4.4     Problèmes avec QUIC et le zero-copy
+      L’implémentation du zero-copy dans QUIC présente plusieurs défis, principalement dus à la
+structure et au fonctionnement actuel du protocole. Voici les principaux obstacles :
+
+    — Encodage des frames : Dans QUIC, le type et la longueur des frames sont encodés au début
+      de chaque frame. Cette structure rend difficile le calcul de la position de l’offset, essentiel pour le
+      zero-copy. Contrairement à TCPLS, où ces informations sont placées à la fin des frames, QUIC
+      ne permet pas une lecture rapide de ces données sans parcourir l’intégralité de la frame.
+
+    — Positionnement des frames de contrôle : QUIC permet le placement des frames de contrôle
+      au début du payload, avant les stream frames. Cette flexibilité complique l’application du zero-
+      copy qui nécessite que les stream frames soient en début de payload pour permettre l’écrasement
+      des frames de contrôle.
+
+    — Constitution du paquet : Un paquet QUIC peut contenir plusieurs frames destinées à un
+      même stream. Ce qui n’est pas permis pour l’application du zero-copy.
+
+    — Chiffrement de l’ID du stream : Dans QUIC, l’ID du stream contenu dans une stream frame
+      est chiffré. Cela empêche l’identification rapide du stream auquel appartiennent les données sans
+      d’abord déchiffrer l’ensemble de la frame. Cette contrainte complique le processus de déchiffre-
+      ment direct dans le bon buffer, une caractéristique clé du zero-copy.
+
+    — Désordre des paquets : QUIC est conçu pour fonctionner efficacement même lorsque les
+      paquets arrivent dans le désordre, notamment dans le cas d’envoi de données via plusieurs
+      connexions. Cette flexibilité, bien qu’avantageuse pour la résilience du protocole, pose un défi
+      pour l’implémentation du zero-copy qui nécessite un ordre strict des frames pour fonctionner de
+      manière optimale.
+
+      Ces problèmes soulignent les différences fondamentales entre la conception de QUIC et les exi-
+gences du zero-copy teles qu’implémentées dans TCPLS. L’intégration du zero-copy dans QUIC ne
+sera pas possible sans quelques modifications au préalable.
+
+
+5     Implémentation du zero-copy
+       Cette section détaille le processus d’un début d’intégration de l’optimisation "zero-copy" au sein
+de la librairie Kwik, une implémentation Java du protocole QUIC.
+
+
+
+                                                                                                          25
+5.1   Les modifications à prévoir
+      L’intégration du zero-copy dans le protocole QUIC nécessite plusieurs modifications structurelles
+et fonctionnelles. Ces changements doivent être effectués tout en maintenant la compatibilité avec les
+versions existantes. Les principales modifications à apporter sont les suivantes :
+
+  1. Création d’une nouvelle version QUIC : Une nouvelle version du protocole QUIC spécifique
+     au zero-copy doit être créée afin de ne pas impacter toutes les autres versions déjà fournies par
+     la librairie.
+
+  2. Inversion des frames : Les frames doivent être restructurées pour permettre une lecture des
+     informations de droite à gauche afin d’accèder directement au type et à la taille des frames lors
+     de la lecture inversée.
+
+  3. Modification du mécanisme de lecture : Le processus de lecture des frames doit être adapté
+     pour fonctionner de droite à gauche, en cohérence avec la nouvelle structure des frames. Ceci
+     uniquement pour le payload d’un paquet.
+
+  4. Positionnement des frames de contrôle : Il est nécessaire de s’assurer que les frames de
+     contrôle soient systématiquement placées à la fin du payload pour leur écrasement lors de l’ap-
+     plication du zero-copy. Les stream frames doivent également être triées afin de placer les plus
+     grandes en premier.
+
+  5. Contrôle des stream frames : Il est nécessaire de s’assurer que le paquet ne contient que des
+     stream frames destinées à des stream différents.
+
+  6. Exposition de l’ID du stream : L’identifiant du stream associé aux frames doit être rendu
+     accessible avant le déchiffrement du payload pour permettre d’effectuer celui-ci directement dans
+     le buffer approprié.
+
+  7. Gestion de l’ordre de réception des paquets : Un mécanisme d’ordonnancement doit être
+     mis en place pour garantir l’ordre correct de réception des paquets, en particulier dans le cas de
+     connexions multiples.
+
+  8. Modification de l’API : L’interface de programmation doit être adaptée pour permettre à
+     l’application de fournir son propre buffer, offrant ainsi un meilleur contrôle sur la gestion de la
+     mémoire à la librairie afin de manipuler l’offset.
+
+  9. Ajustement de l’offset : Un mécanisme d’ajustement de l’offset lors de l’écriture des données
+     dans le buffer doit être implémenté pour permettre l’écrasement des frames non essentielles à
+     l’application.
+
+      L’implémentation du zero-copy étant encore en cours de développement, il est important de noter
+que certaines étapes nécessaires à sa réalisation complète pourraient ne pas être identifiées à ce stade.
+Des ajustements et des étapes supplémentaires seront probablement nécessaires au fur et à mesure que
+de nouveaux défis techniques seront rencontrés lors des phases ultérieures de l’implémentation.
+
+5.2   Préparatif avant implémentation
+       Avant de procéder à l’implémentation du zero-copy dans la librairie Kwik, il est crucial d’éta-
+blir une base solide et de préparer l’environnement de développement. Cette phase préparatoire est
+essentielle pour assurer la stabilité et la fiabilité de l’implémentation future. Elle comprend plusieurs
+étapes clés, notamment le choix d’une librairie QUIC appropriée et la mise en place de procédures de
+tests robustes. Ces préparatifs visent à faciliter le processus d’implémentation, à minimiser les risques
+d’erreurs et à permettre une validation continue des modifications apportées au protocole.
+
+
+                                                                                                      26
+5.2.1   Choix de la librairie QUIC
+       L’implémentation du zero-copy a été effectuée dans de la librairie Kwik [12]. Kwik est une implé-
+mentation du protocole QUIC écrite en java. Ce choix a été motivé par plusieurs facteurs. La majorité
+des fonctionnalités QUIC sont implémentées. La structure modulaire du code qui permet de comprendre
+la librairie aisément. Des tests unitaires sont présents, ce qui est crucial afin de s’assurer du bon fonc-
+tionnement de la librairie pendant le développement. Et finalement, mon affinité avec le language Java.
+
+       Afin de tester l’implémentation du zero-copy, la librairie Flupke [11] sera utilisée. Flupke est une
+implémentation d’un client HTTP/3 basée sur la librairie Kwik. Cette combinaison permettra de tester
+le zero-copy dans un contexte d’application réel. Ces deux librairies sont écrites et maintenues par la
+même personne.
+
+       L’implémentation du zero-copy se basera sur la version 1 de QUIC [16]. Celle-ci sera effectuée
+sur l’outil IntellIJ, qui est un environnement de développement conçu pour Java.
+
+5.2.2   Tests de la stack
+       Une première étape sera d’établir une procédure de tests afin de s’assurer du bon fonctionnement
+de la librairie. Ces tests permettront de valider les différents changements effectués par après.
+
+       Deux types de tests vont être utilisés lors du développement. Premièrement, un test d’intégration.
+Ce test permet de valider le fonctionnement du protocole via un cas d’utilisation concret, c’est à dire,
+un transfert d’un fichier d’un point A à un point B via le protocole QUIC. La librairie java "Flupke"
+permettra d’effectuer ce test via son client HTTP/3. Celui-ci est utilisé par différentes implémentations
+de clients et de serveurs fournies par la librairie Kwik (voir Figure 14).
+
+
+
+
+               Figure 14 – Strutcure de l’application client et serveur Kwik - Flupke
+
+      Des requêtes sont envoyées via le client CLI "KwikCli.java" qui est fourni par la librairie Kwik.
+Les requêtes sont traitées par le serveur "SampleWebServer.java" également fourni par Kwik. Les pages
+HTML sont ensuite récupérées par le CLI. Le test est valide dans le cas où la page HTML a bien été
+récupérée par le client et que celle-ci est bien similaire à la page exposée par le serveur(kwik-zero-
+copy\server\www\kwikserver.html). Ce CLI permet d’exécuter des requêtes GET sur le serveur (voir
+figure 15). Les pages seront considérées comme similaires dans le cas ou elles s’affichent de la même
+manière et qu’elles ont la même taille.
+
+
+
+
+                                                                                                        27
+                   Figure 15 – Exemple d’utilisation du CLI avec les logs réseaux
+
+
+      La figure 15 est un exemple d’utilisation du CLI. Tout d’abord le serveur est lancé avant d’en-
+voyer la requête. Ceci en exécutant la classe "SampleWebServer.java". Le serveur est maintenant prêt
+à recevoir des requêtes sur le port local 4433. La commande effectuée dans la figure 15 "./kwik.sh
+https ://localhost :4433 –noCertificateCheck –secrets secrets.log -H /kwikserver.html -v1" va effectuer
+un GET sur l’url "https ://localhost :4433/kwikserver.html" afin de télécharger la page html. On
+peut ensuite voir dans le terminal les échanges des paquets, les frames qui composent celles-ci et bien
+d’autres informations. Ces logs révèle que le client reçoit un total de 13 paquets pour cette requête.
+Une vérification de la taille du fichier via l’explorateur indique une taille de 2446 bytes pour la page
+HTML transmise.
+
+      La figure 16 est la suite des logs la requête GET. On peut y voir la page HTML envoyé par le
+serveur et bien formée.
+
+
+
+
+                                                                                                     28
+                              Figure 16 – Réponse de la requête du CLI
+
+
+      Deuxièmement, une vérification de la couverture des tests unitaires dans le code de la librairie
+Kwik est nécessaire avant tout développement. Ceux-ci jouent un rôle crucial dans le développement
+de logiciels robustes et maintenables. Ces tests sont créés avec la librairie Java nommé JUnit. Ils
+permettent aux développeurs de vérifier individuellement le comportement de chaque unité de code,
+généralement au niveau des méthodes ou des classes. Cette approche granulaire facilite la détection des
+erreurs, réduisant ainsi le coût et la complexité des corrections ultérieures. Les tests unitaires servent
+également de documentation vivante du code, expliquant les cas d’utilisation prévus et les compor-
+tements attendus. De plus, il permet d’identifier rapidement toute régression. Il est donc important
+d’avoir une bonne couverture avant d’effectuer des nouveaux développements et il également important
+d’en ajouter afin de tester le nouveau code. Certains ingénieurs tels que Kent Beck suggère même de
+commencer par les tests unitaires (Test driven development).
+
+
+
+
+                                                                                                       29
+                           Figure 17 – Kwik couverture des tests unitaires
+
+       Le rapport de couverture de test d’Intellij (figure 17) montre que 74% des classes et 58% des
+lignes de codes sont couvertes. Dans un premier temps, les packages "frame" et "packet" sont les plus
+importants afin de tester l’inversion des frames. Ces tests serviront de base pour l’implémentation des
+nouveaux tests pour le zero-copy. Ces tests permettent notamment de s’assurer de la bonne construction
+des différentes frames et paquets. Une inspection des méthodes non couvertes révèle que la majorité
+sont des méthodes getter, setter, toString et certaines exceptions. Les méthodes les plus importantes
+telles que le parsing et l’encoding des parquets et des frames sont particulièrement déjà bien testées.
+
+5.3     Implémentation des frames inversées dans Kwik
+5.3.1     Ajout d’une nouvelle version QUIC
+     La première étape est de créer une nouvelle version de QUIC dans la librairie. Cette version, avant
+implémentation, est simplement une "duplication" du QUIC v1, en effet cette version fonctionnera au
+départ exactement comme la v1. Cette version est ajoutée dans la classe "Version.java".
+
+
+   public final static Version QUIC_version_1_zero_copy = new Version(0x00000011);
+
+
+
+        Cette version sera utilisée dans un premier temps au niveau des paquets QUIC afin de connaître
+
+                                                                                                     30
+la méthode d’encodage des frames et de les inverser pour permettre l’application future du zero-copy.
+Cette nouvelle version a également été ajoutée dans Flupke afin de permettre au client HTTP/3 d’être
+compatible avec celle-ci. Une fois cette étape terminée, nous avons à disposition une nouvelle version
+de QUIC utilisable par le serveur et le client.
+
+5.3.2   Inversion des entiers à longueur variable
+      L’inversion des frames (figure 18) est nécessaire afin de permettre l’écrasement des frames de
+contrôles lors du zero-copy. Et bien entendu, de lire les données telles que la taille de la prochaine in-
+formation par la droite, ce qui permettra de définir la position de l’offset du buffer. Un type de donnée
+très utilisé dans les frames et qui défini sa taille dans les premiers bits (les bits les plus significatifs)
+sont les entiers à longueur variable.
+
+
+
+
+                             Figure 18 – Exemple d’inversion d’une frame
+
+      Les paquets QUIC et les frames encodent leurs entiers non-négatif sous forme d’entier à longueur
+variable [16]. Cette encodage permet d’allouer moins de bytes aux entiers les plus petits. L’encodage
+des entiers à longueur variable de QUIC réserve les deux bits les plus significatifs du premier byte afin
+d’encoder le nombre de bytes utilisé par l’entier. Le tableau de la figure 19 nous montre que les entiers
+sont encodés sur 1, 2, 4 ou 8 bytes et peuvent encoder des valeurs de 6, 14, 30 ou 62 bits.
+
+
+
+
+                            Figure 19 – Summary of Integer Encodings [16]
+
+      L’inversion des frames commence par l’inversion des entiers à longueur variable. L’inversion est
+assez simple, les 2 bits qui définissent le nombre de bytes ne seront plus les deux bits les plus significatifs
+mais les moins significatifs (Voir figure 20). Cette inversion se fait lors de l’encodage d’un entier dans
+un buffer, c’est pour cela que nous allons parler par la suite de buffer.
+
+
+
+
+                                                                                                            31
+                    Figure 20 – Exemple d’inversion d’entier à longueur variable
+
+
+       Les implémentations java du buffer propose par défaut des méthodes d’ajout et de lecture de
+tailles prédéfinies. Ces tailles étant les différents types de variables permettant à java de stocker les
+entiers. Celles-ci correspondent justement aux différentes tailles d’un entier à longueur variable QUIC
+(Voir figure 19) :
+
+  — byte : Un byte en java, comme l’indique son nom, est encodé sur 1 byte. Ce qui correspond à la
+    longueur d’un entier à longueur variable QUIC de type "00".
+
+  — short : Un short en java est encodé sur 2 bytes. Ce qui correspond à la longueur d’un entier à
+    longueur variable QUIC de type "01".
+
+  — int : Un int en java est encodé sur 4 bytes. Ce qui correspond à la longueur d’un entier à longueur
+    variable QUIC de type "10".
+
+  — long : Un int en java est encodé sur 8 bytes. Ce qui correspond à la longueur d’un entier à
+    longueur variable QUIC de type "11".
+
+       Les méthodes par défaut du buffer en java possèdent donc déjà des méthodes permettant de lire
+et écrire directement des entiers à longueur variable de toute taille. Celles-ci seront utilisées lors de
+l’écriture et la lecture du buffer.
+
+       La classe "VariableLengthInteger" contient les différentes méthodes de manipulation des entiers
+à longueur variable déjà utilisées par les différentes versions de QUIC. Les méthodes d’encodage ou
+de parsing d’entier vont être englobés dans des méthodes portant le même nom et qui permettront
+d’inverser ou non ces entiers selon la version de QUIC. Une nouvelle méthode sera également créée
+spécifiquement pour cet encodage inversé (figure 21). On distincte la méthode reverse de la non reverse
+par les différents buffer qu’ils reçoivent en paramètre. En effet, les paquets QUIC travailleront désormais
+avec des "ByteBufferWrapper" (ceci sera développé plus tard). Dans le cas où le buffer n’est pas en
+mode reverse, l’encoding de base sera simplement utilisé.
+
+
+   if (!buffer.isReverse()) return encode(value, buffer.getBuffer());
+
+
+
+      C’est au niveau du paquet QUIC que le mode reverse est défini en passant en argument l’égalité
+de la version utilisée avec la version "QUIC_version_1_zero_copy".
+
+
+
+
+                                                                                                        32
+   ByteBufferWrapper buffer = ByteBufferWrapper.wrap(frameBytes,
+   Version.QUIC_version_1_zero_copy.equals(this.getVersion()));
+
+
+
+       Dans le cas contraire, elle va utiliser l’encoding inversé (figure 21). Les différentes méthodes du
+buffer sont utilisées selon la taille de la donnée. C’est-à-dire un ajout d’un "byte" pour un entier d’une
+taille de 1 byte, l’ajout d’un "short" pour un entier d’une taille de 2 byte, l’ajoute d’un "int" pour un
+entier d’une taille de 4 byte et l’ajout d’un "long" pour l’ajout d’un entier d’une longueur de 8 bytes
+dans le buffer. Ceux-ci correspondent aux différents types d’entier primitif de java. La taille de l’entier
+est écrit sur les 2 bits les plus à droite (les deux bit les moins significatifs). Ceci est fait en décalant
+l’entier de 2 bits grâce à l’opération binaire "Shift" de java ("«"). La taille de l’entier est encodée
+avec l’opération binaire "OR" (exemple : | 0x01). Les différentes valeurs testées et harcodées dans les
+différents "if" correspondent aux tailles maximales définies dans la figure 19.
+
+
+     public static int encode(int value, ByteBufferWrapper buffer) {
+         if (!buffer.isReverse())
+             return encode(value, buffer.getBuffer());
+         if (value <= 63) {
+             buffer.put((byte) (value << 2));
+             return 1;
+         } else if (value <= 16383) {
+             int valueWithLenght = (value << 2) | 0x01;
+             buffer.putShort((short) valueWithLenght);
+             return 2;
+         } else if (value <= 1073741823) {
+             int valueWithLenght = (value << 2) | 0x02;
+             buffer.putInt(valueWithLenght);
+             return 4;
+         } else {
+             long valueWithLenght = ((long) value << 2) | 0x03;
+             buffer.putLong(valueWithLenght);
+             return 8;
+         }
+     }
+
+
+
+                Figure 21 – Méthode de sérialisation d’un entier à longueur variable
+
+      La lecture d’un entier à taille variable se fait de manière similaire (figure 22). L’extraction de la
+longueur de l’entier s’effectue en appliquant l’opération suivante sur le premier byte du buffer. C’est-
+à-dire celui le plus à droite dans le cas du buffer inversé.
+
+
+   firstLengthByte & 0x03
+
+
+
+       Cette opération permet de ne garder que les 2 premier bits et de mettre les autres à 0, ce qui se
+traduit par une valeur entre 0 et 3. Une fois la taille connue, la fonction associée à la lecture de cette
+taille va être appelée. Par exemple, pour une taille "10" qui correspond à une taille de 4 bytes, c’est la
+fonction du buffer "getInt" qui va être appelée. Ensuite, la taille doit être enlevée de cette valeur ceci
+
+                                                                                                         33
+étant fait avec un SHIFT de 2 vers la droite et en appliquant un masque AND afin de s’assurer que
+les 2 derniers bit sont bien à 0.
+
+
+   value = (byteBufferWrapper.getShort() >> 2) & 0x3fff;
+
+
+
+       La fonction intègre un contrôle afin de prévenir la lecture excessive de bytes. Ce contrôle vérifie
+systématiquement que le nombre de bytes restants dans le buffer est supérieur ou égal au nombre de
+bytes à lire. Une observation notable concerne l’ajustement de la position du pointeur de lecture avant
+l’extraction des types de données short, int et long. Cette modification est faite afin de récupérer la
+donnée entière avec le byte déjà lu lors de la lecture de la taille.
+
+
+
+
+                                                                                                       34
+public static long parseLong(ByteBufferWrapper byteBufferWrapper)
+throws InvalidIntegerEncodingException {
+    if (!byteBufferWrapper.isReverse())
+        return parse(byteBufferWrapper.getBuffer());
+
+    if (byteBufferWrapper.remaining() < 1) {
+        throw new InvalidIntegerEncodingException();
+    }
+
+    long value;
+    byte firstLengthByte = byteBufferWrapper.get();
+
+    switch (firstLengthByte & 0x03) {
+        case 0:
+            value = (firstLengthByte >> 2) & 0x3f;
+            break;
+        case 1:
+            if (byteBufferWrapper.remaining() < 1) {
+                 throw new InvalidIntegerEncodingException();
+            }
+            byteBufferWrapper.position(byteBufferWrapper.position() - 1);
+            value = (byteBufferWrapper.getShort() >> 2) & 0x3fff;
+            break;
+        case 2:
+            if (byteBufferWrapper.remaining() < 3) {
+                 throw new InvalidIntegerEncodingException();
+            }
+            byteBufferWrapper.position(byteBufferWrapper.position() - 1);
+            value = (byteBufferWrapper.getInt() >> 2) & 0x3fffffff;
+            break;
+        case 3:
+            if (byteBufferWrapper.remaining() < 7) {
+                 throw new InvalidIntegerEncodingException();
+            }
+            byteBufferWrapper.position(byteBufferWrapper.position() - 1);
+            value = (byteBufferWrapper.getLong() >> 2) & 0x3fffffffffffffffL;
+            break;
+        default:
+            // Impossible, just to satisfy the compiler
+            throw new RuntimeException();
+    }
+
+    return value;
+}
+
+
+
+       Figure 22 – Méthode de désérialisation d’un entier à longueur variable
+
+
+
+
+                                                                                35
+5.3.3    Inversion des frames
+      Kwik travaille avec des "ByteBuffer" (classe du package "java.nio") pour l’encodage des diffé-
+rentes données qui constituent la frame en bytes. Les frames sont, dans un premier temps, stockées
+dans une liste de "QuicFrame". Lors de la génération des bytes du payload du paquet QUIC, les frames
+vont être encodées dans un buffer de travail fourni par le paquet.
+
+      La solution générique appliquée, afin d’inverser les frames, est la création d’une classe wrapper
+appelée "ByteBufferWrapper". La classe "ByteBuffer" a été substituée par le "ByteBufferWrapper"
+uniquement dans le paquet QUIC. C’est le payload de celui-ci qui doit être encodé et parsé à l’envers
+ou non.
+
+
+    protected ByteBuffer generatePayloadBytes(int encodedPacketNumberLength) {
+         ByteBufferWrapper frameBytes = ByteBufferWrapper.allocate(MAX_PACKET_SIZE,
+         quicVersion.isV1ZeroCopy());
+         ...
+     }
+
+
+
+      Ce "wrapper" permet d’abstraire les méthodes du "ByteBuffer" et d’ajouter la logique de lecture
+et d’encodage inversé lorsque c’est nécessaire sans pour autant impacter tout le code. Le sens de l’enco-
+dage dépendra de la version de QUIC, uniquement les données de la version "QUIC_version_1_zero_copy"
+seront inversées. Cette solution, presque transparente à l’application, permet d’inverser directement
+toutes les frames.
+
+
+    public ByteBufferWrapper(byte[] byteArray, boolean isReverse) {
+         this.isReverse = isReverse;
+         if (isReverse) {
+             this.reverseBuffer = new ReverseByteBuffer(byteArray);
+             this.buffer = null;
+         } else {
+             this.buffer = ByteBuffer.wrap(byteArray);
+             this.reverseBuffer = null;
+         }
+     }
+
+
+
+      Le code ci-dessus montre que le "ByteBufferWrapper" contient simplement deux implémentations
+de buffer. Un seul des deux est initialisé et utilisé par la suite (figure 23).
+
+
+    public int getInt() {
+         if (isReverse)
+             return this.reverseBuffer.getInt();
+
+          return this.buffer.getInt();
+     }
+
+
+
+                     Figure 23 – Exemple de méthode du ByteBufferWrapper
+
+
+
+                                                                                                    36
+     Le "ByteBufferWrapper" étant en place, une nouvelle implémentation du "ByteBuffer" est dé-
+sormais nécessaire. Cette version, appelée "ReverseByteBuffer" exposera les mêmes méthodes que le
+"ByteBuffer" mais commencera l’ajout des données par la fin. Deux versions de cette classe ont été
+implémentées. Ce buffer permet également la lecture des données par la droite.
+
+      La première version utilisera en arrière plan le "ByteBuffer" de java, comme le fait déjà Kwik.
+Le "ByteBuffer" ne pouvant pas être surchargé, les méthodes de manipulation de buffer de ce dernier
+sont utilisées afin de forcer l’ajout des données par la fin. Ceci étant fait en ajustant la position de la
+prochaine donnée à inséré dans le buffer après chaque opération (figure 24).
+
+
+
+     public ByteBufferWrapper putShort(short shortValue) {
+         if (!isReverse) {
+             this.buffer.putShort(shortValue);
+         } else {
+             if (isBufferLimit || this.position() + 1 >= this.limit())
+                 throw new BufferOverflowException();
+             this.position(this.position() + 1);
+             this.buffer.putShort(shortValue);
+             // Next byte are the left byte and we wrote 2
+             this.position(this.position() + 3);
+         }
+         return this;
+     }
+
+     public int position() {
+         if (!isReverse) return this.buffer.position();
+         return isBufferLimit ? this.limit() : this.buffer.limit()
+             - this.buffer.position() - 1;
+     }
+
+
+
+   Figure 24 – Exemple de code d’écriture du ReverseByteBuffer utilisant le ByteBuffer de java
+
+      La figure 24 illustre qu’en l’absence du mode reverse, les opérations sont exécutées en invoquant
+directement les méthodes natives du "ByteBuffer". Cette approche permet de maintenir le comporte-
+ment standard du buffer lorsque l’inversion n’est pas requise. Dans le cas contraire, la position de la
+prochaine donnée insérée est inversée. Cette inversion est faite via un nouveau calcul de la position de
+la prochaine donnée à insérer. Dans le "ByteBuffer" la méthode "int position()" retourne simplement
+l’index d’insertion du prochain byte dans le buffer. L’index est calculé via une soustraction de la limite
+du buffer et de la position interne du buffer moins 1.
+
+
+
+
+                                                                                                        37
+                     Figure 25 – Exemple d’ajout de données dans les buffers
+
+
+     La lecture se fait de la même manière (figure 26).
+
+
+     public short getShort() {
+         if (!isReverse)
+             return this.buffer.getShort();
+
+          if (isBufferLimit || this.position() + 1 >= this.limit())
+              throw new BufferOverflowException();
+
+          this.position(this.position() + 1);
+          short shortValue = this.buffer.getShort();
+
+          // Next byte are the left byte and we read 2
+          this.position(this.position() + 3);
+
+          return shortValue;
+     }
+
+
+
+   Figure 26 – Exemple de code de lecture du ReverseByteBuffer utilisant le ByteBuffer de java
+
+      Maintenant que le "ByteBufferWrapper" est implémenté, il permet l’encoding et le parsing de
+données en mode reverse ou non. Les frames peuvent enfin profiter du mode reverse. Dans la figure
+27, on peut y voir l’implémentation de la sérialisation d’une frame de type "STREAM". Les différents
+champs sont encodés selon la RFC (Voir figure 32). Cette méthode de sérialisation est utilisée que se
+soit en mode reverse ou non. Les différents champs de la frames sont ajoutés un à la suite de l’autre.
+Les champs comme "streamId", "offset" et "lenght" sont encodés dans ce même buffer par la classe
+"VariableLengthInteger" comme décrit dans la figure 20.
+
+
+
+
+                                                                                                   38
+      public void serialize(ByteBufferWrapper buffer) {
+          if (frameLength > buffer.remaining()) {
+              throw new IllegalArgumentException();
+          }
+
+          byte baseType = (byte) 0x08;
+          // OFF-bit, LEN-bit, (no) FIN-bit
+          byte frameType = (byte) (baseType | 0x04 | 0x02 | 0x00);
+          if (isFinal) {
+              frameType |= 0x01;
+          }
+
+          buffer.put(frameType);
+          VariableLengthInteger.encode(streamId, buffer);
+          VariableLengthInteger.encode(offset, buffer);
+          VariableLengthInteger.encode(length, buffer);
+          buffer.put(streamData);
+      }
+
+
+
+               Figure 27 – Méthode de sérialisation d’une frame de type "STREAM"
+
+
+        Suite à des problèmes de performances (voir section Performance), une nouvelle version du "Re-
+verseByteBuffer" a été implémentée. Cette version custom n’utilisera pas le "ByteBuffer" de java mais
+un simple tableau de byte, ceci afin d’éviter toutes les opérations inutiles comme par exemple le re-
+calcul des positions. L’implémentation du buffer java ne peut être étendue car il possède une visibilité
+"package private" certainement pour des raisons de sécurité. Cette version inspirée du "ByteBuffer"
+fonctionne de la même manière que la version précédente. Cette version plus optimisée sera la solution
+finale.
+
+      Le reverse buffer étant fonctionnel, un dernier changement est nécessaire avant d’avoir des entiers
+à longueur variable inversés. Des méthodes de parsing et d’encoding ont été ajoutées afin de traiter les
+deux bits définissant la taille de l’entier.
+
+       Le "ByteBufferWrapper" et les "VariableLengthInteger" étant utilisables en mode inversé, c’est
+la classe "QuicPacket" qui va décider selon la version de QUIC d’encoder ou de parser ses frames de
+manière inversée ou non. En résumé, ce nouveau buffer permet deux choses : L’encodage inversé de
+données dans un buffer, aussi bien au niveau de la frame que au niveau du payload du paquet QUIC
+et la lecture des paquets et frames de droite à gauche. Ce nouveau buffer est uniquement utilisé au
+niveau du payload des paquets QUIC.
+
+5.4   Test de l’inversion des frames
+       Les premiers tests effectués sont des tests d’intégration client serveur. Ces tests manuels sont simi-
+laires aux tests d’intégration effectués sur le code initial, c’est-à-dire, la récupération d’une page html.
+Ce test rapide est fait aussi bien pour la v1 zero-copy de QUIC mais également pour la v1 simple. Il
+permet de s’assurer que les données reçues ne sont pas altérées et que la page HTML est toujours lisible.
+
+
+
+
+                                                                                                          39
+Figure 28 – Test d’intégration de l’inversion des frames de QUIC v1 zero-copy
+
+
+
+
+Figure 29 – Test d’intégration de l’inversion des frames de QUIC v1 zero-copy
+
+
+                                                                                40
+       L’analyse du test d’intégration, illustré dans la figure 28, démontre que la transmission de la page
+s’effectue avec succès et que le nombre de paquets reçu est toujours de 13. La figure 29 confirme la
+réception intacte de la page HTML, conservant sa taille originale de 2446 bytes. Ce qui est similaire au
+test effectué avant l’implémentation pour la version 1 de QUIC. Un test est également refait pour cette
+version et les résultats sont les mêmes que précédemment. Ces résultats indiquent que les changements
+effectués ne perturbent pas le transfert de données.
+
+      Des tests unitaires sont également développés pour les entiers à longueur variable, pour chaque
+type de frame (voir figure 30) et pour chaque type de paquet. Tous les nouveaux tests liés à l’inversion
+des frames et des paquets se trouvent dans le package "net.luminis.quic.zerocopy".
+
+
+
+
+                                     Figure 30 – Frame types [16]
+
+      Ces tests unitaires consistent à créer de nouveaux tests sur base des existants pour la version 1
+de QUIC (Voir figure 31). Il vont encoder et parser les différentes frames et paquets et s’assurer que
+l’output est bien le résultat attendu.
+
+
+
+
+                                                                                                        41
+     @Test
+     void testParseStreamWithoutOffsetAndLengthByte() throws Exception {
+         byte[] raw = new byte[] { 0x08, 0x02, 48, 49, 50, 51, 52 };
+         StreamFrame frame = new StreamFrame().parse(ByteBufferWrapper.wrap(raw,
+         false), Mockito.mock(Logger.class));
+         assertThat(frame.getStreamId()).isEqualTo(2);
+         assertThat(frame.getOffset()).isEqualTo(0);
+         assertThat(frame.getLength()).isEqualTo(5);
+         assertThat(frame.getStreamData()).isEqualTo("01234".getBytes());
+         assertThat(frame.isFinal()).isEqualTo(false);
+     }
+
+
+
+                      Figure 31 – Exemple de test unitaire d’une stream frame
+
+
+      Le test unitaire de la figure 31 test le parsing d’une stream frame. La stream frame étant repré-
+sentée par le tableau de byte " 0x08, 0x02, 48, 49, 50, 51, 52 ".
+
+
+
+   STREAM Frame {
+     Type (i) = 0x08..0x0f,
+     Stream ID (i),
+     [Offset (i)],
+     [Length (i)],
+     Stream Data (..),
+   }
+
+
+
+                               Figure 32 – STREAM Frame format [16]
+
+     Le parsing de ce tableau de byte selon la définition de la RFC9000 (Figure 32) d’une stream
+frame est la suivante :
+
+  — 0x08 - Le premier byte 0x08 ou 0b00001000 correspond au type de la frame. Cette frame est
+    bien de type "STREAM" (voir figure 30). Les trois derniers bits sont à 0 ce qui signifie, d’après
+    la RFC9000 [16], que l’offset et la taille des données ne sont pas présents mais également que
+    cette frame n’est pas la dernière du stream.
+
+  — 0x02 - Le second byte 0b00000010 correspond au "Stream ID". Ce stream id est un entier à
+    longueur variable de valeur 2. Il commence par 00, ce qui signifie que la longueur du stream id
+    est de un byte.
+
+  — 48, 49, 50, 51, 52 - L’offset et la longueur n’était pas présent, le reste des bytes correspondent
+    aux données. Les bytes 48, 49, 50, 51, 52 correspondent à la chaîne de caractère "012345" en
+    UTF-16 (Java utilise en interne l’encoding UTF-16 pour le stockage des strings).
+
+      Le test unitaire valide ces différentes valeurs via des assertions une fois le tableau de byte traité
+et traduit en objet java.
+
+      Cette même stream frame encodée en version QUIC zero-copy est 48, 49, 50, 51, 52, 0x08, 0x08.
+
+
+                                                                                                        42
+  — 48, 49, 50, 51, 52 - Les données se retrouvent en début de frame et sont identiques à la version
+    QUIC v1.
+
+  — 0x08 - Le byte du stream id 0b00001000 diffère de sa version QUIC v1 du à l’encoding inversé
+    de l’entier à longueur variable. Ce n’est plus les deux premiers bit qui indiquent la longueur mais
+    les deux derniers.
+
+  — 0x08 - Correspond au type de frame, exactement comme sa version QUIC v1.
+
+      Un test unitaire similaire à la figure 31 a été créé avec ce nouveau tableau de byte (figure 33).
+Ce test va parser via ce tableau avec le "ReverseByteBuffer" et s’assurer que les données sont toujours
+les mêmes. Cette méthode de testing a été appliquée sur tous les tests de frame et d’entier à longueur
+variable. Mais également sur les paquets afin de s’assurer que les changements des frames et l’utilisation
+d’un nouveau buffer ne les impacte pas. Chaque tableau de byte est calculé manuellement afin d’être
+certain de la valeur attendue.
+
+
+      @Test
+      void testParseStreamWithoutOffsetAndLengthByte() throws Exception {
+          byte[] raw = {48, 49, 50, 51, 52, 0x08, 0x08};
+          StreamFrame frame = new StreamFrame().parse(ByteBufferWrapper.wrap(raw), Mockito.mock(Lo
+
+          assertThat(frame.getStreamId()).isEqualTo(2);
+          assertThat(frame.getOffset()).isEqualTo(0);
+          assertThat(frame.getLength()).isEqualTo(5);
+          assertThat(frame.getStreamData()).isEqualTo("01234".getBytes());
+          assertThat(frame.isFinal()).isEqualTo(false);
+      }
+
+
+
+                      Figure 33 – Exemple de test unitaire d’une stream frame
+
+      La finalisation des tests a démontré que l’implémentation de la lecture et de l’écriture des frames
+en mode inversé fonctionne conformément aux attentes. Cette méthode de travail m’a pas permis de
+trouver et de corriger de multiples erreurs lors de leurs développements.
+
+5.5   Tests de performance
+      Le but du zero-copy étant d’optimiser la vitesse de transfert de données, des tests de perfor-
+mances ont été réalisés afin de s’assurer que les changements n’ont pas impacté celle-ci. Pour rappel,
+ce n’est qu’un début d’implémentation du zero-copy mais ces tests permettent de s’assurer que le code
+n’a pas été impacté négativement en terme de performance.
+
+      Pour garantir la fiabilité statistique des résultats, chaque cas d’utilisation a été exécuté 100 fois,
+permettant ainsi de collecter un échantillon suffisant de métriques et de calculer des temps moyens
+représentatifs. Deux scénarios de test distincts ont été élaborés pour chaque version de QUIC :
+
+  — BASIC_GET - Ce cas de test envoie une requête HTTP/3 de type GET sur la page "kwik-
+    server.html".
+
+  — HUGE_GET - Ce cas de test envoie une requête HTTP/3 de type GET sur la page "hugek-
+    wikserver.html".
+
+
+                                                                                                         43
+      Ces tests permettent de comparer les temps d’exécution sur base de la taille des fichiers. Un
+gros fichier permet de tester une création de stream frame intensif et ainsi tester les performances
+d’encodage et du parsing des frames. Le temps d’exécution du GET sur le petit fichier est plus impacté
+par le temps de connexion.
+
+      Dans cette section, des tests effectués sur les versions désignées comme "zero-copy" seront exa-
+minés. Il est important de noter que cette appellation fait référence au nom de la version et non à
+une implémentation complète du mécanisme de zero-copy, qui n’est pas encore entièrement réalisé à
+ce stade du développement.
+
+5.5.1     Ajout de métriques
+     Une nouvelle classe appelé "MetricManager" a été implémentée. Cette classe static permet
+au "Http3Client" de Flupke de générer une métrique par requête. Pour chaque cas d’utilisation, le
+"Http3Client" va générer les données suivantes :
+
+  — currentTestCase - Nom du cas d’utilisation actuel, ce qui permet de générer un fichier à ce
+    nom en fin de test.
+
+  — totalByte - Le nombre de total de byte des payload reçu.
+
+  — executionTimeMillis - Le temps d’exécution total du cas d’utilisation en milliseconde.
+
+  — metricList - Une metric est lié à une requête et contient le temps de connexion et le temps de
+    téléchargement du payload en milliseconde.
+
+      A la fin de chaque boucle d’exécution d’un cas d’utilisation, un fichier de métrique est généré.
+Celui-ci sera traité par après par un programme python afin de créer les graphiques.
+
+5.5.2     Implémentation des tests
+      Les tests de performances sont créés sur base du "Http3Client" fourni par Flupke. Cette classe
+permet d’envoyer des requêtes HTTP de type GET programmatiquement. Ce client va être utilisé de
+pair avec le "SampleWebServer" de Kiwk, précédemment utilisé pour le test d’intégration. Deux pages
+webs vont être mises à disposition par ce serveur, la page "kwikserver.html" avec une taille de 2kb et
+la page "hugekwikserver.html" avec une taille de 10mb.
+
+        Afin de réaliser ces tests, des classes de récoltes de données ont été créées :
+
+  — Metric.java - Représentation d’une métrique.
+
+  — MetricManager.java - Le "MetricManager" est la classe qui va récolter les métriques et per-
+    mettre d’écrire les résultats dans un fichier.
+
+  — TestCase.java - La classe "TestCase" est la classe qui contient tous les cas de test. Ceux-ci
+    consistent simplement à une association d’une version de QUIC avec une page html (34).
+
+  — TestLauncher.java - La classe "TestLauncher" est la classe qui va lancer une requête et utiliser
+    le "MetricManager" afin de créer et de sauvegarder les métriques
+
+  — TestLauncherLoop.java - La classe "TestLauncherLoop" est la classe qui va lancer le "Test-
+    Launcher" 100 fois pour un cas d’utilisation spécifique.
+
+
+
+
+                                                                                                   44
+     BASIC_GET_V1(Version.QUIC_version_1, "/kwikserver.html"),
+     HUGE_GET_V1(Version.QUIC_version_1, "/hugekwikserver.html"),
+     BASIC_GET_V1ZC(Version.QUIC_version_1_zero_copy, "/kwikserver.html"),
+     HUGE_GET_V1ZC(Version.QUIC_version_1_zero_copy, "/hugekwikserver.html")
+
+
+
+             Figure 34 – Différents cas de test pertinent contenu dans la classe "TestCase"
+
+
+      Le "MetricManager" permet au "Http3Client" de Flupke de générer une métrique par requête
+et ceci pour chaque cas d’utilisation.
+
+
+     @Override
+     public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T>
+         responseBodyHandler) throws IOException {
+
+            http3Connection = http3ConnectionFactory.getConnection(request);
+            long connectionStart = System.currentTimeMillis();
+            http3Connection.connect((int) connectTimeout().orElse(DEFAULT_CONNECT_TIMEOUT)
+                .toMillis());
+            long connectionEnd = System.currentTimeMillis();
+            HttpResponse<T> response = http3Connection.send(request, responseBodyHandler);
+            long downloadEnd = System.currentTimeMillis();
+
+            MetricManager.newMetric(connectionEnd - connectionStart, downloadEnd
+                - connectionEnd);
+
+            return response;
+     }
+
+
+
+                   Figure 35 – Méthode d’envoi de données de la classe Http3Client
+
+       La figure 35 illustre la méthode d’envoi de données de la classe Http3Client. Celle-ci contient
+différentes variables qui vont sauvegarder différentes heures. L’heure de l’appel de la méthode, l’heure
+après l’établissement de la connexion et l’heure après la réception de la réponse. Ces heures sont récu-
+pérées en milliseconde. Une fois les temps enregistrés, il est possible d’en déduire le temps de connexion,
+le temps de réception de la réponse et le temps total de la communication.
+
+      La classe "TestLauncher" contient toute la logique du test. Elle va créer une requête HTTP/3,
+créer le client HTTP/3, envoyer cette requête au serveur local et traiter la réponse. La classe "Test-
+LauncherLoop" permettra de choisir un cas d’utilisation et d’exécuter le "TestLauncher" cent fois.
+
+5.5.3     Résultat des tests
+      Six tests ont été lancés. Les cas de test BASIC_GET et HUGE_GET ont été lancés pour trois
+versions de QUIC. Le version 1, qui est la version de base fournie par Kwik, la première version du
+zero-copy ainsi que la version zero-copy "optimisée". La version optimisée correspond à la 2ème im-
+plémentation du "ReverseByteBuffer". Les résultats seront présentés sous forme de boxplot.
+
+        La création des différents graphiques ont été fait en python dans l’IDE de JupyterLab. Le projet
+
+
+                                                                                                        45
+est disponible à la racine du projet dans le dossier "_python_plot". Dans ce projet se trouve un script
+python qui va lire les fichiers contenant les métriques, calculés les moyennes de temps d’exécution par
+cas d’utilisation. Une fois ces données calculés, il va généré les boxplot.
+
+
+
+
+                       Figure 36 – Résultat des cas d’utilisation de type BASIC
+
+       La figure 36 est le graphique réalisé sur base des résultats des tests pour le cas d’utilisation
+de type "BASIC". Pour rappel, ce test consistait à récupérer une page web d’une taille de 2kb cent
+fois par version. Il est possible de déduire que le temps d’exécution des trois versions sont assez si-
+milaires. Les valeurs médianes (représentées par les lignes oranges) sont presque identiques pour les
+trois versions. La version QUIC v1 zero-copy (BASIC_GET_V1ZC) montre une moyenne de temps
+d’exécution légèrement supérieure aux autres versions. La dispersion des résultats sont également simi-
+laire. L’inversion des frames n’a pas de réel impacte sur les performances pour les fichiers de petite taille.
+
+
+
+
+                       Figure 37 – Résultat des cas d’utilisation de type HUGE
+
+      La figure 37 représente les résultats des tests pour le cas d’utilisation de type "HUGE". Pour
+
+                                                                                                           46
+rappel, ce test consistait à récupérer une page web d’une taille de 10mb cent fois par version. Le gra-
+phique montre que la version "V1ZC" présente un temps d’exécution très élevé par rapport aux autres
+versions. Le temps d’exécution médian et la moyenne sont 50% plus élevés que la version originale.
+On peut également apercevoir que les versions QUIC "V1" et "V1ZC_OPTI" sont très similaires en
+terme de temps d’exécution. La dispersion des résultats pour V1ZC est nettement plus importante que
+pour les autres versions. L’analyse des résultats révèle que la première implémentation du zero-copy
+(V1ZC) a introduit une dégradation significative des performances. Cependant, la version optimisée
+(V1ZC_OPTI) a réussi à éliminer ce problème de performance, ramenant les temps d’exécution à un
+niveau comparable à la version originale de QUIC. Cela suggère que l’optimisation a été efficace pour
+résoudre les problèmes initiaux de l’implémentation du zero-copy.
+
+       En conclusion, ces résultats montrent que l’implémentation initiale du zero-copy a eu un impact
+négatif sur les performances, en particulier pour les grands transferts de données. Toutefois, l’optimi-
+sation subséquente a permis de résoudre ces problèmes, aboutissant à une version (V1ZC_OPTI) qui
+offre des performances équivalentes à la version originale de QUIC, tout en préparant le terrain pour
+la suite des développement liées au zero-copy.
+
+
+6     Travaux futures
+       Parmi les modifications prévues dans la section 5.1, plusieurs étapes ont été accomplies avec
+succès. Premièrement, une nouvelle version de QUIC spécifique au zero-copy a été créée (point 1), per-
+mettant d’implémenter les changements sans affecter les versions existantes du protocole. L’inversion
+des frames (point 2) a été réalisée, restructurant les données pour permettre une lecture de droite à
+gauche. En conséquence, le mécanisme de lecture des frames (point 3) a été adapté pour fonctionner
+avec cette nouvelle structure, spécifiquement pour le payload des paquets QUIC. Ces modifications ont
+été implémentées tout en maintenant la compatibilité avec les versions antérieures du protocole. Les
+tests unitaires et d’intégration ont confirmé le bon fonctionnement de ces changements, démontrant
+que l’inversion des frames n’a pas eu d’impact négatif sur les performances globales du protocole. Ces
+réalisations constituent une base solide pour la suite de l’implémentation du zero-copy dans QUIC,
+ouvrant la voie aux étapes suivantes de ce processus d’optimisation.
+
+      Les prochaines sous-sections auront pour but de donnée des pistes et des débuts de solutions
+pour les prochaines étapes du développement du zero-copy dans la librairie Kwik.
+
+6.1   Positionnement des frames de contrôle
+       Une première implémentation naïve a été réalisée dans la classe "StreamFrameFirstCompara-
+tor.java" (figure 39). Cette classe permet de trier une liste selon les critère définis par le comparator.
+Celle-ci n’est pas utilisé dans le code final (elle est commenté) mais a été partiellement testé. Un test
+unitaire a été créé à cet effet "StreamFrameFirstComparatorTest.java". Ce tri n’impacte pas les tests
+unitaires dans un premier temps. Le comparator peut être utilisé lors de la génération des bytes du
+payload d’un paquet (Figure 38).
+
+
+
+
+                                                                                                       47
+     protected ByteBuffer generatePayloadBytes(int encodedPacketNumberLength) {
+         ByteBufferWrapper frameBytes = ByteBufferWrapper.allocate(MAX_PACKET_SIZE, quicVersion.i
+         // frames.sort(streamFrameFirstComparator);
+         frames.forEach(frame -> frame.serialize(frameBytes));
+         ...
+     }
+
+}
+
+
+
+                        Figure 38 – Tri de frames dans la classe QuicPacket
+
+
+      Ce comparator fait deux choses. Premièrement il va donner la priorité au stream frames, c’est-
+à-dire, qu’elles vont se retrouver tout à gauche de la liste. Toute autre type de frame va être placé à
+leur droite. Ce qui permet de répondre au problème des frames de contrôles qui se retrouvent avant les
+stream frames.
+
+      Deuxièmement, dans le cas d’une comparaison de deux stream frames, la taille va être comparée.
+Ceci afin de placer les plus grandes stream frames en début de liste. Ce qui permet de répondre à une
+des conditions de l’application du zero-copy qui permet son optimisation.
+
+
+
+     public class StreamFrameFirstComparator implements Comparator<QuicFrame>, Serializable {
+
+          @Override
+          public int compare(QuicFrame qf1, QuicFrame qf2) {
+
+               boolean isQf1StreamFrame = qf1 instanceof StreamFrame;
+               boolean isQf2StreamFrame = qf2 instanceof StreamFrame;
+
+               if (!isQf1StreamFrame && !isQf2StreamFrame) {
+                   return 0;
+               } else if (isQf1StreamFrame && !isQf2StreamFrame) {
+                   return -1;
+               } else if (!isQf1StreamFrame) {
+                   return 1;
+               }
+
+               return Integer.compare(qf2.getFrameLength(), qf1.getFrameLength());
+          }
+
+     }
+
+
+
+                                 Figure 39 – Classe de tri de frames
+
+       Ce tri n’est pas appliqué par défaut pour plusieurs raison. Des tests d’intégration sont encore
+nécessaires afin d’assurer son bon fonctionnent. Il n’est pas encore certain qu’un changement d’ordre des
+frames n’a aucun impact sur le fonctionnement de QUIC. Un test de performance doit être également
+réalisé afin d’être certain que celles-ci ne sont pas affectées par un tri fait à la génération de chaque
+
+
+                                                                                                      48
+paquet.
+
+6.2     Exposition de l’ID du stream
+      En ce qui concerne l’exposition de l’ID du stream, la figure 40 révèle que certaines informations
+sont déjà encodées dans les données additionnelles du AEAD. La créations de ce tableau de byte
+nommé "additionalData" semble être l’endroit propice à l’ajout de données supplémentaires telles que
+l’ID du stream. Le code doit également être adapté afin de réceptionner cette valeur en paramètre de
+la méthode.
+
+
+       protected void protectPacketNumberAndPayload(ByteBuffer packetBuffer,
+       int packetNumberSize,
+       ByteBuffer payload, int paddingSize, Keys clientSecrets) {
+           int packetNumberPosition = packetBuffer.position() - packetNumberSize;
+
+           // From https://tools.ietf.org/html/draft-ietf-quic-tls-16#section-5.3:
+           // "The associated data, A, for the AEAD is the contents of the QUIC
+           //   header, starting from the flags octet in either the short or long
+           //   header, up to and including the unprotected packet number."
+           int additionalDataSize = packetBuffer.position();
+           byte[] additionalData = new byte[additionalDataSize];
+
+           // Prepare for reading from start
+           packetBuffer.flip();
+           // Position is now where it was at start of this method.
+           packetBuffer.get(additionalData);
+           // Ensure we can continue writing
+           packetBuffer.limit(packetBuffer.capacity());
+
+           byte[] paddedPayload = new byte[payload.limit() + paddingSize];
+           payload.get(paddedPayload, 0, payload.limit());
+
+           byte[] encryptedPayload = encryptPayload(paddedPayload, additionalData,
+           packetNumber, clientSecrets);
+           ...
+       }
+
+
+
+      Figure 40 – Méthode de protection du payload et numéro de paquet de la classe QuicPacket
+
+
+6.3     Gestion de l’ordre de réception des paquets
+       Le gestion de l’ordre de réception des paquets pourrait se faire un niveau de la classe "QuicCon-
+nectionImpl.java". En effet, c’est cette classe avec la méthode "parseAndProcessPackets" qui va lire
+et traiter les paquets du buffer (figure 41). Elle semble être un point d’entrée intéressant afin de réor-
+ganiser les paquets avant l’envoi dans le buffer de l’application. Un autre endroit qui semble pertinent
+pour cette réorganisation peut être un peu plus loin dans les méthodes, au niveau du stream.
+
+
+
+
+                                                                                                       49
+      public void parseAndProcessPackets(int datagram, Instant timeReceived,
+      ByteBuffer data, QuicPacket parsedPacket)
+
+
+
+                Figure 41 – Méthode de parsing et de processing des paquets QUIC
+
+
+6.4   Points manquants
+       Les implémentations restantes telles que le contrôle des stream frames et la modification de l’API
+doivent encore passer par une étape d’analyse du code afin de trouver l’endroit propice. L’ajustement
+de l’offset, quant à lui, sera possible une fois l’API adaptée afin d’avoir le contrôle sur le buffer fourni
+par l’application. Comme indiqué précédemment, certaines étapes supplémentaires pourraient être
+découvertes avec les avancées des implémentations.
+
+
+7     Discussion
+      Les résultats obtenus dans cette étude préliminaire sur l’implémentation du zero-copy dans le
+protocole QUIC apportent des éclairages intéressants sur la faisabilité et les défis de cette optimisation.
+L’inversion des frames, première étape cruciale vers le zero-copy complet, a été réalisée avec succès sans
+compromettre les performances globales du protocole, comme le démontrent nos tests de performance.
+Cette constatation est encourageante pour la suite. Cependant, il est important de noter que cette
+étude n’a abordé qu’une partie des modifications nécessaires pour une implémentation complète du
+zero-copy dans QUIC. Les défis restants, énuméré dans la section 6, doivent encore être relevé. Ceci
+nécessitant encore beaucoup de travail. Cette section fournis quelques pistes intéressantes pour les
+travaux futurs
+
+       La comparaison des performances entre les différentes versions (QUIC v1, QUIC v1 zero-copy
+initiale, et QUIC v1 zero-copy optimisée) a permis de révéler des problèmes de performances. Ceci dû à
+la première implémentation du "ReverseBufer". Ce qui m’a permis de corriger le problème par la suite.
+Le fait que la version optimisée du zero-copy offre des performances équivalentes à la version originale
+de QUIC, même pour des transferts de données volumineux, est prometteur. Cela suggère que l’optimi-
+sation du zero-copy pourrait potentiellement améliorer les performances sans compromettre l’efficacité
+existante du protocole, une fois l’implémentation complétée.
+
+       Néanmoins, il est important de reconnaître les limitations de cette étude. L’implémentation par-
+tielle du zero-copy ne permet pas encore de tirer des conclusions définitives sur son impact global sur
+les performances de QUIC. De plus, les tests ont été réalisés dans un environnement contrôlé, et les
+résultats pourraient varier dans des conditions réseau réelles et plus diversifiées.
+
+
+
+8     Conclusion
+8.1   Rappel de la recherche
+      Cette recherche avait pour but de démontrer la faisabilité de l’application de l’optimisation
+de zero-copy au protocole QUIC. Un aspect important de cette recherche consiste à comprendre le
+fonctionnement de cette optimisation dans le TCPLS, de comprendre les particularités du protocole
+qui permettent l’application de celle-ci et de comprendre les conditions d’application de cette opti-
+misation. Ceci afin d’établir un plan des modifications à prévoir dans QUIC. Une implémentation de
+l’optimisation a été réalisée afin d’appliquer le plan précédemment établi. Des tests de performances
+ont également été effectués afin de s’assurer de l’impacte positif des changements.
+
+
+                                                                                                         50
+8.2    Démarche
+        Tout d’abord, une étude des différents des protocoles TCPLS et QUIC a été effectué ainsi que
+sur les protocoles lié à ceux ci comme le TCP, l’UDP et le TLS. Un parcours des différentes faiblesse
+du TCP et TLS a également été faite et de comment TCPLS et QUIC pallient à celles-ci. Ceci afin de
+mieux comprendre leurs fonctionnement. Ensuite, une étude de l’optimisation zero-copy du TCPLS et
+de ces conditions d’application a été effectué. Suivit d’une analyse des changements à appliquer dans
+le protocole QUIC afin d’intégrer cette optimisation. La librairie choisi pour cette démonstration est
+la librairie Kwik qui est une implémentation Java de QUIC. Des testes on été fait afin de comprendre
+l’utilisation et le fonctionnement de cette librairie. Le travail de transposition à ensuite eu lieu en partie.
+En effet, uniquement le retournement des frames a été implémenté. Des testes unitaires java ainsi que
+des testes d’intégrations manuels ont permis de s’assurer du bon fonctionnement de la librairie avant et
+après développement. Ensuite des scénarios de tests ont été élaboré et implémenté dans Kwik. Ce qui
+a permis de tester les différentes version de QUIC réalisées et d’en tirer des conclusions sur l’impacte
+des changements.
+
+8.3    Résultats
+       L’analyse approfondie de l’optimisation zero-copy dans le contexte de TCPLS a permis de mieux
+comprendre son fonctionnement et d’identifier ses conditions spécifiques d’application. En parallèle,
+l’examen détaillé des divers protocoles, notamment TCPLS et QUIC, a mis en lumière leurs diver-
+gences structurelles et fonctionnelles. Sur la base de ces connaissances, un plan d’action a été élaboré,
+définissant les étapes nécessaires et les modifications requises pour intégrer l’optimisation zero-copy
+dans le protocole QUIC, tout en tenant compte des particularités de ce protocole.
+
+      Une partie de l’implémentation du zero-copy a été réalisée. Une nouvelle version QUIC a été
+ajouté au niveau de Kwik et du client Flupke. Les frames ont été retournées et la lecture des payloads
+des paquets QUIC de droite à gauche est fonctionnel. L’implémentation de la suite demandant cer-
+tainement encore plusieurs mois de travail. Des testes unitaires et d’intégrations ont été ajouté et ont
+permis de s’assurer du bon fonctionnement de la librairie avant et après changement. Tous les types de
+frames ont été testés. Les scénarios de testes ainsi que les testes de performances ont pu révéler dans
+un premier tant des problèmes lié à la première version des changements. Des adaptations ont été fait,
+les changements n’ont actuellement plus d’impact négatif sur le code.
+
+      Les résultats des modifications se sont révélés encourageants pour la suite. Les changements
+apportés n’ont pas eu d’impact négatif sur les performances du protocole, ce qui constitue un point
+de départ favorable pour les développements ultérieurs. De plus, la méthodologie de test mise en
+place offre une base solide pour les futures implémentations. Cette approche rigoureuse permet non
+seulement de valider les nouvelles fonctionnalités sur une fondation stable, mais aussi de détecter
+et prévenir rapidement d’éventuelles régressions. Ainsi, le cadre de développement établi assure une
+progression contrôlée et fiable vers l’intégration complète du zero-copy dans QUIC.
+
+8.4    Limites de l’étude
+      L’étude n’étant pas terminée, elle ne peut pas encore prouver que l’application du zero-copy est
+possible et efficace dans le protocole QUIC mais les résultats sont encourageants.
+
+
+
+
+                                                                                                            51
+Références
+ [1] User    Datagram    Protocol.         RFC            768,       August    1980.            URL
+     https://www.rfc-editor.org/info/rfc768.
+
+ [2] Internet Protocol. RFC 791, September 1981. URL https://www.rfc-editor.org/info/rfc791.
+
+ [3] M. Belshe, R. Peon, and M. Thomson. Rfc 7540 : Hypertext transfer protocol version 2 (http/2),
+     2015.
+
+ [4] Mike    Bishop.        HTTP/3.           RFC            9114,      June    2022.           URL
+     https://www.rfc-editor.org/info/rfc9114.
+
+ [5] Scott W. Brim and Brian E. Carpenter. Middleboxes : Taxonomy and Issues. RFC 3234, February
+     2002. URL https://www.rfc-editor.org/info/rfc3234.
+
+ [6] Neal Cardwell, Yuchung Cheng, C. Stephen Gunn, Soheil Hassas Yeganeh, and Van Jacobson.
+     Bbr : congestion-based congestion control. Commun. ACM, 60(2) :58–66, jan 2017. ISSN 0001-
+     0782. doi : 10.1145/3009824. URL https://doi.org/10.1145/3009824.
+
+ [7] Yuchung Cheng, Jerry Chu, Sivasankar Radhakrishnan, and Arvind Jain. TCP Fast Open. RFC
+     7413, December 2014. URL https://www.rfc-editor.org/info/rfc7413.
+
+ [8] Jeffrey Dean and Luiz André Barroso.     The tail at scale.    Commun. ACM, 56
+     (2) :74–80, feb 2013.    ISSN 0001-0782.    doi : 10.1145/2408776.2408794. URL
+     https://doi.org/10.1145/2408776.2408794.
+
+ [9] Devopedia. QUIC. URL https://devopedia.org/quic. [Online ; accessed 16-July-2024].
+
+[10] Mo Dong, Qingxi Li, Doron Zarchy, P. Brighten Godfrey, and Michael Schapira. Pcc : re-
+     architecting congestion control for consistent high performance. In Proceedings of the 12th USE-
+     NIX Conference on Networked Systems Design and Implementation, NSDI’15, page 395–408, USA,
+     2015. USENIX Association. ISBN 9781931971218.
+
+[11] Peter Doornbosch. Flupke, . URL https://bitbucket.org/pjtr/flupke/src/master/. [Online ;
+     accessed 21-March-2023].
+
+[12] Peter Doornbosch. Kwik, . URL https://bitbucket.org/pjtr/kwik/src/master/. [Online ;
+     accessed 21-March-2023].
+
+[13] Wesley Eddy. Transmission Control Protocol (TCP).            RFC 9293, August 2022.        URL
+     https://www.rfc-editor.org/info/rfc9293.
+
+[14] Tobias Flach, Nandita Dukkipati, Andreas Terzis, Barath Raghavan, Neal Cardwell, Yuchung
+     Cheng, Ankur Jain, Shuai Hao, Ethan Katz-Bassett, and Ramesh Govindan. Reducing web
+     latency : the virtue of gentle aggression. In Proceedings of the ACM SIGCOMM 2013 Confe-
+     rence on SIGCOMM, SIGCOMM ’13, page 159–170, New York, NY, USA, 2013. Associa-
+     tion for Computing Machinery. ISBN 9781450320566. doi : 10.1145/2486001.2486014. URL
+     https://doi.org/10.1145/2486001.2486014.
+
+[15] Sally Floyd, Jamshid Mahdavi, Matt Mathis, and Dr. Allyn Romanow. TCP Selective Acknow-
+     ledgment Options. RFC 2018, October 1996. URL https://www.rfc-editor.org/info/rfc2018.
+
+[16] Jana Iyengar and Martin Thomson. QUIC : A UDP-Based Multiplexed and Secure Transport.
+     RFC 9000, May 2021. URL https://www.rfc-editor.org/info/rfc9000.
+
+
+
+
+                                                                                                  52
+[17] Adam Langley, Alistair Riddoch, Alyssa Wilk, Antonio Vicente, Charles Krasic, Dan Zhang,
+     Fan Yang, Fedor Kouranov, Ian Swett, Janardhan Iyengar, Jeff Bailey, Jeremy Dorfman, Jim
+     Roskind, Joanna Kulik, Patrik Westin, Raman Tenneti, Robbie Shade, Ryan Hamilton, Vic-
+     tor Vasiliev, Wan-Teh Chang, and Zhongyi Shi. The quic transport protocol : Design and
+     internet-scale deployment. In Proceedings of the Conference of the ACM Special Interest Group
+     on Data Communication, SIGCOMM ’17, page 183–196, New York, NY, USA, 2017. Associa-
+     tion for Computing Machinery. ISBN 9781450346535. doi : 10.1145/3098822.3098842. URL
+     https://doi.org/10.1145/3098822.3098842.
+
+[18] David McGrew. An Interface and Algorithms for Authenticated Encryption. RFC 5116, January
+     2008. URL https://www.rfc-editor.org/info/rfc5116.
+
+[19] Henrik Nielsen, Jeffrey Mogul, Larry M Masinter, Roy T. Fielding, Jim Gettys, Paul J. Leach,
+     and Tim Berners-Lee. Hypertext Transfer Protocol – HTTP/1.1. RFC 2616, June 1999. URL
+     https://www.rfc-editor.org/info/rfc2616.
+
+[20] Eric Rescorla. The Transport Layer Security (TLS) Protocol Version 1.3. RFC 8446, August 2018.
+     URL https://www.rfc-editor.org/info/rfc8446.
+
+[21] Eric Rescorla and Nagendra Modadugu. Datagram Transport Layer Security Version 1.2. RFC
+     6347, January 2012. URL https://www.rfc-editor.org/info/rfc6347.
+
+[22] F. Rochet, M. Piraux, and O. Bonaventure. TCPLS : Modern Transport Services with TCP
+     and TLS. URL https://www.ietf.org/archive/id/draft-piraux-tcpls-04.html. [Online ;
+     accessed 31-October-2023].
+
+[23] Florentin Rochet, Emery Assogba, Maxime Piraux, Korian Edeline, Benoit Donnet, and Olivier
+     Bonaventure. Tcpls : Modern transport services with tcp and tls. In Proceedings of the 17th Inter-
+     national Conference on Emerging Networking EXperiments and Technologies, CoNEXT ’21, page
+     45–59, New York, NY, USA, 2021. Association for Computing Machinery. ISBN 9781450390989.
+     doi : 10.1145/3485983.3494865. URL https://doi.org/10.1145/3485983.3494865.
+
+[24] Martin Thomson and Cory Benfield.       HTTP/2.              RFC 9113, June 2022.            URL
+     https://www.rfc-editor.org/info/rfc9113.
+
+[25] Martin Thomson and Sean Turner. Using TLS to Secure QUIC. RFC 9001, May 2021. URL
+     https://www.rfc-editor.org/info/rfc9001.
+
+[26] Lisong Xu, Sangtae Ha, Injong Rhee, Vidhi Goel, and Lars Eggert. CUBIC for Fast and Long-
+     Distance Networks. RFC 9438, August 2023. URL https://www.rfc-editor.org/info/rfc9438.
+
+
+
+
+                                                                                                    53
+8.5     Annexes
+8.5.1    Code du projet
+        Repository gitlab : https ://gitlab.com/unamur-ts/kwik-zero-copy
+
+
+
+
+                                                                           54
+

@@ -1,0 +1,2824 @@
+                          Institutional Repository - Research Portal
+                          Dépôt Institutionnel - Portail de la Recherche
+                   researchportal.unamur.be
+     University of Namur
+
+
+
+
+                                                      THESIS / THÈSE
+
+     MASTER EN SCIENCES INFORMATIQUES
+
+
+     Impacts et défis de l’intégration d’un générateur de tests dans un pipeline CI/CD
+
+
+
+
+Author(s) - Auteur(s) :
+     Coppin, Julien
+
+     Award date:
+     2024
+
+
+     Awarding institution:
+     Universite de Namur
+Supervisor - Co-Supervisor / Promoteur - Co-Promoteur :
+     Link to publication
+
+
+
+
+Publication date - Date de publication :
+
+
+
+Permanent link - Permalien :
+
+
+
+Rights / License - Licence de droit d’auteur :
+
+     General rights
+     Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+     and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+             • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+             • You may not further distribute the material or use it for any profit-making activity or commercial gain
+             • You may freely distribute the URL identifying the publication in the public portal ?
+     Take down policy
+     If you believe that this document breaches copyright please contact us providing details, and we will remove access to the work immediately
+     and investigate your claim.
+
+Bibliothèque   Universitaire
+     Download date: 23. mars. 2026Moretus Plantin
+                         Université de Namur
+                          Faculté d’informatique
+                        Année académique 2023–2024
+
+
+
+
+              Impacts et défis de l’intégration d’un
+              générateur de tests dans un pipeline
+                                  CI/CD
+
+
+                              Julien COPPIN
+
+
+
+
+Promoteur :                         (Signature pour approbation du dépôt - REE art. 40)
+              Xavier DEVROEY
+
+
+
+              Mémoire présenté en vue de l’obtention du grade de
+                     Master en Sciences Informatiques.
+                     Remerciements
+
+    Ce mémoire est le fruit de plusieurs mois de travail et
+de recherche. Il n’aurait pas pu voir le jour sans le soutien
+et l’aide précieuse de nombreuses personnes auxquelles je
+tiens à exprimer ma profonde gratitude.
+    Tout d’abord, je souhaite remercier sincèrement mon
+promoteur, Xavier Devroey, pour sa patience, sa disponi-
+bilité, et ses conseils éclairés. Son expertise et ses encoura-
+gements ont été indispensables à la réalisation de ce mé-
+moire.
+    Je tiens également à remercier mes proches, qui ont su
+me soutenir et m’encourager tout au long de ce parcours.
+Leur compréhension et leurs piques d’humour ont été d’un
+grand réconfort lors des moments diﬃciles.
+    Un grand merci à mes collègues, pour leur soutien, leur
+patience et leurs piques qui ont su rendre ce parcours plus
+agréable. Leur collaboration et leurs retours constructifs
+ont largement contribué à l’avancement de ce travail.
+    Enfin, je remercie toutes les personnes qui, de près ou de
+loin, ont contribué à la réalisation de ce mémoire. Leur aide
+et leur soutien ont été précieux et je leur en suis infiniment
+reconnaissant.
+Résumé
+    Ce mémoire examine les impacts et les défis de l’intégration de CLING, un générateur de tests
+pour Java, dans les pipelines CI/CD (Continuous Integration/Continuous Deployment). Dans un
+contexte où l’automatisation des tests est essentielle pour garantir la qualité des logiciels, CLING
+est utilisé pour générer automatiquement des tests d’intégration. L’intégration de cet outil dans
+un environnement Docker permet de standardiser et d’isoler les environnements, assurant ainsi
+une exécution cohérente des tests.
+
+    Le travail aborde les défis techniques rencontrés lors de cette intégration, tels que la confi-
+guration et l’automatisation des opérations nécessaires. Il décrit également le développement
+de l’API utilisée pour gérer les données générées par CLING. Les résultats montrent une amé-
+lioration de l’eﬃcacité du processus de développement, en particulier grâce à la réduction des
+interventions manuelles. Enfin, le mémoire propose des recommandations pour les développeurs
+et les ingénieurs DevOps cherchant à optimiser l’intégration des générateurs de tests dans leurs
+pipelines CI/CD.
+
+Mots-clés : CI/CD, Docker, tests automatisés, CLING, intégration continue, déploiement continu,
+Java
+
+
+Abstract
+    This thesis investigates the impacts and challenges of integrating CLING, a test generator for
+Java, into CI/CD (Continuous Integration/Continuous Deployment) pipelines. In a context where
+test automation is essential to ensure the quality of software, CLING is used to automatically
+generate integration tests. The integration of this tool into a Docker environment standardizes
+and isolates the environments, thus ensuring consistent test execution.
+
+    The work addresses the technical challenges encountered during this integration, such as the
+configuration and automation of necessary operations. It also describes the development of the
+API used to manage the data generated by CLING. The results show an improvement in the
+eﬃciency of the development process, particularly through the reduction of manual interven-
+tions. Finally, the thesis oﬀers recommendations for developers and DevOps engineers looking to
+optimize the integration of test generators into their CI/CD pipelines.
+
+Keywords : CI/CD, Docker, automated testing, CLING, continuous integration, continuous de-
+ployment, Java
+Acronymes
+ API Application programming interface. 9, 10, 14, 25, 27–30, 33, 35, 36, 38–43, 45–47
+
+ CD Continuous Deployment. 12, 13, 15, 24
+ CI Continuous Integration. 12, 13, 15, 24, 29
+ CI/CD Continuous Integration/Continuous Deployment. 9, 12–16, 20–23, 25–27, 29–
+   31, 33–35, 44, 47, 49, 53, 55, 56
+ CLI Command-line interface. 33
+ CRUD Create, Read, Update, Delete. 37, 38
+ CSRF Cross-site request forgery. 39, 42, 47
+
+ DTO Data Transfer Object. 10, 38, 39
+
+ IT Information Technology. 31, 49
+
+ JWT JSON Web Token. 39, 40, 42, 47
+
+ MVC Modèle/Vue/Contrôleur. 10, 36, 39
+
+ ORM Object-Relational Mapping. 37, 38
+
+ RGPD Règlement général sur la protection des données. 47
+
+ SOLID S - Responsabilité unique (Single responsibility principle) O - Ouvert/fermé
+   (Open/closed principle) L - Substitution de Liskov (Liskov substitution principle)
+   I - Ségrégation des interfaces (Interface segregation principle) D - Inversion des
+   dépendances (Dependency inversion principle). 37
+
+ UEQ User Experience Questionnaire. 9, 30, 31, 49–53, 55, 60
+ UUID Universally Unique Identifier. 35
+ UX User experience. 10, 42
+
+ WCAG Web Content Accessibility Guidelines. 42
+
+ XSS Cross-site Scripting. 39, 42
+
+
+
+
+                                         4
+Glossaire
+  Agile La méthodologie Agile est une approche de gestion de projet qui consiste à
+    diviser un projet en phases et à mettre l’accent sur la collaboration et l’amélioration
+    continue. 12, 13, 23, 55
+
+  bot Un bot est une application logicielle automatisée qui exécute des tâches répétitives
+     sur un réseau. Il suit des instructions spécifiques pour imiter le comportement
+     humain, mais il est plus rapide et plus précis. 15, 16
+  build Compilation du code source afin de pouvoir le déposer sur un serveur ou l’in-
+     tégrer dans une image Docker. 9, 14, 15, 21, 44, 45
+
+  clean architecture La Clean Architecture vise à réduire les dépendances de la lo-
+     gique métier avec les services que l’on consomme (API, Base de données, Frame-
+     work, Librairies tierces), pour maintenir une application stable au cours de ses
+     évolutions, de ses tests mais également lors de changements ou mises à jour des
+     ressources externes. 37
+  Cloud Le terme « cloud » désigne les serveurs accessibles sur Internet, ainsi que les
+     logiciels et bases de données qui fonctionnent sur ces serveurs. 14
+  Command Line Interface Une interface de ligne de commande (CLI) est une in-
+    terface basée sur du texte dans laquelle vous pouvez saisir des commandes qui
+    interagissent avec le système d’exploitation d’un ordinateur. 33
+  commit En gestion de versions, un commit représente une opération d’enregistrement
+    d’un ensemble de modifications dans un dépôt Git. Chaque commit capture l’état
+    actuel du projet, y compris les ajouts, suppressions ou modifications de fichiers, et
+    les enregistre dans l’historique du dépôt avec un message descriptif. Ce message
+    permet de documenter les changements eﬀectués, facilitant ainsi la traçabilité et
+    la compréhension de l’évolution du code. Chaque commit est identifié par un hash
+    unique, garantissant l’intégrité et la sécurité des données enregistrées. 14
+  conteneur En informatique, un conteneur est une structure de données, une classe,
+     ou un type de données abstrait, dont les instances représentent des collections
+     d’autres objets. Autrement dit, les conteneurs sont utilisés pour stocker des objets
+     sous une forme organisée qui suit des règles d’accès spécifiques. 13, 14, 25
+  conteneurisation La conteneurisation est un processus de déploiement logiciel qui
+     regroupe le code d’une application avec tous les fichiers et bibliothèques dont elle
+     a besoin pour s’exécuter sur n’importe quelle infrastructure. 12, 13, 53, 55
+  Continuous Deployment/Delivery Le déploiement continu est une approche d’in-
+    génierie logicielle dans laquelle les fonctionnalités logicielles sont livrées fréquem-
+    ment par le biais de déploiements automatisés. 12, 13
+  Continuous Integration L’intégration continue, est un ensemble de pratiques uti-
+    lisées en génie logiciel consistant à vérifier à chaque modification de code source
+    que le résultat des modifications ne produit pas de régression dans l’application
+    développée. 12, 13
+
+  Data Transfer Object Un objet de transfert de données est un patron de conception
+    utilisé dans les architectures logicielles objets. Son but est de simplifier les transferts
+    de données entre les sous-systèmes d’une application logicielle. 10, 38
+
+                                              5
+DevOps DevOps est un ensemble de pratiques et d’outils, ainsi qu’une philosophie
+   culturelle. Son but est d’automatiser et d’intégrer les processus entre les équipes
+   de développement et informatiques. 12, 13, 36, 55
+dockeriser Dockeriser désigne le processus d’encapsulation d’une application, y com-
+   pris toutes ses dépendances, dans un conteneur Docker. Cela implique de créer une
+   image Docker qui contient tout le nécessaire pour exécuter l’application de manière
+   cohérente dans diﬀérents environnements. En dockerisant une application, on s’as-
+   sure qu’elle peut être déployée de manière reproductible et isolée, indépendamment
+   des diﬀérences entre les systèmes hôtes. 34
+endpoint Un Endpoint est ce qu’on appelle une extrémité d’un canal de communi-
+   cation. Autrement dit, lorsqu’une API interagit avec un autre système, les points
+   de contact de cette communication sont considérés comme des Endpoints. 28, 37,
+   40
+framework Un framework est un ensemble d’outils et de composants logiciels orga-
+   nisés conformément à un plan d’architecture et des patterns, l’ensemble formant
+   ou promouvant un « squelette » de programme, un canevas. 25, 28, 36, 47
+hooks Un hook dans Git est un script personnalisé qui s’exécute automatiquement en
+  réponse à des événements spécifiques au sein du dépôt. Les hooks sont utilisés pour
+  automatiser des tâches à diﬀérents moments du cycle de vie du projet, comme avant
+  un commit (pre-commit hook) ou après un push (post-push hook). Ils permettent
+  d’appliquer des règles de style de code, de lancer des tests, de mettre à jour des
+  fichiers, ou d’autres actions avant ou après que des actions Git soient exécutées.
+  Les hooks sont stockés dans le répertoire .git/hooks du dépôt, et peuvent être
+  configurés pour répondre aux besoins spécifiques du projet. 14
+implémentation L’implémentation fait référence au processus de développement et
+   de réalisation concrète d’une solution technique à partir des spécifications définies
+   lors de la phase de conception. Cela inclut l’écriture du code, l’intégration des
+   diﬀérentes composantes du système, et la configuration des environnements néces-
+   saires pour exécuter le projet. L’implémentation implique de traduire les concepts
+   théoriques en un produit fonctionnel, en respectant les exigences techniques et
+   fonctionnelles du projet. C’est une étape clé du cycle de développement logiciel,
+   où les idées et les plans sont transformés en réalité opérationnelle. 12
+intégration L’intégration en informatique désigne le processus consistant à assembler
+   diﬀérents composants ou systèmes pour qu’ils fonctionnent ensemble de manière
+   cohérente et harmonieuse. Cela peut inclure l’intégration de logiciels, de matériels,
+   de bases de données, ou de services web, afin de créer un système global où toutes
+   les parties interagissent eﬃcacement. L’intégration vise à s’assurer que les diﬀé-
+   rentes parties fonctionnent correctement ensemble, en échangeant des données, en
+   exécutant des processus conjoints, et en respectant les contraintes et spécifications
+   établies. Ce processus est essentiel dans le développement de systèmes complexes,
+   où plusieurs technologies ou modules doivent collaborer pour fournir une fonction-
+   nalité complète. 12–16, 19–25, 27–30, 32
+log Le fichier LOG est un format de fichier texte. Il s’agit d’un document créé par un
+   programme ou un système d’exploitation qui constitue un historique des activités
+   liées à l’utilisation de ce programme ou ce système. 34
+
+                                         6
+mapper Un mapper est un composant ou un outil en informatique qui sert à transfor-
+  mer ou à faire correspondre des données entre deux systèmes, structures ou formats
+  diﬀérents. 37
+middleware Un intergiciel (middleware) est un logiciel qui se trouve entre un système
+  d’exploitation et les applications qui s’exécutent sur celui-ci. 29, 38
+mocks En programmation orientée objet, les mocks sont des objets simulés qui re-
+  produisent le comportement d’objets réels de manière contrôlée. Un programmeur
+  crée un mock dans le but de tester le comportement d’autres objets, réels, mais
+  liés à un objet inaccessible ou non implémenté. 17
+Object-Relational Mapping Un mapping objet-relationnel est un type de pro-
+  gramme informatique qui se place en interface entre un programme applicatif et
+  une base de données relationnelle pour simuler une base de données orientée objet.
+  37
+open source Un logiciel open source est un logiciel informatique publié sous une
+  licence dans laquelle le détenteur du droit d’auteur accorde aux utilisateurs le
+  droit d’utiliser, d’étudier, de modifier et de distribuer le logiciel et son code source
+  à toute personne et à toutes fins. 21
+parser Parcourir le contenu d’un texte ou d’un fichier en l’analysant pour vérifier sa
+   syntaxe ou en extraire des éléments. 45
+pipeline Un pipeline est un ensemble de processus et d’outils automatisés qui per-
+   mettent aux développeurs et aux experts des opérations de travailler de manière
+   cohérente pour développer et déployer du code dans un environnement de produc-
+   tion. 9, 10, 12, 14–16, 20–23, 26, 27, 29, 30, 33–35, 44, 45, 47, 49, 53, 55, 56
+playbook Un playbook est un ensemble d’étapes manuelles permettant de résoudre
+   un problème de production. 15
+plugin Le plugin, également appelé module d’extension, plug-in, add-in ou add-on, est
+   un programme additionnel pour une application internet ou un logiciel de bureau.
+   21, 56
+portabilité La portabilité d’un programme informatique est sa capacité à pouvoir
+   être adapté plus ou moins facilement en vue de fonctionner dans diﬀérents environ-
+   nements d’exécution. Les diﬀérences peuvent porter sur l’environnement matériel
+   comme sur l’environnement logiciel. 13, 14, 29
+push La commande git push envoie les commits locaux d’une branche vers un dé-
+   pôt distant. Cela permet de partager les modifications eﬀectuées localement avec
+   d’autres membres de l’équipe ou de mettre à jour la version distante du projet.
+   Lors d’un git push, les commits de la branche active sont transférés vers la branche
+   correspondante sur le dépôt distant. Cette opération est souvent utilisée après avoir
+   eﬀectué des modifications locales et les avoir validées (commits), pour ensuite les
+   synchroniser avec le dépôt distant. 14
+README Un fichier README est un fichier contenant des informations sur les
+   autres fichiers du même répertoire. 33, 45
+repositories Dans le contexte de l’Object-Relational Mapping (ORM), un repository
+   est un design pattern qui encapsule la logique nécessaire pour accéder aux données
+   de la base de données et eﬀectuer des opérations CRUD (Create, Read, Update,
+   Delete). 28, 38, 39
+
+                                          7
+repository Dans le cadre de GIT, un repository est un lieu de stockage de paquets lo-
+   giciels. Dans le cadre d’un ORM, le repository sert de médiateur entre l’application
+   et le mécanisme de persistance (la base de données), permettant aux développeurs
+   de manipuler les données sous forme d’objets sans avoir à écrire directement des
+   requêtes SQL. Chaque repository est généralement associé à une entité ou un mo-
+   dèle spécifique, et il fournit des méthodes pour interagir avec les enregistrements
+   correspondants dans la base de données, comme la recherche, la sauvegarde, la mise
+   à jour ou la suppression de données. 21, 26, 29, 37, 38, 40, 44, 45
+responsive Cela consiste à rendre un site web accessible et adaptable à tous les
+   devices : tablettes, smartphones, etc. 42
+
+scalabilité La scalabilité désigne la capacité d’un produit à s’adapter à un change-
+   ment d’ordre de grandeur de la demande, en particulier sa capacité à maintenir ses
+   fonctionnalités et ses performances en cas de forte demande. 13, 14, 21, 47
+
+thread Un thread est similaire à un processus. Il représente l’exécution d’un ensemble
+   d’instructions du langage machine d’un processeur. Du point de vue de l’utilisateur,
+   ces exécutions semblent se dérouler en parallèle. Toutefois, là où chaque processus
+   possède sa propre mémoire virtuelle, les threads d’un même processus se partagent
+   sa mémoire virtuelle. En revanche, tous les threads possèdent leur propre pile d’exé-
+   cution. 34
+
+workflow Un workflow, aussi appelé flux de travaux ou flux opérationnel, désigne
+  une suite de tâches ou d’opérations qui doivent être réalisées par un individu ou
+  un groupe d’individus selon un ordre spécifique. 13, 21, 24–27, 34, 46
+
+
+
+
+                                         8
+Table des matières
+Acronymes                                                                                   4
+
+Glossaire                                                                                   5
+
+1 Introduction                                                                             12
+
+2 État de l’art                                                                            13
+  2.1 CI/CD . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    13
+  2.2 Docker et la virtualisation . . . . . . . . . . . . . . . . . . . . . . . . . . .    13
+  2.3 Intégration d’outils (API) . . . . . . . . . . . . . . . . . . . . . . . . . . .     14
+      2.3.1 Interaction avec les systèmes de gestion de version . . . . . . . . . .        14
+      2.3.2 Intégration avec des outils de build et de déploiement . . . . . . . .         14
+      2.3.3 Outils de visualisation . . . . . . . . . . . . . . . . . . . . . . . . .      15
+      2.3.4 Bots d’aide au développement . . . . . . . . . . . . . . . . . . . . .         15
+  2.4 Génération de tests (search-based test case generation) . . . . . . . . . . .        16
+  2.5 Unit Testing . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   16
+      2.5.1 EvoSuite . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     16
+      2.5.2 Randoop . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      17
+  2.6 Class Integration Testing . . . . . . . . . . . . . . . . . . . . . . . . . . . .    17
+      2.6.1 Dataflow Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . .      17
+      2.6.2 Controlflow Analysis (critère CBC) . . . . . . . . . . . . . . . . . .         17
+  2.7 Génération de tests dans l’industrie . . . . . . . . . . . . . . . . . . . . . .     20
+      2.7.1 Acception par les développeurs . . . . . . . . . . . . . . . . . . . .         20
+  2.8 Outils et méthodes de CI/CD . . . . . . . . . . . . . . . . . . . . . . . . .        20
+      2.8.1 GitHub Actions . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       21
+      2.8.2 GitLab CI . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      21
+      2.8.3 Jenkins . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      21
+      2.8.4 Bitbucket Pipelines . . . . . . . . . . . . . . . . . . . . . . . . . . .      21
+
+3 Méthodologie                                                                             23
+  3.1 Approche Générale . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      23
+  3.2 Processus de Recherche . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     23
+  3.3 Définition de l’Architecture . . . . . . . . . . . . . . . . . . . . . . . . . .     24
+      3.3.1 Analyse de CLING . . . . . . . . . . . . . . . . . . . . . . . . . . .         24
+      3.3.2 Sélection des Outils et Technologies . . . . . . . . . . . . . . . . . .       24
+      3.3.3 Workflow global des composants . . . . . . . . . . . . . . . . . . . .         26
+  3.4 Développement et intégration . . . . . . . . . . . . . . . . . . . . . . . . .       27
+      3.4.1 Intégration de l’Outil . . . . . . . . . . . . . . . . . . . . . . . . . .     27
+      3.4.2 Développement de l’API . . . . . . . . . . . . . . . . . . . . . . . .         28
+              3.4.2.1 Architecture et Technologies Utilisées . . . . . . . . . . . .       28
+              3.4.2.2 Documentation . . . . . . . . . . . . . . . . . . . . . . . .        28
+              3.4.2.3 Défis Techniques et Solutions . . . . . . . . . . . . . . . .        29
+              3.4.2.4 Performance et Optimisation . . . . . . . . . . . . . . . .          29
+      3.4.3 Intégration dans les pipelines CI/CD . . . . . . . . . . . . . . . . .         29
+      3.4.4 Conception du Site Web . . . . . . . . . . . . . . . . . . . . . . . .         30
+  3.5 Protocole de Recherche pour le Questionnaire UEQ . . . . . . . . . . . . .           30
+
+
+
+                                             9
+4 Implémentation                                                                           33
+  4.1 Présentation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   33
+  4.2 Analyse de CLING . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       33
+  4.3 Modification CLING . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       33
+  4.4 Intégration CLING pipeline . . . . . . . . . . . . . . . . . . . . . . . . . .       34
+  4.5 Développement de l’API . . . . . . . . . . . . . . . . . . . . . . . . . . . .       36
+      4.5.1 Architecture . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     36
+      4.5.2 Pattern Repository . . . . . . . . . . . . . . . . . . . . . . . . . . .       38
+      4.5.3 Pattern Service . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      38
+      4.5.4 Pattern DTO (Data Transfer Object) . . . . . . . . . . . . . . . . .           38
+      4.5.5 Pattern Module . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       39
+      4.5.6 Pattern MVC (Modèle-Vue-Contrôleur) . . . . . . . . . . . . . . . .            39
+      4.5.7 Pattern Proxy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      39
+      4.5.8 Authentification et Autorisation . . . . . . . . . . . . . . . . . . . .       39
+      4.5.9 Gestion des Erreurs . . . . . . . . . . . . . . . . . . . . . . . . . . .      40
+      4.5.10 Documentation de l’API . . . . . . . . . . . . . . . . . . . . . . . .        40
+      4.5.11 Sécurité . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    40
+  4.6 Développement du site web . . . . . . . . . . . . . . . . . . . . . . . . . .        40
+      4.6.1 Architecture de l’Application . . . . . . . . . . . . . . . . . . . . .        40
+      4.6.2 Design des Composants . . . . . . . . . . . . . . . . . . . . . . . . .        41
+      4.6.3 Services et Gestion de la Logique Métier . . . . . . . . . . . . . . .         41
+      4.6.4 Routage et Navigation . . . . . . . . . . . . . . . . . . . . . . . . .        41
+      4.6.5 Formulaires et Validation . . . . . . . . . . . . . . . . . . . . . . . .      41
+      4.6.6 Sécurité . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     42
+      4.6.7 Performance et Optimisation . . . . . . . . . . . . . . . . . . . . . .        42
+      4.6.8 Expérience Utilisateur (UX) et Design . . . . . . . . . . . . . . . .          42
+  4.7 Partage de fonctionnalité commune . . . . . . . . . . . . . . . . . . . . . .        42
+  4.8 Intégration de l’outil dans les Pipelines Bitbucket . . . . . . . . . . . . . .      44
+  4.9 Défis Techniques . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     45
+      4.9.1 Problèmes de Performance avec Angular . . . . . . . . . . . . . . .            46
+      4.9.2 Gestion des Sous-modules Git . . . . . . . . . . . . . . . . . . . . .         46
+      4.9.3 Sécurité et Conformité . . . . . . . . . . . . . . . . . . . . . . . . .       46
+      4.9.4 Gestion des Ressources et Scalabilité . . . . . . . . . . . . . . . . .        47
+      4.9.5 Tests et Assurance Qualité . . . . . . . . . . . . . . . . . . . . . . .       47
+      4.9.6 Maintenance et Documentation . . . . . . . . . . . . . . . . . . . .           47
+      4.9.7 Retour d’Expérience Utilisateur et Améliorations . . . . . . . . . .           47
+      4.9.8 Conclusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     47
+
+5 Résultats                                                                                49
+  5.1 Méthodologie et Description de la Manipulation . . . . . . . . . . . . . . .         49
+  5.2 Informations Démographiques des Participants . . . . . . . . . . . . . . . .         49
+  5.3 Analyse des Résultats du Questionnaire UEQ . . . . . . . . . . . . . . . .           50
+
+6 Discussion                                                                               53
+  6.1 Évaluation utilisateur . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   53
+  6.2 Implémentation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     53
+  6.3 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    54
+
+7 Conclusion                                                                               55
+
+                                             10
+Références                                                                             57
+
+
+Annexe A - Questionnaire expérience utilisateur . . . . . . . . . . . . . . . . . . . . 62
+
+
+
+
+                                           11
+1    Introduction
+    Dans le domaine du développement logiciel moderne, les pratiques de Continuous In-
+tegration (CI) et de Continuous Deployment/Delivery (CD) sont devenues des éléments
+essentiels pour garantir la qualité et la rapidité des livraisons de logiciels. Ces pratiques
+permettent d’automatiser l’intégration des modifications de code, de détecter rapidement
+les erreurs, et d’assurer une mise en production continue et fiable. Historiquement, les mé-
+thodologies de développement logiciel ont évolué des modèles en cascade aux approches
+Agiles et DevOps, facilitant ainsi l’adoption des pratiques CI/CD grâce à une plus grande
+réactivité aux changements et une amélioration continue des processus de développement .
+
+    L’automatisation des tests est un pilier central des pipelines CI/CD. Elle permet non
+seulement de détecter les erreurs plus tôt dans le cycle de développement, mais aussi
+d’améliorer la qualité et la stabilité du code déployé. Les générateurs de tests automa-
+tisés, tels que CLING, jouent un rôle crucial dans ce processus. CLING, en particulier,
+est conçu pour automatiser la génération de tests d’intégration pour les programmes en
+Java, permettant ainsi de détecter des erreurs complexes qui pourraient autrement passer
+inaperçues.
+
+    Ce mémoire explore diﬀérents aspects en terme d’impacts et de défis liés à l’intégration
+d’un générateur de tests comme CLING dans les pipelines CI/CD. CLING utilise une ap-
+proche basée sur l’analyse des flux de contrôle pour maximiser la couverture des tests,
+générant des tests qui couvrent eﬃcacement les interactions entre les classes appelantes et
+appelées. L’intégration de cet outil dans un environnement Docker permet de standardiser
+et d’isoler les environnements de développement et de production, ce qui est crucial pour
+une exécution cohérente et reproductible des tests.
+
+    La structure du mémoire est organisée comme suit : nous commencerons par une re-
+vue de la littérature sur les concepts fondamentaux de CI/CD, y compris l’historique, les
+avantages et les défis. Nous aborderons ensuite l’utilisation de Docker pour la conteneuri-
+sation et les avantages qu’il apporte dans les pipelines CI/CD. La méthodologie employée
+pour l’intégration de CLING sera détaillée, suivie par une description de l’implémentation
+pratique. Enfin, nous discuterons des résultats obtenus et des perspectives pour des tra-
+vaux futurs.
+
+    L’objectif principal de cette recherche est d’apporter des solutions concrètes aux pro-
+blèmes rencontrés lors de l’intégration de générateurs de tests dans des pipelines CI/CD,
+tout en fournissant des recommandations pratiques pour les développeurs et les ingénieurs
+DevOps. En combinant une approche théorique avec des applications pratiques, ce mé-
+moire vise à contribuer à l’amélioration continue des pratiques de développement logiciel
+et à l’adoption plus large des outils d’automatisation de tests. De plus, les résultats obte-
+nus et les analyses eﬀectuées oﬀriront des perspectives nouvelles pour la recherche future
+dans ce domaine.
+
+
+
+
+                                             12
+2     État de l’art
+2.1    CI/CD
+    Le Continuous Integration (CI) et le Continuous Deployment/Delivery (CD) sont des
+pratiques essentielles dans le développement logiciel moderne [16]. Le CI permet aux dé-
+veloppeurs d’intégrer fréquemment leurs modifications de code dans un dépôt partagé,
+déclenchant des s et des tests automatisés à chaque intégration. Cela permet de détecter
+rapidement les erreurs et d’améliorer la qualité du code. Le CD, quant à lui, automatise
+le déploiement des modifications validées en production, réduisant ainsi le délai entre le
+développement et la mise en service [21].
+
+    L’idée de CI/CD remonte aux pratiques Agiles et au besoin d’accélérer les cycles de
+livraison. Au début des années 2000, des outils comme CruiseControl ont été parmi les
+premiers à implémenter ces concepts. Depuis, de nombreux outils ont émergé, chacun ap-
+portant des améliorations significatives en termes de scalabilité et de facilité d’utilisation
+[27].
+
+   Des recherches montrent que l’adoption de CI/CD a été facilitée par l’évolution des
+méthodologies de développement logiciel, passant des modèles en cascade aux approches
+Agiles et DevOps [22]. Ces pratiques permettent une plus grande réactivité aux change-
+ments et une amélioration continue des processus de développement.
+
+    Les principaux avantages du CI/CD incluent la détection précoce des erreurs, l’amélio-
+ration de la qualité du code, et une plus grande réactivité aux changements. Cependant,
+la mise en place de ces pratiques peut être complexe et nécessite une gestion rigoureuse
+des environnements et des dépendances [15].
+
+   Les défis incluent également la nécessité d’une culture d’équipe adaptée, où les déve-
+loppeurs adoptent des pratiques de test et de déploiement continu, ainsi que l’intégration
+des outils CI/CD dans des environnements existants sans perturber les workflows [8].
+
+
+
+2.2    Docker et la virtualisation
+    Docker est devenu un outil incontournable pour la conteneurisation des applications.
+Il permet de créer, déployer et exécuter des applications dans des environnements légers,
+oﬀrant ainsi une isolation et une portabilité exceptionnelles [26]. La virtualisation, en
+général, a transformé la manière dont les ressources informatiques sont utilisées, rendant
+possible l’allocation dynamique et optimisée des ressources matérielles [10].
+
+    Docker utilise des images, qui sont des instantanés des environnements de dévelop-
+pement et de production. Les conteneurs sont des instances en cours d’exécution de ces
+images, permettant aux développeurs de s’assurer que leurs applications fonctionneront
+de manière identique, quel que soit l’environnement [30]. Contrairement aux machines
+virtuelles, les conteneurs partagent le même noyau de système d’exploitation, ce qui les
+rend plus légers et plus rapides à déployer.
+
+
+
+                                             13
+    L’un des principaux avantages de Docker dans les pipelines CI/CD est la standardisa-
+tion des environnements. En encapsulant les dépendances et les configurations dans des
+conteneurs, Docker réduit les conflits d’environnement et assure une plus grande fiabilité
+des builds [26] (l’encapsulation est un mécanisme consistant à rassembler les données et
+les méthodes au sein d’une structure en cachant l’implémentation de l’objet, c’est-à-dire
+en empêchant l’accès aux données par un autre moyen que les services proposés). Cela
+permet aux développeurs de tester et de déployer des applications dans des environne-
+ments cohérents et reproductibles.
+
+    Des études ont montré que l’utilisation de Docker dans les pipelines CI/CD peut
+réduire considérablement les temps de configuration des environnements et améliorer l’ef-
+ficacité des déploiements [29]. En outre, la portabilité des conteneurs Docker facilite le
+déploiement sur des infrastructures Cloud, augmentant ainsi la flexibilité et la scalabilité
+des applications [11].
+
+   Dans ce mémoire, nous utiliserons Docker principalement pour intégrer l’outil CLING
+dans une image Docker, ce qui facilitera son utilisation au sein des pipelines CI/CD. Do-
+cker permettra d’encapsuler CLING ainsi que toutes ses dépendances dans un conteneur,
+garantissant ainsi une exécution cohérente et reproductible dans diﬀérents environne-
+ments de développement et d’intégration. Cette approche assure que l’outil fonctionne
+de manière identique, indépendamment de la machine ou du système où il est déployé.
+L’utilisation de Docker dans ce contexte vise à simplifier le processus d’intégration de
+CLING dans les pipelines CI/CD, tout en minimisant les problèmes potentiels liés aux
+diﬀérences d’environnement.
+
+
+
+2.3     Intégration d’outils (API)
+    Les pipelines CI/CD intègrent divers outils via des API pour automatiser les processus
+de build, de test et de déploiement. Les systèmes de gestion de version comme Git, les
+services de build comme Jenkins, et les plateformes de déploiement comme Kubernetes
+sont essentiels pour automatiser ces tâches [27].
+
+
+2.3.1   Interaction avec les systèmes de gestion de version
+   Les systèmes de gestion de version, tels que Git, permettent de suivre les modifications
+du code source et de gérer les branches de développement. Les hooks de commit et de
+push peuvent déclencher des builds et des tests automatiques, intégrant ainsi les processus
+CI/CD de manière fluide [15]. Cette intégration assure que chaque modification est im-
+médiatement testée, réduisant ainsi le risque d’introduire des bugs dans le code principal.
+
+
+2.3.2   Intégration avec des outils de build et de déploiement
+     Des outils comme Jenkins et GitHub Actions permettent de définir des pipelines
+CI/CD avec des étapes de build, de test et de déploiement. Les API de ces outils fa-
+cilitent l’automatisation et l’intégration avec d’autres services, comme les notifications
+Slack ou les systèmes de suivi des bugs [27]. Par exemple, une modification de code peut
+
+                                            14
+automatiquement déclencher une série de tests et, en cas de succès, déployer le code en
+production sans intervention manuelle.
+
+
+2.3.3   Outils de visualisation
+    Les tableaux de bord CI/CD, tels que ceux fournis par Jenkins ou GitLab, permettent
+de visualiser l’état des builds, des tests et des déploiements. Ces outils oﬀrent des gra-
+phiques et des rapports détaillés qui aident à identifier rapidement les problèmes [14]. Les
+visualisations aident les équipes à suivre les métriques clés, telles que les temps de build,
+les taux de succès/échec des tests, et les tendances de déploiement.
+
+
+2.3.4   Bots d’aide au développement
+    Les pipelines d’intégration continue (CI) et de déploiement continu (CD) sont essen-
+tiels pour assurer une livraison rapide et fiable des logiciels. Dans ce cadre, les bots jouent
+un rôle clé en automatisant les notifications de builds, l’analyse des logs et la gestion des
+incidents, tout en améliorant la collaboration des équipes. Cette section examine l’utili-
+sation des bots pour la génération et la communication des tests dans les pipelines CI/CD.
+
+    Les bots peuvent automatiser plusieurs aspects des pipelines CI/CD, y compris :
+    Les bots comme Hubot ou Lita, intégrés à des outils CI/CD tels que Jenkins ou Tra-
+vis CI, notifient les équipes de développement en temps réel via des plateformes de chat
+comme Slack ou Microsoft Teams [3] [9]. Selon BMC Software, ces notifications permettent
+de maintenir l’équipe informée des progrès et des problèmes en temps réel, ce qui est es-
+sentiel pour une réponse rapide et eﬃcace.
+
+    Des bots analysent les logs pour identifier les causes d’échec et fournir des recomman-
+dations. Par exemple, GitHub utilise des commandes ChatOps pour aider les ingénieurs de
+garde à diagnostiquer et résoudre rapidement les problèmes en recherchant des playbooks
+pertinents directement dans Slack [19]. Cela permet de gagner du temps en centralisant
+les informations et les solutions potentielles.
+
+    Les bots peuvent créer automatiquement des tickets d’incidents et assigner des tâches
+aux membres de l’équipe concernés lorsqu’un build échoue, facilitant ainsi une gestion
+rapide et eﬃcace des incidents [9] [19]. Atlassian souligne que cette automatisation réduit
+les délais de réponse et améliore la coordination entre les équipes.
+
+   Les bots déclenchent des tests automatisés, analysent les résultats et fournissent des
+rapports détaillés, ce qui accélère le cycle de feedback et réduit les erreurs humaines.
+
+   Les avantages de l’utilisation des bots incluent la réduction du temps de réaction grâce
+aux notifications en temps réel [9], l’automatisation des tâches répétitives qui réduit la
+charge de travail manuel, et l’amélioration de la collaboration grâce à l’intégration avec
+des plateformes de chat qui fournissent un contexte partagé et en temps réel [3] [9].
+
+   Cependant, il existe des défis tels que la configuration initiale et la maintenance des
+bots, qui peuvent être complexes et nécessitent des compétences spécifiques. De plus, les
+
+                                              15
+bots doivent être fiables et robustes pour ne pas introduire de nouveaux points de dé-
+faillance dans le pipeline.
+
+    L’intégration de CLING dans une image Docker pour les pipelines CI/CD permet de
+concrétiser les principes évoqués précédemment, notamment en facilitant l’automatisation
+des processus via les API et en standardisant les environnements d’exécution. En encapsu-
+lant l’outil dans Docker, non seulement nous exploitons pleinement les avantages de l’API
+et des outils de gestion de version, mais nous ouvrons également la possibilité d’intégrer
+d’autres composants à l’avenir. Cette approche pourrait permettre d’améliorer encore les
+performances et la flexibilité des pipelines CI/CD en ajoutant de nouvelles fonctionnalités
+ou en optimisant davantage celles existantes.
+
+
+
+2.4     Génération de tests (search-based test case generation)
+    La génération de tests search-based utilise des techniques algorithmiques pour auto-
+matiser la création de cas de test. Ces techniques optimisent la couverture des tests en
+utilisant des méthodes comme les algorithmes génétiques, les simulations Monte Carlo, et
+d’autres heuristiques [20].
+
+    Les algorithmes génétiques sont des techniques d’optimisation inspirées par la sélection
+naturelle. Ils fonctionnent en évoluant des solutions candidates à travers des générations
+successives pour maximiser la couverture de code [20]. Ces algorithmes utilisent des opéra-
+tions comme la sélection, le croisement et la mutation pour explorer l’espace des solutions
+possibles et générer des tests eﬃcaces.
+
+    Des études ont montré que les algorithmes génétiques peuvent produire des suites de
+tests de haute qualité, couvrant eﬃcacement les chemins critiques du programme et dé-
+tectant des défauts complexes [25].
+
+
+
+2.5     Unit Testing
+    Les tests unitaires sont essentiels pour vérifier individuellement les composants logi-
+ciels. Parmis les outils existants :
+
+    - EvoSuite : Un outil de génération automatique de tests unitaires pour Java, qui uti-
+lise des algorithmes évolutifs pour créer des suites de tests optimisées. EvoSuite a montré
+une eﬃcacité significative dans divers contextes industriels [17].
+
+   - Randoop : Un outil de génération de tests basé sur des techniques aléatoires pour
+Java, qui crée des tests en explorant les comportements possibles des programmes. Ran-
+doop est largement utilisé dans l’industrie pour sa simplicité et son eﬃcacité [28].
+
+
+2.5.1   EvoSuite
+   EvoSuite utilise des algorithmes évolutifs pour générer des suites de tests unitaires
+optimisées qui maximisent la couverture de code et détectent les bugs potentiels. Des
+
+                                            16
+études ont montré que EvoSuite peut générer des tests avec une couverture comparable
+à celle des tests écrits manuellement, mais en beaucoup moins de temps [17]. EvoSuite
+permet également de générer des mocks pour isoler les unités de test, rendant les tests
+plus robustes.
+
+    Des expériences industrielles ont démontré qu’EvoSuite peut améliorer la qualité du
+logiciel en détectant des défauts diﬃciles à identifier avec des techniques de test tradition-
+nelles [18].
+
+
+2.5.2   Randoop
+    Randoop génère des tests en explorant les comportements possibles d’un programme
+à travers des séquences d’appels de méthode aléatoires. Cette approche a été utilisée avec
+succès pour détecter des bugs dans des bibliothèques et des applications Java de grande
+taille [28]. Randoop est particulièrement utile pour détecter des erreurs inattendues ou
+des comportements non spécifiés.
+
+   Des études montrent que Randoop est eﬃcace pour trouver des erreurs dans des sys-
+tèmes logiciels complexes, en particulier lorsqu’il est utilisé en complément de tests ma-
+nuels [12].
+
+
+
+2.6     Class Integration Testing
+2.6.1   Dataflow Analysis
+    L’analyse de flux de données (def-use) permet de suivre les définitions et les utilisations
+des variables dans le programme. Cette technique aide à identifier les chemins critiques
+qui doivent être testés pour assurer une couverture complète des interactions de données
+[31]. En identifiant les paires def-use, les tests peuvent être conçus pour vérifier que les
+valeurs des variables sont correctement propagées et utilisées dans le programme.
+
+    Des études ont montré que l’analyse de flux de données est eﬃcace pour détecter les
+erreurs de manipulation de variables et les anomalies de flux de contrôle, contribuant ainsi
+à la fiabilité du logiciel [31].
+
+
+2.6.2   Controlflow Analysis (critère CBC)
+    L’analyse de flux de contrôle (CBC) identifie les chemins possibles à travers le code
+en analysant les structures de contrôle, telles que les boucles et les conditions. Cette tech-
+nique permet de s’assurer que tous les chemins logiques possibles dans le programme sont
+testés, y compris ceux qui pourraient être rarement exécutés [1].
+
+
+
+
+                                              17
+         Figure 1 – Un exemple de classe utilisée par CLING [13]
+
+
+
+
+Figure 2 – Graphe de flux de contrôle pour la classe Person du schéma 1 [13]
+
+
+                                    18
+   Des recherches ont montré que l’analyse de flux de contrôle est particulièrement utile
+pour tester les systèmes avec des interactions complexes entre les composants, améliorant
+ainsi la couverture de test et la détection des défauts [7].
+
+    L’outil CLING[13] (https://github.com/STAMP-project/Cling-application), dé-
+veloppé pour la génération de tests d’intégration de classes, utilise une approche basée sur
+l’analyse des flux de contrôle pour maximiser la couverture des tests. CLING se concentre
+sur la génération de tests au niveau de l’intégration, en exploitant l’interaction entre les
+paires de classes, l’appelant et l’appelé, à travers des appels de méthodes. Plus préci-
+sément, CLING génère des tests qui maximisent le critère de Couverture des Branches
+Couplées (CBC).
+
+    Les branches couplées sont des paires de branches contenant une branche de l’appelant
+et une branche de l’appelé, de sorte qu’un test d’intégration qui exerce la première exerce
+également la seconde. CBC est un critère de couverture de niveau intégration qui mesure
+le degré auquel une suite de tests exerce les interactions entre une classe appelante et
+une classe appelée. CLING utilise des heuristiques de recherche pour générer des suites
+de tests qui maximisent le nombre de branches couplées couvertes.
+
+
+
+
+ Figure 3 – Graphe de flux de contrôle pour la classe Person et Car du schéma 1 [13]
+
+   Les principales étapes du processus de CLING sont les suivantes :
+    1. Analyse statique des classes : CLING eﬀectue une analyse statique pour identifier
+       les méthodes couvrantes dans l’appelant qui peuvent directement ou indirectement
+       couvrir des déclarations dans l’appelé.
+    2. Identification des branches couplées : En utilisant les graphes de contrôle des flux
+       des classes appelante et appelée, CLING identifie les paires de branches couplées.
+    3. Génération des tests : CLING utilise un algorithme génétique pour générer des
+       suites de tests qui couvrent ces branches couplées, en optimisant chaque paire de
+
+                                            19
+        branches couplées comme un objectif indépendant.
+
+
+
+
+                       Figure 4 – Fonctionnement de CLING [13]
+
+   Les résultats de l’étude empirique montrent que CLING génère des suites de tests avec
+une couverture CBC élevée, atteignant jusqu’à 99% de couverture pour certaines paires
+de classes [13].
+
+
+
+2.7     Génération de tests dans l’industrie
+   L’adoption de la génération de tests automatiques dans l’industrie présente des défis,
+notamment en termes de perception par les développeurs et d’intégration dans les flux
+de travail existants. La littérature montre une certaine résistance à l’adoption en raison
+de préoccupations concernant la qualité des tests générés et la courbe d’apprentissage
+associée [27].
+
+
+2.7.1    Acception par les développeurs
+    Les développeurs peuvent être réticents à adopter des outils de génération automa-
+tique de tests en raison de préoccupations concernant la qualité et la pertinence des tests
+générés. Des études ont montré que l’intégration de ces outils nécessite souvent une phase
+d’apprentissage et d’ajustement pour maximiser leur eﬃcacité [27]. Il est crucial de fournir
+des formations et des supports adéquats pour aider les développeurs à comprendre et à
+utiliser eﬃcacement ces outils.
+
+
+
+2.8     Outils et méthodes de CI/CD
+    Les outils comme GitHub Actions, GitLab CI, et Jenkins sont largement utilisés dans
+l’industrie pour automatiser les pipelines CI/CD. Chaque outil oﬀre des caractéristiques et
+
+                                            20
+des avantages distincts en termes d’intégration, de scalabilité, et de flexibilité. La compa-
+raison des architectures CI/CD montre que GitHub Actions est particulièrement apprécié
+pour son intégration native avec GitHub, tandis que Jenkins est reconnu pour sa flexibilité
+et sa large adoption industrielle [27].
+
+
+2.8.1   GitHub Actions
+    GitHub Actions permet de définir des workflows CI/CD directement dans les dépôts
+GitHub. Il oﬀre une intégration native avec GitHub et supporte une large gamme d’ac-
+tions et de déclencheurs pour automatiser les processus de développement [27]. GitHub
+Actions facilite également la collaboration entre les équipes en intégrant les demandes de
+tirage et les revues de code dans le flux de travail CI/CD.
+
+   Des recherches montrent que l’utilisation de GitHub Actions peut améliorer l’eﬃcacité
+des workflows de développement et réduire les temps de cycle des déploiements [2].
+
+
+2.8.2   GitLab CI
+    GitLab CI est intégré à GitLab et permet de définir des pipelines CI/CD avec une
+grande flexibilité. Il oﬀre des fonctionnalités avancées comme les runners personnalisés et
+les déploiements multi-environnements [27]. GitLab CI permet également de gérer l’en-
+semble du cycle de vie du développement logiciel, de la gestion de projet à la livraison
+continue.
+
+
+2.8.3   Jenkins
+   Jenkins est un outil open source largement utilisé pour l’automatisation des builds et
+des déploiements. Il supporte une large gamme de plugins et oﬀre une grande flexibilité
+pour définir des pipelines complexes [27]. Jenkins est particulièrement adapté aux envi-
+ronnements hétérogènes et permet de s’intégrer avec de nombreux autres outils et services.
+
+    Des recherches ont montré que Jenkins est l’un des outils CI/CD les plus utilisés dans
+l’industrie, grâce à sa flexibilité, son extensibilité et sa communauté active [33].
+
+2.8.4   Bitbucket Pipelines
+    Bitbucket Pipelines est une fonctionnalité intégrée à Bitbucket qui permet de configu-
+rer et d’automatiser des pipelines CI/CD directement dans un repository. Cette solution
+propose une interface intuitive pour définir des étapes de build, de test et de déploiement,
+en tirant parti de Docker pour exécuter des tâches dans des environnements isolés [5].
+
+    Bitbucket Pipelines est étroitement intégré avec Jira, ce qui facilite le suivi des tâches
+et des bugs tout au long du cycle de développement [6]. Cette intégration transparente
+entre Bitbucket et Jira permet aux équipes de développement de gérer eﬃcacement leurs
+projets en reliant les commits et les branches aux tickets Jira, optimisant ainsi la visibilité
+et la traçabilité des changements [4].
+
+
+                                              21
+   Dans le cadre de ce mémoire, l’outil CLING sera intégré dans un pipeline Bitbucket.
+Bien que l’outil soit encapsulé dans une image Docker, ce qui permettrait son intégration
+dans divers systèmes CI/CD, le choix de Bitbucket s’est imposé en raison d’une préférence
+personnelle et d’une expertise approfondie dans l’utilisation de cette plateforme. Ce choix
+permet de tirer pleinement parti des fonctionnalités de Bitbucket Pipelines et d’assurer
+une gestion optimale du processus de développement.
+
+
+
+
+                                            22
+3     Méthodologie
+3.1    Approche Générale
+    L’adoption de la méthode Agile pour ce projet reflète un engagement envers une flexi-
+bilité maximale et une adaptation rapide aux obstacles et aux découvertes. L’approche
+itérative de l’Agilité permet de structurer le travail en sprints, facilitant ainsi la gestion
+des tâches et la priorisation des objectifs. Cette méthodologie s’avère particulièrement
+adaptée pour gérer l’incertitude inhérente à l’intégration d’outils complexes et au déve-
+loppement de nouvelles fonctionnalités.
+
+   La planification initiale a souligné l’importance d’une exploration approfondie de
+chaque composant du projet. La capacité à passer d’une tâche à l’autre tout en mainte-
+nant une vue d’ensemble est cruciale. La gestion du temps et la délimitation claire des
+objectifs de chaque sprint sont essentielles pour éviter le surmenage et garantir une pro-
+gression constante.
+
+
+
+
+                          Figure 5 – Étapes de la méthodologie
+
+
+3.2    Processus de Recherche
+    La recherche bibliographique a été menée de manière systématique en utilisant plu-
+sieurs bases de données académiques reconnues. Les mots-clés principaux utilisés pour
+la recherche incluaient "Continuous Integration (CI)", "Continuous Deployment (CD)",
+"Docker", "API Integration", "Automated Test Generation", "Search-Based Test Gene-
+ration", "Unit Testing", "Control Flow Graph (CFG)", "Class Integration Testing", et
+"DevOps". Ces termes ont été choisis pour couvrir les diﬀérents aspects clés de l’état de
+l’art abordés dans ce mémoire.
+
+    Les articles trouvés ont été filtrés en fonction de leur pertinence par rapport aux thé-
+matiques couvertes dans ce mémoire, en se basant sur les résumés, les mots-clés, et les
+citations. Une attention particulière a été portée aux articles ayant reçu un nombre signi-
+ficatif de citations, ce qui indique leur impact dans la communauté scientifique.
+
+    L’article sur CLING a été initialement proposé par mon promoteur comme base pour
+ce mémoire, en raison de son approche innovante et de sa pertinence dans le domaine
+de la génération automatique de tests au sein de pipelines CI/CD. De plus, CLING pré-
+sente l’avantage d’avoir été développé par la communauté scientifique, ce qui en fait un
+outil reconnu et validé par les pairs. Cette caractéristique oﬀre une opportunité unique
+d’évaluer non seulement l’eﬃcacité de l’outil, mais aussi les impacts et défis associés à son
+intégration dans des environnements réels de développement logiciel.
+
+
+                                             23
+    En parallèle, d’autres articles et sources ont été sélectionnés pour compléter l’état de
+l’art, couvrant divers aspects tels que les méthodes de génération de tests basées sur des
+graphes de flux de contrôle (CFG), les outils de testing unitaire, l’intégration d’API, et
+les meilleures pratiques pour l’intégration continue (CI) et le déploiement continu (CD).
+Ces articles ont été choisis pour leur capacité à fournir un cadre théorique robuste et à
+identifier les lacunes existantes dans les pratiques actuelles, servant ainsi de guide pour le
+développement de la solution proposée dans ce mémoire.
+
+    Cette recherche approfondie a permis de constituer une base théorique solide pour le
+développement de la solution, en s’appuyant sur des travaux reconnus et en identifiant les
+lacunes à combler dans le domaine.
+
+
+
+3.3     Définition de l’Architecture
+    Cette section est dédiée à la présentation de l’architecture globale de la solution dé-
+veloppée. L’architecture est divisée en plusieurs composants clés qui interagissent pour
+fournir une solution complète et intégrée. Les sous-sections suivantes détailleront l’analyse
+de CLING, la sélection des outils, et le workflow global de la solution.
+
+
+
+
+                           Figure 6 – Étapes de l’architecture
+
+3.3.1   Analyse de CLING
+    L’analyse détaillée de la documentation et du code source de l’outil sélectionné a été
+une étape initiale nécessaire pour comprendre ses capacités et identifier les opportunités
+d’automatisation. Cette tâche s’est avérée être à la fois chronophage et enrichissante, of-
+frant une compréhension intime des mécanismes internes de l’outil qui sera cruciale pour
+son intégration réussie.
+
+
+3.3.2   Sélection des Outils et Technologies
+    La sélection minutieuse des outils et technologies est cruciale pour le succès d’un pro-
+jet logiciel, surtout dans un contexte où l’innovation et l’eﬃcacité sont primordiales. Pour
+ce projet, chaque choix technologique a été eﬀectué après une évaluation approfondie de
+plusieurs critères, dont la performance, l’écosystème, la facilité d’intégration et la courbe
+d’apprentissage.
+
+    Docker : Le choix de Docker comme environnement d’exécution pour l’outil de généra-
+tion de tests s’est imposé pour plusieurs raisons. Premièrement, Docker facilite la création,
+
+                                             24
+le déploiement et l’exécution d’applications dans des conteneurs, permettant ainsi une iso-
+lation des dépendances et une cohérence entre les environnements de développement, de
+test et de production. Cette isolation réduit les conflits entre les environnements et ac-
+célère le déploiement des applications. De plus, Docker oﬀre une solution portable qui
+peut être facilement partagée entre les membres de l’équipe ou déployée dans diﬀérents
+systèmes, ce qui est essentiel pour maintenir l’eﬃcacité dans un workflow CI/CD. Cepen-
+dant, l’utilisation de Docker introduit une couche supplémentaire d’abstraction qui peut
+potentiellement masquer les problèmes liés à l’environnement sous-jacent, et la gestion des
+volumes de données et des réseaux peut s’avérer complexe dans des scénarios d’utilisation
+avancés.
+
+    Node.js et Nest.js : La décision d’utiliser Node.js pour l’API repose sur sa nature
+non bloquante et événementielle, qui est idéale pour les applications nécessitant de hautes
+performances et une gestion eﬃcace de multiples connexions simultanées, comme c’est le
+cas pour notre API. Nest.js, un framework basé sur Node.js, a été choisi pour sa structure
+et son architecture, qui sont fortement inspirées d’Angular. Cela oﬀre une cohérence de
+développement entre le backend et le frontend, réduisant ainsi la courbe d’apprentissage
+pour les développeurs familiers avec Angular. Nest.js promeut également une architecture
+modulaire et facilement testable, ce qui est vital pour maintenir la qualité et la fiabilité
+de l’API à mesure que le projet évolue. Un défi potentiel de l’utilisation de Node.js est
+sa gestion des opérations lourdes CPU, qui pourrait nécessiter l’emploi de solutions de
+contournement pour optimiser les performances.
+
+    Angular et PrimeNG : Angular a été choisi pour le développement du site web
+en raison de son architecture complète et de son système robuste de gestion des dépen-
+dances, ce qui en fait une solution adaptée pour des applications d’entreprise complexes.
+La bibliothèque de composants PrimeNG a été sélectionnée pour son vaste ensemble de
+composants d’interface utilisateur riches et prêts à l’emploi, ce qui accélère considérable-
+ment le développement. L’utilisation conjointe d’Angular et PrimeNG facilite la création
+d’une interface utilisateur cohérente et réactive, tout en oﬀrant la flexibilité nécessaire
+pour personnaliser les composants en fonction des besoins spécifiques du projet. Toute-
+fois, l’une des préoccupations liées à l’utilisation d’Angular est sa courbe d’apprentissage
+relativement abrupte pour les développeurs moins expérimentés, en particulier en ce qui
+concerne les concepts avancés tels que la gestion de l’état et la programmation réactive.
+
+    En anticipant les défis futurs, il est clair que la gestion des performances et des res-
+sources sera cruciale, en particulier pour l’API développée en Node.js, qui devra traiter
+eﬃcacement un volume élevé de requêtes. De même, l’intégration continue de nouvelles
+fonctionnalités et la gestion de la complexité croissante du code nécessiteront une attention
+particulière pour éviter la dégradation des performances et maintenir la qualité du code.
+L’adoption d’une approche modulaire et la mise en place de pratiques de développement
+rigoureuses, telles que l’intégration continue et le déploiement continu, seront essentielles
+pour surmonter ces défis.
+
+    Cette section a illustré l’importance d’une sélection réfléchie des technologies, en te-
+nant compte non seulement de leurs avantages immédiats mais aussi de la manière dont
+elles s’intègrent dans l’écosystème global du projet et des défis potentiels à l’horizon. La
+réussite du projet dépendra de la capacité à naviguer ces complexités tout en exploitant
+
+
+                                             25
+au maximum les forces de chaque technologie choisie.
+
+
+3.3.3   Workflow global des composants
+   Le workflow global des diﬀérents composants de l’application est illustré dans le schéma
+7. Ce workflow décrit le processus complet, depuis le déclenchement du pipeline CI/CD
+jusqu’à la validation des tests par l’utilisateur.
+
+
+
+
+              Figure 7 – Workflow global des composants de l’application
+
+   Le processus de fonctionnement de l’application peut être décrit comme suit :
+
+    1. Déclenchement du Pipeline CI/CD : Le workflow débute par le déclenchement
+       d’un pipeline CI/CD, initié soit automatiquement suite à des modifications dans
+       le repository, soit manuellement par un utilisateur. Ce pipeline, développé dans
+       le cadre de ce projet, sert de point de départ pour l’exécution de l’ensemble du
+
+                                            26
+        processus.
+
+    2. Génération des Tests par CLING : Une fois le pipeline en cours d’exécution,
+       l’outil CLING est activé pour générer automatiquement des tests unitaires basés
+       sur le code soumis. CLING, intégré dans le pipeline via une image Docker, produit
+       des tests qui sont immédiatement disponibles pour les étapes suivantes.
+
+    3. Transmission des Résultats des Tests à l’API : Les résultats des tests générés
+       par CLING sont ensuite envoyés à une API dédiée, développée spécifiquement pour
+       ce projet. Cette API reçoit les résultats et les enregistre dans une base de données,
+       permettant une gestion centralisée des données de test.
+
+    4. Interaction de l’Utilisateur avec l’Interface : L’utilisateur interagit avec l’ap-
+       plication via une interface web développée, où il peut consulter les résultats des
+       tests générés. L’interface permet à l’utilisateur de visualiser les pipelines en cours,
+       d’examiner le code des tests générés, et de les télécharger si nécessaire.
+
+    5. Validation des Tests par l’Utilisateur : Enfin, l’utilisateur peut marquer les
+       tests comme validés via l’interface web, en fonction de leur satisfaction par rapport
+       aux résultats obtenus. Cette validation est ensuite enregistrée par l’API et stockée
+       dans la base de données.
+
+    Ce workflow montre comment les diﬀérents composants de l’application (pipeline
+CI/CD, CLING, API, interface utilisateur, et base de données) interagissent pour of-
+frir un cycle complet de génération, de transmission, et de validation des tests dans un
+environnement CI/CD.
+
+
+
+3.4     Développement et intégration
+
+
+
+
+                Figure 8 – Étapes du développement et de l’intégration
+
+3.4.1    Intégration de l’Outil
+    L’intégration de l’outil dans ce contexte spécifique a nécessité une réflexion approfon-
+die, car il n’était initialement pas conçu pour être utilisé dans un environnement impli-
+quant la sélection dynamique des projets à tester et l’interaction avec une API personnali-
+sée. Ces contraintes ont imposé la nécessité d’adaptations méthodologiques pour garantir
+
+
+                                             27
+que l’outil puisse répondre aux exigences du projet.
+
+    La première étape a consisté à identifier les limitations inhérentes à l’outil existant, en
+particulier en ce qui concerne sa rigidité face aux diﬀérentes configurations de projets. Il a
+été envisagé que l’extension des capacités de l’outil pour permettre la sélection dynamique
+des projets exigerait une modification de son architecture logicielle. Cette adaptation mé-
+thodologique visait à rendre l’outil plus flexible et à anticiper les besoins variés des projets
+à tester.
+
+    Ensuite, l’intégration avec une API personnalisée a été reconnue comme un autre défi
+majeur. L’outil, dans sa forme originale, n’était pas conçu pour interagir de manière na-
+tive avec des APIs externes. Par conséquent, la méthodologie a inclus la conception de
+modules d’intégration spécifiques pour gérer les interactions avec l’API, en veillant à ce
+que les communications soient sécurisées, les formats de données compatibles, et la per-
+formance globale maintenue.
+
+    Ces défis méthodologiques ont mis en évidence la nécessité de prévoir des étapes spé-
+cifiques pour surmonter les limitations techniques anticipées, tout en maintenant un haut
+niveau de flexibilité et d’eﬃcacité dans l’intégration de l’outil. Cette approche proactive
+a permis d’établir un cadre solide pour l’adaptation de l’outil, en tenant compte des exi-
+gences uniques du projet avant même le début de l’implémentation.
+
+
+3.4.2     Développement de l’API
+   Le développement de l’API a imposé la nécessité d’une architecture claire dès le début.
+L’utilisation de Node.js et de NestJS a été déterminée non seulement par leurs perfor-
+mances mais aussi par leur structure, qui favorise une organisation modulaire du code.
+Cette décision stratégique facilite la maintenance et l’extension future de l’API.
+
+
+3.4.2.1    Architecture et Technologies Utilisées
+    L’architecture de l’API a été conçue pour être modulaire et facilement extensible.
+L’utilisation de NestJS, un framework progressif basé sur Node.js, permet une organisa-
+tion claire et maintenable du code. La modularité de NestJS, avec ses contrôleurs, services,
+et repositories, facilite l’ajout de nouvelles fonctionnalités sans compromettre la stabilité
+de l’application.
+
+
+3.4.2.2    Documentation
+   La documentation est un aspect essentiel pour assurer la transférabilité des connais-
+sances et la continuité du projet. Swagger a été utilisé pour générer automatiquement la
+documentation de l’API. Cela permet non seulement de garder une trace des endpoints
+disponibles mais aussi de faciliter les tests et l’intégration avec d’autres services. Une do-
+cumentation claire est cruciale pour permettre à de futurs développeurs de reprendre et
+de maintenir le travail sans diﬃculté.
+
+
+
+                                              28
+3.4.2.3    Défis Techniques et Solutions
+   Le développement de l’API a présenté plusieurs défis, notamment la gestion des re-
+quêtes simultanées et l’optimisation des performances. Pour gérer les multiples connexions
+simultanées, l’architecture non-bloquante de Node.js s’est avérée particulièrement utile.
+De plus, l’utilisation de middlewares pour la gestion des erreurs et l’authentification a
+permis de centraliser ces aspects critiques, assurant ainsi une cohérence et une sécurité
+accrues.
+
+
+3.4.2.4    Performance et Optimisation
+    Pour garantir des performances optimales, plusieurs stratégies sont mises en place.
+L’utilisation du caching permet de stocker temporairement les réponses fréquentes pour
+accélérer les temps de réponse. La pagination est mise en œuvre pour gérer eﬃcacement
+les grandes quantités de données. L’optimisation des requêtes SQL avec TypeORM est
+également cruciale pour améliorer les performances de la base de données. Par exemple,
+l’utilisation des relations ‘lazy‘ et ‘eager‘ pour charger uniquement les données nécessaires
+à une requête donnée.
+
+
+3.4.3     Intégration dans les pipelines CI/CD
+   L’intégration de l’outil de génération de tests dans les pipelines CI/CD représente un
+aspect fondamental de ce projet, visant à automatiser le processus de test et à garantir une
+qualité constante du code tout au long du cycle de développement. Les pipelines CI/CD,
+pour Integration Continue et Déploiement Continu, sont essentiels dans les pratiques de
+développement moderne, permettant d’intégrer régulièrement des modifications de code
+dans le repository principal et de déployer automatiquement les versions de l’application.
+
+    La sélection de Docker comme environnement d’exécution pour l’outil s’intègre parfai-
+tement dans cette logique, oﬀrant la possibilité de déployer l’outil de manière cohérente et
+isolée au sein de divers environnements de CI/CD, tels que Jenkins, Travis CI ou GitLab
+CI. L’utilisation de Docker permet de s’assurer que l’outil fonctionne de manière identique
+dans tous les environnements, évitant les problèmes classiques de portabilité.
+
+   Cependant, l’intégration dans des pipelines CI/CD pose plusieurs défis, notamment la
+gestion des ressources et le temps d’exécution des tests. Les pipelines doivent être conçus
+pour être à la fois eﬃcaces et économiques, minimisant le temps d’exécution sans com-
+promettre la qualité des tests. Cela implique une optimisation des tests générés par l’outil
+pour s’assurer qu’ils sont à la fois pertinents et performants.
+
+    De plus, il est crucial de configurer correctement les pipelines pour gérer les résultats
+des tests : enregistrer les échecs, notifier les équipes concernées, et potentiellement arrêter
+le déploiement en cas de problèmes critiques. La mise en place de ces processus nécessite
+une réflexion approfondie sur la manière dont les informations sont communiquées au sein
+de l’équipe de développement, pour maintenir une visibilité et une réactivité maximales
+face aux problèmes identifiés.
+
+
+
+                                              29
+     L’intégration de cet outil dans les pipelines CI/CD nécessite donc non seulement des
+compétences techniques en matière de développement logiciel et d’ingénierie des systèmes
+mais aussi une capacité à anticiper les besoins du projet en termes de tests, de déploie-
+ment, et de gestion de la qualité. Cette intégration est une étape clé vers l’automatisation
+complète du processus de développement, garantissant un niveau élevé de qualité et d’ef-
+ficience.
+
+    La distinction entre les interactions automatisées et manuelles au sein de l’API a posé
+des défis en termes de conception de sécurité. La mise en œuvre de mécanismes d’authenti-
+fication distincts pour chaque type d’interaction a été une tâche complexe mais nécessaire
+pour assurer la sécurité des données traitées par l’API.
+
+
+3.4.4   Conception du Site Web
+    Le développement du site web en Angular et l’utilisation de PrimeNG ont été guidés
+par le désir d’eﬃcacité et de cohérence dans le développement. Travailler sur le frontend
+et le backend impose un équilibre entre l’ambition du projet et les ressources limitées en
+termes de temps et d’énergie. Angular oﬀre un cadre structuré qui aide à organiser le code
+de manière eﬃcace, tandis que PrimeNG fournit des composants d’interface utilisateur
+prêts à l’emploi, réduisant le temps de développement.
+
+    Concevoir une interface utilisateur qui présente les données de manière intuitive, tout
+en permettant une gestion facile des configurations de test, représente un défi majeur
+du projet. La nécessité de simplifier des processus complexes en une interface claire et
+utilisable requiert une attention particulière au design et à l’expérience utilisateur, des
+compétences qui doivent être constamment aﬃnées.
+
+    La séparation des composants utilisés par d’autres composants et des pages utilisées
+uniquement pour le routage a été une décision stratégique pour maintenir une organisa-
+tion claire du code. Cette séparation facilite la maintenance et l’évolution du site web,
+permettant de réutiliser les composants de manière eﬃcace et de gérer les routes de ma-
+nière centralisée.
+
+
+
+3.5     Protocole de Recherche pour le Questionnaire UEQ
+    Dans le cadre de ce mémoire, une étape essentielle consiste à évaluer la potentielle
+acceptation de la solution développée, plus spécifiquement en ce qui concerne l’interface
+utilisateur du site web associé à l’intégration de l’outil CLING.
+
+    Pour ce faire, un questionnaire standardisé UEQ[24] (User Experience Questionnaire)
+sera utilisé. Ce choix repose sur la reconnaissance scientifique du questionnaire UEQ
+et la robustesse de sa méthode d’analyse de données, validée par de nombreuses autres
+études[23][32]. Le questionnaire permettra de recueillir des données sur l’expérience utilisa-
+teur, oﬀrant ainsi un premier aperçu de la satisfaction et de l’acceptation des développeurs
+face à cette interface web.
+
+
+
+                                             30
+                         Figure 9 – Étapes de la partie résultats
+
+    L’étude s’appuiera sur le questionnaire complet de l’User Experience Questionnaire
+(UEQ) (annexe A), reconnu pour sa capacité à évaluer de manière approfondie l’expérience
+utilisateur selon diverses dimensions pertinentes. Les participants seront principalement
+des développeurs, des intégrateurs CI/CD, ainsi que des volontaires du secteur de l’IT,
+assurant ainsi une bonne compréhension des aspects techniques évalués. L’échantillon de
+cette étude sera constitué de 20 à 40 participants, un nombre estimé suﬃsant pour fournir
+des résultats fiables tout en restant gérable en termes de collecte et d’analyse des données.
+
+   L’étude se déroulera sur une période définie afin de permettre une collecte de données
+organisée et structurée. Les participants seront recrutés via des réseaux professionnels et
+personnels dans le domaine de l’IT. Une fois recrutés, les participants recevront des ins-
+tructions détaillées sur la manière de participer à l’étude, y compris l’accès aux maquettes
+du site web ou à l’application en développement.
+
+    Chaque session de test durera environ 45 minutes. Cette durée a été choisie pour plu-
+sieurs raisons : elle permet une gestion optimale du temps des participants en évitant la
+fatigue excessive et en garantissant des réponses précises et réfléchies. Mentionner une
+durée spécifique montre également une transparence dans la méthodologie de l’étude,
+permettant aux participants de comprendre le niveau d’engagement requis. De plus, une
+durée standard permet aux organisateurs de planifier eﬃcacement les sessions de test et
+de préparer les ressources nécessaires. En standardisant la durée des sessions, on garantit
+des conditions similaires pour tous les participants, facilitant ainsi la comparaison des
+résultats.
+
+    Les sessions de test incluront plusieurs étapes : une introduction et une explication
+des objectifs de l’étude, la présentation des maquettes du site web ou de l’application, le
+remplissage du questionnaire UEQ[24] complet par les participants via un Google Form
+pour centraliser les données facilement, et la collecte de feedback qualitatif supplémen-
+taire, si pertinent.
+
+    Les données recueillies seront analysées grâce à l’analyse standard fournie par UEQ[24]
+afin d’identifier les tendances et les points de satisfaction ou de friction dans l’expérience
+utilisateur. Les résultats seront utilisés pour informer les améliorations futures du site
+web ou de l’application. Toutes les données collectées seront traitées de manière confiden-
+tielle. Les participants seront informés de leurs droits et devront donner leur consentement
+éclairé avant de participer à l’étude.
+
+   En conclusion, ce protocole de recherche vise à garantir une évaluation rigoureuse et
+complète de l’expérience utilisateur en utilisant le questionnaire UEQ, tout en mainte-
+nant une transparence et une eﬃcacité dans la réalisation de l’étude. Les choix métho-
+dologiques, tels que l’utilisation du questionnaire complet et la collecte des données via
+
+
+                                             31
+Google Forms, sont justifiés par la nécessité d’obtenir des données fiables et comparables,
+tout en facilitant l’analyse et l’interprétation des résultats. La durée de 45 minutes pour
+chaque session assure une évaluation approfondie sans surcharger les participants. Cepen-
+dant il est important de noter que cette évaluation se limite à l’interface du site web et
+constitue une première étape dans l’appréciation globale de la solution. Une analyse plus
+exhaustive, qui inclurait d’autres aspects de l’intégration de CLING ainsi que des autres
+composants, fait partie des travaux futurs envisagés.
+
+
+
+
+                                            32
+4     Implémentation
+4.1    Présentation
+    CLING est un outil qui permet de générer des tests unitaires en JAVA. Cela permet de
+potentiellement identifier des erreurs qui n’auraient pas pu être trouvées autrement dans
+le code. De plus, CLING est un outil développé par la communauté scientifique, ce qui
+permet également de voir quels peuvent être les problèmes d’intégration qui peuvent être
+rencontrés, des problèmes potentiellement diﬀérents de ceux rencontrés dans un projet
+développé dans le cadre d’une société privée ou d’un projet open source.
+
+  Dans le cadre du papier, CLING est uniquement utilisé dans le cas d’un CLI (Com-
+mand Line Interface) et non d’une intégration dans un pipeline.
+
+    Afin de pouvoir ajouter toute cette logique, plusieurs parties vont devoir être dévelop-
+pées : la configuration de l’outil pour pouvoir être ajouté dans une image et configurable,
+l’intégration de l’image produite dans un pipeline CI/CD, la création d’une API pour
+pouvoir récolter les données générées par l’outil et finalement un visuel qui va permettre
+de visualiser les données et accéder à quelques écrans de configuration.
+
+    Il n’existe pas d’information générale sur comment faire ce genre d’intégration mais
+plutôt des morceaux à gauche et à droite. Cette intégration est un très grand enjeu dans
+ce développement.
+
+
+
+4.2    Analyse de CLING
+   Afin de pouvoir lancer CLING, il faut premièrement lire le papier qui explique son
+fonctionnement et ensuite lire le README fourni avec le projet afin de comprendre com-
+ment relancer le projet en local et pouvoir l’adapter pour le faire tourner dans un pipeline
+CI/CD.
+
+    En parcourant le README, on se rend compte qu’il manque pas mal de fonctionnali-
+tés qui permettent de limiter le temps d’exécution par exemple. Afin de pouvoir intégrer
+tout cela dans un pipeline CI/CD, il est important d’ajouter plusieurs moyens de confi-
+gurer les diﬀérents paramètres pour l’exécution de l’outil.
+
+   Il y a également certains problèmes de saut d’étape qui ne permettent pas de lancer
+complètement le projet sans utiliser les fichiers déjà pré-fournis par la démo.
+
+   Et finalement, le papier explique quels sont les projets utilisés pour les comparatifs
+mais rien n’explique ce qui est nécessaire pour intégrer un nouveau projet.
+
+
+
+4.3    Modification CLING
+   Afin de pouvoir utiliser CLING dans un autre cas que le papier, des modifications
+ont été apportées afin de rendre la recherche de projets actifs automatique. Pour cela, le
+
+
+                                            33
+programme regarde dans le dossier projets si des projets sont présents. Il va ensuite itérer
+sur chaque projet et vérifier qu’il possède chacun une configuration CLING valide. Dans
+le cas où la configuration CLING n’est pas disponible, le projet est ignoré.
+Dans le cas contraire, la suite du workflow va pouvoir continuer. Cette logique d’arrêter
+l’exécution en cas de manquement d’informations a été utilisée dans l’ensemble des mo-
+difications apportées à l’utilisation de CLING.
+
+    L’ensemble des diﬀérents scripts proposés pour l’utilisation de CLING utilisait tous
+des chemins définis dans chaque fichier. Afin d’améliorer au maximum la configurabilité
+et la centralisation des informations, un fichier contenant l’ensemble des variables et des
+chemins a été créé. Certains des valeurs sont hardcodées tandis que d’autres se basent
+sur des variables d’environnement. Passer par des variables d’environnement permet de
+donner des valeurs par défaut et de pouvoir ensuite les modifier sans devoir pour autant
+modifier le fichier source.
+
+   Le changement le plus colossal est le lancement de CLING en tant que tel.
+Dans l’état du papier, un nombre de threads doit être choisi, ensuite 1 thread est créé
+pour chaque opération jusqu’à arriver à la limite de threads. Une fois un thread terminé,
+un nouveau est ajouté jusqu’à terminer l’ensemble des opérations définies.
+
+    Le traitement d’un thread consiste en le lancement de CLING et ensuite attendre 5
+min pour vérifier que CLING ait fini son travail. Le travail de CLING est vérifié grâce à la
+date de dernière mise à jour du fichier de log. Si cette date est plus grande que 5 minutes
+(ici nommé le budget), alors le thread est terminé.
+
+    Cependant, cette approche apporte plusieurs problèmes. Il n’est pas possible de limi-
+ter le nombre d’itérations à traiter avant de terminer le script, c’est-à-dire que l’ensemble
+des opérations doit être réalisé avant de pouvoir terminer le programme. Or, dès qu’il
+y a quelques données, les durées d’exécution peuvent vite grimper. Ce qui peut devenir
+un problème dans le cadre d’un pipeline CI/CD. Afin de régler ce problème, un nombre
+d’itérations peut être configuré. Par défaut, la valeur est mise à 0, ce qui permet de ne pas
+mettre de limite. Le nombre maximum d’itérations permet d’arrêter automatiquement le
+programme à partir du moment où le nombre d’itérations est égal à cette limite.
+
+    Le problème suivant rencontré est le budget. Il est eﬀectivement très important de
+limiter la durée d’exécution du script, mais plusieurs améliorations peuvent être mises en
+place. La première est la possibilité de réduire le temps entre 2 tests de date de modifi-
+cation. Car dans le cas où on vient de trouver qu’un processus est arrivé à la durée égale
+au budget, il peut être immédiatement stoppé. Un autre cas qui n’était pas géré est le
+moment où le script aurait fini de s’exécuter, dans ce cas-là il n’est pas non plus nécessaire
+de continuer à attendre une fin d’exécution qui est déjà terminée.
+
+
+
+4.4    Intégration CLING pipeline
+    Pour pouvoir intégrer CLING dans un pipeline, il est important de dockeriser CLING
+ainsi que d’automatiser l’enchainement des opérations pour pouvoir rendre les opérations
+les plus faciles possible.
+
+
+                                             34
+Afin de faciliter au mieux le lancement de l’outil dans un pipeline, il faut limiter au maxi-
+mum les opérations manuelles à faire.
+Suite aux modifications apportées à CLING, il est désormais possible de spécifier des
+configurations diﬀérentes grâce à des variables d’environnement qui peuvent être directe-
+ment spécifiées dans le pipeline.
+
+   Pour que tout puisse être automatisé, des changements supplémentaires ont dû être
+apportés afin de pouvoir déterminer toute une série d’options de manière complètement
+automatique - ou avec un minimum d’interaction utilisateur.
+Dans le cas des actions utilisateurs, des messages d’erreurs ont été ajoutés pour expliquer
+quels sont les problèmes de configuration rencontrés et des résolutions à apporter.
+
+    Dans le cas des actions automatiques, bien que les erreurs ne soient pas censées se
+produire car toute une série de tests sont réalisés, des messages sont quand même prévus
+si jamais ce cas-là se présente.
+
+    Afin que le pipeline puisse être exploité, il faut pouvoir communiquer avec l’API. Pour
+réaliser cette tâche-là, diﬀérents appels API sont faits à diﬀérents moments afin de la
+notifier des actions en cours et de l’envoi des résultats.
+
+   La première action est la création d’une entité pipeline. Cette entité permet de savoir
+à quelle heure le pipeline a commencé à s’exécuter. Cette requête renvoie également un
+identifiant unique sous la forme d’un UUID, qui permet au reste du script de pouvoir
+indiquer les modifications opérées dans le cadre de ce pipeline.
+
+    Ensuite, une fois l’ensemble des fichiers générés, les fichiers de tests générés sont archi-
+vés dans une archive ZIP afin d’être envoyés via un deuxième appel API. L’avantage de
+les zipper et de ne faire qu’un seul envoi permet de ne faire qu’un seul appel et de réduire
+la taille du fichier envoyé. Les fichiers sont ensuite traités par le serveur. Ce point-là sera
+abordé dans la suite de l’intégration de l’API.
+
+   Une fois les fichiers envoyés, un dernier appel est réalisé afin de notifier l’API que le
+pipeline est terminé.
+
+    Le problème de cette approche est le grand nombre d’opérations à réaliser dans un
+ordre bien précis dans un environnement spécifique. Car il y a eﬀectivement l’appel à
+JAVA, bash, python. Cependant, il faut s’assurer que les versions utilisées sont bien celles
+demandées par CLING. C’est donc l’avantage d’utiliser Docker. Docker va permettre
+de réaliser les diﬀérentes opérations dans un environnement contrôlé sur lequel on a un
+contrôle complet.
+Pour que les opérations soient bien réalisées dans un ordre spécifique, un script a été écrit
+qui exécute chaque instruction dans l’ordre voulu. De plus, ce fichier est le point d’entrée
+du Docker. Cela va permettre aux utilisateurs de ne pas devoir interagir avec l’image mais
+juste de la lancer et d’attendre qu’elle termine son exécution. Les seules interactions pos-
+sibles seront uniquement l’envoi des variables d’environnement lors de la phase de setup.
+
+   Et finalement, le fait de faire une image Docker permet d’utiliser l’image dans n’im-
+porte quel pipeline CI/CD avec la seule obligation qui est l’utilisation de Docker - qui est
+
+
+                                              35
+de plus en plus courant dans le monde DevOps.
+
+
+
+4.5     Développement de l’API
+    L’API joue un rôle crucial dans l’intégration de l’outil. En eﬀet, sans API, il ne serait
+pas possible de stocker les données générées par l’outil et de les fournir au visuel pour les
+traiter.
+L’API est responsable de la gestion des données, de la validation, de l’authentification,
+et de la communication entre les diﬀérents composants de l’application, ce qui en fait un
+élément central du projet.
+
+
+4.5.1   Architecture
+    L’architecture de l’API utilisée est celle fournie par NestJS, un framework progressif
+pour construire des applications server-side Node.js eﬃcaces, fiables et scalables. NestJS
+suit les principes de l’architecture modulaire, ce qui permet de structurer le code de ma-
+nière claire et maintenable. Cette architecture s’inspire de concepts éprouvés tels que le
+modèle-vue-contrôleur (MVC) et l’injection de dépendances, facilitant ainsi le développe-
+ment et la maintenance de l’application.
+
+
+
+
+                              Figure 10 – Architecture API
+
+    NestJS est construit sur Express, un framework web minimaliste pour Node.js, mais
+il peut également utiliser Fastify, un framework plus performant, en fonction des besoins
+
+                                             36
+de l’application. Cette flexibilité permet de choisir la meilleure option en termes de per-
+formances et de fonctionnalités.
+
+    Les points d’entrée de l’application sont gérés via des contrôleurs. Un contrôleur est
+une classe qui gère les requêtes HTTP entrantes, les traite et renvoie des réponses appro-
+priées. Chaque méthode d’un contrôleur est associée à une route spécifique, ce qui permet
+de définir clairement quelles actions sont disponibles à chaque endpoint. Par exemple, un
+contrôleur dédié aux utilisateurs peut avoir des méthodes pour créer, lire, mettre à jour
+et supprimer des utilisateurs.
+
+    Afin de réduire au maximum la logique dans les contrôleurs, la mise en place de services
+permet de centraliser la logique applicative. Les services encapsulent la logique métier,
+permettant ainsi de maintenir des contrôleurs légers et de favoriser la réutilisabilité du
+code. Un service peut être utilisé par plusieurs contrôleurs, ce qui permet de partager la
+logique métier entre diﬀérentes parties de l’application. Par exemple, un service de ges-
+tion des utilisateurs inclura des méthodes pour créer, lire, mettre à jour et supprimer des
+utilisateurs, en utilisant un repository.
+
+    NestJS est intégré avec TypeORM, un ORM (Object-Relational Mapping) puissant
+qui facilite les interactions avec la base de données. TypeORM permet de définir des en-
+tités et de faire correspondre ces entités à des tables de la base de données. Les entités
+sont des classes TypeScript qui représentent les données de l’application, et TypeORM
+se charge de la traduction entre ces classes et les tables correspondantes. Cela permet de
+travailler avec des objets TypeScript au lieu d’écrire des requêtes SQL, simplifiant ainsi
+le développement et la maintenance.
+
+   TypeORM utilise une notion de repository pour interagir avec la base de données. Un
+repository est une classe dédiée à la gestion des opérations de persistance pour une entité
+donnée. Il fournit des méthodes pour eﬀectuer des opérations de lecture, d’écriture, de
+mise à jour et de suppression sur les entités. Par exemple, un repository pour une entité
+‘User‘ gérerait toutes les opérations CRUD spécifiques aux utilisateurs.
+
+   L’utilisation d’un ORM comme TypeORM facilite les transformations de types de
+données et assure que les bases de données et le code restent synchronisés. Les bases de
+données ne contiennent pas toujours les types de données utilisés dans le code, il faut donc
+un mapper qui permet de faire correspondre les deux ensembles. De plus, TypeORM prend
+en charge les migrations de base de données, ce qui permet de gérer les modifications de
+schéma de manière structurée et sécurisée.
+
+   Pour améliorer encore la structure et la maintenabilité, NestJS adopte également des
+concepts de SOLID et de clean architecture, garantissant que chaque classe et module a
+une responsabilité unique et que les dépendances sont inversées de manière appropriée.
+
+    Les modules de NestJS permettent de regrouper les fonctionnalités connexes et de
+les organiser de manière cohérente. Un module peut inclure des contrôleurs, des services,
+des filtres, des guardes et des intercepteurs. Par exemple, un module d’authentification
+pourrait inclure toutes les fonctionnalités liées à l’authentification et à l’autorisation des
+utilisateurs.
+
+
+                                             37
+    NestJS prend également en charge les middlewares, qui sont des fonctions qui ont
+accès à l’objet de requête (req), l’objet de réponse (res), et la fonction suivante dans
+le cycle de requête-réponse de l’application. Les middlewares peuvent eﬀectuer diverses
+tâches, comme l’authentification, la journalisation des requêtes, la gestion des erreurs, etc.
+
+     En résumé, l’architecture de l’API NestJS oﬀre une structure claire et modulaire, fa-
+cilite la gestion des données et améliore la maintenabilité du code grâce à l’utilisation
+de contrôleurs, de services et de repositories. Cette approche permet de construire une
+API robuste, évolutive et facile à maintenir. Les concepts de modularité, d’injection de
+dépendances et d’utilisation d’un ORM comme TypeORM assurent une application bien
+structurée et prête à évoluer avec les besoins futurs.
+
+
+4.5.2   Pattern Repository
+    Le Pattern Repository est essentiel pour isoler la logique de persistance des données.
+Dans NestJS avec TypeORM, chaque entité de base de données est associée à un reposi-
+tory dédié, chargé de gérer les opérations de lecture, d’écriture et de mise à jour relatives
+à cette entité. Cette approche permet une séparation claire entre la logique métier de
+l’application et la manipulation des données, améliorant ainsi la maintenabilité et la tes-
+tabilité du code. Par exemple, un repository pour une entité ‘User‘ gérerait toutes les
+opérations CRUD spécifiques aux utilisateurs.
+
+
+4.5.3   Pattern Service
+    Le Pattern Service encapsule la logique métier de l’application. Les services oﬀrent
+une interface cohérente pour interagir avec les diﬀérentes fonctionnalités de l’application.
+Dans le cadre de NestJS avec TypeORM, les services sont souvent utilisés pour interagir
+avec les repositories et eﬀectuer des opérations CRUD sur les entités de la base de don-
+nées. Cette approche favorise la modularité et la réutilisabilité du code. Un service dédié
+à la gestion des utilisateurs, par exemple, inclurait des méthodes pour créer, lire, mettre
+à jour et supprimer des utilisateurs, en utilisant le repository ‘User‘.
+
+
+4.5.4   Pattern DTO (Data Transfer Object)
+    Le Pattern DTO est utilisé pour transporter des données entre les diﬀérentes couches
+de l’application de manière structurée. Dans NestJS avec TypeORM, les DTO sont utilisés
+pour définir des schémas de données lors de la validation des entrées utilisateur ou pour
+formater les données renvoyées par l’API. En définissant des DTO spécifiques à chaque
+opération, il est possible de garantir la cohérence et l’intégrité des données échangées au
+sein de l’application. Par exemple, un ‘CreateUserDTO‘ peut définir les champs néces-
+saires pour créer un utilisateur, et valider que tous les champs requis sont fournis.
+
+
+
+
+                                             38
+4.5.5   Pattern Module
+    Les modules dans NestJS permettent d’organiser et de découper l’application en fonc-
+tionnalités distinctes. Chaque module peut contenir des contrôleurs, des services, des
+repositories, des DTO et d’autres composants nécessaires à une fonctionnalité spécifique
+de l’application. Cette approche favorise la modularité, la réutilisabilité et la séparation
+des préoccupations, facilitant ainsi un développement évolutif et maintenable de l’appli-
+cation. Un module ‘UserModule‘, par exemple, regrouperait toutes les classes et fichiers
+relatifs aux utilisateurs.
+
+
+4.5.6   Pattern MVC (Modèle-Vue-Contrôleur)
+    Le Pattern MVC est largement utilisé dans le développement web pour séparer les
+préoccupations en termes de données (Modèle), de présentation (Vue) et de logique de
+contrôle (Contrôleur). Dans NestJS avec TypeORM, le Modèle correspond généralement
+aux entités de base de données, la Vue est représentée par les réponses HTTP renvoyées
+par les contrôleurs, tandis que le Contrôleur est chargé de gérer les requêtes HTTP en-
+trantes et de diriger le flux de contrôle vers les actions appropriées. Cette séparation
+facilite la gestion et la maintenance du code.
+
+
+4.5.7   Pattern Proxy
+    Le Pattern Proxy est utilisé pour contrôler l’accès à un objet en agissant comme une
+couche intermédiaire entre l’utilisateur et l’objet réel. Dans NestJS avec TypeORM, un
+Proxy peut être utilisé pour eﬀectuer des opérations de validation, de mise en cache ou de
+journalisation avant d’interagir avec les services ou les repositories. Cette approche permet
+de déléguer des responsabilités supplémentaires à un objet intermédiaire sans modifier son
+comportement de base. Par exemple, un proxy peut intercepter les requêtes pour vérifier
+les permissions d’accès avant de déléguer la requête au service approprié.
+
+
+4.5.8   Authentification et Autorisation
+    La sécurité de l’API est assurée par l’utilisation de stratégies d’authentification et
+d’autorisation robustes. L’authentification des utilisateurs est gérée via JWT (JsonWeb-
+Token), garantissant que les tokens ne peuvent pas être modifiés par des tiers. Les guards
+sont utilisés pour protéger les routes API, assurant que seuls les utilisateurs autorisés
+peuvent accéder à certaines fonctionnalités. Par exemple, un AuthGuard peut vérifier
+que l’utilisateur est authentifié avant de permettre l’accès à des routes protégées. L’au-
+torisation basée sur les rôles contrôle l’accès aux diﬀérentes parties de l’application, les
+utilisateurs ne pouvant accéder qu’aux fonctionnalités et données pour lesquelles ils ont
+les permissions appropriées. Des tokens CSRF (Cross-Site Request Forgery) protègent
+l’application contre les attaques de type CSRF. Les entrées utilisateur sont systématique-
+ment validées et nettoyées pour prévenir les attaques par injection, comme les injections
+SQL ou les scripts intersites (XSS).
+
+
+
+
+                                             39
+4.5.9    Gestion des Erreurs
+    La gestion des erreurs est centralisée grâce à des filtres d’exception globaux. Ces filtres
+permettent de capturer et de gérer les erreurs de manière standardisée, fournissant des
+réponses d’erreur claires et cohérentes. Cela améliore la robustesse et la maintenabilité de
+l’application, en facilitant le débogage et en assurant une meilleure expérience utilisateur.
+
+
+4.5.10    Documentation de l’API
+    La documentation de l’API est générée automatiquement à l’aide de Swagger. Cette
+documentation détaillée facilite le développement, la maintenance et l’intégration avec
+d’autres services. Les développeurs peuvent explorer et tester les endpoints de l’API di-
+rectement depuis l’interface Swagger, ce qui améliore la productivité et réduit les erreurs.
+
+
+4.5.11    Sécurité
+    L’API a été découpée en plusieurs parties afin d’avoir des gestions de permissions dif-
+férentes : la partie utilisée pour les appels depuis l’outil et la partie utilisée pour le visuel.
+
+    Les appels depuis l’outil sont faits de manière automatique sans aucune interaction
+de l’utilisateur, il est donc important que le système de connexion soit entièrement au-
+tomatisé. De plus, pour des communications du style "serveur à serveur", le domaine
+professionnel utilise fréquemment des clés d’API. Ce système d’authentification a donc
+été utilisé dans ce cadre-là. Les clés d’API sont directement configurées sur un repository,
+permettant d’en avoir diﬀérentes et d’augmenter la sécurité, car les utilisateurs ne peuvent
+générer des clés d’API que pour leur propre repository.
+
+    Pour la partie visuelle développée en Angular, une clé d’API pourrait être possible,
+mais ce n’est pas le standard utilisé par l’industrie. Le standard pour les connexions
+API-Visuel est le JWT (JsonWebToken). Un JWT permet de stocker des informations
+concernant l’utilisateur tout en garantissant qu’il ne peut pas être modifié par un acteur
+autre que le serveur, car le token est signé et vérifié à chaque appel API pour s’assurer
+de sa validité. De plus, un JWT possède une durée de vie qui permet de limiter le temps
+de connexion et de forcer l’utilisateur à se reconnecter périodiquement, améliorant ainsi
+la sécurité globale de l’application.
+
+
+
+4.6      Développement du site web
+4.6.1    Architecture de l’Application
+   Développé en Angular, le front-end utilise une architecture modulaire qui facilite la
+maintenance et l’évolutivité de l’application. Le projet est structuré en modules, com-
+posants, services et modèles, ce qui assure une séparation claire des préoccupations. Les
+modules Angular permettent de regrouper des fonctionnalités liées, chaque fonctionnalité
+étant implémentée sous forme de composant Angular. Par exemple, il existe un module
+pour la gestion des utilisateurs, un autre pour la configuration des clés d’API et un autre
+
+
+                                               40
+pour la visualisation des tests. Cette structuration en modules facilite la gestion des dé-
+pendances et améliore la maintenabilité du code. En utilisant le lazy loading, seuls les
+modules nécessaires sont chargés à la demande, ce qui optimise les performances de l’ap-
+plication.
+
+
+4.6.2   Design des Composants
+    Les composants gèrent des fonctionnalités spécifiques, comme l’aﬃchage de la liste des
+tests générés ou la configuration des clés d’API. Un choix de conception important a été
+fait pour séparer les composants réutilisables des pages qui sont utilisées uniquement par
+le routing. Les composants réutilisables sont ceux qui peuvent être utilisés par d’autres
+composants ou pages, tandis que les pages sont des composants dédiés à des vues spéci-
+fiques du routage de l’application. Cette séparation permet de maintenir un code propre
+et modulaire, facilitant ainsi la réutilisation et la maintenance. Par exemple, un compo-
+sant de tableau de bord peut être réutilisé dans plusieurs pages pour aﬃcher des données
+statistiques, tandis qu’une page de configuration de l’utilisateur est dédiée à la gestion
+des paramètres de l’utilisateur.
+
+
+4.6.3   Services et Gestion de la Logique Métier
+    Les services Angular centralisent la logique métier et les appels API, rendant cette lo-
+gique réutilisable à travers diﬀérents composants. Les services sont également responsables
+de l’interception des requêtes HTTP, permettant ainsi l’ajout automatique de tokens d’au-
+thentification aux requêtes sortantes. Cela simplifie la gestion de l’authentification et as-
+sure une communication sécurisée avec l’API. En utilisant des intercepteurs, les services
+peuvent également gérer les erreurs de manière centralisée, améliorant ainsi la robustesse
+de l’application.
+
+
+4.6.4   Routage et Navigation
+    Le routage est géré par Angular Router, qui permet une navigation fluide et la gestion
+des routes protégées. Les guards sont utilisés pour vérifier les permissions d’accès avant
+de permettre la navigation vers certaines routes. Par exemple, un AuthGuard assure que
+seuls les utilisateurs authentifiés peuvent accéder à certaines parties de l’application. De
+plus, des résolveurs de données (resolve) sont utilisés pour précharger les données néces-
+saires avant d’aﬃcher la page, améliorant ainsi l’expérience utilisateur en réduisant les
+temps de chargement.
+
+
+4.6.5   Formulaires et Validation
+    L’application utilise les formulaires réactifs d’Angular pour gérer les entrées utilisa-
+teur. Les formulaires réactifs oﬀrent un moyen flexible et performant de gérer la validation
+des entrées utilisateur. Des validations personnalisées ont été implémentées pour répondre
+aux besoins spécifiques de l’application, garantissant que les données saisies sont correctes
+et sécurisées. Les formulaires réactifs permettent également de gérer les états de validation
+
+
+                                             41
+de manière déclarative, rendant le code plus lisible et maintenable.
+
+
+4.6.6   Sécurité
+    La sécurité est un aspect crucial du développement du site web. L’authentification des
+utilisateurs est gérée via JWT (JsonWebToken), garantissant que les tokens ne peuvent
+pas être modifiés par des tiers. L’autorisation basée sur les rôles contrôle l’accès aux diﬀé-
+rentes parties de l’application, les utilisateurs ne pouvant accéder qu’aux fonctionnalités et
+données pour lesquelles ils ont les permissions appropriées. Des tokens CSRF (Cross-Site
+Request Forgery) protègent l’application contre les attaques de type CSRF. Les entrées
+utilisateur sont systématiquement validées et nettoyées pour prévenir les attaques par
+injection, comme les injections SQL ou les scripts intersites (XSS). Des mécanismes de
+chiﬀrement sont également utilisés pour protéger les données sensibles en transit et au
+repos.
+
+
+4.6.7   Performance et Optimisation
+   Le développement du site web a inclus des eﬀorts significatifs pour optimiser les per-
+formances et garantir une expérience utilisateur fluide, même avec un grand volume de
+données. Les modules Angular sont chargés de manière paresseuse (lazy loading), ré-
+duisant le temps de chargement initial en ne chargeant que les modules nécessaires. La
+pagination aﬃche les listes de tests par lots, réduisant le nombre de données chargées et
+aﬃchées à tout moment. Les appels API sont optimisés pour minimiser la quantité de
+données transférées et réduire le temps de réponse. Le caching est utilisé pour stocker
+temporairement les données fréquemment demandées, améliorant ainsi les temps de char-
+gement. Des techniques de debouncing sont également utilisées pour réduire le nombre
+d’appels API lors des entrées utilisateur fréquentes.
+
+
+4.6.8   Expérience Utilisateur (UX) et Design
+    Un eﬀort particulier a été mis sur l’expérience utilisateur (UX) pour rendre l’applica-
+tion intuitive et facile à utiliser. L’application est conçue pour être responsive, s’adaptant
+automatiquement aux diﬀérentes tailles d’écran. L’interface utilisateur est conçue avec
+une attention particulière à l’ergonomie, en utilisant des standards de design modernes
+pour assurer une navigation fluide. Des notifications de succès ou d’erreur fournissent
+des indications claires sur les actions eﬀectuées. L’accessibilité a été prise en compte en
+suivant les directives WCAG (Web Content Accessibility Guidelines) pour s’assurer que
+l’application est utilisable par tous, y compris les personnes handicapées. Des tests d’uti-
+lisabilité ont été eﬀectués pour identifier et corriger les problèmes de navigation et de
+compréhension, améliorant ainsi l’eﬃcacité globale de l’application.
+
+
+
+4.7     Partage de fonctionnalité commune
+   L’utilisation d’un sous-module Git pour partager des interfaces en TypeScript entre
+une API développée en NestJS et un front-end en Angular oﬀre une solution élégante
+
+
+                                             42
+et eﬃcace pour maintenir la cohérence des contrats de données à travers les diﬀérentes
+couches de l’application. Dans un environnement de développement moderne, il est cru-
+cial de garantir que les définitions des types de données restent synchronisées entre le
+front-end et le back-end, afin de minimiser les erreurs et les incohérences qui peuvent
+survenir lors des échanges de données. En centralisant les définitions d’interfaces dans un
+référentiel partagé et en les intégrant en tant que sous-module dans les projets front-end et
+back-end, les développeurs peuvent s’assurer que les deux parties de l’application utilisent
+exactement les mêmes structures de données.
+
+    Cette approche présente plusieurs avantages majeurs. Premièrement, elle améliore la
+maintenabilité du code. Lorsqu’une interface est modifiée, les changements sont immé-
+diatement disponibles pour les deux parties de l’application, éliminant ainsi le besoin de
+duplications et de mises à jour manuelles des types. Cela réduit considérablement le risque
+d’erreurs dues à des définitions de types désynchronisées et garantit que le front-end et le
+back-end évoluent de manière cohérente. De plus, en utilisant un sous-module Git, il est
+possible de versionner les interfaces indépendamment des projets principaux, permettant
+ainsi une gestion fine des dépendances et facilitant les retours en arrière en cas de besoin.
+
+    Deuxièmement, cette méthode favorise la réutilisabilité du code. Les interfaces TypeS-
+cript définies dans le sous-module peuvent être réutilisées dans d’autres projets ou services
+qui partagent les mêmes modèles de données, favorisant ainsi une approche modulaire
+et DRY (Don’t Repeat Yourself). Cela contribue à une architecture plus propre et plus
+modulaire, où les composants partagés sont centralisés et maintenus de manière uniforme.
+
+    Troisièmement, l’intégration des sous-modules Git améliore le flux de travail des équipes
+de développement. Les développeurs peuvent travailler sur des fonctionnalités en sachant
+que les interfaces qu’ils utilisent sont toujours à jour et conformes à la spécification. Les
+modifications apportées aux interfaces peuvent être propagées de manière contrôlée, grâce
+à des processus de revue de code et de validation automatisés. Cela est particulièrement
+utile dans les équipes distribuées ou lorsque plusieurs développeurs travaillent simultané-
+ment sur le front-end et le back-end.
+
+    Enfin, l’utilisation de sous-modules Git pour partager des interfaces en TypeScript
+renforce la robustesse et la sécurité de l’application. En garantissant que les mêmes types
+et validations sont appliqués des deux côtés, on réduit les risques de failles de sécurité
+dues à des données mal formées ou inattendues. Cela permet également de tirer pleine-
+ment parti des fonctionnalités de typage fort de TypeScript, qui détecte les erreurs à la
+compilation plutôt qu’à l’exécution, améliorant ainsi la qualité globale du code.
+
+    En conclusion, l’utilisation d’un sous-module Git pour partager des interfaces en Ty-
+peScript entre une API en NestJS et un front-end en Angular oﬀre une solution puissante
+pour maintenir la cohérence des données, améliorer la réutilisabilité et la maintenabilité
+du code, et optimiser le flux de travail des équipes de développement. Cette approche
+garantit que les contrats de données restent synchronisés et cohérents, réduisant ainsi les
+risques d’erreurs et améliorant la qualité et la sécurité de l’application.
+
+
+
+
+                                             43
+4.8    Intégration de l’outil dans les Pipelines Bitbucket
+    L’intégration de l’outil dans les pipelines Bitbucket permet d’automatiser son exécu-
+tion à chaque modification du code source, assurant ainsi une vérification continue de la
+qualité du code et une mise à jour régulière des tests générés. Bitbucket Pipelines oﬀre
+un environnement CI/CD intégré qui facilite l’automatisation des processus de build, de
+test et de déploiement, directement dans les dépôts Git hébergés sur Bitbucket.
+
+    Pour intégrer l’outil dans un pipeline Bitbucket, un fichier de configuration spécifique
+doit être ajouté à la racine du repository Git. Ce fichier, nommé ‘bitbucket-pipelines.yml‘,
+définit les étapes à suivre lors de l’exécution du pipeline. Le contenu de ce fichier est pré-
+senté ci-dessous :
+
+# bitbucket - pipelines . yml
+
+image : maven :3.8.1 - openjdk -11
+
+pipelines :
+  default :
+    - step :
+        name : Build and start CLING
+        caches :
+            - maven
+        size : 2 x
+        services :
+            - docker
+        script :
+            - echo " Installing dependencies , building the project ,
+               and starting CLING ..."
+            - mvn clean install - DskipTests
+            - docker run -e AUTH_TOKEN =" $ { AUTH_TOKEN }" -e API_URL =" $ {
+               API_URL }" -e BUDGET =" $ { BUDGET }" -e MAX_ITERATIONS =" $ {
+               MAX_ITERATIONS }" -v $BITBUCKET_CLONE_DIR :/ devops /
+               projects / build -- name cling - ci - cd - container
+               jucoppinunamur / cling - ci - cd : latest
+
+definitions :
+  services :
+    docker :
+      memory : 6344
+      Listing 1 – Configuration du pipeline Bitbucket pour l’intégration de l’outil
+    Le fichier de configuration utilise plusieurs variables d’environnement pour configurer
+et lancer le conteneur Docker CLING. Voici une explication des principales variables uti-
+lisées :
+
+   — AUTH_TOKEN : Cette variable stocke le jeton d’authentification utilisé pour
+     accéder à des services ou API sécurisés. Il est passé au conteneur Docker pour
+     permettre une communication sécurisée avec des ressources externes.
+
+
+                                             44
+   — API_URL : Cette variable définit l’URL de l’API à laquelle le conteneur Docker
+     se connectera. Cela peut être utilisé pour envoyer des résultats ou récupérer des
+     configurations nécessaires au fonctionnement de l’outil.
+
+   — BUDGET : Représente le budget alloué en temps pour la génération d’un test.
+
+   — MAX_ITERATIONS : Cette variable contrôle le nombre maximum d’itérations
+     que CLING eﬀectuera. Elle est utilisée pour limiter le temps d’exécution de l’outil
+     et éviter qu’il ne consomme trop de ressources lors de tests prolongés.
+
+   — BITBUCKET_CLONE_DIR : Cette variable, fournie par Bitbucket, représente le
+     répertoire où le code source du repository est cloné dans l’environnement de build.
+     Il est monté comme volume dans le conteneur Docker pour que CLING puisse ac-
+     céder au code source à analyser.
+
+    La capture d’écran suivante illustre les étapes principales du pipeline telles que dé-
+crites dans le fichier de configuration.
+
+
+
+
+                       Figure 11 – Étapes principales du pipeline
+
+
+4.9    Défis Techniques
+    Vu que l’intégration a été faite en plusieurs phases, des erreurs et des diﬃcultés ont
+été rencontrées au fur et à mesure. Les premières diﬃcultés étaient liées à l’intégration de
+l’outil en tant que tel. Le README n’était pas complet et le manque de documentation
+existante dans les papiers scientifiques a rendu l’avancée du développement complexe, né-
+cessitant une approche basée sur des essais et des erreurs.
+
+    Ensuite, il a fallu réaliser les appels API depuis des scripts en bash. Dans le monde du
+développement, l’habitude est généralement de passer directement par des bibliothèques
+qui facilitent ce genre d’appel, comme Axios en NestJS et Angular. Or, dans le cadre de
+bash, l’utilisation de CURL, bien que très utilisée, est plus compliquée à implémenter.
+Il faut non seulement gérer les paramètres en ligne de commande mais aussi parser les
+réponses JSON avec jq, une bibliothèque dédiée. De plus, étant donné que l’intégration
+se faisait dans un environnement Docker, il était crucial de s’assurer que toutes les bi-
+bliothèques nécessaires étaient incluses dans l’image Docker et non uniquement installées
+dans le container en cours d’exécution.
+
+                                            45
+   Une fois ces problèmes résolus, les premiers appels API ont pu être réalisés sur un
+petit échantillon de données pour valider les fonctionnalités. Cette phase de test a permis
+d’ajuster rapidement l’API en fonction des retours. La montée en charge, en passant d’une
+vingtaine de classes de test à 5000, a mis en évidence des problèmes de performances, no-
+tamment dans le service parcourant les classes JAVA.
+
+
+4.9.1   Problèmes de Performance avec Angular
+   L’un des principaux défis a été les problèmes de performance sur la partie Angular.
+Lors de l’aﬃchage de grandes quantités de données, la page mettait environ 30 secondes à
+charger, ce qui est inacceptable pour une application interactive. Les outils de debugging
+des navigateurs ont révélé que les problèmes de performance provenaient à la fois de la
+quantité de données, du traitement pour générer le visuel, et de la transmission des don-
+nées depuis l’API.
+
+    Pour remédier à cela, la première étape a été d’optimiser l’API. En évitant de ré-
+cupérer systématiquement les informations détaillées des méthodes dans chaque classe,
+le temps d’exécution de l’API a été divisé par dix et la quantité de données envoyées a
+été considérablement réduite. Cette optimisation a permis de tester plus eﬃcacement les
+autres aspects de l’application.
+
+
+4.9.2   Gestion des Sous-modules Git
+   L’utilisation de sous-modules Git pour partager des interfaces TypeScript entre l’API
+en NestJS et le front-end en Angular présente de nombreux avantages en termes de co-
+hérence des données et de réutilisabilité du code. Cependant, cette approche comporte
+également des défis techniques.
+
+    La configuration initiale des sous-modules Git peut être complexe. Il est crucial de
+s’assurer que le sous-module pointe vers le bon référentiel et qu’il est correctement initia-
+lisé et mis à jour dans les projets front-end et back-end. Une documentation claire et des
+scripts automatisés pour initialiser et configurer les sous-modules peuvent simplifier cette
+tâche et réduire les erreurs humaines.
+
+    Maintenir les sous-modules à jour est un autre défi majeur. Il est essentiel de synchro-
+niser régulièrement les sous-modules pour garantir que les dernières versions des interfaces
+sont utilisées. Des scripts d’automatisation peuvent aider à réduire ce risque, mais leur
+mise en place demande du temps et des compétences supplémentaires. Automatiser ce
+processus dans le workflow de développement peut garantir que les sous-modules sont
+toujours à jour, minimisant ainsi les erreurs dues à des interfaces désynchronisées.
+
+
+4.9.3   Sécurité et Conformité
+    L’intégration de l’outil et le développement de l’API nécessitent une attention particu-
+lière à la sécurité. Les communications doivent être sécurisées, notamment par l’utilisation
+
+
+                                             46
+de HTTPS, et les données sensibles doivent être protégées. Des mécanismes tels que les
+tokens JWT pour l’authentification et des stratégies de prévention des attaques CSRF
+(Cross-Site Request Forgery) sont essentiels. De plus, la conformité avec les réglementa-
+tions sur la protection des données, comme le RGPD (Règlement Général sur la Protection
+des Données) en Europe, doit être assurée.
+
+
+4.9.4   Gestion des Ressources et Scalabilité
+    Avec l’augmentation du volume de données et du nombre d’utilisateurs, la gestion
+des ressources et la scalabilité de l’application deviennent critiques. L’utilisation de tech-
+niques de mise en cache, la répartition de la charge et l’optimisation des requêtes de base
+de données sont des aspects importants pour garantir la performance et la réactivité de
+l’application. De plus, la scalabilité horizontale, c’est-à-dire l’ajout de nouvelles instances
+de serveurs, peut être nécessaire pour répondre à une demande croissante.
+
+
+4.9.5   Tests et Assurance Qualité
+   Assurer la qualité et la fiabilité de l’application nécessite la mise en place de tests
+automatisés, y compris des tests unitaires, des tests d’intégration et des tests de bout en
+bout. L’intégration continue et le déploiement continu (CI/CD) avec des pipelines de tests
+automatisés permettent de détecter rapidement les régressions et les erreurs, garantissant
+ainsi la stabilité de l’application à chaque mise à jour.
+
+
+4.9.6   Maintenance et Documentation
+    La maintenance continue de l’application et la mise à jour régulière des dépendances
+sont essentielles pour prévenir les vulnérabilités de sécurité et assurer la compatibilité avec
+les nouvelles versions des frameworks et des bibliothèques utilisées. Une documentation dé-
+taillée, incluant les instructions d’installation, d’utilisation et de contribution, est cruciale
+pour faciliter la collaboration et la prise en main du projet par de nouveaux développeurs.
+
+
+4.9.7   Retour d’Expérience Utilisateur et Améliorations
+    Enfin, recueillir et analyser les retours des utilisateurs est essentiel pour identifier les
+points de friction et les opportunités d’amélioration. Cela peut être fait par le biais de
+questionnaires, de sessions de test utilisateur et de l’analyse des données d’utilisation. Les
+retours permettent d’orienter les développements futurs et d’améliorer continuellement
+l’expérience utilisateur.
+
+
+4.9.8   Conclusion
+   Les défis techniques rencontrés lors de l’intégration de l’outil, du développement de
+l’API, de la gestion des performances d’Angular et de l’utilisation des sous-modules Git
+ont mis en évidence l’importance de la documentation, de l’automatisation et de la gestion
+
+
+                                               47
+des versions. Chacune de ces étapes a nécessité une réflexion approfondie et des ajuste-
+ments constants pour assurer la cohérence, la performance et la sécurité de l’application.
+En surmontant ces défis, nous avons pu établir un environnement de développement ro-
+buste et une base solide pour les futurs développements et intégrations.
+
+   En identifiant et en abordant de manière proactive ces défis potentiels, nous pouvons
+mieux préparer et structurer le projet pour garantir son succès à long terme.
+
+
+
+
+                                           48
+5     Résultats
+    Pour évaluer l’acceptation et l’adoption du site web par les développeurs, un ques-
+tionnaire d’expérience utilisateur (UEQ) a été utilisé. Les résultats de ce questionnaire
+oﬀrent un aperçu précieux sur la perception et l’acceptabilité du site web dans un contexte
+industriel.
+
+5.1    Méthodologie et Description de la Manipulation
+    L’étude a été menée en ligne, permettant aux participants de tester l’application à
+distance. Les développeurs participants ont été invités à interagir avec l’application dé-
+veloppée, conçue pour aﬃcher les résultats des tests générés par des pipelines CI/CD, en
+particulier ceux créés par l’outil CLING. Les participants ont reçu des instructions spéci-
+fiques pour guider leur exploration de l’application, comprenant les étapes suivantes :
+    1. Accès et Navigation : Les participants se sont connectés à l’application en utili-
+       sant des identifiants fournis. Une fois connectés, ils étaient dirigés vers la page des
+       pipelines, où ils pouvaient visualiser les diﬀérents pipelines CI/CD en cours.
+
+    2. Interaction avec le site web :
+
+       — Les tests unitaires générés automatiquement par les pipelines CI/CD étaient
+         présentés sur la plateforme.
+
+       — Ces tests, après avoir été générés par CLING, étaient envoyés à une API qui
+         les rendait disponibles sur le site web.
+
+       — Sur la page dédiée aux pipelines, les participants pouvaient visualiser les tests,
+         lire le code des tests générés, les télécharger si nécessaire, et marquer les tests
+         comme validés s’ils étaient satisfaits des résultats.
+
+    Les participants n’étaient pas tenus de partager leur écran durant la session, mais ils
+étaient encouragés à fournir des retours détaillés via le questionnaire UEQ. En ce qui
+concerne le code utilisé pour générer les tests avec CLING, un code standard a été fourni
+afin d’assurer une base homogène pour l’évaluation. Cette approche a permis de concen-
+trer l’étude sur l’expérience utilisateur, et non sur les spécificités du code testé.
+
+
+
+5.2    Informations Démographiques des Participants
+    L’étude a inclus un total de 42 participants, sélectionnés principalement parmi les
+développeurs, les intégrateurs CI/CD, les professionnels du secteur IT et des apprenants.
+Après vérification de la sincérité des réponses, 8 d’entre elles ont été écartées, portant
+l’échantillon final à 34 participants. La sincérité des réponses a été évaluée grâce à l’ana-
+lyse de données fourni par UEQ.
+
+    Les rôles des participants sont illustrés dans le schéma ci-dessous :
+
+
+
+                                             49
+            Figure 12 – Répartition des rôles des participants dans l’étude
+
+
+5.3    Analyse des Résultats du Questionnaire UEQ
+   Le formulaire UEQ évalue six dimensions principales :
+
+   — Attraction : La perception générale des utilisateurs vis-à-vis de l’attrait du site
+     web.
+
+   — Compréhensibilité : La facilité avec laquelle les utilisateurs peuvent comprendre
+     et utiliser le site web.
+
+   — Eﬃcacité : L’eﬃcacité perçue du site web dans l’accomplissement des tâches.
+
+   — Contrôlabilité : La fiabilité et la sécurité perçues du site web.
+
+   — Stimulation : À quel point les utilisateurs trouvent l’utilisation du site web sti-
+     mulante et engageante.
+
+   — Originalité : La perception de l’innovation et de la nouveauté du site web.
+
+    Les résultats du formulaire UEQ sont illustrés dans les schémas ci-dessous. Le premier
+schéma montre la distribution des réponses pour chaque question du questionnaire. Le
+deuxième schéma présente les dimensions extraites par l’outil d’analyse des données, avec
+les scores moyens pour chaque dimension classés selon les catégories Excellent, Good, Above
+Average, Below Average, et Bad.
+
+
+
+
+                                            50
+51
+
+
+
+
+     Figure 13 – Distribution des réponses par question du questionnaire d’expérience utilisateur (UEQ)
+Figure 14 – Scores moyens des dimensions évaluées par le questionnaire d’expérience
+utilisateur (UEQ) basés sur 34 réponses sérieuses
+
+
+
+
+                                        52
+6     Discussion
+6.1    Évaluation utilisateur
+    Les résultats de l’UEQ montrent que les développeurs ont globalement une perception
+positive du site web. Les dimensions "Attraction", "Compréhensibilité" et "Eﬃcacité"
+étant bien notées, il est clair que les utilisateurs trouvent le site web agréable, facile à
+comprendre et eﬃcace pour accomplir leurs tâches. Cela indique que le site web répond
+bien aux besoins fonctionnels de ses utilisateurs, en leur oﬀrant une interface utilisateur
+attrayante et intuitive, ainsi qu’une performance satisfaisante.
+
+    La "Contrôlabilité" a également été bien notée, suggérant que les utilisateurs font
+confiance au site web et le trouvent stable et sécurisé. Cette dimension est cruciale dans
+le contexte de l’intégration de générateurs de tests dans des pipelines CI/CD, où la fiabi-
+lité des outils est essentielle pour assurer la qualité continue du logiciel.
+
+    Cependant, les scores légèrement inférieurs pour "Stimulation" et "Originalité" in-
+diquent que le site web pourrait bénéficier de mises à jour pour le rendre plus stimulant et
+innovant. Ces dimensions peuvent être influencées par l’existence de systèmes concurrents
+pour la lecture de code en ligne, perçus comme plus performants ou intuitifs, ce qui réduit
+la perception de nouveauté et de stimulation du site web.
+
+    L’ "Originalité" relativement basse peut s’expliquer par plusieurs facteurs. Premiè-
+rement, bien que le site web soit fonctionnel, il ne présente peut-être pas des caractéris-
+tiques perçues comme innovantes ou révolutionnaires par les utilisateurs. Les développeurs
+peuvent avoir des attentes élevées en matière d’innovation, cherchant des fonctionnalités
+uniques ou des approches nouvelles qui ne sont pas encore présentes sur le site. Deuxiè-
+mement, l’accent principal du site web étant mis sur l’eﬃcacité et la fiabilité, les aspects
+novateurs peuvent avoir été perçus comme secondaires. Enfin, il est possible que les uti-
+lisateurs soient déjà familiers avec des concepts similaires, ce qui réduit la perception de
+nouveauté. Cependant, cette familiarité pourrait en fait constituer un avantage impor-
+tant, car elle suggère que la solution pourrait être plus facilement acceptée et intégrée par
+une équipe de développement. Le fait que les autres dimensions, telles que l’attraction,
+la compréhensibilité et l’eﬃcacité, aient été bien notées, renforce l’idée que cette solution
+s’aligne bien avec les attentes des utilisateurs et peut être adoptée sans nécessiter de chan-
+gements majeurs dans les pratiques existantes.
+
+
+
+6.2    Implémentation
+    — Appréciation des développeurs : Les développeurs ont apprécié la capacité du site
+      web à aﬃcher eﬃcacement les données de tests, facilitant ainsi l’analyse et la prise
+      de décision rapide.
+
+    — Courbe d’apprentissage : Certains développeurs ont noté que la courbe d’appren-
+      tissage initiale était relativement élevée en raison de la documentation incomplète.
+
+    — Intégration avec Docker : L’intégration de l’outil avec des environnements de conte-
+
+
+                                             53
+       neurisation comme Docker a été perçue positivement, car elle a permis de standar-
+       diser et d’isoler les environnements de test, minimisant ainsi les variations d’envi-
+       ronnement.
+
+
+
+6.3    Limitations
+    Bien que ce travail ait permis de développer et d’évaluer une solution fonctionnelle,
+plusieurs limitations doivent être prises en compte pour les travaux futurs. Premièrement,
+l’évaluation menée dans cette étude, bien qu’elle ait fourni des résultats intéressants, reste
+relativement générale. Il serait pertinent de renforcer cette évaluation pour identifier les
+points forts et les points faibles de manière plus spécifique, notamment en conduisant des
+études plus ciblées sur diﬀérents aspects de la solution. Cela pourrait inclure des tests
+utilisateur plus détaillés et des analyses comparatives avec d’autres outils similaires.
+
+    Deuxièmement, la visualisation des résultats, bien qu’acceptable, pourrait ne pas être
+optimale pour tous les utilisateurs. Il est probable qu’il existe des progrès à faire dans
+ce domaine, en particulier en termes de recherche sur l’interaction utilisateur. Les fu-
+tures recherches pourraient explorer diﬀérentes approches de visualisation, en testant par
+exemple des interfaces plus interactives ou des représentations graphiques plus intuitives,
+afin d’améliorer l’expérience utilisateur globale.
+
+   Ces limitations ouvrent ainsi la voie à des travaux futurs qui non seulement appro-
+fondiront l’évaluation de la solution, mais aussi exploreront de nouvelles méthodes pour
+améliorer l’interaction utilisateur et la visualisation des données. Une meilleure compré-
+hension de ces aspects permettra de créer une solution encore plus robuste et adaptée aux
+besoins des développeurs dans des environnements variés.
+
+
+
+
+                                             54
+7    Conclusion
+    Ce mémoire a exploré en profondeur les impacts et les défis de l’intégration de géné-
+rateurs de tests automatisés dans des pipelines CI/CD, en se concentrant spécifiquement
+sur l’outil CLING. En partant des pratiques de CI/CD, en passant par l’utilisation de
+Docker pour la conteneurisation, jusqu’aux défis spécifiques de l’automatisation des tests,
+nous avons examiné comment ces éléments interagissent et contribuent à la qualité et à
+l’eﬃcacité des livraisons de logiciels
+
+    Les pratiques de CI/CD se sont révélées essentielles pour garantir la qualité et la
+rapidité des livraisons de logiciels. Elles permettent d’automatiser l’intégration des modi-
+fications de code, de détecter rapidement les erreurs, et d’assurer une mise en production
+continue et fiable. L’adoption de ces pratiques a profondément transformé les méthodes
+de développement logiciel, favorisant des approches Agiles et DevOps plus flexibles et
+réactives.
+
+    L’utilisation de Docker dans les pipelines CI/CD a permis de standardiser et d’isoler
+les environnements de développement et de production. En assurant des configurations
+homogènes, Docker minimise les variations d’environnement et garantit que les tests sont
+exécutés de manière cohérente et reproductible. Cette standardisation facilite également
+l’intégration d’outils comme CLING, en réduisant les eﬀorts nécessaires pour configurer
+les environnements de test.
+
+    CLING, un générateur de tests basé sur l’analyse des flux de contrôle, a démontré
+son eﬃcacité pour maximiser la couverture des tests en générant des cas qui couvrent
+les interactions complexes entre les classes appelantes et appelées. Les résultats obtenus
+montrent que l’utilisation de CLING dans les pipelines CI/CD peut significativement ré-
+duire les défauts logiciels, contribuant ainsi à une meilleure qualité du code.
+
+    Cependant, l’intégration de CLING a révélé plusieurs défis majeurs. Les principaux
+problèmes rencontrés incluaient des documents incomplets, la nécessité d’améliorer les
+scripts existants, et l’optimisation des processus. La gestion des dépendances et des en-
+vironnements de test, ainsi que la performance des tests, se sont avérées être des aspects
+critiques.
+
+    Un autre aspect crucial de cette recherche a été l’acceptation et l’adoption de l’outil par
+les développeurs. Bien que l’automatisation oﬀre des avantages clairs, elle nécessite éga-
+lement une phase d’apprentissage et d’adaptation. Les retours des utilisateurs, recueillis
+à travers le questionnaire d’expérience utilisateur (UEQ), ont fourni un aperçu précieux
+sur la perception et l’acceptabilité de l’outil dans un contexte industriel. Ces retours ont
+mis en lumière la nécessité de fournir une documentation claire et des outils configurables
+pour faciliter l’adoption de CLING.
+
+    Les travaux futurs se concentreront sur plusieurs axes d’amélioration. Premièrement,
+il est essentiel d’étendre la solution d’intégration pour supporter d’autres langages de
+programmation tels que Python, JavaScript ou C++. Cette extension permettrait de
+généraliser les bénéfices de l’approche à un plus large éventail de projets logiciels. En
+parallèle, l’amélioration de l’interface utilisateur du site web, notamment pour prendre en
+
+
+                                              55
+charge plus de langages que le Java, est également une priorité. Un site web plus intuitif
+et polyvalent pourrait faciliter l’adoption de l’outil par une communauté plus large de
+développeurs.
+
+    De plus, une évaluation plus complète, couvrant l’ensemble des composants du sys-
+tème, y compris le pipeline CI/CD, l’intégration de CLING, ainsi que l’API associée, est
+nécessaire. Ces études pourraient aider à identifier des points d’amélioration spécifiques
+et contribuer à optimiser l’ensemble du système pour une utilisation en contexte réel de
+développement logiciel.
+
+    Des études empiriques à grande échelle sur l’eﬃcacité des tests générés dans des
+contextes réels de développement logiciel seraient nécessaires pour valider et quantifier
+les bénéfices de ces outils d’intégration. L’intégration avec d’autres outils populaires de
+CI/CD tels que Jenkins, GitLab CI, GitHub Actions, ou Bitbucket pipelines pourrait
+faciliter l’adoption et l’utilisation par les équipes de développement. Développer des plu-
+gins ou des extensions spécifiques pour permettre une intégration transparente dans ces
+environnements pourrait également être bénéfique.
+
+    En conclusion, les travaux futurs permettront non seulement d’améliorer les capacités
+des outils d’intégration de tests, mais aussi d’étendre leur applicabilité et de maximiser
+leurs bénéfices pour l’industrie du logiciel. Cette recherche vise à contribuer à l’amélio-
+ration continue des pratiques de développement logiciel et à promouvoir l’adoption plus
+large des outils d’automatisation de tests.
+
+
+
+
+                                            56
+Références
+ [1] Frances E. Allen. « Control flow analysis ». In : SIGPLAN Not. 5.7 (juill. 1970),
+     p. 1-19. issn : 0362-1340. doi : 10.1145/390013.808479. url : https://doi.
+     org/10.1145/390013.808479.
+ [2] John Arundel et Justin Domingus. Cloud Native DevOps with Kubernetes : buil-
+     ding, deploying, and scaling modern applications in the Cloud. O’Reilly Media, 2019.
+ [3] Atlassian. ChatOps for Incident Management. https://www.atlassian.com/
+     incident-management/devops/chatops. Accessed : 2024-06-28. 2023.
+ [4] Atlassian. Integrating Bitbucket with Jira. Accessed : 2024-06-28. 2024. url :
+     https://www.atlassian.com/fr/software/jira/bitbucket-integration.
+ [5] Atlassian. Using Bitbucket Pipelines. Accessed : 2024-06-28. 2024. url : https:
+     / / support . atlassian . com / bitbucket - cloud / docs / get - started - with -
+     bitbucket-pipelines/.
+ [6] Atlassian. What is Jira ? Accessed : 2024-06-28. 2024. url : https : / / www .
+     atlassian.com/software/jira.
+ [7] Thomas Ball et Sriram K. Rajamani. « The SLAM project : debugging system
+     software via static analysis ». In : SIGPLAN Not. 37.1 (jan. 2002), p. 1-3. issn :
+     0362-1340. doi : 10.1145/565816.503274. url : https://doi.org/10.1145/
+     565816.503274.
+ [8] Len Bass, Ingo Weber et Liming Zhu. DevOps : A software architect’s perspective.
+     Addison-Wesley Professional, 2015.
+ [9] BMC Software. ChatOps Explained : How ChatOps Supports Collaboration. https:
+     //www.bmc.com/blogs/chatops/. Accessed : 2024-06-28. 2023.
+[10] Carl Boettiger. « An introduction to Docker for reproducible research ». In :
+     ACM SIGOPS Operating Systems Review 49.1 (2015), p. 71-79. doi : 10.1145/
+     2723872.2723882.
+[11] Brendan Burns et al. Kubernetes : up and running. " O’Reilly Media, Inc.", 2022.
+[12] Ilinca Ciupa et al. « Experimental assessment of random testing for object-oriented
+     software ». In : Proceedings of the 2007 International Symposium on Software Tes-
+     ting and Analysis. ISSTA ’07. London, United Kingdom : Association for Computing
+     Machinery, 2007, p. 84-94. isbn : 9781595937346. doi : 10.1145/1273463.1273476.
+     url : https://doi.org/10.1145/1273463.1273476.
+[13] Pouria Derakhshanfar et al. « Generating Class-Level Integration Tests Using
+     Call Site Information ». In : IEEE Transactions on Software Engineering 49.4
+     (2023), p. 2069-2087. doi : 10.1109/TSE.2022.3209625.
+[14] Jason Dixon. Monitoring with Graphite : Tracking Dynamic Host and Application
+     Metrics at Scale. " O’Reilly Media, Inc.", 2017.
+[15] Paul M Duvall, Steve Matyas et Andrew Glover. Continuous integration :
+     improving software quality and reducing risk. Pearson Education, 2007.
+[16] Martin Fowler. Continuous Integration. ThoughtWorks, 2006. url : https://
+     martinfowler.com/articles/continuousIntegration.html.
+
+
+
+                                           57
+[17] Gordon Fraser et Andrea Arcuri. « EvoSuite : Automatic test suite generation
+     for object-oriented software ». In : Proceedings of the 19th ACM SIGSOFT sym-
+     posium and the 13th European conference on Foundations of software engineering.
+     2011, p. 416-419. doi : 10.1145/2025113.2025179.
+[18] Gordon Fraser et Andrea Arcuri. « Whole test suite generation ». In : IEEE
+     Transactions on Software Engineering 39.2 (2013), p. 276-291. doi : 10.1109/TSE.
+     2012.14.
+[19] GitHub Blog. Using ChatOps to help Actions on-call engineers. https://github.
+     blog/2021- 12- 01- using- chatops- to- help- actions- on- call- engineers/.
+     Accessed : 2024-06-28. 2021.
+[20] Mark Harman et Bryan F. Jones. « Search-based software engineering ». In :
+     Information and Software Technology 43.14 (2001), p. 833-839. doi : 10 . 1016 /
+     S0950-5849(01)00189-6.
+[21] Jez Humble et David Farley. Continuous delivery : reliable software releases
+     through build, test, and deployment automation. Pearson Education, 2010.
+[22] Gene Kim et al. The DevOps handbook : How to create world-class agility, reliability,
+     & security in technology organizations. It Revolution, 2021.
+[23] Bettina Laugwitz, Theo Held et Martin Schrepp. « Construction and Evalua-
+     tion of a User Experience Questionnaire ». In : HCI and Usability for Education
+     and Work. Sous la dir. d’Andreas Holzinger. Berlin, Heidelberg : Springer Berlin
+     Heidelberg, 2008, p. 63-76. isbn : 978-3-540-89350-9.
+[24] Martin Schrepp. User Experience Questionnaire. https://www.ueq- online.
+     org/. Accessed : 2024-08-09. 2024.
+[25] Phil McMinn. « Search-based software test data generation : A survey ». In : Soft-
+     ware Testing, Verification and Reliability. T. 14. 2. 2004, p. 105-156. doi : 10.1002/
+     stvr.294.
+[26] Dirk Merkel et al. « Docker : lightweight linux containers for consistent develop-
+     ment and deployment ». In : Linux j 239.2 (2014), p. 2.
+[27] M. Ali Babar Mohammad Shahin et Liming Zhu. « Continuous integration, de-
+     livery and deployment : A systematic review on approaches, tools, challenges and
+     practices ». In : IEEE Access 5 (2017), p. 3909-3943. doi : 10.1109/ACCESS.2017.
+     2685629.
+[28] Carlos Pacheco et Michael D. Ernst. « Randoop : Feedback-directed random tes-
+     ting for Java ». In : Companion to the 22nd ACM SIGPLAN conference on Object-
+     oriented programming systems and applications companion. 2007, p. 815-816. doi :
+     10.1145/1297846.1297902.
+[29] Claus Pahl et Brian Lee. « Containers and Clusters for Edge Cloud Architectures
+     – A Technology Review ». In : 2015 3rd International Conference on Future Internet
+     of Things and Cloud. 2015, p. 379-386. doi : 10.1109/FiCloud.2015.35.
+[30] Mendel Rosenblum et Tal Garfinkel. « Virtual machine monitors : Current
+     technology and future trends ». In : Computer 38.5 (2005), p. 39-47. doi : 10 .
+     1109/MC.2005.176.
+
+
+
+
+                                            58
+[31] G. Rothermel et M.J. Harrold. « A safe, eﬃcient algorithm for regression test
+     selection ». In : 1993 Conference on Software Maintenance. 1993, p. 358-367. doi :
+     10.1109/ICSM.1993.366926.
+[32] Martin Schrepp, Andreas Hinderks et Jörg Thomaschewski. « Applying the
+     User Experience Questionnaire (UEQ) in Diﬀerent Evaluation Scenarios ». In : De-
+     sign, User Experience, and Usability. Theories, Methods, and Tools for Designing
+     the User Experience. Sous la dir. d’Aaron Marcus. Cham : Springer International
+     Publishing, 2014, p. 383-392. isbn : 978-3-319-07668-3.
+[33] John Smart. Jenkins : the definitive guide. " O’Reilly Media, Inc.", 2011.
+
+
+
+
+                                          59
+Table des figures
+  1    Un exemple de classe utilisée par CLING [13] . . . . . . . . . . . . . . . .        18
+  2    Graphe de flux de contrôle pour la classe Person du schéma 1 [13] . . . . .         18
+  3    Graphe de flux de contrôle pour la classe Person et Car du schéma 1 [13] .          19
+  4    Fonctionnement de CLING [13] . . . . . . . . . . . . . . . . . . . . . . . .        20
+  5    Étapes de la méthodologie . . . . . . . . . . . . . . . . . . . . . . . . . . .     23
+  6    Étapes de l’architecture . . . . . . . . . . . . . . . . . . . . . . . . . . . .    24
+  7    Workflow global des composants de l’application . . . . . . . . . . . . . . .       26
+  8    Étapes du développement et de l’intégration . . . . . . . . . . . . . . . . .       27
+  9    Étapes de la partie résultats . . . . . . . . . . . . . . . . . . . . . . . . . .   31
+  10   Architecture API . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    36
+  11   Étapes principales du pipeline . . . . . . . . . . . . . . . . . . . . . . . . .    45
+  12   Répartition des rôles des participants dans l’étude . . . . . . . . . . . . . .     50
+  13   Distribution des réponses par question du questionnaire d’expérience utili-
+       sateur (UEQ) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    51
+  14   Scores moyens des dimensions évaluées par le questionnaire d’expérience
+       utilisateur (UEQ) basés sur 34 réponses sérieuses . . . . . . . . . . . . . .       52
+
+
+
+
+                                           60
+Listings
+  1   Configuration du pipeline Bitbucket pour l’intégration de l’outil . . . . . . 44
+
+
+
+
+                                        61
+Questionnaire expérience utilisateur                                   https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+               Annexe A - Questionnaire expérience utilisateur
+
+                     Questionnaire expérience utilisateur
+                     Chers participants,
+
+                     Nous vous invitons à participer à une étude visant à évaluer et améliorer l'expérience
+                     utilisateur d'une application en développement. Vous trouverez ci-dessous les
+                     informations de connexion :
+
+                         • URL : https://devops-dash-view.juliencoppin.be/
+                         • Nom d'utilisateur : dev@yopmail.com
+                         • Mot de passe : 1234
+
+                     Description de l'Application et de son Work�ow
+
+                     L'application que vous allez tester est conçue pour a�cher les résultats des tests générés
+                     par des pipelines CI/CD (Continuous Integration/Continuous Deployment). Voici une vue
+                     d'ensemble de son fonctionnement :
+
+                         1. Accès et Navigation :
+                                ◦ Connectez-vous à l'application en utilisant les identi�ants fournis.
+                                ◦ Naviguez jusqu'à la page des pipelines, où vous pouvez voir les différents
+                                  pipelines CI/CD en cours.
+                         2. Interaction avec les Pipelines :
+                                ◦ Le pipeline CI/CD génère automatiquement des tests unitaires.
+                                ◦ Ces tests sont ensuite envoyés à l'API, qui les rend disponibles sur le site web.
+                                ◦ Sur la page des pipelines, vous pouvez visualiser les tests générés par CLING.
+                                ◦ Vous pouvez lire le code des tests générés et les télécharger si nécessaire.
+                                ◦ Vous pouvez marquer les tests comme validés si vous êtes satisfaits des
+                                  résultats.
+
+                     Votre rôle dans l'Étude
+
+                     Votre tâche principale est de vous concentrer sur les écrans et les interactions possibles
+                     au sein de l'application. Vous n'avez pas besoin d'exécuter les tests vous-même.
+                     Concentrez-vous sur :
+
+                         • La facilité de navigation dans l'application.
+                         • L'intuitivité des interfaces.
+                         • Toute di�culté rencontrée lors de l'interaction avec les fonctionnalités.
+
+                     Questionnaire UEQ
+
+                     A�n d'évaluer le produit, veuillez remplir le questionnaire ci-dessous. Il se compose de
+                     paires opposées de propriétés que peut avoir le produit. La gradation entre les contraires
+                     est représentée par des cercles. En cochant l'un de ces cercles, vous pouvez exprimer
+                     votre approbation d'un concept.
+
+
+
+
+1 of 8                                                                                                                09/08/2024, 19:55
+Questionnaire expérience utilisateur                                    https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+                          • Répondez le plus spontanément possible.
+                          • Veuillez répondre à toutes les questions, même si vous n'êtes pas sûr de l'évaluation.
+                          • Il n’y a pas de «bonne» ou de «mauvaise» réponse, seul votre avis compte !
+
+                     Une seule réponse possible par qualité/défaut.
+
+                     Vos retours sont essentiels pour nous aider à améliorer l'application et à optimiser
+                     l'expérience utilisateur. Toutes les données collectées seront traitées de manière
+                     con�dentielle.
+
+                     Merci pour votre précieuse contribution.
+
+                     Connectez-vous à Google pour enregistrer votre progression. En savoir plus
+
+
+                     * Indique une question obligatoire
+
+
+
+
+                     Si vous travaillez dans l'IT, quelle est votre fonction / branche ?
+
+
+                     Votre réponse
+
+
+
+
+                     *
+
+
+                                         1          2       3       4       5         6        7
+
+
+                         Agaçant                                                                        Agréable
+
+
+
+
+                     *
+
+
+                                                1       2       3   4      5      6       7
+
+
+                         Incompréhensible                                                          Compréhensible
+
+
+
+
+2 of 8                                                                                                                 09/08/2024, 19:55
+Questionnaire expérience utilisateur                                             https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+
+
+                     *
+
+
+                                         1       2           3           4           5           6         7
+
+
+                          Moderne                                                                                    Sans fantaisie
+
+
+
+
+                     *
+
+
+                                                 1       2       3       4       5       6       7
+
+
+                         Appropriation simple                                                            Appropriation compliquée
+
+
+
+
+                     *
+
+
+                                                 1       2           3       4       5       6       7
+
+
+                         Apporte de la valeur                                                                  Peu de valeur ajoutée
+
+
+
+
+                     *
+
+
+                                             1       2           3           4           5           6           7
+
+
+                          Ennuyeux                                                                                       Captivant
+
+
+
+
+3 of 8                                                                                                                                 09/08/2024, 19:55
+Questionnaire expérience utilisateur                                         https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+
+
+                     *
+
+
+                                             1           2       3       4        5           6       7
+
+
+                         Inintéressant                                                                        Intéressant
+
+
+
+
+                     *
+
+
+                                             1           2       3       4        5           6       7
+
+
+                         Imprévisible                                                                          Prévisible
+
+
+
+
+                     *
+
+
+                                         1           2           3       4            5           6       7
+
+
+                         Rapide                                                                                     Lent
+
+
+
+
+                     *
+
+
+                                         1       2           3       4       5            6       7
+
+
+                         Original                                                                         Conventionnel
+
+
+
+
+4 of 8                                                                                                                      09/08/2024, 19:55
+Questionnaire expérience utilisateur                                           https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+
+
+                     *
+
+
+                                           1           2       3       4          5         6        7
+
+
+                         Rigide                                                                               Facilitant
+
+
+
+
+                     *
+
+
+                                       1           2           3       4         5         6        7
+
+
+                         Bien                                                                                 Médiocre
+
+
+
+
+                     *
+
+
+                                               1           2       3       4          5         6        7
+
+
+                         Compliqué                                                                               Simple
+
+
+
+
+                     *
+
+
+                                               1           2       3       4          5         6        7
+
+
+                         Repoussant                                                                             Attractif
+
+
+
+
+5 of 8                                                                                                                        09/08/2024, 19:55
+Questionnaire expérience utilisateur                                                   https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+
+
+                     *
+
+
+                                       1           2           3           4            5           6           7
+
+
+                         Habituel                                                                                           Avant-gardiste
+
+
+
+
+                     *
+
+
+                                               1           2           3           4            5           6           7
+
+
+                         Désagréable                                                                                             Agréable
+
+
+
+
+                     *
+
+
+                                           1           2           3           4            5           6           7
+
+
+                         Sécurisant                                                                                           Insécurisant
+
+
+
+
+                     *
+
+
+                                           1           2           3           4            5           6           7
+
+
+                         Stimulant                                                                                            Sopori�que
+
+
+
+
+6 of 8                                                                                                                                       09/08/2024, 19:55
+Questionnaire expérience utilisateur                                                   https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+
+
+                     *
+
+
+                                                   1       2       3       4   5          6       7
+
+
+                         Répond aux attentes                                                              Ne répond pas aux attentes
+
+
+
+
+                     *
+
+
+                                           1           2           3           4              5               6       7
+
+
+                          Ine�cace                                                                                           E�cace
+
+
+
+
+                     *
+
+
+                                       1       2               3           4             5            6           7
+
+
+                          Clair                                                                                            Déroutant
+
+
+
+
+                     *
+
+
+                                                   1           2       3           4          5           6       7
+
+
+                         Non pragmatique                                                                                  Pragmatique
+
+
+
+
+7 of 8                                                                                                                                  09/08/2024, 19:55
+Questionnaire expérience utilisateur                                                      https://docs.google.com/forms/d/e/1FAIpQLSeqoHooEFAuQfq--gQ28...
+
+
+
+
+                     *
+
+
+                                          1           2           3           4             5         6        7
+
+
+                         Sobre                                                                                          Surchargé
+
+
+
+
+                     *
+
+
+                                              1           2           3           4           5       6        7
+
+
+                         Attrayant                                                                                      Rébarbatif
+
+
+
+
+                     *
+
+
+                                                  1           2           3           4           5       6        7
+
+
+                         Sympathique                                                                                      Inamical
+
+
+
+
+                     *
+
+
+                                                  1           2           3           4           5       6        7
+
+
+                         Conservateur                                                                                     Innovant
+
+
+
+
+                N'envoyez jamais de mots de passe via Google Forms.
+
+                    Ce contenu n'est ni rédigé, ni cautionné par Google. Signaler un cas d'utilisation abusive - Conditions d'utilisation -
+                                                                  Règles de con�dentialité
+
+
+                                                                                      Forms
+
+8 of 8                                                                                                                                        09/08/2024, 19:55
+

@@ -1,0 +1,591 @@
+[
+  {
+    "name": "2022_DELVAUX_Gaetan_final",
+    "pages": 73,
+    "words": 27022,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "2023_BauwensJoel_memoire",
+    "pages": 97,
+    "words": 34333,
+    "chapter_headings": [
+      [
+        "Chapitre 1",
+        7
+      ],
+      [
+        "Chapitre 2",
+        10
+      ],
+      [
+        "Chapitre 3",
+        12
+      ],
+      [
+        "Chapitre 4",
+        17
+      ],
+      [
+        "Chapitre 5",
+        37
+      ],
+      [
+        "Chapitre 6",
+        87
+      ]
+    ],
+    "toc_entries": [
+      [
+        "1      Introduction",
+        "1"
+      ],
+      [
+        "2      Etat de l’art",
+        "4"
+      ],
+      [
+        "3      Le Cobol en bref",
+        "6"
+      ],
+      [
+        "4      La compilation conditionnelle",
+        "11"
+      ],
+      [
+        "5      La recherche",
+        "31"
+      ]
+    ]
+  },
+  {
+    "name": "2023_BlauwaertMichel_memoire",
+    "pages": 95,
+    "words": 24015,
+    "chapter_headings": [
+      [
+        "Chapitre 1",
+        7
+      ],
+      [
+        "Chapitre 2",
+        9
+      ],
+      [
+        "Chapitre 3",
+        46
+      ],
+      [
+        "Chapitre 4",
+        78
+      ],
+      [
+        "Chapitre 5",
+        84
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "2023_DeKinderJeremy-PeytierPaul_mmoire",
+    "pages": 116,
+    "words": 21962,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "2023_DeRopChristophe_memoire",
+    "pages": 48,
+    "words": 23146,
+    "chapter_headings": [
+      [
+        "Chapitre 1",
+        2
+      ],
+      [
+        "Chapitre 2",
+        3
+      ],
+      [
+        "Chapitre 3",
+        4
+      ],
+      [
+        "Chapitre 4",
+        7
+      ],
+      [
+        "CHAPITRE 4. INTRODUCTION",
+        8
+      ],
+      [
+        "Chapitre 5",
+        9
+      ],
+      [
+        "chapitre 6.6) font directement référence aux travaux de défi",
+        11
+      ],
+      [
+        "Chapitre 6",
+        25
+      ],
+      [
+        "chapitre 5 pointe l’explosion des requêtes à traiter (nouvel",
+        26
+      ],
+      [
+        "CHAPITRE 6. CRITIQUES DE L’ÉTAT DE L’ART",
+        40
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "2023_DuvivierBenoit_memoire",
+    "pages": 154,
+    "words": 50923,
+    "chapter_headings": [
+      [
+        "Chapitre 1",
+        9
+      ],
+      [
+        "Chapitre 2",
+        11
+      ],
+      [
+        "Chapitre 3",
+        17
+      ],
+      [
+        "Chapitre 4",
+        21
+      ],
+      [
+        "Chapitre 5",
+        41
+      ],
+      [
+        "Chapitre 6",
+        51
+      ],
+      [
+        "Chapitre 7",
+        57
+      ],
+      [
+        "Chapitre 8",
+        81
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "2023_VerjansMartin_memoire",
+    "pages": 69,
+    "words": 23133,
+    "chapter_headings": [
+      [
+        "CHAPTER 1.       INTRODUCTION",
+        9
+      ],
+      [
+        "CHAPTER 2.        STATE OF THE ART",
+        13
+      ],
+      [
+        "CHAPTER 2.           STATE OF THE ART",
+        15
+      ],
+      [
+        "CHAPTER 2.     STATE OF THE ART",
+        17
+      ],
+      [
+        "CHAPTER 3.       THE ESCAPE GAME FRAMEWORK",
+        21
+      ],
+      [
+        "CHAPTER 3.         THE ESCAPE GAME FRAMEWORK",
+        23
+      ],
+      [
+        "CHAPTER 3.        THE ESCAPE GAME FRAMEWORK",
+        25
+      ],
+      [
+        "CHAPTER 3.      THE ESCAPE GAME FRAMEWORK",
+        27
+      ],
+      [
+        "CHAPTER 3.         THE ESCAPE GAME FRAMEWORK",
+        29
+      ],
+      [
+        "CHAPTER 3.        THE ESCAPE GAME FRAMEWORK",
+        31
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_CoppinJ_Memoire",
+    "pages": 70,
+    "words": 21370,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_DeGroveG_Memoire",
+    "pages": 52,
+    "words": 17331,
+    "chapter_headings": [
+      [
+        "CHAPTER 1.       INTRODUCTION",
+        8
+      ],
+      [
+        "CHAPTER 1.      INTRODUCTION",
+        9
+      ],
+      [
+        "CHAPTER 1.   INTRODUCTION",
+        10
+      ],
+      [
+        "CHAPTER 2.      LITERATURE REVIEW                           ",
+        13
+      ],
+      [
+        "CHAPTER 2.      LITERATURE REVIEW                           ",
+        15
+      ],
+      [
+        "CHAPTER 2.     LITERATURE REVIEW                            ",
+        17
+      ],
+      [
+        "CHAPTER 2.      LITERATURE REVIEW",
+        19
+      ],
+      [
+        "CHAPTER 3.      METHODOLOGY",
+        23
+      ],
+      [
+        "CHAPTER 3.         METHODOLOGY                              ",
+        25
+      ],
+      [
+        "CHAPTER 4.      RESULTS",
+        29
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_EvrardL_Memoire",
+    "pages": 103,
+    "words": 36605,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_GaillardM_Memoire",
+    "pages": 79,
+    "words": 33919,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_GalloyM_Memoire",
+    "pages": 58,
+    "words": 31171,
+    "chapter_headings": [
+      [
+        "Chapter 1",
+        6
+      ],
+      [
+        "CHAPTER 1. INTRODUCTION",
+        7
+      ],
+      [
+        "Chapter 2",
+        8
+      ],
+      [
+        "CHAPTER 2. STATE OF THE ART",
+        9
+      ],
+      [
+        "CHAPTER 2. STATE OF THE ART                                 ",
+        11
+      ],
+      [
+        "CHAPTER 2. STATE OF THE ART                                 ",
+        13
+      ],
+      [
+        "CHAPTER 2. STATE OF THE ART                                 ",
+        15
+      ],
+      [
+        "CHAPTER 2. STATE OF THE ART                                 ",
+        17
+      ],
+      [
+        "CHAPTER 2. STATE OF THE ART                                 ",
+        19
+      ],
+      [
+        "Chapter 3",
+        21
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_HenneC_Memoire",
+    "pages": 116,
+    "words": 47780,
+    "chapter_headings": [],
+    "toc_entries": [
+      [
+        "1.      Introduction",
+        "7"
+      ],
+      [
+        "2.      L’analogie",
+        "8"
+      ],
+      [
+        "3.      La variable",
+        "16"
+      ]
+    ]
+  },
+  {
+    "name": "2024_SixT_Memoire",
+    "pages": 89,
+    "words": 41506,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "2024_SossonT_Memoire",
+    "pages": 55,
+    "words": 18848,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "Alexis_DEGRAEVE_1029010_assignsubmission_file_IHDCB339_Memoire_Chatbot_dans_un_Escape_Game_adg",
+    "pages": 111,
+    "words": 35954,
+    "chapter_headings": [
+      [
+        "Chapitre 1 : Introduction",
+        11
+      ],
+      [
+        "Chapitre 2 : Escape game",
+        11
+      ],
+      [
+        "Chapitre 3 : Chatbot",
+        11
+      ],
+      [
+        "Chapitre 4 : Liens entre chatbot et escape game",
+        11
+      ],
+      [
+        "Chapitre 5 : Synthèse et conclusion de l’état de l’art",
+        12
+      ],
+      [
+        "Chapitre 6 : Méthodologie",
+        12
+      ],
+      [
+        "Chapitre 7 : Conception du jeu et intégration du chatbot",
+        12
+      ],
+      [
+        "Chapitre 8 : Évaluation du chatbot dans l’escape game",
+        12
+      ],
+      [
+        "Chapitre 9 et 10 : Résultats et discussion",
+        12
+      ],
+      [
+        "Chapitre 1",
+        13
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "F_lix_BARZIN_1202522_assignsubmission_file_memoire_felix_barzin",
+    "pages": 154,
+    "words": 40202,
+    "chapter_headings": [],
+    "toc_entries": [
+      [
+        "1.     Introduction",
+        "7"
+      ]
+    ]
+  },
+  {
+    "name": "Guillaume_DENIS_1202530_assignsubmission_file_M_moire_Guillaume_Denis",
+    "pages": 93,
+    "words": 25929,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "J_r_me_ZENOBI_1202528_assignsubmission_file_Annexes_II_VI_Interviews",
+    "pages": 39,
+    "words": 19839,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "J_r_me_ZENOBI_1202528_assignsubmission_file_M_moire_ZENOBI",
+    "pages": 83,
+    "words": 39852,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "Micha_l_MESTR_1028979_assignsubmission_file_Memoire_Mestre_Michael",
+    "pages": 79,
+    "words": 37670,
+    "chapter_headings": [
+      [
+        "Chapter 1",
+        9
+      ],
+      [
+        "Chapter 2",
+        13
+      ],
+      [
+        "Chapter 3",
+        27
+      ],
+      [
+        "Chapter 4",
+        57
+      ],
+      [
+        "Chapter 5",
+        73
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "Olivier_HENSMANS_1202517_assignsubmission_file_MASTER_60_Olivier_Hensmans_Study_of_the_impacts_of_Code_Smells_on_code_Testability",
+    "pages": 66,
+    "words": 20051,
+    "chapter_headings": [
+      [
+        "Chapter 1",
+        7
+      ],
+      [
+        "Chapter 2",
+        11
+      ],
+      [
+        "CHAPTER 2. INTRODUCTION",
+        12
+      ],
+      [
+        "Chapter 3",
+        13
+      ],
+      [
+        "CHAPTER 3. CODE SMELLS",
+        15
+      ],
+      [
+        "CHAPTER 3. CODE SMELLS                                      ",
+        17
+      ],
+      [
+        "CHAPTER 3. CODE SMELLS                              3.4. PRI",
+        19
+      ],
+      [
+        "Chapter 4",
+        21
+      ],
+      [
+        "CHAPTER 4. TESTABILITY",
+        23
+      ],
+      [
+        "CHAPTER 4. TESTABILITY",
+        25
+      ]
+    ],
+    "toc_entries": []
+  },
+  {
+    "name": "Philippe_HINANT_1202524_assignsubmission_file_UNamur_Memoire_Hinant_Philippe_2022_2023_final",
+    "pages": 82,
+    "words": 32045,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "Sylvain_VEULLIET_597818_assignsubmission_file_M_moire_Sylvain_Veulliet",
+    "pages": 99,
+    "words": 22899,
+    "chapter_headings": [],
+    "toc_entries": []
+  },
+  {
+    "name": "memoireSBlacks",
+    "pages": 75,
+    "words": 22426,
+    "chapter_headings": [
+      [
+        "Chapitre 1",
+        7
+      ],
+      [
+        "Chapitre 2",
+        11
+      ],
+      [
+        "Chapitre 3",
+        36
+      ],
+      [
+        "Chapitre 4",
+        40
+      ],
+      [
+        "Chapitre 5",
+        56
+      ],
+      [
+        "Chapitre 6",
+        63
+      ],
+      [
+        "Chapitre 7",
+        73
+      ]
+    ],
+    "toc_entries": []
+  }
+]

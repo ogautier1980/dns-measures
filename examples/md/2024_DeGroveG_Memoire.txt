@@ -1,0 +1,2160 @@
+                          Institutional Repository - Research Portal
+                          Dépôt Institutionnel - Portail de la Recherche
+                   researchportal.unamur.be
+     University of Namur
+
+
+
+
+                                                      THESIS / THÈSE
+
+     MASTER IN COMPUTER SCIENCE
+
+
+     Classifying AI-Generated and Human-Written Texts
+     Authorship Verification Techniques in Educational Settings
+
+
+
+Author(s) - Auteur(s) :
+     DE GROVE, Gil
+
+     Award date:
+     2024
+
+
+     Awarding institution:
+     University of Namur
+Supervisor - Co-Supervisor / Promoteur - Co-Promoteur :
+     Link to publication
+
+
+
+
+Publication date - Date de publication :
+
+
+
+Permanent link - Permalien :
+
+
+
+Rights / License - Licence de droit d’auteur :
+
+     General rights
+     Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+     and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+             • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+             • You may not further distribute the material or use it for any profit-making activity or commercial gain
+             • You may freely distribute the URL identifying the publication in the public portal ?
+     Take down policy
+     If you believe that this document breaches copyright please contact us providing details, and we will remove access to the work immediately
+     and investigate your claim.
+
+Bibliothèque   Universitaire
+     Download date: 23. mars. 2026Moretus Plantin
+                                  UNIVERSITÉ DE NAMUR
+                                    Faculté d'informatique
+                                  Année académique 2023-2024
+
+
+
+
+                 Classifying AI-Generated and Human-Written
+                 Texts: Authorship Verication Techniques in
+                              Educational Settings
+
+                                          De Grove Gil
+
+
+
+
+                 ........................ (Signature pour approbation du dépôt - REE art. 40)
+
+                 Promoteur : Beuls Katrien
+
+
+
+
+Mémoire présenté en vue de l'obtention du grade de Master 60 en Sciences Informatiques
+
+
+
+
+                          Faculté d'Informatique  Université de Namur
+
+                 RUE GRANDGAGNAGE, 21 ● B-5000 NAMUR(BELGIUM)
+Remerciements
+  Je tiens à exprimer ma profonde gratitude à Katrien Beuls, ma promotrice, pour son soutien
+indéfectible et son aide précieuse tout au long de la réalisation de ce mémoire. Son expertise et ses
+conseils avisés ont été d'une grande valeur pour mener à bien ce projet.
+   Je remercie également mes collègues, amis et ma famille qui m'ont soutenu à travers les nom-
+breuses discussions, parfois passionnées, que j'ai pu initier sur le sujet. Leur intérêt et leur engage-
+ment ont été une source constante de motivation.
+   Je souhaite remercier tout particulièrement Carolina, Matthew et JC pour leur aide précieuse
+dans la relecture de mon mémoire. Leurs commentaires et suggestions m'ont permis d'améliorer
+considérablement la qualité de ce travail.
+   Enn, je tiens à exprimer ma reconnaissance innie à mon épouse, Eline, pour son soutien
+inébranlable durant toutes mes années d'études. Ses petites attentions et son dévouement ont
+rendu ces années beaucoup plus supportables et m'ont aidé à persévérer jusqu'au bout.
+   Merci à tous pour votre soutien et votre aide précieuse.
+
+
+Acknowledgements
+  I would like to express my deep gratitude to Katrien Beuls, my supervisor, for her unwavering
+support and invaluable assistance throughout the completion of this thesis. Her expertise and
+insightful advice have been of great value in successfully carrying out this project.
+   I also thank my colleagues, friends, and family who supported me through numerous discussions,
+sometimes passionate, that I initiated on the subject. Their interest and commitment have been a
+constant source of motivation.
+   I would especially like to thank Carolina, Matthew, and JC for their invaluable help in proof-
+reading my thesis. Their comments and suggestions have allowed me to signicantly improve the
+quality of this work.
+   Finally, I wish to express my innite gratitude to my wife, Eline, for her unwavering support
+during all my years of study. Her small gestures and dedication have made these years much more
+bearable and have helped me persevere to the end.
+   Thank you all for your support and invaluable assistance.
+
+
+
+
+                                                                                                      2
+Résumé
+   Le domaine de l'intelligence articielle générative a gagné une attention signicative et une
+utilisation répandue ces dernières années, grâce à sa capacité à eectuer une large gamme de
+tâches. Cependant, distinguer entre le contenu écrit par des humains et celui généré par une IA
+pose un dé considérable. Cette thèse explore l'application des techniques d'attribution d'auteur
+pour classier le contenu produit par des grands modèles de langage (LLM). L'étude commence
+par une revue complète des recherches existantes sur l'IA générative et les méthodes d'attribution
+d'auteur. En utilisant ces connaissances, un système est développé pour détecter si un texte
+a été écrit par un humain ou généré par un modèle d'IA. La méthodologie inclut la création
+d'un ensemble de données de textes écrits par des humains et générés par des IA, l'extraction
+de caractéristiques stylométriques et l'entraînement de modèles d'apprentissage automatique pour
+diérencier les deux. Les résultats démontrent l'ecacité de ces modèles à identier avec précision
+le contenu généré par IA, fournissant un outil précieux pour les éducateurs et les chercheurs an
+de maintenir l'intégrité des travaux écrits.
+
+Mots-clés   :Grands Modèles de Langage, Attribution d'Auteur, Intelligence Articielle
+
+Abstract
+  The eld of generative articial intelligence has gained signicant attention and widespread use in
+recent years, driven by its ability to perform a wide array of tasks. However, distinguishing between
+human-written and AI-generated content poses a substantial challenge. This thesis explores the
+application of authorship attribution techniques to classify content produced by large language
+models (LLMs). The study begins with a comprehensive review of existing research on generative
+AI and authorship attribution methods. Leveraging these insights, a system is developed to detect
+whether a text was authored by a human or generated by an AI model. The methodology includes
+curating a dataset of human-written and AI-generated texts, extracting stylometric features, and
+training machine learning models to dierentiate between the two. The ndings demonstrate the
+ecacy of these models in accurately identifying AI-generated content, providing a valuable tool
+for educators and researchers in maintaining the integrity of written work.
+
+Keywords    : Large Language Models, Authorship Attribution, Articial Intelligence
+4
+Contents
+1 Introduction                                                                                        7
+2 Literature Review                                                                                   11
+  2.1   Overview of Authorship Attribution Techniques . . . . . . . . . . . . . . . . . . . .         11
+        2.1.1 The Importance of Features . . . . . . . . . . . . . . . . . . . . . . . . . . .        11
+  2.2   Evolution of Language Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        13
+        2.2.1 Early Language Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         13
+        2.2.2 Introduction to Attention Mechanism . . . . . . . . . . . . . . . . . . . . .           14
+        2.2.3 The Rise of Transformers . . . . . . . . . . . . . . . . . . . . . . . . . . . .        14
+        2.2.4 Large-Scale Language Models . . . . . . . . . . . . . . . . . . . . . . . . . .         15
+        2.2.5 The Limits of Textual Learning and Attention . . . . . . . . . . . . . . . .            17
+  2.3   Current Techniques in Authorship Validation for AI-Generated Content . . . . . .              18
+  2.4   Limitations and Challenges in Existing Research . . . . . . . . . . . . . . . . . . .         20
+        2.4.1 Current State-of-the-Art Validation Technologies . . . . . . . . . . . . . . .          20
+        2.4.2 Challenges in Dierentiating Between Human and Machine-Generated Texts                  20
+
+3 Methodology                                                                                         21
+  3.1   Research Design . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     21
+  3.2   Corpus Generation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     21
+        3.2.1 Student-Written Corpus Selection . . . . . . . . . . . . . . . . . . . . . . .          22
+        3.2.2 Machine-Written Corpus . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        23
+  3.3   Feature Selection and Preparation . . . . . . . . . . . . . . . . . . . . . . . . . . .       24
+  3.4   Machine Learning Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .       24
+  3.5   Machine Learning Model Evaluation . . . . . . . . . . . . . . . . . . . . . . . . . .         25
+
+4 Results                                                                                             27
+  4.1   Student-Written Corpus . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      27
+  4.2   Machine-Written Corpus . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      27
+        4.2.1 Corpus Augmentation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         27
+        4.2.2 Random Generation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .         29
+        4.2.3 Machine-Corpus Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . .         29
+  4.3   Training Dataset Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     31
+  4.4   Model Training . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .    32
+        4.4.1 Linear Regression Using FlauBert Embeddings . . . . . . . . . . . . . . . .             32
+        4.4.2 LinearSVC Using Stylometric Features . . . . . . . . . . . . . . . . . . . . .          33
+        4.4.3 Performance Against an Established Model . . . . . . . . . . . . . . . . . .            33
+  4.5   Model Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   34
+
+5 Discussion                                                                                          37
+  5.1   Interpretation of Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   37
+        5.1.1 Corpora Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      37
+        5.1.2 Model Ecacy and Limitations . . . . . . . . . . . . . . . . . . . . . . . . .          37
+  5.2   Implications for AI in Authorship Identication . . . . . . . . . . . . . . . . . . . .       38
+CONTENTS                                                                                             CONTENTS
+
+
+
+             5.3   Future Improvement . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .     38
+                   5.3.1 Student Corpus Collection in Classroom . . . . . . . . . . . . . . . . . . . .         38
+                   5.3.2 Improvement of Models for Hybrid Texts . . . . . . . . . . . . . . . . . . .           38
+                   5.3.3 Other Embeddings Techniques . . . . . . . . . . . . . . . . . . . . . . . . .          38
+                   5.3.4 Model Development . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .        38
+                   5.3.5 Application of Advanced LLM Techniques . . . . . . . . . . . . . . . . . . .           39
+
+           6 Conclusion                                                                                         41
+             6.1   Summary of Findings . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .      41
+             6.2   Recommendations for Future Research . . . . . . . . . . . . . . . . . . . . . . . . .        41
+             6.3   Final Thoughts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   42
+
+           7 Bibliography                                                                                       43
+           8 Appendix                                                                                           47
+
+
+
+
+                                                                                                                 6
+1          Introduction
+Problem Statement
+   Writing is a critical skill for students to convey their learnings and incorporate them eectively.
+However, many nd writing challenging, as I did during this master's thesis. Writing correctly,
+clearly, and concisely was not trivial for me. Learning to write is something all students must go
+through, and it is also a critical aspect of student assessment.1
+
+  As students struggle with writing, they are increasingly attracted to the capabilities of Large
+Language Models (LLMs). The availability of LLM interfaces, such as ChatGPT, allows them to
+automate their writing tasks (Liang et al., 2024). A quote from the book  "Make It Stick"
+                                                                                       succinctly
+encapsulates the challenges we face:
+          "...even the most diligent students are often hobbled by two liabilities: a failure to
+          know the areas where their learning is weakwhere they need to do more work to bring
+          up their knowledgeand a preference for study methods that create a false sense of
+          mastery ".
+Consequently, teachers and professors are now ooded with generated emails, assignments, and
+essays. They face the dual challenge of assessing students' ability to structure their thoughts and
+verifying that the students are the true authors of their work, a task that was not a concern
+previously.
+
+  Machine learning has advanced in many areas, including authorship attribution, which involves
+determining the author of a text. Authorship verication, a technique within this eld, helps
+validate the authenticity of a text (Koppel et al., 2008). This is increasingly relevant as LLMs
+become more powerful and widespread, making it harder to identify the true origin of written
+content (Jawahar et al., 2020).
+
+  The evolution of LLMs introduces more complexity into the development of detection tools
+(Huang et al., 2024). As models grow in power and sophistication, it is crucial to assess whether
+current methods remain eective and to explore new approaches for developing detection tools.
+These tools are essential for ensuring that teachers can condently evaluate the authenticity of
+their students' work. This brings us to the central question of this thesis:
+              "Is it possible to create a model that can classify text in the classroom setting and
+          validate whether it was generated by a large language model?"
+
+
+
+    1   https://www.knack.be/nieuws/belgie/studeren-zonder-chatgpt-daarna-verstandiger-werken-met/
+                                                               CHAPTER 1.       INTRODUCTION
+
+
+
+
+Methodology Overview
+To answer the central question of this thesis " whether it is possible to create a model that can
+classify text in the classroom setting and validate whether it was generated by a large language
+model " we adopted a multi-faceted methodology.
+    First, we conducted a comprehensive review of the existing literature on Large Language Mod-
+els (LLMs) and authorship verication techniques. This literature review provided a theoretical
+foundation and contextual background for our research.
+    Next, we designed and implemented an experimental study to develop and test a model capable
+of classifying text and identifying LLM-generated content. Our approach involved several key steps:
+  1. Dataset Curation and Generation:
+         We curated a dataset consisting of student texts from existing collections. Following
+          this, we generated a twin dataset of LLM-generated texts to parallel the student writing.
+         Generating the twin dataset involved signicant eort. It required carefully selecting
+          prompts and contexts to ensure the LLM-generated texts were comparable to the orig-
+          inal student texts. This process is challenging due to cost constraints, diculties in
+          validation, and uncertainties about how closely the generated texts would match the
+          originals in style and content. Ensuring the generated texts were realistic and represen-
+          tative of potential student outputs was crucial for the validity of our study.
+  2. Models Development:
+         We applied machine learning techniques to develop dierent models that can distinguish
+          between human-authored and LLM-generated texts. This process involved selecting
+          appropriate algorithms, feature extraction, and model training.
+  3. Model Evaluation:
+         We evaluated the performance of our model using various metrics, such as accuracy,
+          precision, recall, and F1-score. These metrics allowed us to assess the eectiveness of
+          the model in dierent scenarios.
+  4. Analysis and Validation:
+         We analysed the results to determine the model's reliability and validity in classifying
+          text and detecting AI-generated content. This step included cross-validation and testing
+          on unseen data to ensure robustness.
+    The detailed procedures, including data preprocessing, algorithm selection, model training, and
+evaluation techniques, are elaborated in the Methodology chapter. This comprehensive approach
+aims to address the complexities involved in distinguishing between human and AI-generated text
+in educational settings..
+
+
+
+
+                                                                                                 8
+CHAPTER 1.      INTRODUCTION
+
+
+
+
+Overview of Thesis Structure
+This thesis is organized into several chapters, each addressing a key aspect of the research. The
+structure is as follows:
+
+    1. Introduction This chapter provides an overview of the research problem, the signicance
+of the study, and the research question. It sets the stage for the detailed examination that follows.
+
+   2. Literature Review This chapter review existing research and theories related to au-
+thorship verication, Large Language Models (LLMs), and the challenges posed by AI-generated
+content. It identies gaps in the current knowledge that this thesis aims to address.
+
+   3: Methodology This chapter describes the research design, data collection methods, and
+analytical techniques used in the study. It explains how the proposed model for classifying text
+and validating authorship was developed and tested.
+
+   4. Results This chapter presents the ndings of the study, including the performance of the
+proposed model in classifying text and detecting AI-generated content. It includes quantitative
+data and analysis.
+
+    5. Discussion This chapter interprets the results in the context of the research question and
+existing literature. It discusses the implications of the ndings for educators and researchers, as
+well as the limitations of the study.
+
+   6. Conclusion This chapter summarizes the main ndings of the thesis, answers the research
+question, and suggests directions for future research. It emphasizes the importance of developing
+robust tools for verifying authorship in educational settings.
+CHAPTER 1.   INTRODUCTION
+
+
+
+
+                       10
+2       Literature Review
+2.1 Overview of Authorship Attribution Techniques
+  Ever since people rst learned how to write, the need to attribute a piece of text the author has
+been paramount. The methods for author identication have evolved signicantly, from a simple
+univariate representation of a text (Koppel et al., 2008) to sophisticated techniques employing deep
+neural networks and transformers (Huang et al., 2024).
+    Author identication tasks can be categorized into three main problems, as outlined by Koppel
+et al., 2008;
+     The Proling problem: In the absence of a specic candidate, the goal is to infer the
+      author's traits, such as gender or ethnicity (e.g. Caucasian or African-American).
+     The Needle in the Haystack Problem: This involves a large pool of potential authors
+      but only a small amount of text to analyse.
+     The Verication Problem: Given a set of candidates and a suspect, the objective is to
+      conrm whether the suspect is indeed the author.
+    These techniques are diverse and often require solving a multi-class problem. To address these
+issues eectively, three key steps are involved:
+    1. Feature Extraction: Identifying the relevant features in the text.
+    2. Encoding: Representing these features in a form suitable for analysis.
+    3. Model Selection: Choosing an appropriate model to solve the specic author identication
+       problem.
+   Understanding and applying these steps allows for the eective resolution of various author
+identication challenges.
+
+
+2.1.1 The Importance of Features
+Before processing any text, it is essential to transform it into a form that a model can understand.
+Depending on the type of information we aim to extract from the text, features can be categorized
+into two classes:
+    1. Content-Related Features: These features provide information about the subject matter
+       of the text (Koppel et al., 2008).
+    2. Style-Related Features: These features reect the manner in which the text is written,
+       capturing elements such as syntax, grammar, and stylistic nuances (Koppel et al., 2008).
+   By distinguishing between these two types of features, we can better tailor our models to extract
+the desired information from the text.
+2.1.   AUTHORSHIP ATTRIBUTIONS                                              CHAPTER 2.        LITERATURE REVIEW
+
+
+
+            Content-Related Features
+              These features come directly from the topic the author writes about (Koppel et al., 2008). If an
+            author decides to write a piece about a male or a female subject, the whole text will be gendered
+            in that way. This will seep in the lexicon used. This will allow for an easier detection of the
+            similarities between the two articles (Mana & Sasipraba, 2021). This technique is mainly used for
+            problems such as recommendations (Mana & Sasipraba, 2021) but can also be used in authorship
+            attribution, with the usage of "Content Words" (Koppel et al., 2008).
+
+              Koppel et al., 2008 describe the use of content-related features as follows:
+                  "There are aspects of authorial identity that are not easily captured by the sorts of
+                  stylistic features described previously. For example, one author may prefer to use the
+                  words start and large whereas another may prefer begin and big (Koppel et al., 2006;
+                  Mosteller & Wallace, 1963)" (Koppel et al., 2008)
+
+              However, there are limitations to this approach, which can be addressed using the "unmasking
+            technique" (Koppel et al., 2008). This technique has proven eective in the authorship verication
+            problem, although it may not always provide a denitive answer.
+
+              Since the publication of Koppel et al.'s paper, new techniques utilizing large language models,
+            such as Bidirectional Encoder Representations from Transformers (BERT) (Uchendu et al., 2023),
+            have been developed to address these challenges. These techniques leverage transformers (see
+            Section 2.2.2) to detect long-range dependencies in text (Vaswani et al., 2017). Typically, this
+            involves ne-tuning a large language model and embedding the text using the same model.
+
+            Text Embeddings
+
+              The rst approach to encoding a text, both in terms of content and style, is to use simple
+            embedding techniques. This method allows for the encoding of entire texts and facilitates the
+            detection of similarities between dierent pieces of text. It is a common technique employed in
+            many natural language processing tasks (Pennington et al., 2014). This approach is both cost-
+            eective to implement and oers high accuracy in similarity detection.
+
+              With the advent of embedding models, such as transformers, the capability to encode relation-
+            ships between words, even over long distances, has signicantly improved. Techniques such as
+            sentiment analysis based on text embeddings (Devlin et al., 2019) have also been developed in
+            recent years, leveraging these advancements.
+
+
+            Style-Related Features
+            At the other side of the problem, we need to detect "how an author writes". This is done through
+            the use of stylistic features (Koppel et al., 2008). Stylistic features can be dened as:
+                  The ways in which aspects of texts (such as words, sentences, images) are arranged
+                  and how they aect meaning. Style can distinguish the work of individual authors (for
+                  example, Jennings's stories, Lawson's poems), as well as the work of a particular pe-
+                  riod (for example, Elizabethan drama, nineteenth-century novels). Examples of stylistic
+                  features are narrative viewpoint, structure of stanzas, juxtaposition.       1
+
+                Extracting such information from a text involves crucial preprocessing steps, which directly
+            impact the model's ability to perform authorship attribution tasks (Koppel et al., 2008). Several
+            stylistic features can be extracted from a text, including:
+               1 https://k10outline.scsa.wa.edu.au/home/p-10-curriculum/curriculum-browser/english/overview/glossary/stylistic-
+            features as visited on the 05-05-2024
+                                                                                                                         12
+CHAPTER 2.      LITERATURE REVIEW                                2.2.   EVOLUTION OF LANGUAGE MODELS
+
+
+
+    Complexity Measures: Early eorts aimed to represent text complexity statistically, such
+     as by computing word length. Although it may work in specic cases, complexity measures
+     are usually not very eective for authorship attribution (Burrows, 1992; Koppel et al., 2008).
+
+    Function Words (FW): Function words serve grammatical purposes, including pronouns,
+     determiners, and conjunctions (e.g. he, the, and). Authors may use the same function
+     words dierently, even when writing on the same topic, making this an eective feature for
+     authorship attribution (Koppel et al., 2008).
+
+    Syntax and Parts-of-Speech (POS): POS tagging assigns a role to each word in a sen-
+     tence, which helps resolve ambiguities when a word can have multiple roles (Savoy, 2020).
+     For example, in the sentence "Gil is a human," POS tagging decomposes it into word-tag
+     tuples:
+
+     [(Gil,NOUN), (is, VERB), (a, DETERMINER), (human, NOUN)]
+     This helps analyse patterns such as the occurrence of 'NOUN-VERB' pairs across a corpus.
+
+    Functional Lexical Taxonomies: Koppel et al., 2008 describe "Functional Lexical Tax-
+     onomies" as:
+
+           "FWs and some POS features can be subsumed by considering taxonomies, based
+           on Systemic Functional Linguistic (Halliday et al., 2014), which represent gram-
+           matical and semantic distinctions between classes of FWs at dierent levels of
+           abstraction (Matthiessen, 1995))." (Koppel et al., 2008)
+
+     This taxonomy combines both Functional and Lexical features, creating a new classication
+     system. It is then used to represent the dierent ways each class of features is utilized.
+
+    N-Grams: N-Grams encode text by capturing the relationship between words in tuples of
+     size N. For example, the sentence "Gil is a human" can be decomposed into several N-Grams:
+
+         1-Gram: [(Gil), (is), (a), (human)]
+         2-Gram: [(Gil, is), (is, a), (a, human)]
+         3-Gram: [(Gil, is, a), (is, a, human)]
+     This method captures word collocation and can be used in models to detect patterns that
+     are more prevalent in a particular author's work.
+
+
+
+2.2 Evolution of Language Models
+2.2.1 Early Language Models
+   Since the inception of AI, developers have aimed to create models capable of humanlike com-
+prehension of text inputs. In 1966, ELIZA was developed to study human-machine interactions
+(Weizenbaum, 1966). Using Prolog and its rule-based engine, ELIZA was able to mimic conversa-
+tions between a human and a therapist (Weizenbaum, 1966). Although it did not use any machine
+learning, ELIZA is considered one of the rst natural language processing systems.
+
+
+   In the late 1990s, probabilistic models capable of predicting the next word in a sentence emerged
+(Jurafsky & Martin, 2000). These developments marked the birth of language models. Since then,
+the pursuit of models capable of performing language-based tasks has continued, leading to the
+emergence of new techniques based on neural networks (Bengio et al., 1993; De Mulder et al.,
+2015). These models have been able to perform various tasks. However, to address some of their
+inherent limitations, they grew in size and complexity, making their training time-consuming and
+limiting their ability to be used as a single model for all text-based tasks (De Mulder et al., 2015).
+2.2.   EVOLUTION OF LANGUAGE MODELS                                  CHAPTER 2.       LITERATURE REVIEW
+
+
+
+            2.2.2 Introduction to Attention Mechanism
+              As discussed in the previous section, learning from text can be straightforward using N-Gram
+            representations, which allow for the computation of the probability of the next word in a sentence.
+            However, the results and implications of such models are limited (Jurafsky & Martin, 2000) and
+            depend on the model's ability to understand the sentence's meaning (Niu et al., 2021). To achieve
+            good results, certain patterns in the text need to be identied. Humans perform this naturally,
+            focusing on context (Niu et al., 2021),but this is more complex for models (Bengio et al., 1993). The
+            "long-range dependency" problem refers to the challenge of detecting relationships between words
+            in a sentence when the distance between them is signicant. For example, in bigram language
+            models, context is lost quickly since these models only capture relationships between adjacent
+            words.
+
+               Humans possess an innate ability to understand context and meaning, known as attention.
+            This attention can be categorized into two types:
+
+                Unconscious Attention: A bottom-up approach developed as we grow, where we under-
+                 stand the importance of words based on external stimuli, such as voice pitch and uctuations.
+
+                Conscious Attention: A top-down approach learned over time, where we grasp the mean-
+                 ings and subtleties of words, improving our ability to comprehend sentences in specic con-
+                 texts.
+
+               For example, the sentences "the forest is on re" and "the crowd is on re" are structurally
+            identical, but their meanings dier signicantly:
+
+                The forest is on re: This phrase conveys urgency, as it describes a literal re in a forest.
+
+                The crowd is on re: This phrase, typically used in a festive context, means that the
+                 crowd is highly excited.
+
+               When humans have acquired sucient knowledge of the languages, they are able to discern the
+            dierence between the two sentences, unlike children or new language learners. However, neural
+            networks do not have this inherent capacity (Bengio et al., 1993). Initially, tasks were performed
+            with rule-based machines that processed input token-by-token and applied logical rules to generate
+            output (Weizenbaum, 1966). With the advent of Convolutional Neural Networks (CNNs), local
+            context could be captured based on surrounding words. However, CNNs struggle with long-term
+            dependencies when words are far apart in a sentence (Bengio et al., 1993).
+
+               Recurrent Neural Networks (RNNs), on the other hand, process inputs sequentially, with each
+            input aecting not only the current state but also future states. This sequential processing allows
+            RNNs to handle long-range dependencies by retaining information from previously seen words.
+            However, this comes at the cost of larger and slower models, leading to increased training times
+            and reduced versatility (De Mulder et al., 2015).
+
+
+            2.2.3 The Rise of Transformers
+               Vaswani et al., 2017 introduced a novel solution to these problems through the multi-head
+            attention architecture, which employs "self-attention". This approach allows the model to assess
+            the relative importance of each word within a sentence and across sequences of sentences. They
+            introduced two key methods to compute attention (as illustrated in Figure 2.1):
+
+              1. Scaled Dot-Product Attention: This method computes the attention weights between a
+                 query (Q) token and a set of key (K)-value (V) tokens. It utilizes matrices as input and scales
+                 the attention scores to maintain gradient stability, even for high-dimensional data. Compared
+                 to the previous attention methods, the scaled dot-product attention leverages highly opti-
+                 mized matrix multiplication, enabling ecient learning with high-dimensional matrices and
+                 thus capturing a broader range of dependencies (Vaswani et al., 2017). This method is de-
+                 picted on the left side of Figure 2.1.
+
+                                                                                                              14
+CHAPTER 2.      LITERATURE REVIEW                              2.2.   EVOLUTION OF LANGUAGE MODELS
+
+
+
+  2. Multi-Head Attention: This method involves running multiple "Scaled Dot-Product At-
+     tention" mechanisms in parallel. By doing so, the model can capture relationships and
+     dependencies in the data at various dimensions simultaneously. This allows the model to
+     learn both local and global dependencies eectively (Vaswani et al., 2017). This method is
+     depicted on the right side of Figure 2.1.
+
+    In summary, the combination of Scaled Dot-Product Attention and Multi-Head Attention en-
+ables Transformers to capture a wide range of dependencies and relationships in the input data,
+facilitating sophisticated reasoning (Vaswani et al., 2017).
+
+
+
+
+Figure 2.1: "(left) Scaled Dot-Product Attention. (right) Multi-Head Attention consists of several
+attention layers running in parallel."(Vaswani et al., 2017)
+
+
+  We utilized BERTViz (Vig, 2019) to visualize the attention mechanism in dierent sentences.
+As shown in Figure 2.2b, the word "re" in the sentence "the forest is on re" is directly related
+to the words "forest", "is", and "on". Conversely, in Figure 2.2a, the word "re" in the sentence
+"the crowd is on re" is related to the words "crowd", "is", and "on". This distinction enables the
+model to learn the dierences between these sentences and better understand the use of the same
+words in dierent contexts.
+
+
+   These gures demonstrate that the model is highly capable of dierentiating between contexts.
+By using this mechanism, models can be trained to perform better across various text-based tasks,
+from translation to more complex applications such as code generation or brainstorming bots, as
+seen in today's advanced systems (Brown et al., 2020; Tech, 2021; Uchendu et al., 2023; Vaswani
+et al., 2017).
+
+
+2.2.4 Large-Scale Language Models
+  As discussed in the previous section, transformer-based models unlock a new way to understand
+text by enhancing their ability to grasp the ne-grained context of tokens (Beuls & Van Eecke, 2024;
+Brown et al., 2020; Devlin et al., 2019). In 2019, Devlin et al., 2019 proposed a new transformer-
+based model, BERT (Bidirectional Encoder Representations from Transformer). BERT was trained
+on a large corpus of text, enabling it to tackle various tasks such as sentiment analysis. However,
+these models initially struggled with multilingual settings, leading to the development of retrained
+or ne-tuned models based on the original BERT, such as Facebook's RoBERTa (Liu et al., 2019).
+
+
+  In 2020, OpenAI introduced their architecture, the Generative Pretrained Transformer (GPT)
+(Brown et al., 2020; Solaiman et al., 2019). This model allowed for more interactive capabilities,
+enabling users to "converse" with the model and request it to generate content based on a provided
+context. This approach has proven highly ecient for tasks such as translation and text generation
+(Brown et al., 2020).
+2.2.   EVOLUTION OF LANGUAGE MODELS                                    CHAPTER 2.        LITERATURE REVIEW
+
+
+
+
+                          (a) BertVIZ visualization of the attention score for "The Crowd is on Fire"
+
+
+
+
+                          (b) BertVIZ visualization of the attention score for "The Forest is on Fire"
+
+                                 Figure 2.2: Comparison of attention score using BertViz
+
+
+            Conversing With a Large Language Model
+               In November 2022, OpenAI released ChatGPT, a web-based chatbot application based on their
+            latest GPT model at the time, "ChatGPT 3.0" (OpenAI, n.d.-a). This system allows users to
+            interact with the large language model as easily as conversing with a human on any chat application.
+
+              OpenAI also introduced an Application Programming Interface (API) that allows computer
+            systems to integrate large language models into various applications (OpenAI, n.d.-c).
+
+               In a conversational setting, users interact with an assistant, a congured text generation model.
+            A conversation consists of several messages, similar to human interactions, with each message
+            having a role and content. The roles can be      system user assistant
+                                                                    ,     , or         . When interacting with
+            the model, a user adds messages to the conversation, thereby increasing the context available to
+            the model. This ever-increasing context helps train the model to perform specic actions (Brown
+            et al., 2020).
+
+              Each  user-assistantinteraction, known as a "shot", is fed to the model to rene and expand the
+            context, enabling the model to perform the required tasks more eectively.
+               Here is a list of the message roles and their functions when interacting with the model:
+                System: A    system message is a specic prompt that instructs the model on how to behave.
+                 This prompt typically cannot be overridden and ensures the model follows certain guidelines.
+                 For example, the system prompt, "You are an AI trained to behave like Bob. Bob is a system
+                 that can only answer 'I am Bob'" will make the model always respond with, "I am Bob".
+
+                                                                                                             16
+CHAPTER 2.     LITERATURE REVIEW                                2.2.   EVOLUTION OF LANGUAGE MODELS
+
+
+
+    User: A   usermessage provides context to the model. This is typically how humans interact
+     with the chatbot, asking questions or giving instructions. For example, a user might ask,
+     "What's your name?"
+    Assistant: The    assistantmessage is the content generated by the model based on the user
+     input within the given system settings.
+
+  This process is iterative: a human provides a message, receives an output, and can rene the
+output through further interaction. For example, to demonstrate the model's ability to understand
+dierent contexts of the previously used sentences, we asked it to describe both sentences. The
+output can be seen in Figure 2.3
+
+
+
+
+                      (a) ChatGPT, describe the sentence "the crowd is on re"
+
+
+
+
+                      (b) ChatGPT, describe the sentence "the forest is on re"
+
+Figure 2.3: "ChatGPT 4.0" comparison of output of the two sentences as queried on the 30th of
+April 2024
+
+
+
+2.2.5 The Limits of Textual Learning and Attention
+   Transformers-based models, and specically large language models (LLMs), derive their power
+from their ability to grasp context from text. This is made possible by training on vast datasets
+(Vaswani et al., 2017). They tokenize input text and detect internal relationships among these
+tokens. This capability allows them to convince humans that they can reason (Beuls & Van Eecke,
+2024; Ippolito et al., 2020). When humans learn about attention, they engage actively or passively
+in communication within specic contexts. This enables them to understand the relationship
+between their experiences, situations, and the language used at that moment (Beuls & Van Eecke,
+2024). Iteratively, they participate in other communication acts, linking new experiences with
+2.3.   AI-GENERATED CONTENT                                           CHAPTER 2.       LITERATURE REVIEW
+
+
+
+            prior learning. This process renes their initial understanding and helps them identify patterns
+            within situations and language, actively facilitating learning.
+                To illustrate, consider a parent teaching their toddler about colors using a book. Each night,
+            the parent uses the book to describe the relationship between colors and objects by pointing to
+            images and using phrases like "the red re truck", "the green apple", and "the yellow jacket". The
+            next day, when the toddler sees a red re truck on the street, the parent might point it out and say,
+            "Look at this red re truck." The toddler hears the siren sound and associates it with "wheeoo",
+            learning that the re truck is red and makes a "wheeoo" sound.
+               Later, the toddler encounters an ambulance with a dierent siren sound. Seeing the yellow
+            ambulance and hearing its siren, the toddler understands that sirens are associated with emergency
+            vehicles, not just re trucks. Through these experiences, the toddler links language to real-life
+            observations, expanding their understanding.
+               Language learning alternates between "situation-based intention reading" and "syntactico-
+            semantic pattern nding" (Beuls & Van Eecke, 2024), as demonstrated in our example. Conversely,
+            LLMs are trained using textual content, learning patterns between tokens in large text corpora.
+            They engage in "syntactico-semantic pattern nding" without "situation-based intention reading,"
+            limiting their comprehension and reasoning abilities (Azaria et al., 2024; Bender et al., 2021; Beuls
+            & Van Eecke, 2024; Ippolito et al., 2020).
+               Beuls and Van Eecke, 2024, list several inherent limitations of LLMs:
+                Hallucinations: Large language models (LLMs) exhibit hallucinations, generating infor-
+                 mation that sounds plausible but is incorrect. This issue arises because LLMs always form
+                 relationships between tokens, even when the probability is low, resulting in syntactically cor-
+                 rect sentences that may lack semantic accuracy (Beuls & Van Eecke, 2024). This problem
+                 was particularly evident in earlier versions of LLMs (Azaria et al., 2024; Ippolito et al., 2020).
+                Human-like logic and pragmatic reasoning: LLMs contain extensive knowledge but
+                 lack the ability to reason about it. Humans can detect implicit context in a sentence and
+                 act accordingly. LLMs, however, are trained on input-output patterns without learning the
+                 context, limiting their ability to understand why outputs should vary based on context (Beuls
+                 & Van Eecke, 2024).
+                Data-hungriness: LLMs require vast amounts of textual data to accurately learn token
+                 distributions and extract meaning. Training eective LLMs often necessitates hundreds of
+                 billions of tokens, depending on the model and architecture (Beuls & Van Eecke, 2024).
+                Sensitivity to biases: Biases inherent in society often unintentionally permeate training
+                 datasets. To avoid this, developers must curate training data meticulously. Given the scale of
+                 datasets required for LLMs, this task is often impractical (Akgun & Greenhow, 2021; Beuls
+                 & Van Eecke, 2024).
+                In summary, while LLMs have impressive capabilities in understanding and generating text by
+            identifying syntactic and semantic patterns, they are inherently limited by their inability to engage
+            in situation-based intention reading. This limitation manifests in issues such as hallucinations, lack
+            of pragmatic reasoning, data-hungriness, and sensitivity to biases. These challenges highlight the
+            ongoing need for advancements in how LLMs are trained and applied. (Beuls & Van Eecke, 2024)
+
+
+            2.3 Current Techniques in Authorship Validation for AI-Generated
+                Content
+               Transformer-based models are eective at generating linguistically sound content (Jawahar et
+            al., 2020; Kumarage & Liu, 2023). However, their ability diminishes when precision is required
+            (Ippolito et al., 2020), this discrepancy has historically allowed humans to detect AI-generated text
+            and exercise caution when encountering poorly generated content (Bender et al., 2021; Ippolito et
+
+                                                                                                                18
+CHAPTER 2.      LITERATURE REVIEW                                              2.3.   AI-GENERATED CONTENT
+
+
+
+al., 2020). Over time, transformer-based models have improved signicantly and now produce high-
+quality, accurate-enough content, making it more challenging for humans to identify AI-generated
+text without expert scrutiny (Azaria et al., 2024). Additionally, these models are increasingly used
+to generate code that can subsequently produce precise answers (Bailey P., 2024).
+
+  Despite these advancements, detecting AI-generated text remains a crucial task that needs au-
+tomation to assist non-experts (Ippolito et al., 2020). Several tools have emerged online to address
+this need. While these tools represent an important rst step, many of them rely on closed-source
+models, limiting transparency and accessibility.
+
+
+List of Available Tooling
+In Table 2.1, we present an analysis of tools that can be easily found through a Google search
+using the query, "detect ChatGPT texts". We compared these tools based on their methods
+for detecting generated texts, when such information was available, and assessed the availability
+of their source code. Out of the eight tools selected, only one, detailed in a paper by OpenAI
+(Solaiman et al., 2019), disclosed its source code. Four tools provided vague explanations of their
+detection mechanisms. Additionally, we analysed the following tools but found no disclosure on
+their detection mechanisms:
+    Scribbr ai-detector
+    ZeroGPT
+    ContentDetector.ai
+    content at scale
+    These tools typically charge a fee for their most capable detection mechanisms, leading to frag-
+mentation in the current tooling and increasing uncertainty about their actual capabilities, as they
+are not validated against a known corpus. Their performance claims have not been substantiated in
+scientic literature. Notably, OpenAI's classier was abandoned due to its low accuracy (OpenAI,
+n.d.-b).
+   From the information we collected, two metrics are commonly used to detect AI-generated
+content:
+    Burstiness:
+
+               "Burstiness refers to the tendency of certain events or terms to appear in clus-
+           ters rather than uniformly or randomly distributed. In the context of AI-generated
+           content, it can manifest as repetitive or clustered outputs when you might expect
+           more diverse responses."  2
+
+     This typically refers to the style of writing. Humans tend to write in varied sentence lengths
+     and may exhibit bursts of passionate or explanatory writing, while AI-generated text is often
+     more monotonous, serving as an indicator of non-human writing.
+    Perplexity:
+
+              "Perplexity is a measure used to evaluate how well a probability distribution
+           predicts a sample. In the context of generative AI, it quanties how "surprised"
+           the model is by a given input, based on the data it has been trained on. A lower
+           perplexity indicates that the model is less surprised and thus better at predicting the
+           input."3
+
+     This metric validates generated text by computing a score for each input using another large
+     language model. It involves asking the model the probability of the next token given an
+     input. The actual next token is then compared with the model's predicted probabilities. If
+     the probability is low, the token is less likely to have been generated by the model.
+2.4.   CHALLENGES IN EXISTING RESEARCH                                                               CHAPTER 2.               LITERATURE REVIEW
+
+
+
+            Name                                            Description                                                                             Model Information
+                                                            - detect burstiness
+                                                            - detect perplexity
+            GPTZero (GPTZero, n.d.)                                                                                                                 Close sources
+                                                            - deep learning
+                                                            - sentence by sentence analysis
+                                                            Mulitple detection systems:
+                                                            Baseline Logistic Regression on TF-IDF bigrams and trigrams
+            gpt-2 output detector (Solaiman et al., 2019)                                                                                           open source
+                                                            - Zero-Shot approach (perplexity) using GPT-2 model 1.5 billions
+                                                            - Roberta ned-tuned model.
+                                                            Language model ne-tuned on a dataset of human/ai generated pairs on the same topic.
+            OpenAI classier (OpenAI, n.d.-b)                                                                                                       Close source
+                                                            Accuracy is low (26%) and the tool has been dropped due to the low accuracy.
+            Copyleaks (CopyLeaks, n.d.)                     System using AI to detect Human-written texts, and detect disruption in the writings.   Closes Sources
+
+
+                          Table 2.1: Comparisons of Existing Tools for Detecting LLM-Generated Texts
+
+
+                Due to the closed-source nature of most of these tools, it is dicult to ascertain the reliability
+            of their outputs. This can be particularly problematic for educators who need to validate the
+            originality of their students' writing.
+
+
+            2.4 Limitations and Challenges in Existing Research
+            2.4.1 Current State-of-the-Art Validation Technologies
+               Tang et al., 2024 distinguish between two primary approaches to detect content generated by
+            large language models (LLMs): the white box and the black-box approaches.
+                "The white-box approach is built on the assumption that we control the model and that the
+            model, at generation time, can add a watermark that can then be used to detect content generated
+            by the LLM. This solution, which is the easiest and most reliable if we control the LLM, is also
+            the most prone to fail with the emergence of new open-source models that are not controlled by any
+            single entity " (Tang et al., 2024).
+               On the other hand, there is the black-box approach. This approach considers the model as an
+            uncontrollable entity and aims to detect its output based on patterns inherent in the generated
+            content rather than relying on any embedded watermark. While this method does not depend on
+            controlling the model, it faces its own set of challenges (Tang et al., 2024).
+               Most techniques for validating content generated by LLMs, whether using the white-box or
+            black-box approach, rely heavily on curating a dataset specically for this purpose (Shankar et al.,
+            2024). However, there is a signicant risk that such datasets could be used to train models to
+            evade detection (Tang et al., 2024).
+
+
+            2.4.2 Challenges in Dierentiating Between Human and Machine-Generated
+                  Texts
+             As discussed in Section 2.3, most detection tools rely on distinguishing between human and
+            machine-generated styles. This task becomes increasingly complex as larger and more advanced
+            models produce content that closely mimics human writing (Kumarage & Liu, 2023).
+
+              Nevertheless, distinct styles are emerging from dierent models, even those developed by the
+            same company (Kumarage & Liu, 2023). There are concerns with these techniques, such as the
+            diculty in detecting specic dierences between models that share the same training datasets
+            (Kumarage & Liu, 2023). Additionally, techniques involving style transfer using LLMs (Pan et al.,
+            2024) highlights archetypes that models or individuals could use to disguise the use of generated
+            content.
+
+
+
+
+              2   https://guides.library.unlv.edu/c.php?g=1361336&p=10054021 as visited on the 18-05-2024
+              3   https://guides.library.unlv.edu/c.php?g=1361336&p=10054021 as visited on the 18-05-2024
+                                                                                                                                                                     20
+3      Methodology
+3.1 Research Design
+   To address the question: "Is it possible to create a model that can classify text in the classroom
+setting and validate whether it was generated by a large language model?" the following steps were
+undertaken. The research methodology schema, illustrated in Figure 3.1, outlines the comprehen-
+sive process followed in this study.
+
+
+Corpus Generation The rst step involved selecting a text corpus to serve as the foundation
+for our research. After selecting the dataset, we created a framework to augment it, generating a
+machine-generated corpus. These steps are grouped under the "Corpus Collection" phase. This
+allowed us to explore the question: "Can we eectively use a Large Language Model to generate
+texts based on an existing dataset?"
+
+
+Feature Processing Once the dataset was collected, we prepared it for analysis. This involved
+assessing the quality of the generated dataset and preparing it for model training. This phase,
+categorized under "Feature Selection and Preparation," allowed us to answer the question: "Can
+texts generated by Large Language Models be used to extract stylometric features?"
+
+
+Model Training and Validation After preparing and cleaning the dataset, we trained several
+models and validated their performance against a baseline. Instead of creating new models, we
+focused on applying existing and proven methodologies to our corpus. This phase aimed to answer
+the question: "Can we accurately distinguish texts written by students from those generated by
+models?"
+
+
+
+3.2 Corpus Generation
+  In the rst step of our research, we collected a dataset that would enable us to address the
+subsequent questions of our thesis. Given the breadth of this step, we divided it into two smaller
+steps to address the question: "Can we eectively use a Large Language Model to generate texts
+based on an existing dataset?"
+
+     Student-Written Corpus: This step focused on selecting a student-written corpus to serve
+      as the foundation for generating a machine-written corpus.
+
+     Machine-Written Corpus: In this step, we used the student-written corpus and aug-
+      mented it with machine-generated texts.
+
+   The end goal of this step was to create a corpus of texts suitable for various machine processing
+tasks. To validate the texts, we employed techniques that will be explained in the next section 3.3
+3.2.   CORPUS GENERATION                                                   CHAPTER 3.      METHODOLOGY
+
+
+
+
+           Figure 3.1: Methodology schema illustrating the process from corpus generation (collection and
+           augmentation) to feature processing (text embeddings and feature generation), followed by feature
+           analysis, model training, and scoring.
+
+
+           3.2.1 Student-Written Corpus Selection
+             To generate text based on student-written texts, we needed to select texts that accurately rep-
+           resent the student writing style. Due to time constraints, we opted to use an already established
+           corpus rather than conducting an experiment with students writing texts specically for this study.
+           Later in this thesis (see section 5.3.1), we will discuss how this corpus collection method could be
+           applied in a classroom setting to create the framework.
+              To select a suitable dataset, we established several requirements that the model needed to meet:
+               Population Selection: Since our research aims to create a framework usable by university
+                teachers, the corpus needed to consist of texts written by university students with a similar
+                academic background. We focused specically on texts written by a master's students.
+               Collection Method: To ensure the texts were genuinely written by students and not gen-
+                erated by a model, the collection had to be performed in a controlled environment.
+               French Writings Corpus: Given that most academic and large language model research
+                focuses on English, we aimed to work with a French corpus.
+
+
+           É-Calm Corpus
+             We selected part of the É-Calm corpus (Ponton et al., 2023), which contains over 4500 writing
+           gathered during a four-year research study aimed at studying the "Learning of Writing." The
+
+                                                                                                            22
+CHAPTER 3.      METHODOLOGY                                                      3.2.   CORPUS GENERATION
+
+
+
+corpus includes both unprocessed and pre-processed/corrected texts (Ho-Dac et al., 2020). The
+É-Calm corpus consists of four sub-corpora:
+
+  1. Scoledit: Focuses on the longitudinal evolution of writing from a set of students during
+     grade school (Ho-Dac et al., 2020).
+
+  2. ECRISOL: Focuses on textual genetics with or without student supervision (Ho-Dac et al.,
+     2020).
+
+  3. RésolCo: Focuses on textual cohesion, including students from grade school to university
+     following the same guidelines for creating texts (Ho-Dac et al., 2020).
+
+  4. Littéracie Avancée: Comprises writing from university students from the same study (Ho-
+     Dac et al., 2020).
+
+   From these sub-corpora, we excluded two that did not meet all our requirements:
+
+    ECRISOL: Excluded because it involved teacher supervision, potentially including adult
+     feedback.
+
+    Scoledit: Excluded because it focused on a specic set of students' writing evolution, not a
+     broad set of students.
+
+   Ultimately, our student-written corpus comprised 482 texts, written by university students,
+with a total of 996,005 words. The detailed analysis of this corpus will be discussed later in this
+thesis (see section 4.1).
+
+
+3.2.2 Machine-Written Corpus
+  Once we selected the student-written corpus, we needed to augment the dataset to compare
+the student and machine-generated texts. Our primary focus was on stylistic features rather than
+content features, ensuring that each text's purpose remained consistent while only the writing style
+diered.
+
+   We experimented with two techniques to generate texts using a large language model. The rst
+method used OpenAI's "GPT-4" and "GPT-4.5" models to generate random texts in a zero-shot
+manner, simulating how a student might write without specic prompts.
+
+   The second method involved a two-step process to generate texts corresponding to each student-
+written text. This approach ensured that the generated text maintained the same meaning but
+diered in style. As illustrated in Figure 3.2, the process begins with the student corpus and
+employs a large language model (LLM) to generate summaries and subsequently produce new
+texts, resulting in the machine corpus.
+
+
+
+
+Figure 3.2: Two-step process for augmenting the dataset using a large language model (LLM),
+resulting in a machine corpus from summarized student corpus texts.
+3.3.   FEATURE SELECTION AND PREPARATION                                     CHAPTER 3.       METHODOLOGY
+
+
+
+              1. Summarization: This step aimed to extract the core meaning of the text without leaking
+                 too much context into the generation step. We used a large language model to summarize
+                 each student-written text.
+              2. Generation: Using the summary, we generated a new text that matched the summary's
+                 content. This ensured that the generated text shared the same meaning as the student text,
+                 while the large language model's stylistic elements were evident.
+               The results of this generation step will be discussed in Section 4.2.
+
+
+            3.3 Feature Selection and Preparation
+               Once our corpus was generated, we needed to pre-process the dataset to enable the application
+            of machine learning techniques.
+
+            Text Similarity Our rst step in this process was to validate our generated corpus against
+            the student corpus. This validation would help us answer the question, "Can we use LLM to
+            generate text comparable to text written by students?" We decided to use a cosine similarity
+            measure, employing FlauBERT embeddings (Le et al., 2020) and Umap (McInnes et al., 2018).
+            This approach allowed us to measure the distance between the generated texts and the student-
+            written texts, thereby validating the content's similarity (Mana & Sasipraba, 2021).
+
+            Stylometric Features Since embeddings are not fully representative of stylometric features, we
+            focused on extracting specic features from the corpora to train dierent stylometric-based models.
+            We chose to extract the following features from the text corpora:
+                1-Grams
+                2-Grams
+                3-Grams
+                POS-tags
+
+
+            3.4 Machine Learning Models
+              With the resulting dataset, we aimed to answer our nal question:
+
+                    "Can we use the generated dataset to train a model using authorship validation
+                 techniques to classify texts as either student-written or AI-generated?"
+                To address this, we searched for classier models suitable for our task. We needed models that
+            were easy to train, as we wanted to apply this methodology in each classroom rather than using
+            a broad and general model. A specialized model for our text would ensure applicability in a real
+            classroom setting.
+                We decided to use three classiers with various training techniques. First, we selected a model
+            to serve as our baseline. We trained a linear regression model and used the embeddings generated
+            to validate the dataset. This naive approach allowed us to observe dierences in content or style
+            between the generated texts.
+                After training and validating our baseline model, we created a model that solely used stylometric
+            features to conrm that the dierence was not only in the content but also in the style. We used the
+            features extracted in section 3.3 and trained a linear support vector classier using the distribution
+            of these features. This helped us validate that we could detect a change in style between student-
+            written texts and AI-generated texts.
+
+                                                                                                               24
+CHAPTER 3.         METHODOLOGY                                3.5.   MACHINE LEARNING MODEL EVALUATION
+
+
+
+    Finally, we explored an existing model that also used stylometric features to determine if our
+methodology could extend to any established model. We found a suitable model on the scikit-
+learn website1 that met our requirements. This model uses a combination of supervised and
+unsupervised training techniques on uni-gram distribution, utilizing the term frequency-inverse
+document frequency (TF-IDF) technique.
+
+
+3.5 Machine Learning Model Evaluation
+  The models were evaluated using the following metrics:        accuracy precision recall
+                                                                    ,         ,      , and       F1-Score
+                                                                                                 ,
+which are widely recognized as eective for validating classier models. Jurafsky and Martin, 2000
+denes these metrics as follows (see Figure 3.3 for a visual representation of these metrics):
+       Accuracy: Represents the percentage of correct predictions made by the model. It is ex-
+        pressed as
+                                         N umber of correct predictions
+                            Accuracy =                                                    (3.1)
+                                          T otal number of predictions
+
+       Precision:   "Measures the percentage of the items that the system detected (i.e., the system
+        labeled as positive) that are in fact positive (i.e., are positive according to the human gold
+        labels). Precision is dened as" (Jurafsky & Martin, 2000)
+                                                        true positives
+                                 P recision =                                                         (3.2)
+                                                true positives + f alse positives
+
+       Recall:  "measures the percentage of items actually present in the input that were correctly
+        identied by the system. Recall is dened as" (Jurafsky & Martin, 2000)
+                                                       true positives
+                                   Recall =                                                           (3.3)
+                                              true positives + f alse negatives
+
+       F1-score: "There are many ways to dene a single metric that incorporates aspects of both
+        precision and recall. The simplest of these combinations is the F-measure (van Rijsbergen,
+        1975), dened as [...] The β parameter dierentially weights the importance of recall and
+        precision, based perhaps on the needs of an application. Values of β > 1 favor recall, while
+        values of β < 1 favor precision. When β = 1, precision and recall are equally balanced; this
+        is the most frequently used metric, and is called Fβ = 1 or just F1" (Jurafsky & Martin,
+        2000)
+                                                       2P R
+                                                F1 =                                           (3.4)
+                                                      P +R
+
+
+
+
+  1   https://scikit-learn.org/stable/auto_examples/semi_supervised/plot_semi_supervised_newsgroups.html
+3.5.   MACHINE LEARNING MODEL EVALUATION                                 CHAPTER 3.     METHODOLOGY
+
+
+
+
+            Figure 3.3: "A confusion matrix for visualizing how well a binary classication system performs
+            against gold standard labels" (Jurafsky & Martin, 2000)
+
+
+
+
+                                                                                                        26
+4      Results
+4.1 Student-Written Corpus
+  As we expressed in Section 3.2.1, the source dataset was ltered to meet our requirements. Once
+the dataset was curated, we rst embedded the texts using FlauBERT (Le et al., 2020) and Umap
+(McInnes et al., 2018). The code used to generate both embeddings is available in the appendices
+8.2. Using UMAP, we compared the text in two ways:
+     Cosine Similarity by Text Provenance (Figure 4.1a): We compared dierent corpora,
+      such as Resolco  and Littéracie Avancée
+                                       . This validated that the texts within each corpus
+      were identical or comparable.
+     Cosine Similarity by Text Type (Figure 4.1b): Using the rst output, we observed
+      that the texts formed three distinct clusters. We introduced a new label, "production_type",
+      based on the title of each text. The mapping between the rule and the label can be found in
+      Table 4.1
+
+                     Title                               Label
+                     SIT                                 lettre_de_stage
+                     CR                                  compte_rendu
+                     TER or BOCH_R or BOCH_M             rapport_de_stage
+                     PTM                                 ptm
+                     ELAOUF_M                            elaouf_m
+                     SOBRA_D                             dissertation
+                     BOCH_SYNTH                          synthese
+                     everything else                     production_resolco
+
+                  Table 4.1: Mapping of production_type and title of the texts
+
+
+  As shown in the gure, there are clear clusters of texts in the student corpus. The impact of
+these clusters will be discussed later in this thesis 5.1.1.
+
+
+4.2 Machine-Written Corpus
+  As we expressed in Section 3.2.2, two techniques were used to generate the machine-written
+corpus: Corpus Augmentation and Random Generation.
+
+
+4.2.1 Corpus Augmentation
+  This step was performed in two stages. First, we summarized the student productions using
+a Large Language Model (LLM). Then, we used the summary outputs to generate texts for our
+machine-generated corpus. The goal was to create pairs of student and machine texts on the same
+subject, dierentiating in style.
+4.2.   MACHINE-WRITTEN CORPUS                                                     CHAPTER 4.      RESULTS
+
+
+
+
+                        (a) By text provenance                              (b) By text type
+
+             Figure 4.1: Analyse of the student corpus with Umap using cosine similarity scoring method
+
+
+           Text Summarization
+             For summarization, we used OpenAI's "GPT-4" model via the OpenAI API (OpenAI, n.d.-c).
+           The system prompt was as follows:
+           You are an AI trained to make summary of various texts. You
+           will be given a text and you will need to summarize this text. You need to
+           give a title, a description of the content and a to make a summary of the
+           content as if you were the writer of this text. Your answer needs to be in
+           JSON format.
+           Specifying the JSON format and requesting a writer's perspective for the summary were necessary
+           for optimal results. The content of the student text was passed to the model using a user message.
+           We used the GPT-4.5 preview model to generate the summaries.
+
+             The results from this generation process can be improved in future iterations of this research.
+           Several proposals for improvement will be made in Section 5.3.5.
+
+           Text Generation
+             Using the summaries, we asked another model to generate texts matching the summaries. Given
+           the high cost of using the GPT-4 API, we opted for a local instance of MixtralAI with 7 billion
+           parameters (MistralAI, 2023) using the Ollama library (ollama, n.d.).
+
+             We employed two sets of prompts to generate the content:
+               Generate Internship Letter: Some student texts were internship letters. To ensure accu-
+                rate content, we used the following prompt:
+                You are an AI trained to only answer in
+                french. Your role is to generate an application letter in the style of a
+                master 2 student. You will be given a context, such as, but not limited to,
+                the internship subject. You need to generate the internship application
+                letter as if you were that student. For any information you don't have,
+                please generate a random, but plausible, value. You can only respond the
+                full content of the letter, don't provide any other informations.
+
+                                                                                                          28
+CHAPTER 4.      RESULTS                                                 4.2.   MACHINE-WRITTEN CORPUS
+
+
+
+    Generate Essay: For all other content types, the following prompt was used:
+
+     You are an AI trained only to answer in
+     french. Your role is to generate a dissertation based on the summary in the
+     style of a master 2 student. You'll be given the summary of the essay. You
+     can only respond the full content of the essay. The dissertation you
+     generate should contain an introduction, a development in 3 phases, and a
+     conclusion. The average length of the dissertation should be between 1000
+     and 5000 characters.
+    The main challenge in this step was cleaning the summary output. An example of a text
+cleanup task can be found in the appendix 8.1.
+
+   Later in this thesis, we will discuss ways to improve and optimize content generation 5.3.5.
+
+
+4.2.2 Random Generation
+  For this technique, we requested "GPT" to generate text randomly, as if it were a student from
+the Littéracie Avancée  group. We used "GPT-4.5 Turbo" and "GPT-4" models. The system
+prompt was as follows:
+
+You are an AI trained to generate texts on
+various subjects you can only respond in french. Your answer should be of a
+level of a student studying in master 2. The response should include the
+subject of the text, the length of the text in words, and the text itself
+and be formated as JSON.
+For each article we wanted to generate, we interacted with the assistant using the following user
+prompt:
+
+Genere un texte de plus de 1000 characteres, ce texte doit comprendre une
+introduction, un developpement et une conclusion. La reponse doit
+obligatoirement inclure le sujet, la Longueur du texte ainsi que le texte
+genere.
+    Using the JSON mode of the model, we specied the desired output format. This specication
+impacted the post-processing of the text. While this technique proved ecient, it was too expensive
+to continue using. We generated around 75 texts before discontinuing the method. These texts
+were used for our model training, and improvements to this technique will be discussed later in
+this thesis 5.3.5.
+
+   The full code used to generate these texts can be found in Appendix 8.6
+
+
+  Due to the high cost and non-deterministic output, we stopped using this technique. Nonetheless,
+we decided to use the already generated texts in our model training.
+
+
+4.2.3 Machine-Corpus Analysis
+   Once generated, we performed the same analysis on the machine-generated corpus as we did on
+the student corpus (see Section 4.1). This step was crucial to ensure that our generated content
+aligned with our expectations.
+
+
+Cosine Similarity
+  For each generated text, we maintained a reference to the corresponding text in the student
+corpus. This allowed us to apply the same labels as those used in the student corpus analysis.
+4.2.   MACHINE-WRITTEN CORPUS                                                       CHAPTER 4.      RESULTS
+
+
+
+              For this analysis, we followed the same procedure as with the student corpus. Each generated
+           text was embedded using FlauBERT (Le et al., 2020) and we then employed UMAP (McInnes
+           et al., 2018) to generate cosine similarity scores.
+              We used two sets of labels for this analysis:
+               Cosine Similarity of Mixtral Corpus by Text Provenance: Using the same labels
+                as the student corpus, we dierentiated between texts sourced from      Resolco
+                                                                                              and    Littéracie
+                Avancée . This helped us determine whether the generated texts followed the same patterns
+                as the source datasets. The results of this analysis are shown in Figure 4.2a
+               Cosine Similarity of Mixtral Corpus by Text Type: Using the available code, we
+                applied the same labels used in the student corpus to identify the type of generated text.
+                This helped us verify whether we could replicate the writing styles found in the source corpus.
+                The results are displayed in Figure 4.2b
+
+
+
+
+                          (a) by text provenance                              (b) By text type
+
+            Figure 4.2: Analyse of the generated corpus with Umap using cosine similarity scoring method
+
+
+              In addition to the UMAP visualizations, we analysed the distribution of cosine similarity scores
+           between the original and generated content. Figure 4.3 shows this distribution, illustrating the
+           frequency of various cosine similarity values. This provides a detailed view of how closely the
+           AI-generated texts match the student-written texts.
+
+             Notably, 230 out of the 482 texts have a cosine similarity score of 1, indicating that these
+           generated texts are identical or nearly identical to their corresponding student-written texts. Ad-
+           ditionally, 322 out of the 482 texts have a cosine similarity score higher than 0.5, suggesting that
+           a signicant majority of the AI-generated texts exhibit a moderate to high degree of similarity
+           to the student corpus. Conversely, 166 texts have a cosine similarity score between -0.22 and 0,
+           indicating a subset of articles with no correlation to each other.
+
+              The code used to generate the cosine similarity scores is detailed in Appendix 8.7. The impact
+           of this dissimilarity will be discussed in Section 5.3.5.
+
+             To validate that our generation step met our requirements, we combined the student and the
+           Mixtral datasets. Using the same technique as for the other corpora, we added a new dimension
+           to distinguish between generated and non-generated texts.
+
+                                                                                                            30
+CHAPTER 4.      RESULTS                                                4.3.   TRAINING DATASET ANALYSIS
+
+
+
+
+     Figure 4.3: Distribution of cosine similarity between the original and generated content
+
+
+                                Listing 4.1: Train Test Split code
+X_train, X_test, y_train, y_test = train_test_split( full_df["embedings"],
+       full_df["generated"], stratify=full_df["generated"], random_state=42, )
+
+
+
+  As for the two other corpora, we used the same technique to analyse the combined dataset. We
+added a new dimension to be able to dierentiate text that would have been generated or not.
+    UMAP plot on the combined dataset using cosine similarity scoring: We labelled
+     the texts as generated (True) or not (False). The cosine similarity plot is shown in Figure
+     4.4a
+    UMAP plot on the combined dataset using cosine similarity scoring with type
+     label: Using the previously applied type labels, the similarity scoring is depicted in Figure
+     4.4b.
+    UMAP plot on the combined dataset using cosine similarity scoring with prove-
+     nance label: Again, using the previously applied provenance labels, the similarity scoring
+     is illustrated in Figure 4.4c.
+
+  These results indicate that we successfully generated texts closely related to the original ones,
+with a few exceptions. We will discuss the reasons for these dierences and potential improvements
+to better represent student productions in the machine-generated corpus in Section 5.3.5.
+
+
+4.3 Training Dataset Analysis
+   Before training our rst model, we combined both datasets into one. We then used scikit-learn's
+`train_test_split` method to split the dataset into training and testing sets. The code used for
+the train/test split is shown in Figure 4.1. We employed the stratify technique to ensure a balanced
+dataset of generated and non-generated texts in the test set.
+
+  We applied the same technique to our train and test datasets to determine if we could cluster
+the texts in both datasets:
+    UMAP plot on the train dataset using cosine similarity scoring: Figure 4.5a presents
+     a plot of the cosine similarity using FlauBERT embeddings on the train dataset. The code
+     used to create the labels for the dataset is displayed in Figure 4.2
+    UMAP plot on the test dataset using cosine similarity scoring: Figure 4.5b presents
+     a plot of the cosine similarity using FlauBERT embeddings on the test dataset.
+4.4.   MODEL TRAINING                                                              CHAPTER 4.      RESULTS
+
+
+
+
+                           (a) By dataset label                              (b) By type label
+
+
+
+
+                                                  (c) By provenance label
+
+            Figure 4.4: Analyse of the combined corpus (student + generated) with Umap using cosine simi-
+            larity scoring
+
+
+
+            4.4 Model Training
+               Based on the dataset generated earlier, we trained dierent models as described in Section 3.4.
+            Once trained, we evaluated the models using recall, precision, accuracy and F1-score from the
+            scikit-learn library.
+
+
+
+            4.4.1 Linear Regression Using FlauBert Embeddings
+              This is our baseline model. For this technique, we used the embeddings generated previously
+            and applied Linear Regression as a classier. The dataset described in Section 4.3served as our
+            training data. The training code is shown in the Appendix 8.4.
+
+               The results of this model will be analysed in Section 4.5
+
+                                                                                                           32
+CHAPTER 4.      RESULTS                                                              4.4.   MODEL TRAINING
+
+
+
+
+                              Listing 4.2: Generated label creation
+def labelize(serie: pd.Series): if serie["dataset"] == "student": return 1   #
+        human else: return 2   # gpt/mixtral
+
+
+
+
+                (a) Train dataset                                 (b) Test dataset
+
+     Figure 4.5: Analyse of the Train/test Corpus with Umap using cosine similarity metric
+
+
+4.4.2 LinearSVC Using Stylometric Features
+  The second model we trained utilized only stylometric features. For this model, we used a
+combination of 2-grams, 3-grams, and POS-Tags features. The code used to train this model is
+shown in Appendix 8.3
+
+   The results of this model will be analysed in Section 4.5.
+
+
+4.4.3 Performance Against an Established Model
+  As a nal test for our augmentation techniques, we employed an established model to validate our
+technique. We used the "Semi-supervised Classication on a Text Dataset" approach (scikitlearn,
+n.d.). The code that we used can be found in the Appendix 8.5. In this code, four models were
+trained:
+
+    SDGClassier 100%: A supervised pipeline where the model is trained on 100% of the
+     dataset.
+
+    SDGClassier 20%: A supervised pipeline where the model is trained on 20% of the
+     dataset.
+
+    SelfTrainingClassier 20%: A semi-supervised technique that allows training a supervised
+     model using a semi-supervised approach. The model is trained on a subset of the dataset
+     and stops when no new labels are propagated.
+
+    LabelSpreading 20%: An unsupervised model trained on the same dataset as the previous
+     model.
+
+   The results of these models will be analysed in Section 4.5
+4.5.   MODEL RESULTS                                                                 CHAPTER 4.      RESULTS
+
+
+
+
+                                           Listing 4.3: Model Scoring technique
+            y_pred = model.predict(X_test) print(accuracy_score(y_test,
+            y_pred,normalize=True)) print(recall_score(y_test, y_pred))
+            print(precision_recall_fscore_support(y_test, y_pred, average="binary")) print(
+            "binary=averaged F1 score on test set: %0.3f"
+                % f1_score(y_test, y_pred, average="binary")
+            )
+
+
+
+            4.5 Model Results
+              Each of the models that were trained was scored and validated using the same techniques. We
+            used four metrics as described in Section 3.5
+              1. Accuracy
+              2. Precision
+              3. Recall
+              4. F1-Score
+               The code used to score our models is available in Figure 4.3.
+
+              The performance metrics for various models evaluated in our study are summarized in Table 4.2.
+            These models include Linear Regression (200 iterations), LinearSVC, and several congurations
+            of the Stochastic Gradient Descent Classier (SDGClassier), SelfTrainingClassier, and Label-
+            Spreading on subsets of the data.
+
+              The LinearRegression Model using the BERT embeddings, after 200 iterations, achieved the
+            accuracy of 0.996, precision of 0.992, recall of 1.0, and F1-score of 0.996.
+
+              The LinearSVC using the stylometric features (POS-Tags, 2-Grams, 3-Grams distributions)
+            achieved the accuracy of 0.988, precision of 0.991, recall of 0.983, and F1-score of 0.987.
+
+              The SDGClassier, when trained on 100% of the data, achieved perfect scores across all metrics
+            (accuracy, precision, recall, and F1-score all equal to 1.0).
+
+              When the SDGClassier was trained on only 20% of the data, its performance slightly declined,
+            achieving the accuracy of 0.980, precision of 0.984, recall of 0.977, and an F1-score of 0.980.
+
+              The SelfTrainingClassier, utilizing 20% of the labelled data, achieved the accuracy of 0.957,
+            precision of 0.961, recall of 0.953, and an F1-score of 0.957.
+
+              Lastly, the LabelSpreading algorithm, applied to 20% of the labelled data, resulted in the accu-
+            racy of 0.698, precision of 0.673, recall of 0.773, and an F1-score of 0.720.
+               The results of these models will be discussed later in this thesis in Section 5.1.2
+
+
+
+
+                                                                                                           34
+CHAPTER 4.      RESULTS                                                                 4.5.   MODEL RESULTS
+
+
+
+
+Table 4.2: Scores cores of the dierent model trained using accuracy, prediction, recall and f1-score
+metric
+
+         Model                                 Accuracy     Precision   Recall   F1-Score
+         Linear Regression(200 iterations)     0.996        0.992       1.0      0.996
+         LinearSVC                             0.988        0.991       0.983    0.987
+         SDGClassier 100% of data             1.0          1.0         1.0      1.0
+         SDGClassier 20% of data              0.980        0.984       0.977    0.980
+         SeTrainingClassier 20% of label     0.957        0.961       0.953    0.957
+         LabelSpreading on 20% of label        0.698        0.673       0.773    0.720
+4.5.   MODEL RESULTS   CHAPTER 4.   RESULTS
+
+
+
+
+                                         36
+5      Discussion
+   The results we collected are promising; however, we would like to highlight several points for
+discussion. First, we will go through the interpretation of the results from the curation of the
+corpora to the model development. Secondly, we will open the discussion on how and why we
+believe that our framework could be useful for Authorship Identication, especially applied in a
+classroom setup. Finally, we will propose future improvements for this framework, particularly
+focusing on dataset gathering and the augmentation step.
+
+
+5.1 Interpretation of Results
+  In this section, we will analyse the results of our research and propose an interpretation of these
+results. We will rst analyse the corpora that were crafted and how we believe this impacted the
+research. Then, we will analyse the models and their ecacy.
+
+5.1.1 Corpora Analysis
+  We started with a diverse dataset, which initially was useful to have dierent classes of texts.
+Our dataset included texts ranging from students seeking internship positions to pieces of master
+theses. We believe that this created too many classes of dierent texts. As shown in Figure
+4.1b, the analysis of the cosine similarity per text type revealed very distinct clusters. This impact
+increases the potential for overtting during model training, a potential issue that will be discussed
+further in Section 5.1.2.
+
+   Additionally, the dierent classes of texts inuenced the generation step, requiring us to imple-
+ment various prompts to eectively dierentiate between these text types. In Section 5.3.5, we
+will discuss how we could improve both the summarization and generation steps to circumvent this
+limitation in the dataset and help the teacher to have a coherent dataset.
+
+  We also did not explore the use of large language models for embedding techniques to classify
+the texts. This will be examined further in Section 5.3.3.
+
+5.1.2 Model Ecacy and Limitations
+   As seen in Table 4.2, we achieved very high scores for all but one model. Such high scores
+across all models suggest that our texts were easily identiable and that the corpus was too biased,
+allowing the models to perform exceptionally well. However, similar validation scores have been
+reported in other research (Desaire et al., 2023). These scores should be interpreted with a sceptical
+mind.
+
+  It is important to note that our research focused not on designing a new model but on assessing
+whether we could use generated text to create a dataset for authorship identication. Thus, we
+did not spend much time investigating the validity of these claims. In Section 5.3.4, we will discuss
+potential improvements in this area.
+5.2.   IMPLICATIONS FOR AI IN AUTHORSHIP IDENTIFICATION                           CHAPTER 5.       DISCUSSION
+
+
+
+              Our model implementation was also quite naive. For all the models developed, we used the entire
+            content, which limits our models' ability to detect parts of text that were generated. In Section
+            5.3.2, we will discuss improvements to detect hybrid texts rather than doing full-text inference.
+
+
+            5.2 Implications for AI in Authorship Identication
+              The overall results of our research indicate that it is indeed possible to use generative models for
+            authorship identication. These ndings open up a range of possibilities that could help teachers
+            gain condence in their students' production. However, several other concerns should be raised,
+            such as the implications of using large language models as proofreaders or orthographic correctors.
+            While these concerns were not addressed in this research, they should be discussed in the classroom
+            to establish acceptable usage guidelines for large language models.
+
+
+            5.3 Future Improvement
+              In this section, we will discuss improvements that could be applied to this research to address
+            the questions raised and enhance the robustness and applicability of our framework.
+
+
+            5.3.1 Student Corpus Collection in Classroom
+               The current research relies on an already curated yet diverse corpus of texts. This diversity
+            allowed us to start easily, but we believe it is essential to extend this research by collecting texts
+            directly from classrooms. This approach would enable us to gather a baseline for specic class-
+            room settings. The collection should be performed in a controlled environment using computers
+            to facilitate gathering and processing. Once collected, we could apply the techniques from this
+            research to validate their eectiveness on a smaller subset of texts with more controlled diversity.
+
+
+            5.3.2 Improvement of Models for Hybrid Texts
+            The models and the framework we created only rely on detecting based on the full text of a
+            student. This approach does not help when student used LLM to generate part of their work.
+            Instead of relying fully on the whole text content, we see the benet of encoding the feature on a
+            paragraph per paragraph, or sentence by sentence basis. This would also enable us to increase the
+            capacity of detection of our texts. This would allow teachers to detect zone of mistrust and use
+            this information to ask directed questions to the student.
+
+
+            5.3.3 Other Embeddings Techniques
+              Throughout this research, we exclusively used FlauBERT (Le et al., 2020) as our embedding
+            model. While this choice enabled us to achieve high scores with a well-established solution, many
+            other large language models also oer embedding capabilities. We aim to validate whether using
+            more advanced embedding techniques from newly developed models could enhance the model's
+            document classication ability. As these models continue to improve, incorporating them could
+            rene our pre-processing steps and ultimately boost the overall performance of our models.
+
+
+            5.3.4 Model Development
+              The models and framework we developed currently rely on analysing the full text of a student's
+            work. This approach is limited when students use large language models (LLMs) to generate only
+            parts of their work. Rather than depending entirely on the whole text, we recognize the benets of
+            encoding features on a paragraph-by-paragraph or sentence-by-sentence basis. This would enhance
+            our ability to detect inconsistencies and improve the accuracy of our models. Consequently, teachers
+            could identify suspicious sections and use this information to question students more eectively.
+
+                                                                                                               38
+CHAPTER 5.      DISCUSSION                                                   5.3.   FUTURE IMPROVEMENT
+
+
+
+  Additionally, using better validation techniques could improve the classiers. As seen in Section
+3.2.1, we explicitly removed parts of the dataset that were not directly related to our research
+question. These texts could be utilized in a validation step to train a better model. This could be
+useful for tuning the parameters of our dierent models.
+
+
+5.3.5 Application of Advanced LLM Techniques
+  Our method for generating texts was somewhat naive; we employed a simple few-shot approach
+to mimic how a student might use a large language model to generate text. While this approach
+proved eective for classifying authors, it may not perform as well when all texts are on the
+same subject or require very precise answers. The limitations of our techniques are evident in the
+cosine similarity scores between the articles (as described in Section 4.2.3). We found that 230
+out of the 482 texts had a cosine similarity score of 1, indicating identical or extremely similar
+texts. Additionally, 322 texts had a cosine similarity score higher than 0.5, showing a moderate
+to high degree of similarity. However, 166 texts had a cosine similarity score between -0.22 and 0,
+indicating low-similarity to decorrelation between the articles. We believe that aiming for cosine
+similarity scores predominantly higher than 0.5 would be a good indicator of a correctly generated
+corpus. Future research should explore dierent techniques to improve these results, such as prompt
+engineering and more sophisticated usage of large language models (LLMs).
+
+  During the course of this research, new models and techniques emerged. We attempted to apply
+some of these techniques using LLaMA 3, but due to its late release in our research timeline, we
+could not experiment with it thoroughly. We believe that using LLaMA 3 in conjunction with
+other advanced techniques, such as Retrieval-Augmented Generation (RAG) (Lewis et al., 2020),
+could generate a more accurate dataset. Additionally, testing the model's capability to generate
+prompts rather than summaries as the rst step of our augmentation process could help determine
+which generation step works best in this context. Further experimentation with dierent models
+or combinations of models can also be conducted to identify the most eective framework for
+authorship identication.
+
+   Lastly, with the rapid evolution of models, each step in the research process can quickly become
+outdated. When we began this research, GPT-4 was considered the best overall model, but it
+was too costly. Subsequently, GPT-4.5 Turbo was released with a focus on cost eciency. On the
+open-source front, we started with Mixtral, but soon after, Facebook released LLaMA 3, improving
+all benchmarks. Finally, on May 13, 2024, OpenAI released GPT-4o, setting a new state of the art.
+This rapid evolution makes it challenging for academic research to keep pace and for frameworks
+to adapt. Therefore, we emphasize the importance of validating that the production of a large
+language model (Shankar et al., 2024) is accurate and can be trusted without human supervision.
+This would enable the research eld to focus on frameworks rather than constantly shifting between
+models.
+5.3.   FUTURE IMPROVEMENT   CHAPTER 5.   DISCUSSION
+
+
+
+
+                                                 40
+6      Conclusion
+  In this study, we aimed to answer the question: "Is it possible to create a model that can classify
+text within a classroom setting and validate whether it was generated by a large language model
+(LLM)?"
+
+  We focused on using authorship attribution techniques, specically authorship validation, to
+build our classier. We encountered challenges in nding suitable datasets for this purpose. Ul-
+timately, the primary challenge was not in creating the model itself but in developing an LLM-
+generated student dataset. Our main contribution lies in creating a 'twin' student dataset for
+training the model.
+
+
+6.1 Summary of Findings
+  In our research, we discovered that while it was relatively easy to generate text using large
+language models (LLMs), this process also presented several challenges. Specically, generating
+the desired text often required the development of various prompts tailored to specic needs. This
+challenge extended to eectively using the generated output.
+
+   We developed several models capable of detecting generated content, as detailed in 4.5. However,
+we found that the generated content was dicult to analyse. Techniques such as similarity detection
+between articles and extraction of stylometric features proved useful in understanding the nature
+of the generated content. This raises the question of why these models performed so well, which
+could be attributed to the absence of cross-validation techniques in our initial approach.
+
+  Applying cross-validation techniques to our research, particularly using the dataset of student-
+produced texts that were previously rejected, could help ensure that our models are not overtted.
+This would provide a more robust validation of our models' performance.
+
+  When examining our model scores, it becomes apparent that overtting might be a concern, de-
+spite the fact that our ndings replicate those of other researchers (Desaire et al., 2023). Analysing
+these results underscores the importance of understanding how models produce their output. This
+can be achieved without resorting to white-box approaches (Tang et al., 2024), making our meth-
+ods applicable to all open-source and less controllable models.
+
+
+6.2 Recommendations for Future Research
+  We recommend that future research investigate the capabilities of large language models (LLMs)
+to generate high-quality content eectively. This includes developing and testing methods to
+validate the generated content across various languages, as the importance of validation increases
+with the signicance of the task. To enhance validation, researchers should explore automated
+techniques that can be easily implemented for multilingual content.
+6.3.   FINAL THOUGHTS                                                          CHAPTER 6.       CONCLUSION
+
+
+
+              Furthermore, we suggest focusing on dierent patterns for text generation. Specically, employ-
+            ing Retrieval-Augmented Generation (RAG) or incorporating prompt generation in place of the
+            proposed summarization step could signicantly improve the quality of generated text. These ap-
+            proaches could lead to the development of not only more advanced models but also new paradigms
+            for generating content with LLMs.
+
+               Additionally, future studies should explore the creation of robust frameworks that facilitate the
+            generation and validation of high-quality content. Such frameworks would be particularly benecial
+            in educational settings, where teachers could use them to detect generated content and ensure its
+            integrity. This could restore condence in student work and encourage the use of LLMs as powerful
+            tools for academic and practical productivity.
+
+              By addressing these areas, future research can advance our understanding of LLM capabilities
+            and contribute to the development of innovative solutions for text generation and validation.
+
+
+            6.3 Final Thoughts
+               The results presented in Section4.3 provide substantial evidence supporting the hypothesis that
+            it is possible to use large language models (LLMs) for authorship identication techniques. The
+            high detection scores we obtained, even with naive techniques, were surprising and warrant further
+            discussion. One key question arises: "How was it so easy to detect such content?" This opens
+            avenues for further research into the characteristics of generated text that make it identiable.
+
+               During interactive testing, we found that while it was possible to fool the model, it also demon-
+            strated an unexpected ability to detect generated content in English. This was intriguing because
+            we did not anticipate our models to function eectively across multiple languages. Our research
+            suggests that iteration on the generation methods and experimenting with techniques such as
+            Retrieval-Augmented Generation (RAG) or self-aware RAG could enhance the quality of the gen-
+            erated corpus. We hope future research will build upon our work to rene these methods.
+
+               We also observed the impressive capabilities of open-source models like Llama3 and Mixtral in
+            generating French content that closely resembled the original text. Tools like Ollama facilitated
+            access to these models, and we believe further experimentation with more open-source models could
+            optimize performance and cost eectiveness. Our ultimate goal is to develop a framework that
+            allows teachers to detect generated content on their local computers, providing this capability at
+            no cost. Achieving this would require tting the runtime environment to local hardware constraints.
+
+               We envision future research not only focusing on improving detection methods and also on
+            helping students leverage LLMs more eectively. By guiding students to use these tools beyond
+            naive text generation, we can help them harness the full potential of LLMs to enhance productivity
+            in both academic and everyday tasks.
+
+
+
+
+                                                                                                             42
+7      Bibliography
+Akgun, S., & Greenhow, C. (2021). Articial intelligence in education: Addressing ethical challenges
+        in k-12 settings.AI and Ethics 2, (3), 431440. https://doi.org/10.1007/s43681-021-00096-
+        7 (cit. on p. 18).
+Azaria, A., Azoulay, R., & Reches, S. (2024). ChatGPT is a Remarkable ToolFor Experts.         Data
+        Intelligence 6
+                     , (1), 240296. https://doi.org/10.1162/dint_a_00235 (cit. on pp. 18, 19).
+Bailey P., M. J., Lacroix T. (2024, March). Ai q&a panel [Panel discussion from KubeCone].
+        https://events.linuxfoundation.org/kubecon- cloudnativecon- europe/program/schedule/
+        (cit. on p. 19).
+Bender, E. M., Gebru, T., McMillan-Major, A., & Shmitchell, S. (2021). On the dangers of stochas-
+                   Proceedings of the 2021 ACM Conference on Fairness, Accountability, and
+        tic parrots.
+        Transparency   . https://doi.org/10.1145/3442188.3445922 (cit. on p. 18).
+Bengio, Y., Frasconi, P., & Simard, P. (1993). The problem of learning long-term dependencies in
+                          IEEE International Conference on Neural Networks
+        recurrent networks.                                                        , 11831188 vol.3.
+        https://doi.org/10.1109/ICNN.1993.298725 (cit. on pp. 13, 14).
+Beuls, K., & Van Eecke, P. (2024). Humans learn language from situated communicative interac-
+        tions. what about machines?    Computational Linguistics   (cit. on pp. 15, 17, 18).
+Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., Neelakantan, A.,
+        Shyam, P., Sastry, G., Askell, A., Agarwal, S., Herbert-Voss, A., Krueger, G., Henighan,
+        T., Child, R., Ramesh, A., Ziegler, D. M., Wu, J., Winter, C., . . . Amodei, D. (2020).
+        Language models are few-shot learners. Proceedings of the 34th International Conference
+        on Neural Information Processing Systems     (cit. on pp. 15, 16).
+                                International Small Business Journal: Researching Entrepreneur-
+Burrows, R. (1992). Book reviews.
+        ship 10
+             , (4), 8283. https://doi.org/10.1177/026624269201000408 (cit. on p. 13).
+CopyLeaks. (n.d.). Copy leaks faq [as visited on 05-05-2024]. (Cit. on p. 20).
+De Mulder, W., Bethard, S., & Moens, M.-F. (2015). A survey on the application of recurrent
+        neural networks to statistical language modeling.    Computer Speech & Language 30   ,   (1),
+        6198. https://doi.org/https://doi.org/10.1016/j.csl.2014.09.005 (cit. on pp. 13, 14).
+Desaire, H., Chua, A. E., Isom, M., Jarosova, R., & Hua, D. (2023). Distinguishing academic
+        science writing from humans or chatgpt with over 99% accuracy using o-the-shelf machine
+        learning tools.  Cell Reports Physical Science 4
+                                                       , (6), 101426. https://doi.org/10.1016/j.
+        xcrp.2023.101426 (cit. on pp. 37, 41).
+Devlin, J., Chang, M.-W., Lee, K., & Toutanova, K. (2019, June). BERT: Pre-training of deep
+        bidirectional transformers for language understanding. In J. Burstein, C. Doran, & T.
+        Solorio (Eds.), Proceedings of the 2019 conference of the north American chapter of the
+        association for computational linguistics: Human language technologies, volume 1 (long
+        and short papers) (pp. 41714186). Association for Computational Linguistics. https://
+        doi.org/10.18653/v1/N19-1423 (cit. on pp. 12, 15).
+                                                                 CHAPTER 7.       BIBLIOGRAPHY
+
+
+
+GPTZero. (n.d.). Gptzero technology [as visited on the 05-05-2024]. (Cit. on p. 20).
+Halliday, M., Matthiessen, C. M., Halliday, M., & Matthiessen, C. (2014, February).    An introduc-
+        tion to functional grammar    . Routledge. https://doi.org/10.4324/9780203783771 (cit. on
+         p. 13).
+Ho-Dac, L.-M., Fleury, S., & Ponton, C. (2020, May). E:calm resource: A resource for studying
+         texts produced by French pupils and students. In N. Calzolari, F. Béchet, P. Blache, K.
+         Choukri, C. Cieri, T. Declerck, S. Goggi, H. Isahara, B. Maegaard, J. Mariani, H. Mazo,
+         A. Moreno, J. Odijk, & S. Piperidis (Eds.),  Proceedings of the twelfth language resources
+        and evaluation conference     (pp. 43274332). European Language Resources Association.
+         https://aclanthology.org/2020.lrec-1.533 (cit. on p. 23).
+Huang, W., Murakami, A., & Grieve, J. (2024). Alms: Authorial language models for authorship
+         attribution. https://doi.org/10.48550/ARXIV.2401.12005 (cit. on pp. 7, 11).
+Ippolito, D., Duckworth, D., Callison-Burch, C., & Eck, D. (2020, July). Automatic detection of
+         generated text is easiest when humans are fooled. In D. Jurafsky, J. Chai, N. Schluter,
+         & J. Tetreault (Eds.),  Proceedings of the 58th annual meeting of the association for com-
+        putational linguistics  (pp. 18081822). Association for Computational Linguistics. https:
+         //doi.org/10.18653/v1/2020.acl-main.164 (cit. on pp. 1719).
+Jawahar, G., Abdul-Mageed, M., & Lakshmanan, L., V.S. (2020, December). Automatic detection
+         of machine generated text: A critical survey. In D. Scott, N. Bel, & C. Zong (Eds.),
+        Proceedings of the 28th international conference on computational linguistics     (pp. 2296
+         2309). International Committee on Computational Linguistics. https://doi.org/10.18653/
+         v1/2020.coling-main.208 (cit. on pp. 7, 18).
+Jurafsky, D., & Martin, J. H. (2000).Speech and language processing: An introduction to natural
+        language processing, computational linguistics, and speech recognition   (1st). Prentice Hall
+         PTR. (Cit. on pp. 13, 14, 25, 26).
+Koppel, M., Akiva, N., & Dagan, I. (2006). Feature instability as a criterion for selecting potential
+                      Journal of the American Society for Information Science and Technology
+         style markers.                                                                             ,
+        57  (11), 15191525. https://doi.org/10.1002/asi.20428 (cit. on p. 12).
+Koppel, M., Schler, J., & Argamon, S. (2008). Computational methods in authorship attribution.
+        Journal of the American Society for Information Science and Technology 60      ,   (1), 926.
+         https://doi.org/10.1002/asi.20961 (cit. on pp. 7, 1113).
+Kumarage, T., & Liu, H. (2023). Neural authorship attribution: Stylometric analysis on large
+                       2023 International Conference on Cyber-Enabled Distributed Computing
+         language models.
+        and Knowledge Discovery (CyberC)       , 5154. https://doi.org/10.1109/CyberC58899.2023.
+         00019 (cit. on pp. 18, 20).
+Le, H., Vial, L., Frej, J., Segonne, V., Coavoux, M., Lecouteux, B., Allauzen, A., Crabbé, B.,
+         Besacier, L., & Schwab, D. (2020). Flaubert: Unsupervised language model pre-training
+                   Proceedings of The 12th Language Resources and Evaluation Conference
+         for french.                                                                          , 2479
+         2490. https://www.aclweb.org/anthology/2020.lrec-1.302 (cit. on pp. 24, 27, 30, 38).
+Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih,
+         W.-t., Rocktäschel, T., Riedel, S., & Kiela, D. (2020). Retrieval-augmented generation for
+         knowledge-intensive nlp tasks. In H. Larochelle, M. Ranzato, R. Hadsell, M. Balcan, & H.
+         Lin (Eds.),Advances in neural information processing systems      (pp. 94599474, Vol. 33).
+         Curran Associates, Inc. https://proceedings.neurips.cc/paper_les/paper/2020/le/
+         6b493230205f780e1bc26945df7481e5-Paper.pdf (cit. on p. 39).
+Liang, W., Izzo, Z., Zhang, Y., Lepp, H., Cao, H., Zhao, X., Chen, L., Ye, H., Liu, S., Huang, Z.,
+         McFarland, D. A., & Zou, J. Y. (2024). Monitoring ai-modied content at scale: A case
+         study on the impact of chatgpt on ai conference peer reviews. https://doi.org/10.48550/
+         ARXIV.2403.07183 (cit. on p. 7).
+
+                                                                                                  44
+CHAPTER 7.        BIBLIOGRAPHY
+
+
+
+Liu, Y., Ott, M., Goyal, N., Du, J., Joshi, M., Chen, D., Levy, O., Lewis, M., Zettlemoyer, L.,
+         & Stoyanov, V. (2019). Roberta: A robustly optimized bert pretraining approach. https:
+         //doi.org/10.48550/ARXIV.1907.11692 (cit. on p. 15).
+Mana, S. C., & Sasipraba, T. (2021). Research on cosine similarity and pearson correlation based
+         recommendation models.        Journal of Physics: Conference Series 1770   ,      (1), 012014. https:
+         //doi.org/10.1088/1742-6596/1770/1/012014 (cit. on pp. 12, 24).
+Matthiessen, C. (1995). Lexicogrammatical cartography : English systems. In                Lexicogrammatical
+         cartography : English systems  . International Language Sciences Publishers. (Cit. on p. 13).
+McInnes, L., Healy, J., Saul, N., & Groÿberger, L. (2018). Umap: Uniform manifold approximation
+         and projection. Journal of Open Source Software 3       , (29), 861. https://doi.org/10.21105/
+         joss.00861 (cit. on pp. 24, 27, 30).
+MistralAI. (2023, December). Mixtral of experts. a high quality sparse mixture-of-experts. [as
+         visited on the 11-05-2024]. (Cit. on p. 28).
+Mosteller, F., & Wallace, D. L. (1963). Inference in an authorship problem.          Journal of the American
+         Statistical Association 58
+                                , (302), 275. https://doi.org/10.2307/2283270 (cit. on p. 12).
+Niu, Z., Zhong, G., & Yu, H. (2021). A review on the attention mechanism of deep learning.
+         Neurocomputing 452
+                          ,    , 4862. https : / / doi . org / 10 . 1016 / j . neucom . 2021 . 03 . 091 (cit. on
+         p. 14).
+ollama. (n.d.). Ollama [As visited on the 21-04-204]. (Cit. on p. 28).
+OpenAI. (n.d.-a). Chatgpt [as visited on the 05-05-2024]. (Cit. on p. 16).
+OpenAI. (n.d.-b). Openai classier [as visiter on 05-05-2024]. (Cit. on pp. 19, 20).
+OpenAI. (n.d.-c). Openai paltform api reference [as visited on the 12/04/2024]. (Cit. on pp. 16,
+         28).
+Pan, L., Lan, Y., Li, Y., & Qian, W. (2024). Unsupervised text style transfer via llms and attention
+         masking with multi-way interactions. https://doi.org/10.48550/ARXIV.2402.13647 (cit.
+         on p. 20).
+Pennington, J., Socher, R., & Manning, C. D. (2014). Glove: Global vectors for word representation.
+         Proceedings of the 2014 conference on empirical methods in natural language processing
+         (EMNLP), 15321543 (cit. on p. 12).
+Ponton, C., Fleury, S., Ho-Dac, L. M., & Jacques, M.-P. (2023). E-calm écriture scolaire [OR-
+         TOLANG (Open Resources and TOols for LANGuage) www.ortolang.fr]. https://hdl.
+         handle.net/11403/e-calm/v2.1 (cit. on p. 22).
+Savoy, J. (2020).    Machine learning methods for stylometry: Authorship attribution and author
+         proling . Springer International Publishing. https://doi.org/10.1007/978-3-030-53360-1
+         (cit. on p. 13).
+scikitlearn. (n.d.). Semi-supervised classication on a text dataset [as visited on the 11-05-2024].
+         (Cit. on p. 33).
+Shankar, S., Zamrescu-Pereira, J. D., Hartmann, B., Parameswaran, A. G., & Arawjo, I. (2024).
+         Who validates the validators? aligning llm-assisted evaluation of llm outputs with human
+         preferences. https://doi.org/10.48550/ARXIV.2404.12272 (cit. on pp. 20, 39).
+Solaiman, I., Brundage, M., Clark, J., Askell, A., Herbert-Voss, A., Wu, J., Radford, A., Krueger,
+         G., Kim, J. W., Kreps, S., McCain, M., Newhouse, A., Blazakis, J., McGue, K., &
+         Wang, J. (2019). Release strategies and the social impacts of language models. https :
+         //doi.org/10.48550/ARXIV.1908.09203 (cit. on pp. 15, 19, 20).
+Tang, R., Chuang, Y.-N., & Hu, X. (2024). The science of detecting llm-generated text.                 Commu-
+         nications of the ACM 67, (4), 5059. https://doi.org/10.1145/3624725 (cit. on pp. 20, 41).
+Tech, G. C. (2021, August). Transformers, explained: Understand the model behind gpt, bert or
+         t5 [as visionned on 06-04-2024]. (Cit. on p. 15).
+                                                                CHAPTER 7.    BIBLIOGRAPHY
+
+
+
+Uchendu, A., Le, T., & Lee, D. (2023). Toproberta: Topology-aware authorship attribution of
+         deepfake texts. https://doi.org/10.48550/ARXIV.2309.12934 (cit. on pp. 12, 15).
+                                                   Butter-worths
+van Rijsbergen, C. J. (1975). Information retrieval.                 (cit. on p. 25).
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., & Polo-
+         sukhin, I. (2017). Attention is all you need. https://doi.org/10.48550/ARXIV.1706.03762
+         (cit. on pp. 12, 14, 15, 17).
+                                                                               Proceedings of the
+Vig, J. (2019). A multiscale visualization of attention in the transformer model.
+       57th Annual Meeting of the Association for Computational Linguistics: System Demon-
+       strations, 3742. https://doi.org/10.18653/v1/P19-3007 (cit. on p. 15).
+Weizenbaum, J. (1966). Elizaa computer program for the study of natural language commu-
+       nication between man and machine. Communications of the ACM, 9 (1), 3645. https :
+        //doi.org/10.1145/365153.365168 (cit. on pp. 13, 14).
+
+
+
+
+                                                                                              46
+8     Appendix
+                  Listing 8.1: Code used to clean the summary for generations
+
+
+def clean_summary(summary: dict[str|any] | list[str]| str) => str: if
+    isinstance(sumarry, dict): cleaned_summary = "" for k, v in sumarry.items():
+    if isinstance(v, str): cleaned_summary = cleaned_summary + " " + v else:
+    cleaned_summary = cleaned_summary + " ".join(v) if isinstance(sumarry,
+    list): cleaned_summary = " ".join(summary) return cleaned_summary
+
+                Listing 8.2: Code used for content embedding using FlauBERT
+import numpy as np import pandas as pd import torch from transformers import
+FlaubertModel, FlaubertTokenizer
+
+
+
+modelname = "aubert/aubert_large_cased" aubert, log =
+FlaubertModel.from_pretrained(modelname, output_loading_info=True)
+aubert_tokenizer = FlaubertTokenizer.from_pretrained(modelname,
+do_lowercase=False) device = "cuda:0" if torch.cuda.is_available() else "cpu"
+aubert = aubert.to(device)
+
+def embed(serie: pd.Series): tokens = torch.tensor( [ aubert_tokenizer.encode(
+    serie["content"], max_length=512, padding="max_length", truncation=True ) ]
+    ).to(device) output = aubert(tokens) del tokens embedings =
+    output[0].cpu().detach() cls_embedings = embedings[:, 0, :].numpy() return
+    cls_embedings[0, :]
+
+df.loc[:, "embedings"] = df.apply(embed, axis=1)
+
+
+            Listing 8.3: Code used to train a LinearSVC using Stylometric features
+import pandas as pd
+
+from sklearn.svm import LinearSVC from sklearn.model_selection import
+train_test_split from sklearn.feature_extraction import DictVectorizer from
+sklearn.compose import ColumnTransformer
+
+from sklearn.pipeline import Pipeline
+                                                                        CHAPTER 8.   APPENDIX
+
+
+
+import nltk from nltk.corpus import stopwords from nltk.tokenize import
+word_tokenize, sent_tokenize from yellowbrick.text import PosTagVisualizer from
+itertools import chain from namespace.lib.feature_engineering import get_dataset
+
+stopWordsList = stopwords.words("french")
+nltk.download("averaged_perceptron_tagger") def bigrams(serie: pd.Series):
+tokens = nltk.word_tokenize(serie["content"], language="french") return
+list(nltk.bigrams(tokens))
+
+
+def trigrams(serie: pd.Series): tokens = nltk.word_tokenize(serie["content"],
+    language="french") return list(nltk.trigrams(tokens))
+
+
+
+def embed_sentence(sentence):
+
+    tokens = nltk.word_tokenize(sentence, language="french") tokens = [w for w
+    in tokens if not w in stopWordsList] return nltk.pos_tag(tokens)
+
+
+def pos_tags(serie: pd.Series): sentences = nltk.sent_tokenize(serie["content"],
+    language="french") tokenized_sentence = [embed_sentence(sentence) for
+    sentence in sentences] return tokenized_sentence
+
+
+
+def enrich(serie: pd.Series): serie["content"] = serie["content"].lower()
+    serie["bigrams"] = bigrams(serie) serie["trigrams"] = trigrams(serie)
+    serie["pos_tags"] = pos_tags(serie) serie["trigrams_dist"] =
+    nltk.probability.FreqDist(serie["trigrams"]) serie["bigrams_dist"] =
+    nltk.probability.FreqDist(serie["bigrams"]) serie["attened_pos_tags"] =
+    list(chain.from_iterable(serie["pos_tags"])) serie["pos_tags_dist"] =
+    nltk.probability.FreqDist(serie["attened_pos_tags"])
+
+    return serie
+
+
+def get_enriched_dataset() => pd.DataFrame: full_df = get_dataset(["content"])
+    full_df = full_df.apply(enrich, axis=1) return full_df full_df =
+    get_enriched_dataset()
+
+X_train, X_test, y_train, y_test = train_test_split( full_df[["bigrams_dist",
+   "trigrams_dist", "pos_tags_dist"]], full_df["generated"],
+   stratify=full_df["generated"], random_state=42, )
+
+ct = ColumnTransformer( [ ("bigrams_preprocess", DictVectorizer(),
+    "trigrams_dist"), ("trigrams_preprocess", DictVectorizer(), "bigrams_dist"),
+    ("pos_preprocess", DictVectorizer(), "pos_tags_dist"), ] )
+
+pipeline = Pipeline([("transformer", ct), ("svc", LinearSVC())]) model =
+
+                                                                                           48
+CHAPTER 8.     APPENDIX
+
+
+
+
+                      Listing 8.4: Code used to train a Linear Regression
+import pandas as pd import numpy as np
+
+from sklearn.linear_model import LogisticRegression from sklearn.metrics import
+f1_score from sklearn.model_selection import train_test_split from transformers
+import FlaubertModel, FlaubertTokenizer
+
+import torch import umap import umap.plot
+
+from namespace.lib.feature_engineering import get_dataset
+
+model = LogisticRegression(max_iter=200) full_df = get_dataset(["embedings"])
+X_train, X_test, y_train, y_test = train_test_split( full_df["embedings"],
+full_df["generated"], stratify=full_df["generated"], random_state=42, )
+
+model.t(X=np.stack(X_train), y=y_train) predictions =
+model.predict(np.stack(X_test))
+
+f1_score(y_test, predictions, average="micro")
+
+
+
+pipeline.t(X_train, y_train) model.score(X_test, y_test)
+
+
+                Listing 8.5: Code used to train a model taken from scikit-learn
+# copy of
+https://scikit=learn.org/stable/auto_examples/semi_supervised/
+    ,→ plot_semi_supervised_newsgroups.html      #sphx glr auto examples=semi=supervised=
+                                                    = = =
+    ,→ plot semi supervised newsgroups py
+            = =               =          =
+import numpy as np
+
+from sklearn.feature_extraction.text import CountVectorizer, TdfTransformer
+from sklearn.linear_model import SGDClassier from sklearn.metrics import
+f1_score from sklearn.model_selection import train_test_split from
+sklearn.pipeline import Pipeline from sklearn.preprocessing import
+FunctionTransformer from sklearn.semi_supervised import LabelSpreading,
+SelfTrainingClassier from nltk.corpus import stopwords import nltk
+
+from namespace.lib.feature_engineering import get_dataset full_df =
+get_dataset(["content"]) nltk.download("stopwords") sdg_params =
+dict(alpha=1e=5, penalty="l2", loss="log_loss") vectorizer_params = dict(
+ngram_range=(1, 2), min_df=5, max_df=0.8, stop_words=stopwords.words("french") )
+
+pipeline = Pipeline( [ ("vect", CountVectorizer(**vectorizer_params)), ("tdf",
+    TdfTransformer()), ("clf", SGDClassier(**sdg_params)), ] )     #
+    SelfTraining Pipeline st_pipeline = Pipeline( [ ("vect",
+    CountVectorizer(**vectorizer_params)), ("tdf", TdfTransformer()),
+    ("clf", SelfTrainingClassier(SGDClassier(**sdg_params), verbose=True)),
+    ])# LabelSpreading Pipeline ls_pipeline = Pipeline( [ ("vect",
+    CountVectorizer(**vectorizer_params)), ("tdf", TdfTransformer()),     #
+    LabelSpreading does not support dense matrices ("toarray",
+                                                                    CHAPTER 8.     APPENDIX
+
+
+
+    FunctionTransformer(lambda x: x.toarray())), ("clf", LabelSpreading()), ] )
+
+
+
+def eval_and_print_metrics(clf, X_train, y_train, X_test, y_test): print("Number
+    of training samples:", len(X_train)) print("Unlabeled samples in training
+    set:", sum(1 for x in y_train if x == =1)) clf.t(X_train, y_train) y_pred
+    = clf.predict(X_test) print( "Micro=averaged F1 score on test set: %0.3f"
+        % f1_score(y_test, y_pred, average="micro")
+    ) print("=" * 10) print()
+
+
+
+X, y = full_df["content"], full_df["generated"] X_train, X_test, y_train, y_test
+= train_test_split(X, y)
+
+print("Supervised SGDClassier on 100% of the data:")
+eval_and_print_metrics(pipeline, X_train, y_train, X_test, y_test)
+
+# select a mask of 20% of the train dataset
+y_mask = np.random.rand(len(y_train)) < 0.2
+
+# X_20 and y_20 are the subset of the train dataset indicated by the mask X_20,
+y_20 = map(list, zip(*((x, y) for x, y, m in zip(X_train, y_train, y_mask) if
+m))) print("Supervised SGDClassier on 20% of the training data:")
+eval_and_print_metrics(pipeline, X_20, y_20, X_test, y_test)
+
+# set the non=masked subset to be unlabeled y_train[~y_mask] = =1
+print("SelfTrainingClassier on 20% of the training data (rest is unlabeled):")
+eval_and_print_metrics(st_pipeline, X_train, y_train, X_test, y_test)
+
+print("LabelSpreading on 20% of the data (rest is unlabeled):")
+eval_and_print_metrics(ls_pipeline, X_train, y_train, X_test, y_test)
+
+
+
+
+                                                                                         50
+CHAPTER 8.      APPENDIX
+
+
+
+
+                    Listing 8.6: Code used to generate random text with GPT
+def get_random_generation_prompt() => Prompt: systemMessage =
+    SystemPromptMessage( content="You are an AI trained to generate texts on
+    various subjects you can only respond in french. Your answer should be of a
+    level of a student studying in master 2. The response should include the
+    subject of the text, the length of the text in words, and the text itself
+    and be formated as JSON." )
+
+    userMessage = UserPromptMessage( content="Genere
+    un texte de plus de 1000 characteres, ce texte doit comprendre une
+    introduction, un developpement et une conclusion. La reponse doit
+    obligatoirement inclure le sujet, la Longueur du texte ainsi que le texte
+    genere." )
+
+    return Prompt([systemMessage, userMessage])
+
+def get_functions() => list[dict[str, Any]]: return [ { "type": "function",
+    "function": { "name": "extract_data", "description": "Extract Data from the
+    GPT response", "parameters": { "type": "object", "properties": { "sujet": {
+    "type": "string", "description": "The subject of the text.", }, "longueur":
+    { "type": "number", "description": "The length of the text", }, "texte": {
+    "type": "string", "description": "The content of the text.", }, },
+    "required": ["sujet", "longueur", "texte"], }, }, } ]
+
+def generate_random_articles(client: openai.OpenAI) => ChatCompletion: tools =
+    get_functions() prompt = get_random_generation_prompt() tool_choice =
+    {"type": "function", "function": {"name": "extract_data"}} return
+    _get_completions(prompt=prompt, tools=tools, tool_choice=tool_choice)
+
+
+
+
+Listing 8.7: Code used to generated the cosine similarity between generated and original content
+def cosine_similarity(serie: pd.Series):
+    original_embedings = np.array(serie['embedings_original'])
+    generated_embedings = np.array(serie['embedings_generated'])
+    dot_product = np.dot(original_embedings, generated_embedings)
+    magnitude_original = np.linalg.norm(original_embedings)
+    magnitude_generated = np.linalg.norm(generated_embedings)
+
+    cosine_similarity = dot_product / (magnitude_original * magnitude_generated)
+    serie['cosine_similarity'] = cosine_similarity
+    return serie
+
+joined_df = pd.merge(mixtral_df, student_df, left_on='related_document', right_on='title',
+     ,→ how='inner', suxes=["_generated", "_original"] )
+
+joined_df = joined_df[['title', 'content_generated', 'type_generated', 'corpus_generated', '
+     ,→ embedings_generated', 'embedings_original', 'content_original', 'word_count']]
+
+joined_df = joined_df.apply(cosine_similarity, axis=1)
+
