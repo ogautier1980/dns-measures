@@ -33,6 +33,9 @@ venv.bak/
 .ipynb_checkpoints
 *.ipynb_checkpoints/
 
+# Examples (ignore PDFs, keep md/)
+examples/*.pdf
+
 # Data files (except examples)
 data/raw/*
 data/processed/*
