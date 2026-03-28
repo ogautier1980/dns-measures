@@ -109,3 +109,6 @@ Thumbs.db
 tmp/
 temp/
 *.cache
+
+# Sources - texte brut PDF (régénérable via pdftotext)
+sources/converted/

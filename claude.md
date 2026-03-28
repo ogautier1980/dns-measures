@@ -12,23 +12,44 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 
 ```
 /workspace/
-├── docs/                 # Documentation complète du projet (MD + PDF)
-├── sources/              # Articles académiques et références PDF
-├── data/                 # Données brutes et traitées (persisté via Docker volume)
-├── notebooks/            # Notebooks Jupyter pour analyses exploratoires
-├── scripts/              # Scripts Python pour analyses et traitements
-├── reports/              # Rapports générés et analyses finales
-├── latex/                # Sources LaTeX du mémoire
-├── output/               # Fichiers de sortie (PDF, graphiques, etc.)
-├── .devcontainer/        # Configuration VSCode Dev Container
-├── .claude/              # Configuration Claude Code
-├── Dockerfile            # Image Docker principale
-├── docker-compose.yml    # Orchestration des services
-├── docker-entrypoint.sh  # Script d'entrée du container
-├── requirements.txt      # Dépendances Python
-├── readme.md             # Sujet du mémoire
-└── claude.md            # Ce fichier - journal et bonnes pratiques
+├── docs/                 # Documentation, roadmap, bibliographie, figures
+│   ├── documentation.md  # Guide environnement Docker
+│   ├── roadmap.md        # Plan d'exécution du mémoire
+│   ├── recherche.md      # Guide bibliographique
+│   ├── figures.md        # Plan des figures du mémoire
+│   ├── analyse_exemples.md  # Comparaison mémoires UNamur 2022-2024
+│   └── mailPierre.md     # Notes réunions avec co-promoteur
+├── sources/              # Articles académiques PDF + fiches de lecture
+│   ├── *.pdf             # 16 articles (convention auteur+année)
+│   ├── fiches/           # Fiches de lecture structurées (~20 fiches)
+│   └── README.md         # Catalogue et analyse de pertinence
+├── latex/                # Sources LaTeX — 4 versions du mémoire
+│   ├── main.tex          # Version courte EN
+│   ├── main_fr.tex       # Version courte FR
+│   ├── main_long_en.tex  # Version longue EN
+│   ├── main_fr_long.tex  # Version longue FR
+│   ├── preamble.tex / preamble_fr.tex
+│   ├── chapters/         # Chapitres courts (EN + FR)
+│   ├── long/             # Chapitres longs (EN + FR)
+│   ├── md/en/            # Sources Markdown longues EN
+│   ├── md/fr/            # Sources Markdown longues FR
+│   ├── figures/          # Figures PNG/PUML
+│   ├── img/              # Images (logo UNamur)
+│   ├── bibliography.bib  # Bibliographie BibTeX
+│   └── convert_md_to_tex.py  # Script conversion MD → LaTeX
+├── output/               # PDFs générés (4 versions)
+├── scripts/              # Scripts Python analyses et figures
+├── data/                 # Données (Docker volume)
+├── notebooks/            # Notebooks Jupyter
+├── reports/              # Rapports générés
+├── examples/md/          # Mémoires UNamur 2022-2024 (texte)
+└── readme.md             # Sujet du mémoire
 ```
+
+### Template LaTeX UNamur
+- Auteur : Vincent Englebert, v1.0 (15/10/2025)
+- Police obligatoire : **Atkinson Hyperlegible** (accessibilité)
+- Repo : `Template-Master-Thesis` (UNamur Computer Science)
 
 ## Historique des modifications
 
@@ -170,6 +191,35 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 - Analyse critique approfondie de la littérature avec identification des gaps
 - Tableaux comparatifs (RIPE Atlas vs alternatives, Tranco vs Alexa vs autres)
 
+### 2026-03-28 - Organisation 4 versions + nettoyage
+
+**Actions effectuées :**
+1. ✅ Création de 4 versions complètes du mémoire
+   - Version courte EN : `main.tex` → `output/memoire_court_en.pdf` (79 pages)
+   - Version courte FR : `main_fr.tex` → `output/memoire_court_fr.pdf` (73 pages)
+   - Version longue EN : `main_long_en.tex` → `output/memoire_long_en.pdf` (117 pages)
+   - Version longue FR : `main_fr_long.tex` → `output/memoire_long_fr.pdf` (137 pages)
+   - Chapitres longs EN depuis `old/version complete/` (308–579 lignes/chapitre)
+   - Chapitres longs FR convertis depuis `latex/md/fr/chapitre*.md` via `convert_md_to_tex.py`
+
+2. ✅ Réorganisation des sources Markdown
+   - `latex/md/en/` : sources longues EN (`chapter*.md`, 289–481 lignes)
+   - `latex/md/fr/` : sources longues FR (`chapitre*.md`, 392–1512 lignes)
+   - Versions courtes uniquement en LaTeX (`latex/chapters/`)
+   - Script `convert_md_to_tex.py` mis à jour pour lire depuis `md/en/`
+
+3. ✅ Nettoyage du projet
+   - Suppression `sources/converted/` (textes bruts PDF, régénérables) — ajout `.gitignore`
+   - Suppression fichiers redondants : `docs/README.md`, `docs/Template/README.md`, `sources/RECAP_TRAITEMENT.md`
+   - Déplacement `sources/analyse_articles.md` → `docs/`
+   - Suppression `latex/img/figure1.jpg`, `unamur.png` (non référencés)
+   - Suppression artifacts LaTeX dans `output/`
+
+4. ✅ Conversion PDF → Markdown (outils sources)
+   - Commande : `for pdf in sources/*.pdf; do pdftotext "$pdf" "sources/converted/${pdf%.pdf}.md"; done`
+   - 16/16 articles convertis, fiches de lecture créées dans `sources/fiches/`
+   - Articles classés : 6 ⭐⭐⭐ essentiels, 9 ⭐⭐ pertinents, 2 ⭐ références
+
 ## Bonnes pratiques
 
 ### Compilation LaTeX
@@ -201,15 +251,14 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 - Toujours inclure des commentaires et markdown dans les notebooks
 
 ### Documentation
-- Mettre à jour ce fichier `claude.md` après chaque session importante
-- README.md : documentation utilisateur
-- DOCKER_README.md : guide spécifique Docker
+- Mettre à jour ce fichier `CLAUDE.md` après chaque session importante
+- `docs/documentation.md` : guide environnement Docker
 - Documenter les décisions importantes et leur raison
 
 ### Commits Git
 - Commits atomiques et descriptifs
 - Messages en français pour ce projet
-- Toujours inclure `Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`
+- Toujours inclure `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
 - Ne pas commiter les fichiers dans `.gitignore`
 
 ### Organisation des sources
@@ -223,17 +272,13 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 - [x] Créer le squelette LaTeX du mémoire ✅ (2026-03-21)
 - [x] Mettre en conformité avec template UNamur ✅ (2026-03-21)
 - [x] Enrichir substantiellement le chapitre 2 (×3 en volume) ✅ (2026-03-21)
-- [ ] Convertir manuellement les tableaux Markdown → LaTeX
-- [ ] Compléter les citations BibTeX (remplacer TODO par vraies clés)
+- [x] Générer les 4 versions du mémoire (Long/Court × EN/FR) ✅ (2026-03-28)
+- [x] Organiser les sources Markdown dans `latex/md/` ✅ (2026-03-28)
 - [ ] Implémenter les scripts de récupération RIPE Atlas
 - [ ] Créer le pipeline d'analyse Tranco
 - [ ] Remplir chapitre 4 avec résultats réels une fois mesures effectuées
 - [ ] Remplir chapitre 5 avec discussion basée sur résultats
-
-### Idées et notes
-- Considérer l'ajout de pre-commit hooks pour validation
-- Explorer l'utilisation de DVC (Data Version Control) si données volumineuses
-- Possibilité d'ajouter des dashboards interactifs avec Plotly Dash
+- [ ] Compléter les fiches de lecture restantes (14/20 articles non encore fichés)
 
 ## Dépannage
 
