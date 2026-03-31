@@ -25,7 +25,7 @@ The measurement system is organised in five sequential stages, inspired by the a
 4. **Storage and preprocessing**: Parsing, validation, and archival in Parquet format.
 5. **Analysis**: Quantitative analysis addressing Q1--Q4.
 
-The key design trade-off throughout is the three-way tension between **domain coverage** (how many domains are measured), **geographic coverage** (how many geographically distributed probes), and **temporal resolution** (measurement frequency), all bounded by the finite RIPE Atlas credit budget. The system is fully configurable via `--max-domains` and `--total-probes` parameters; the default operating point is **500 domains × 50 probes**, generating approximately 250,000 credits per day. Figure 3.1 presents the five-stage pipeline architecture.
+The key design trade-off throughout is the three-way tension between **domain coverage** (how many domains are measured), **geographic coverage** (how many geographically distributed probes), and **temporal resolution** (measurement frequency), all bounded by the finite RIPE Atlas credit budget. The system is fully configurable via `--max-domains` and `--total-probes` parameters; the default operating point is **100 domains** and **50 probes**, generating approximately 50,000 credits per day. Figure 3.1 presents the five-stage pipeline architecture.
 
 ### 3.1.3 Infrastructure
 
@@ -62,13 +62,13 @@ The list is **updated weekly** (each Monday at 05:00 UTC) to capture the slow ev
 
 ### 3.2.2 Domain Corpus Size
 
-The measurement corpus targets the **top 500 domains** from the Tranco Top 10,000 list. Although Tranco provides a 10K list, the RIPE Atlas credit system imposes a hard practical constraint: at 10 credits per probe per measurement instance, running 10,000 domains daily with 50 probes would consume 5,000,000 credits per day, draining a typical research allocation within days. The selection of 500 domains represents a deliberate balance between three competing requirements:
+The measurement corpus starts with the **top 100 domains** from the Tranco Top 10,000 list as an initial operating point. Although Tranco provides a 10K list, the RIPE Atlas credit system imposes a hard practical constraint: at 10 credits per probe per measurement instance, running 10,000 domains daily with 50 probes would consume 5,000,000 credits per day, draining a typical research allocation within days. The choice of 100 domains as the initial operating point reflects a deliberate balance between three competing requirements:
 
-**Representativeness**: The Tranco Top 500 concentrates the domains responsible for the large majority of global web traffic --- precisely the CDN-backed services (streaming platforms, search engines, social networks, cloud providers) that exhibit the richest geographic DNS variation. Studies by Calder et al. (2015) and Wang et al. (2018) confirm that CDN routing diversity is most pronounced in this top-ranked tier.
+**Representativeness**: The Tranco Top 100 concentrates the most globally prominent domains --- precisely the CDN-backed services (streaming platforms, search engines, social networks, cloud providers) that exhibit the richest geographic DNS variation. Studies by Calder et al. (2015) and Wang et al. (2018) confirm that CDN routing diversity is most pronounced in this top-ranked tier.
 
-**Feasibility**: At 50 probes per measurement, one A record query per domain per day, the Top 500 corpus generates approximately 25,000 measurement results per day and consumes 250,000 RIPE Atlas credits. This is sustainable over a 90-day measurement period.
+**Feasibility**: At 50 probes per measurement, one A record query per domain per day, the Top 100 corpus consumes 50,000 RIPE Atlas credits per day. This is conservative and sustainable for an extended measurement campaign.
 
-**Configurability**: The pipeline exposes `--max-domains` and `--total-probes` parameters. If the available credit balance allows, the corpus can be extended to 1,000 or 2,000 domains without any other modification.
+**Configurability**: The pipeline exposes `--max-domains` and `--total-probes` parameters. The corpus can be extended to 500 or 1,000 domains if the available credit balance allows, without any other modification.
 
 ### 3.2.3 Domain Filtering and Validation
 
@@ -153,7 +153,7 @@ Key parameter justifications:
 
 ### 3.3.3 Supplementary Campaign for Q4: Resolver Comparison
 
-To address Q4, a supplementary one-off measurement campaign is conducted on a subset of **100 domains** drawn from the top of the primary corpus. This campaign provides four simultaneous resolver-type observations from the same 50 probes:
+To address Q4, a supplementary one-off measurement campaign is conducted on a subset of **50 domains** drawn from the top of the primary corpus. This campaign provides four simultaneous resolver-type observations from the same 50 probes:
 
 | Campaign | Target | `use_probe_resolver` | Resolver |
 |---|---|---|---|
@@ -172,11 +172,11 @@ The RIPE Atlas credit consumption is estimated as follows (10 credits per probe 
 
 | Campaign | Domains | Probes | Frequency | Credits |
 |---|---|---|---|---|
-| Primary A record (direct auth) | 500 | 50 | daily | 250,000 / day |
-| Q4 resolver comparison (one-off) | 100 | 50 | once | 200,000 total |
-| 90-day primary campaign total | — | — | — | ~22,500,000 |
+| Primary A record (direct auth) | 100 | 50 | daily | 50,000 / day |
+| Q4 resolver comparison (one-off) | 50 | 50 | once | 100,000 total |
+| 90-day primary campaign total | --- | --- | --- | ~4,600,000 |
 
-For context, RIPE Atlas free research allocations are typically in the order of 1,000,000--10,000,000 credits; a RIPE NCC research credit grant (available to academic researchers) can cover the full 90-day budget. The pipeline parameters `--max-domains` and `--total-probes` allow scaling to match the available balance: for example, `--max-domains 100 --total-probes 20` reduces daily consumption to 20,000 credits while retaining full pipeline functionality.
+For context, RIPE Atlas free research allocations are typically in the order of 1,000,000--10,000,000 credits; a RIPE NCC research credit grant (available to academic researchers) can extend this further. The pipeline parameters `--max-domains` and `--total-probes` allow scaling the corpus upward as the credit balance allows: for example, `--max-domains 500` increases daily consumption to 250,000 credits while retaining full pipeline functionality.
 
 The credit budget is monitored by the log output of `create_ripe_measurements.py`, which prints the estimated consumption at each invocation before any measurements are created.
 
@@ -231,7 +231,7 @@ The following validation filters are applied during parsing:
 
 Results are stored in a single-tier Parquet architecture optimised for the analytical query patterns of the analysis phase:
 
-**Cumulative Parquet file** (`data/processed/dns_results.parquet`): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. This file grows at approximately 3--5 MB/month for the primary campaign (500 domains × 50 probes × 30 days, after columnar compression with dictionary encoding for repeated string values such as `country_code`, `continent`, and `answer_ips`).
+**Cumulative Parquet file** (`data/processed/dns_results.parquet`): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. This file grows at approximately 1--2 MB/month for the primary campaign (100 domains × 50 probes × 30 days, after columnar compression with dictionary encoding for repeated string values such as `country_code`, `continent`, and `answer_ips`).
 
 **Daily archives** (`data/processed/dns_results_<date>.parquet`): Individual daily Parquet files are also retained for point-in-time analysis and as a recovery mechanism in case of cumulative file corruption.
 
@@ -239,13 +239,13 @@ Results are stored in a single-tier Parquet architecture optimised for the analy
 
 **Cloud backup**: All Parquet files, daily archives, and reports are synchronised daily to two cloud destinations via rclone: Microsoft OneDrive (UNamur institutional account) and Google Drive (personal account). The `sync_cloud.sh` script detects which remotes are configured and synchronises to all available destinations in parallel. The rclone configuration is persisted in a Docker named volume, surviving container updates.
 
-**Storage estimate** for a three-month campaign (500 domains × 50 probes):
+**Storage estimate** for a three-month campaign (100 domains × 50 probes):
 
 | Tier | Volume | Location |
 |---|---|---|
-| Raw JSON (7-day rolling) | ~350 MB | Pi local |
-| Cumulative Parquet | ~15 MB | Pi + OneDrive + Google Drive |
-| Daily Parquet archives | ~45 MB | Pi + OneDrive + Google Drive |
+| Raw JSON (7-day rolling) | ~70 MB | Pi local |
+| Cumulative Parquet | ~5 MB | Pi + OneDrive + Google Drive |
+| Daily Parquet archives | ~10 MB | Pi + OneDrive + Google Drive |
 | Reports and figures | ~50 MB | Pi + OneDrive + Google Drive |
 
 ---
@@ -302,7 +302,7 @@ A **Mann-Whitney U test** (non-parametric, for independent samples) compares the
 
 **Objective**: Quantify the impact of resolver type on DNS responses, comparing local ISP resolvers with three major public DNS services.
 
-This analysis uses the supplementary Q4 measurement campaign (Section 3.3.3), which provides four simultaneous observations for 100 domains from the same 50 probes.
+This analysis uses the supplementary Q4 measurement campaign (Section 3.3.3), which provides four simultaneous observations for 50 domains from the same 50 probes.
 
 **Step 1 --- Per-resolver statistics**: For each resolver type (`isp_local`, `google`, `cloudflare`, `quad9`), the following metrics are computed: error rate (proportion of RCODE != 0 responses), median RTT, and mean answer count.
 
@@ -325,7 +325,7 @@ The measurement design follows the ethical framework of Kisteleki et al. (2016) 
 
 **Probe host protection**: All query targets are publicly accessible domains from the Tranco Top 10K corpus. Direct authoritative queries for A records are indistinguishable from normal client DNS traffic.
 
-**Infrastructure impact**: The measurement frequency (once per domain per day, 50 probes, 500 domains) generates approximately 25,000 queries per day --- negligible compared to OpenINTEL's production campaign of several hundred million queries per day (van Rijswijk-Deij et al., 2016).
+**Infrastructure impact**: The measurement frequency (once per domain per day, 50 probes, 100 domains) generates approximately 5,000 queries per day --- negligible compared to OpenINTEL's production campaign of several hundred million queries per day (van Rijswijk-Deij et al., 2016).
 
 **Transparency**: All measurements are tagged with a project description in RIPE Atlas, allowing authoritative server operators to identify the measurement source. The measurement plan (`measurements.json`) records all active measurement IDs.
 

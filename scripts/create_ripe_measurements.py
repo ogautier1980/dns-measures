@@ -58,7 +58,7 @@ CONTINENT_PROPORTIONS = {
 }
 # Valeur par défaut : 50 sondes → ~125 000 crédits/jour pour 500 domaines
 DEFAULT_TOTAL_PROBES = 50
-DEFAULT_MAX_DOMAINS  = 500   # top-500 Tranco (ajustable selon budget)
+DEFAULT_MAX_DOMAINS  = 100   # top-100 Tranco (ajustable selon budget)
 
 # Mapping pays → continent (ISO 3166-1 alpha-2 → code interne)
 # Basé sur la classification standard ONU des régions
@@ -390,7 +390,7 @@ Q4_RESOLVERS = {
     "cloudflare":  "1.1.1.1",
     "quad9":       "9.9.9.9",
 }
-Q4_SAMPLE_SIZE = 100   # sous-ensemble de domaines pour Q4 (défaut)
+Q4_SAMPLE_SIZE = 50    # sous-ensemble de domaines pour Q4 (défaut)
 
 
 def build_q4_measurement(
