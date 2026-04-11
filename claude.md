@@ -6,7 +6,7 @@
 **Promoteurs** : Fl. Rochet, J. Dejaeghere. **Co-promoteur** : Pierre Luycx.
 **Repo GitHub** : https://github.com/ogautier1980/dns-measures.git
 
-### État au 28 mars 2026 — Ce qui est en place
+### État au 11 avril 2026 — Ce qui est en place
 
 | Version mémoire | Fichier | PDF | Pages |
 |---|---|---|---|
@@ -17,17 +17,89 @@
 
 **Compilation** : `cd /workspace/latex && make long-en` (ou `make all` pour les 4)
 
+### Pipeline DNS — État au 11 avril 2026
+
+**Deux repos distincts :**
+- `/workspace/pipeline-standalone` → repo GitHub `ogautier-unam/dns-pipeline` (code pipeline)
+- `/workspace/dns-pipeline` → données locales (volume monté sur le Pi, NON commité)
+
+**Phases de mesure :**
+- **Phase pilote** (01–10 avril) : 99 domaines × 50 sondes — validée, données 02–09/04 dans le parquet
+- **Phase principale** (à partir du 11 avril) : 250 domaines × 200 sondes — à déployer
+
+**Mesures RIPE Atlas — EN COURS de collecte** :
+
+| Question | Type | État | Détails |
+|---|---|---|---|
+| Q1 (diversité géo) | Périodique auth NS | ✅ Actif | Phase principale à déployer |
+| Q2 (stabilité temps) | Périodique auth NS | ✅ Actif | Mêmes mesures, fetch quotidien 10h UTC |
+| Q3 (biais sondes) | Périodique auth NS | ✅ Actif | Mêmes mesures |
+| Q4 (comparaison résolveurs) | One-off | ✅ Complet | 200/200 créées, données dans parquet |
+
+**Architecture pipeline (sur Raspberry Pi à la maison) :**
+- Docker container `dns-pipeline` tourne en continu avec watchdog cron
+- Cron 10h UTC : `pipeline.py daily` → fetch résultats d'hier + parsing Parquet
+- Cron 11h UTC : `sync_cloud.sh daily` → sync Google Drive
+- Cron 12h UTC dimanche : `pipeline.py analyse` → Q1-Q4 + figures
+- Cron 13h UTC dimanche : `sync_cloud.sh weekly` → sync Google Drive
+- Résultats raw : `data/raw/msm_<id>_<date>.json` (conservés 7 jours puis supprimés)
+- Résultats parsés : `data/processed/dns_results_<date>.parquet`
+- Sync cloud : **Google Drive uniquement** (OneDrive UNamur supprimé — ne fonctionnait pas)
+
+**Crédits RIPE Atlas :**
+- Solde : 29,000,000 crédits
+- Phase pilote consommée : ~495,000 (Q1-Q3) + ~100,000 (Q4 partiel 50 dom) ≈ 600,000
+- Phase principale Q1-Q3 : 250 × 200 × 10 = 500,000 crédits/jour × 49 jours ≈ 24,500,000
+- Phase principale Q4 : 250 dom × 200 sondes × 4 résolveurs × 10 crédits ≈ 2,000,000
+- Total estimé : ~27,095,000 — dans le budget (29,000,000 disponibles)
+
+**Bugs corrigés (important pour reprises futures) :**
+- `parse_dns_results.py` : `--date yesterday` ne fonctionnait pas (glob cherchait "*yesterday*") — corrigé
+- `parse_dns_results.py` : `use_probe_resolver` toujours False (non retourné par RIPE Atlas) — corrigé via lookup depuis measurements.json
+- `sync_cloud.sh` : `set -e` tuait le cron sur erreur rclone — supprimé
+- `entrypoint.sh` : watchdog cron ajouté (relance auto si cron meurt)
+- Volumes Docker : noms réels = `dns-pipeline_dns-raw`, `dns-pipeline_dns-processed`, etc.
+
+**Commande de déploiement phase principale (à faire après sync 11h UTC) :**
+```bash
+cd ~/dns-pipeline && git pull
+docker cp scripts/create_ripe_measurements.py dns-pipeline:/app/scripts/
+docker cp scripts/stop_all_measurements.py dns-pipeline:/app/scripts/
+
+# 1. Analyse finale sur données pilote
+docker exec dns-pipeline python /app/scripts/pipeline.py analyse
+docker exec dns-pipeline sync_cloud.sh weekly
+
+# 2. Stopper les mesures pilote
+docker exec dns-pipeline python /app/scripts/stop_all_measurements.py
+
+# 3. Lancer la phase principale (250 dom × 200 sondes — valeurs par défaut)
+docker exec dns-pipeline python /app/scripts/create_ripe_measurements.py \
+  --corpus data/processed/tranco_corpus.csv \
+  --output data/processed/measurements.json
+```
+
+**Scripts clés dans `pipeline-standalone/scripts/` :**
+- `create_ripe_measurements.py` : création mesures (défaut : 250 dom × 200 sondes, stratification pays)
+- `stop_all_measurements.py` : arrêt des mesures actives RIPE Atlas
+- `fetch_ripe_atlas.py` : fetch résultats par date depuis l'API
+- `parse_dns_results.py` : parsing JSON → Parquet
+- `pipeline.py` : orchestration (init / daily / analyse / weekly)
+- `analyse_dns.py` : analyse Q1-Q4 + figures
+
 ### Ce qui reste à faire
 
-1. **Implémenter les mesures RIPE Atlas** — `scripts/fetch_ripe_atlas.py` est un squelette
-2. **Pipeline Tranco** — téléchargement et filtrage Top 10K
+1. **Déployer phase principale** : stopper mesures pilote + relancer avec 250 dom × 200 sondes
+2. **Attendre ~7 semaines** de collecte (jusqu'à fin mai 2026)
 3. **Remplir chapitre 4** (Résultats) avec les vraies mesures
 4. **Remplir chapitre 5** (Conclusion) basé sur les résultats
-5. **Clé API RIPE Atlas** — copier `.env.example` → `.env` et remplir `RIPE_ATLAS_API_KEY`
 
-### Attention — point sensible
-La version longue FR (`main_fr_long.tex`) compile avec warnings Unicode (non bloquants).
-Ne PAS réécrire les fichiers `latex/long/*-fr.tex` sans demander — ils ont pris du temps à générer.
+### Attention — points sensibles
+- La version longue FR (`main_fr_long.tex`) compile avec warnings Unicode (non bloquants).
+- Ne PAS réécrire les fichiers `latex/long/*-fr.tex` sans demander — ils ont pris du temps à générer.
+- Le corpus Tranco est **figé** pour garantir la validité de Q2. Ne pas le régénérer.
+- Les données sont sur le Pi (`~/dns-pipeline/`), sync vers `/workspace/dns-pipeline/` via Google Drive.
+- Volumes Docker nommés `dns-pipeline_dns-raw`, `dns-pipeline_dns-processed`, `dns-pipeline_dns-logs`, `dns-pipeline_dns-reports`, `dns-pipeline_dns-figures`, `dns-pipeline_rclone-config`.
 
 ## Vue d'ensemble du projet
 
@@ -297,15 +369,21 @@ Projet de mémoire : **Mesures DNS dans l'espace et le temps**
 
 ## Prochaines étapes
 
-### À faire
-- [x] Créer le squelette LaTeX du mémoire ✅ (2026-03-21)
-- [x] Mettre en conformité avec template UNamur ✅ (2026-03-21)
-- [x] Enrichir substantiellement le chapitre 2 (×3 en volume) ✅ (2026-03-21)
-- [x] Générer les 4 versions du mémoire (Long/Court × EN/FR) ✅ (2026-03-28)
-- [x] Organiser les sources Markdown dans `latex/md/` ✅ (2026-03-28)
-- [ ] Implémenter les scripts de récupération RIPE Atlas
-- [ ] Créer le pipeline d'analyse Tranco
-- [ ] Remplir chapitre 4 avec résultats réels une fois mesures effectuées
+### Accompli ✅
+- [x] Créer le squelette LaTeX du mémoire (2026-03-21)
+- [x] Mettre en conformité avec template UNamur (2026-03-21)
+- [x] Enrichir substantiellement le chapitre 2 (×3 en volume) (2026-03-21)
+- [x] Générer les 4 versions du mémoire (Long/Court × EN/FR) (2026-03-28)
+- [x] Organiser les sources Markdown dans `latex/md/` (2026-03-28)
+- [x] Implémenter les scripts de récupération RIPE Atlas (pipeline-standalone/scripts/) (2026-04-01)
+- [x] Créer le pipeline d'analyse Tranco + corpus 100 domaines (2026-04-01)
+- [x] Lancer la collecte RIPE Atlas Q1/Q2/Q3 — 99 mesures périodiques actives depuis 01/04
+- [x] Lancer Q4 partiellement — 85/200 mesures créées
+
+### À faire — avril-mai 2026
+- [ ] **Déployer phase principale** : stopper mesures pilote + relancer 250 dom × 200 sondes (voir commandes dans section pipeline ci-dessus)
+- [ ] **Attendre ~7 semaines** de collecte (jusqu'à fin mai 2026)
+- [ ] Remplir chapitre 4 avec les vrais résultats une fois collecte suffisante
 - [ ] Remplir chapitre 5 avec discussion basée sur résultats
 - [ ] Compléter les fiches de lecture restantes (14/20 articles non encore fichés)
 

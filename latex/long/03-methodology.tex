@@ -44,7 +44,7 @@ The entire pipeline runs as a \textbf{Docker container} on a Raspberry Pi 5 (ARM
 
 The container image is based on \texttt{python:3.11-slim-bookworm} and is compiled natively for the ARM64 architecture, ensuring full compatibility with the Raspberry Pi 5 hardware. The image contains only the dependencies required for the pipeline (dnspython, pandas, pyarrow, scipy, matplotlib, rclone), keeping its footprint under 1 GB.
 
-Data persistence is managed through Docker named volumes, which survive container restarts and image updates. Collected results are automatically synchronised daily to cloud storage via \textbf{rclone}, which is configured to target two destinations simultaneously: Microsoft OneDrive (UNamur institutional account) and Google Drive (personal account, 2 TB available). This dual-destination strategy ensures redundancy: if one service is temporarily unavailable, the other retains a complete copy of all results.
+Data persistence is managed through Docker named volumes, which survive container restarts and image updates. Collected results are automatically synchronised daily to cloud storage via \textbf{rclone}, targeting Google Drive (personal account, 2 TB available) as the remote backup destination.
 
 The pipeline is orchestrated by a cron daemon running inside the container, with the following schedule (all times UTC):
 
@@ -55,15 +55,16 @@ The pipeline is orchestrated by a cron daemon running inside the container, with
 \toprule
 \textbf{Time (UTC)} & \textbf{Day} & \textbf{Action} \\
 \midrule
-05:00 & Monday & Weekly Tranco list refresh \\
-06:00 & Daily & Fetch RIPE Atlas results + Parquet parsing \\
-07:00 & Daily & Cloud sync (Parquet + raw JSON $\rightarrow$ OneDrive + Google Drive) \\
-08:00 & Sunday & Q1--Q4 analysis + figure generation \\
-09:00 & Sunday & Cloud sync (reports + figures $\rightarrow$ OneDrive + Google Drive) \\
+10:00 & Daily & Fetch RIPE Atlas results + Parquet parsing \\
+11:00 & Daily & Cloud sync (Parquet + raw JSON $\rightarrow$ OneDrive + Google Drive) \\
+12:00 & Sunday & Q1--Q4 analysis + figure generation \\
+13:00 & Sunday & Cloud sync (reports + figures $\rightarrow$ OneDrive + Google Drive) \\
 04:00 & 1st of month & Log rotation \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The weekly Tranco list refresh is intentionally disabled during the active measurement period. Keeping the domain corpus fixed throughout the campaign is required for the validity of the Q2 temporal stability analysis: if domains entered or left the measurement set mid-campaign, observed response changes could not be distinguished from corpus changes. The corpus will be refreshed after the measurement period concludes.
 
 The pipeline source code is available at \url{https://github.com/ogautier-unam/dns-pipeline} and implements the six Python scripts described in the following sections.
 \bigskip
@@ -77,27 +78,33 @@ The domain corpus is the \textbf{Tranco Top 10,000} list, retrieved via the Tran
 
 The \texttt{fetch\_tranco.py} script retrieves the most recent available list, falling back up to seven days if the current day's list has not yet been published. The exact Tranco list identifier and generation date are recorded in \texttt{tranco\_meta.json} alongside the corpus, ensuring full reproducibility.
 
-The list is \textbf{updated weekly} (each Monday at 05:00 UTC) to capture the slow evolution of the popular-domain corpus while limiting the rate of change introduced by list updates. Each weekly update computes the delta of added and removed domains relative to the previous week's list. Domains that exit the Top 10K during the measurement campaign are retained in active measurement for two additional weeks to capture any transitional DNS behaviour.
+The list is retrieved once at the start of the measurement campaign and kept \textbf{fixed} for its entire duration. Although Tranco provides a stable list, any mid-campaign change to the measured domain set would conflate DNS response variation with corpus variation, making it impossible to distinguish true temporal instability (Q2) from artefacts of domain rotation. The Tranco list identifier and retrieval date are recorded in \texttt{tranco\_meta.json} to allow exact reproduction of the corpus by any future researcher.
 
 \subsection{Domain Corpus Size}
 \label{subsec:3.2.2}
 
-The measurement corpus starts with the \textbf{top 100 domains} from the Tranco Top 10,000 list as an initial operating point. Although Tranco provides a 10K list, the RIPE Atlas credit system imposes a hard practical constraint: at 10 credits per probe per measurement instance, running 10,000 domains daily with 50 probes would consume 5,000,000 credits per day, draining a typical research allocation within days. The choice of 100 domains as the initial operating point reflects a deliberate balance between three competing requirements:
+The measurement campaign was conducted in two successive phases, each driven by the available RIPE Atlas credit balance:
 
-\textbf{Representativeness}: The Tranco Top 100 concentrates the most globally prominent domains --- precisely the CDN-backed services (streaming platforms, search engines, social networks, cloud providers) that exhibit the richest geographic DNS variation. Studies by Calder et al.~\cite{Calder2015} and Wang et al.~\cite{Wang2018} confirm that CDN routing diversity is most pronounced in this top-ranked tier.
+\textbf{Pilot phase (1--10 April 2026)}: The corpus was limited to the \textbf{top 100 domains} with \textbf{50 probes}, consuming approximately 49,500 credits per day. This phase served to validate the full pipeline end-to-end --- probe selection, measurement creation, daily fetch, parsing, and cloud synchronisation --- before committing to a larger credit budget.
 
-\textbf{Feasibility}: At 50 probes per measurement, one A record query per domain per day, the Top 100 corpus consumes 50,000 RIPE Atlas credits per day. This is conservative and sustainable for an extended measurement campaign.
+\textbf{Main phase (from 11 April 2026)}: Following validation and the allocation of additional RIPE Atlas credits (29,000,000 total), the corpus was extended to \textbf{250 domains} with \textbf{200 probes}, consuming approximately 500,000 credits per day. At this rate, the remaining campaign period of approximately 7 weeks (49 days) consumes 24,500,000 credits, well within the available balance.
 
-\textbf{Configurability}: The pipeline exposes \texttt{--max-domains} and \texttt{--total-probes} parameters. The corpus can be extended to 500 or 1,000 domains if the available credit balance allows, without any other modification.
+The choice of 250 domains reflects a deliberate balance between three competing requirements:
+
+\textbf{Representativeness}: The Tranco Top 250 captures the full tier of globally prominent CDN-backed services while extending coverage into second-tier platforms. Studies by Calder et al.~\cite{Calder2015} and Wang et al.~\cite{Wang2018} confirm that CDN routing diversity is most pronounced in the top-ranked tier, but measurable geographic variation extends well beyond the top 100.
+
+\textbf{Feasibility}: At 200 probes per measurement, the Top 250 corpus consumes 500,000 credits per day --- sustainable over the 7-week remaining campaign duration within the available credit allocation.
+
+\textbf{Configurability}: The pipeline exposes \texttt{--max-domains} and \texttt{--total-probes} parameters. The corpus can be further extended without any other modification.
 
 \subsection{Domain Filtering and Validation}
 \label{subsec:3.2.3}
 
 Before the measurement campaign begins, each domain in the Tranco Top 10K list is pre-validated by \texttt{fetch\_tranco.py} in two steps:
 
-\textbf{Technical validity}: A DNS A record query is issued against Google Public DNS (8.8.8.8) and Cloudflare DNS (1.1.1.1) as reference resolvers. Domains returning \texttt{NXDOMAIN} or \texttt{SERVFAIL} are excluded. Based on the filtering rates reported by Le Pochat et al.~\cite{LePochat2019} for the Tranco Top 10K, approximately 500--600 domains are expected to be excluded (5--6\% of 10K), yielding a final measurement corpus of approximately 9,400--9,500 active domains.
+\textbf{Technical validity}: A DNS A record query is issued against Google Public DNS (8.8.8.8) and Cloudflare DNS (1.1.1.1) as reference resolvers. Domains returning \texttt{NXDOMAIN} or \texttt{SERVFAIL} are excluded. Applied to the Tranco Top 10,000 list used in this campaign, this step yielded \textbf{8,365 valid domains} --- a filtering rate of approximately 16\%, higher than the 5--6\% reported by Le Pochat et al.~\cite{LePochat2019}, which may reflect the broader scope of the list and the inclusion of parked or inactive domains in lower-ranked positions.
 
-\textbf{Authoritative server pre-resolution}: The authoritative name servers for each domain are identified by resolving the domain's NS records from the same reference resolvers. This pre-resolution step maps each domain to its authoritative server set and is repeated weekly in synchrony with the Tranco list update. The resulting corpus is saved as \texttt{tranco\_corpus.csv} with fields \texttt{rank}, \texttt{domain}, and \texttt{ns} (pipe-separated list of authoritative nameserver hostnames).
+\textbf{Authoritative server pre-resolution}: The authoritative name servers for each domain are identified by resolving the domain's NS records from the same reference resolvers. This pre-resolution step maps each domain to its authoritative server set. The resulting corpus is saved as \texttt{tranco\_corpus.csv} with fields \texttt{rank}, \texttt{domain}, and \texttt{ns} (pipe-separated list of authoritative nameserver hostnames). Domains for which the NS IP address could not be resolved at measurement time are skipped; in practice, 1 of the top-100 domains was excluded on this basis, yielding \textbf{99 active RIPE Atlas measurements} for the primary campaign.
 \bigskip
 \section{RIPE Atlas Measurement Configuration}
 \label{sec:3.3}
@@ -121,24 +128,32 @@ Hardware version v3 or later is required. Holterbach et al.~\cite{Holterbach2015
 \begin{table}[H]
 \centering
 \small
-\begin{tabular}{l l l l}
+\begin{tabular}{l l l l l}
 \toprule
-\textbf{Region} & \textbf{Atlas distribution} & \textbf{Allocated probes} & \textbf{This study} \\
+\textbf{Region} & \textbf{Atlas distribution} & \textbf{Pilot (50 probes)} & \textbf{Main (200 probes)} & \textbf{Target \%} \\
 \midrule
-Europe & \textasciitilde{}40\% & 15 & 30\% \\
-North America & \textasciitilde{}28\% & 12 & 25\% \\
-Asia-Pacific & \textasciitilde{}16\% & 10 & 20\% \\
-South America & \textasciitilde{}8\% & 6 & 10\% \\
-Africa & \textasciitilde{}5\% & 5 & 10\% \\
-Oceania & \textasciitilde{}3\% & 2 & 5\% \\
-\textbf{Total} & \textbf{100\%} & \textbf{50} & \textbf{100\%} \\
+Europe        & \textasciitilde{}40\% & 15  & 60  & 30\% \\
+North America & \textasciitilde{}28\% & 12  & 50  & 25\% \\
+Asia-Pacific  & \textasciitilde{}16\% & 10  & 40  & 20\% \\
+South America & \textasciitilde{}8\%  &  5  & 20  & 10\% \\
+Africa        & \textasciitilde{}5\%  &  5  & 20  & 10\% \\
+Oceania       & \textasciitilde{}3\%  &  3  & 10  &  5\% \\
+\textbf{Total} & \textbf{100\%} & \textbf{50} & \textbf{200} & \textbf{100\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The proportional allocation preserves the relative weighting from prior work \cite{Bajpai2017} while scaling the total to 50 probes for budget compatibility. The probe count is configurable via \texttt{--total-probes}; the proportions are applied dynamically.
+The proportional allocation preserves the relative weighting from prior work \cite{Bajpai2017} while scaling to the target probe count. The probe count is configurable via \texttt{--total-probes}; the proportions are applied dynamically.
 
-\textbf{Step 3 --- AS diversity}: Within each geographic stratum, probes are selected using a round-robin algorithm over distinct Autonomous Systems, preferring one probe per AS over multiple probes within the same AS. The selected probe set is saved as \texttt{selected\_probes\_<date>.json} for full reproducibility.
+\textbf{Step 3 --- Country and AS diversity}: Within each continental stratum, probe selection follows a three-round algorithm to maximise both country coverage and AS diversity:
+
+\begin{itemize}
+  \item \textbf{Round 1}: One probe per country, prioritising countries not geographically subsumed by a larger neighbour. Micro-states and dependencies (Luxembourg, Monaco, San Marino, Liechtenstein, Andorra, Vatican, Gibraltar, etc.) are deprioritised, as their DNS infrastructure typically routes through the same CDN PoPs as their larger neighbours.
+  \item \textbf{Round 2}: One probe per deprioritised country, if the continental quota has not yet been reached.
+  \item \textbf{Round 3}: Additional probes per country (preferring a different AS each time) until the quota is filled.
+\end{itemize}
+
+Within each round, the probe selected for a given country is the one with the highest hardware version that introduces a new Autonomous System not yet represented in the selected set. The selected probe set is saved as \texttt{selected\_probes\_<date>.json} for full reproducibility.
 
 \subsection{Primary Campaign: Direct Authoritative DNS Queries}
 \label{subsec:3.3.2}
@@ -193,7 +208,7 @@ Key parameter justifications:
 \subsection{Supplementary Campaign for Q4: Resolver Comparison}
 \label{subsec:3.3.3}
 
-To address Q4, a supplementary one-off measurement campaign is conducted on a subset of \textbf{50 domains} drawn from the top of the primary corpus. This campaign provides four simultaneous resolver-type observations from the same 50 probes:
+To address Q4, a supplementary one-off measurement campaign is conducted on the \textbf{full 250-domain corpus}, identical to the primary campaign. Using the same domain set ensures full comparability between the authoritative DNS responses (Q1--Q3) and the recursive resolver responses (Q4). This campaign provides four simultaneous resolver-type observations from the same 200 probes:
 
 \begin{table}[H]
 \centering
@@ -224,18 +239,18 @@ The RIPE Atlas credit consumption is estimated as follows (10 credits per probe 
 \small
 \begin{tabular}{l l l l l}
 \toprule
-\textbf{Campaign} & \textbf{Domains} & \textbf{Probes} & \textbf{Frequency} & \textbf{Credits} \\
+\textbf{Phase} & \textbf{Domains} & \textbf{Probes} & \textbf{Duration} & \textbf{Credits} \\
 \midrule
-Primary A record (direct auth) & 100 & 50 & daily & 50,000 / day \\
-Q4 resolver comparison (one-off) & 50 & 50 & once & 100,000 total \\
-90-day primary campaign total & --- & --- & --- & \textasciitilde{}4,600,000 \\
+Pilot — primary (direct auth)       &  99 &  50 & 10 days  & $\approx$495,000 \\
+Pilot — Q4 resolver comparison      &  50 &  50 & once     & $\approx$100,000 \\
+Main — primary (direct auth)        & 250 & 200 & 49 days  & $\approx$24,500,000 \\
+Main — Q4 resolver comparison       & 250 & 200 & once     & $\approx$2,000,000 \\
+\textbf{Total campaign}             &     &     &          & $\approx$\textbf{27,095,000} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-For context, RIPE Atlas free research allocations are typically in the order of 1,000,000--10,000,000 credits; a RIPE NCC research credit grant (available to academic researchers) can extend this further. The pipeline parameters \texttt{--max-domains} and \texttt{--total-probes} allow scaling the corpus upward as the credit balance allows: for example, \texttt{--max-domains 500} increases daily consumption to 250,000 credits while retaining full pipeline functionality.
-
-The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated consumption at each invocation before any measurements are created.
+The total estimated consumption of 25,100,000 credits falls within the available balance of 29,000,000 credits, leaving a reserve of approximately 3,900,000 credits to absorb probe availability fluctuations and any re-runs. The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated daily and total consumption before any measurements are created.
 \bigskip
 \section{Data Collection and Processing}
 \label{sec:3.4}
@@ -303,11 +318,11 @@ Results are stored in a single-tier Parquet architecture optimised for the analy
 
 \textbf{Daily archives} (\texttt{data/processed/dns\_results\_<date>.parquet}): Individual daily Parquet files are also retained for point-in-time analysis and as a recovery mechanism in case of cumulative file corruption.
 
-\textbf{Raw JSON files} (\texttt{data/raw/msm\_<id>\_<date>.json}): Raw RIPE Atlas JSON results are retained locally for 7 days, then deleted after cloud synchronisation. This rolling window allows re-parsing with updated schema if needed, while controlling local storage consumption on the Raspberry Pi.
+\textbf{Raw JSON files} (\texttt{data/raw/msm\_<id>\_<date>.json}): Raw RIPE Atlas JSON results are retained locally for 7 days, then deleted after cloud synchronisation. This rolling window allows re-parsing with an updated schema if needed, while controlling local storage consumption on the Raspberry Pi.
 
 \textbf{Cloud backup}: All Parquet files, daily archives, and reports are synchronised daily to two cloud destinations via rclone: Microsoft OneDrive (UNamur institutional account) and Google Drive (personal account). The \texttt{sync\_cloud.sh} script detects which remotes are configured and synchronises to all available destinations in parallel. The rclone configuration is persisted in a Docker named volume, surviving container updates.
 
-\textbf{Storage estimate} for a three-month campaign (100 domains $\times$ 50 probes):
+\textbf{Storage estimate} for a three-month campaign (99 domains $\times$ 50 probes):
 
 \begin{table}[H]
 \centering
@@ -316,7 +331,7 @@ Results are stored in a single-tier Parquet architecture optimised for the analy
 \toprule
 \textbf{Tier} & \textbf{Volume} & \textbf{Location} \\
 \midrule
-Raw JSON (7-day rolling) & \textasciitilde{}70 MB & Pi local \\
+Raw JSON (7-day rolling) & \textasciitilde{}70 MB & Pi local + cloud archive \\
 Cumulative Parquet & \textasciitilde{}5 MB & Pi + OneDrive + Google Drive \\
 Daily Parquet archives & \textasciitilde{}10 MB & Pi + OneDrive + Google Drive \\
 Reports and figures & \textasciitilde{}50 MB & Pi + OneDrive + Google Drive \\
