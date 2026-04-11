@@ -24,17 +24,17 @@
 - `/workspace/dns-pipeline` → données locales (volume monté sur le Pi, NON commité)
 
 **Phases de mesure :**
-- **Phase pilote** (01–10 avril) : 99 domaines × 50 sondes — validée, données 02–09/04 dans le parquet
-- **Phase principale** (à partir du 11 avril) : 250 domaines × 200 sondes — à déployer
+- **Phase pilote** (01–10 avril) : 99 domaines × 50 sondes — terminée, données 02–09/04 dans le parquet
+- **Phase principale** (à partir du 11 avril) : 250 domaines × 200 sondes — **ACTIVE**
 
 **Mesures RIPE Atlas — EN COURS de collecte** :
 
 | Question | Type | État | Détails |
 |---|---|---|---|
-| Q1 (diversité géo) | Périodique auth NS | ✅ Actif | Phase principale à déployer |
-| Q2 (stabilité temps) | Périodique auth NS | ✅ Actif | Mêmes mesures, fetch quotidien 10h UTC |
+| Q1 (diversité géo) | Périodique auth NS | ✅ Actif | 248/250 mesures Ongoing, fetch quotidien 10h UTC |
+| Q2 (stabilité temps) | Périodique auth NS | ✅ Actif | Mêmes mesures |
 | Q3 (biais sondes) | Périodique auth NS | ✅ Actif | Mêmes mesures |
-| Q4 (comparaison résolveurs) | One-off | ✅ Complet | 200/200 créées, données dans parquet |
+| Q4 (comparaison résolveurs) | One-off | ⚠️ Partiel | 8/1000 créées — relancer --q4-resume les prochains jours |
 
 **Architecture pipeline (sur Raspberry Pi à la maison) :**
 - Docker container `dns-pipeline` tourne en continu avec watchdog cron
@@ -89,7 +89,7 @@ docker exec dns-pipeline python /app/scripts/create_ripe_measurements.py \
 
 ### Ce qui reste à faire
 
-1. **Déployer phase principale** : stopper mesures pilote + relancer avec 250 dom × 200 sondes
+1. **Compléter Q4** : relancer `--q4-resume` chaque jour jusqu'à 1000/1000 mesures
 2. **Attendre ~7 semaines** de collecte (jusqu'à fin mai 2026)
 3. **Remplir chapitre 4** (Résultats) avec les vraies mesures
 4. **Remplir chapitre 5** (Conclusion) basé sur les résultats
