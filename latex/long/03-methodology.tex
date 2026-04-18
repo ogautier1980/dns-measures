@@ -28,14 +28,32 @@ The overarching methodological objective of this thesis is to capture the \textb
 The measurement system is organised in five sequential stages, inspired by the architecture of OpenINTEL \cite{vanRijswijk2016} but adapted to the constraints and capabilities of the RIPE Atlas platform:
 
 \begin{enumerate}
-  \item \textbf{Domain corpus preparation}: Retrieval and filtering of the Tranco Top 10,000 domain list.
+  \item \textbf{Domain corpus preparation}: Retrieval and filtering of the Tranco Top 250 domain list.
   \item \textbf{Measurement scheduling}: Configuration and deployment of RIPE Atlas DNS measurement campaigns.
   \item \textbf{Data collection}: Automated daily retrieval of measurement results via the RIPE Atlas REST API.
   \item \textbf{Storage and preprocessing}: Parsing, validation, and archival in Parquet format.
   \item \textbf{Analysis}: Quantitative analysis addressing Q1--Q4.
 \end{enumerate}
 
-The key design trade-off throughout is the three-way tension between \textbf{domain coverage} (how many domains are measured), \textbf{geographic coverage} (how many geographically distributed probes), and \textbf{temporal resolution} (measurement frequency), all bounded by the finite RIPE Atlas credit budget. The system is fully configurable via \texttt{--max-domains} and \texttt{--total-probes} parameters; the default operating point is \textbf{100 domains} and \textbf{50 probes}, generating approximately 50,000 credits per day. Figure 3.1 presents the five-stage pipeline architecture.
+The key design trade-off throughout is the three-way tension between \textbf{domain coverage} (how many domains are measured), \textbf{geographic coverage} (how many geographically distributed probes), and \textbf{temporal resolution} (measurement frequency), all bounded by the finite RIPE Atlas credit budget. The system is fully configurable via \texttt{--max-domains} and \texttt{--total-probes} parameters; the main phase operating point is \textbf{250 domains} and \textbf{200 probes}, consuming approximately 500,000 credits per day (250 domains $\times$ 200 probes $\times$ 10 credits per measurement).
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{c l l}
+\toprule
+\textbf{Step} & \textbf{Stage} & \textbf{Output} \\
+\midrule
+1 & Domain corpus preparation (\texttt{fetch\_tranco.py})         & \texttt{tranco\_corpus.csv} \\
+2 & Measurement scheduling (\texttt{create\_ripe\_measurements.py}) & \texttt{measurements.json} \\
+3 & Data collection (\texttt{fetch\_ripe\_atlas.py})               & \texttt{data/raw/msm\_*.json} \\
+4 & Parsing \& storage (\texttt{parse\_dns\_results.py})           & \texttt{dns\_results*.parquet} \\
+5 & Analysis (\texttt{analyse\_dns.py})                            & Reports \& figures \\
+\bottomrule
+\end{tabular}
+\caption{Five-stage pipeline architecture. Steps 1--2 are run once at campaign initialisation; steps 3--4 run daily; step 5 runs weekly.}
+\label{tab:pipeline_stages}
+\end{table}
 
 \subsection{Infrastructure}
 \label{subsec:3.1.3}
@@ -56,9 +74,9 @@ The pipeline is orchestrated by a cron daemon running inside the container, with
 \textbf{Time (UTC)} & \textbf{Day} & \textbf{Action} \\
 \midrule
 10:00 & Daily & Fetch RIPE Atlas results + Parquet parsing \\
-11:00 & Daily & Cloud sync (Parquet + raw JSON $\rightarrow$ OneDrive + Google Drive) \\
+11:00 & Daily & Cloud sync (Parquet + raw JSON $\rightarrow$ Google Drive) \\
 12:00 & Sunday & Q1--Q4 analysis + figure generation \\
-13:00 & Sunday & Cloud sync (reports + figures $\rightarrow$ OneDrive + Google Drive) \\
+13:00 & Sunday & Cloud sync (reports + figures $\rightarrow$ Google Drive) \\
 04:00 & 1st of month & Log rotation \\
 \bottomrule
 \end{tabular}
@@ -74,7 +92,7 @@ The pipeline source code is available at \url{https://github.com/ogautier-unam/d
 \subsection{Tranco List Configuration}
 \label{subsec:3.2.1}
 
-The domain corpus is the \textbf{Tranco Top 10,000} list, retrieved via the Tranco API at `\url{https://tranco-list.eu`.} The choice of Tranco over commercial ranking lists (Alexa, Cisco Umbrella, Majestic) is motivated in Chapter 2 (Section 2.7) and rests on three properties established by Le Pochat et al.~\cite{LePochat2019}: stability (0.6\% daily change versus approximately 50\% for post-2018 Alexa), manipulation resistance (quadrupled manipulation effort relative to single-source lists), and archivability (each generated list is assigned a unique identifier retrievable indefinitely via permalink).
+The domain corpus is the \textbf{Tranco Top 250} list, retrieved via the Tranco API at \url{https://tranco-list.eu}. The choice of Tranco over commercial ranking lists (Alexa — discontinued May 2022 —, Cisco Umbrella, Majestic) is motivated in Chapter 2 (Section 2.7) and rests on three properties established by Le Pochat et al.~\cite{LePochat2019}: stability (0.6\% daily change versus approximately 50\% for post-2018 Alexa), manipulation resistance (quadrupled manipulation effort relative to single-source lists), and archivability (each generated list is assigned a unique identifier retrievable indefinitely via permalink).
 
 The \texttt{fetch\_tranco.py} script retrieves the most recent available list, falling back up to seven days if the current day's list has not yet been published. The exact Tranco list identifier and generation date are recorded in \texttt{tranco\_meta.json} alongside the corpus, ensuring full reproducibility.
 
@@ -100,11 +118,11 @@ The choice of 250 domains reflects a deliberate balance between three competing 
 \subsection{Domain Filtering and Validation}
 \label{subsec:3.2.3}
 
-Before the measurement campaign begins, each domain in the Tranco Top 10K list is pre-validated by \texttt{fetch\_tranco.py} in two steps:
+Before the measurement campaign begins, each domain in the Tranco list is pre-validated by \texttt{fetch\_tranco.py} in two steps:
 
 \textbf{Technical validity}: A DNS A record query is issued against Google Public DNS (8.8.8.8) and Cloudflare DNS (1.1.1.1) as reference resolvers. Domains returning \texttt{NXDOMAIN} or \texttt{SERVFAIL} are excluded. Applied to the Tranco Top 10,000 list used in this campaign, this step yielded \textbf{8,365 valid domains} --- a filtering rate of approximately 16\%, higher than the 5--6\% reported by Le Pochat et al.~\cite{LePochat2019}, which may reflect the broader scope of the list and the inclusion of parked or inactive domains in lower-ranked positions.
 
-\textbf{Authoritative server pre-resolution}: The authoritative name servers for each domain are identified by resolving the domain's NS records from the same reference resolvers. This pre-resolution step maps each domain to its authoritative server set. The resulting corpus is saved as \texttt{tranco\_corpus.csv} with fields \texttt{rank}, \texttt{domain}, and \texttt{ns} (pipe-separated list of authoritative nameserver hostnames). Domains for which the NS IP address could not be resolved at measurement time are skipped; in practice, 1 of the top-100 domains was excluded on this basis, yielding \textbf{99 active RIPE Atlas measurements} for the primary campaign.
+\textbf{Authoritative server pre-resolution}: The authoritative name servers for each domain are identified by resolving the domain's NS records from the same reference resolvers. This pre-resolution step maps each domain to its authoritative server set. The resulting corpus is saved as \texttt{tranco\_corpus.csv} with fields \texttt{rank}, \texttt{domain}, and \texttt{ns} (pipe-separated list of authoritative nameserver hostnames). Domains for which the NS IP address could not be resolved at measurement time are skipped; in practice, 2 of the top-250 domains were excluded on this basis, yielding \textbf{248 active RIPE Atlas measurements} for the main campaign.
 \bigskip
 \section{RIPE Atlas Measurement Configuration}
 \label{sec:3.3}
@@ -121,7 +139,7 @@ Probe selection is implemented in \texttt{create\_ripe\_measurements.py} and fol
   \item \texttt{system-resolves-a-correctly}: The probe's local resolver returns correct A records.
 \end{itemize}
 
-Hardware version v3 or later is required. Holterbach et al.~\cite{Holterbach2015} show that v1 and v2 probes experience timing precision degradation under concurrent measurement load, while v3 probes experience negligible degradation.
+For hardware probes, version v3 or later is required. Holterbach et al.~\cite{Holterbach2015} show that hardware v1 and v2 probes experience timing precision degradation under concurrent measurement load (up to +7.7\,ms at the 95th percentile), while v3 probes experience negligible degradation (+0.06\,ms); software probes are not subject to this hardware constraint.
 
 \textbf{Step 2 --- Geographic stratification}: To compensate for RIPE Atlas's documented geographic concentration (91\% of dual-stacked probes in the RIPE and ARIN regions, per Bajpai et al., 2017), probe allocation is stratified by continent with inverse-weighted over-representation of underrepresented regions:
 
@@ -158,15 +176,14 @@ Within each round, the probe selected for a given country is the one with the hi
 \subsection{Primary Campaign: Direct Authoritative DNS Queries}
 \label{subsec:3.3.2}
 
-The primary measurement campaign queries authoritative name servers directly, bypassing recursive resolvers. This design choice is motivated by two findings from the literature:
+The primary measurement campaign queries authoritative name servers directly, bypassing recursive resolvers. As discussed in Chapter 2 (Section 2.5), two complementary approaches are possible: using the probe's default resolver (which reflects real user experience) or querying the authoritative server directly (which isolates the geographic routing signal). For Q1--Q3, the direct authoritative approach is chosen for two reasons:
 
 \begin{enumerate}
   \item \textbf{Resolver centralization} \cite{Xu2023}: Over 90\% of forwarding resolvers are backed by fewer than 5\% of indirect recursive resolvers. Querying through probe resolvers would collapse the geographic diversity of probe vantage points into a small number of centralised resolution paths, making geographic DNS variation invisible.
-\end{enumerate}
-
-\begin{enumerate}
   \item \textbf{Cache state divergence}: Probes using local resolvers have heterogeneous cache states, introducing variation that mimics geographic routing differences but is actually an artefact of cache timing. Direct authoritative queries bypass resolver caches entirely.
 \end{enumerate}
+
+The default resolver approach is used for Q4 (Section~\ref{subsec:3.3.3}), where the research question is precisely about the impact of resolver choice on end-user experience.
 
 For each domain in the corpus, the primary authoritative name server identified during pre-resolution is used as the measurement target. The RIPE Atlas DNS measurement is configured as follows:
 
@@ -243,14 +260,14 @@ The RIPE Atlas credit consumption is estimated as follows (10 credits per probe 
 \midrule
 Pilot — primary (direct auth)       &  99 &  50 & 10 days  & $\approx$495,000 \\
 Pilot — Q4 resolver comparison      &  50 &  50 & once     & $\approx$100,000 \\
-Main — primary (direct auth)        & 250 & 200 & 49 days  & $\approx$24,500,000 \\
+Main — primary (direct auth)        & 250 & 200 & 50 days  & $\approx$25,000,000 \\
 Main — Q4 resolver comparison       & 250 & 200 & once     & $\approx$2,000,000 \\
-\textbf{Total campaign}             &     &     &          & $\approx$\textbf{27,095,000} \\
+\textbf{Total campaign}             &     &     &          & $\approx$\textbf{27,595,000} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The total estimated consumption of 25,100,000 credits falls within the available balance of 29,000,000 credits, leaving a reserve of approximately 3,900,000 credits to absorb probe availability fluctuations and any re-runs. The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated daily and total consumption before any measurements are created.
+The total estimated consumption of approximately 27,595,000 credits remains within the initial balance of 29,000,000 credits, leaving a margin of approximately 1,400,000 credits. The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated daily and total consumption before any measurements are created.
 \bigskip
 \section{Data Collection and Processing}
 \label{sec:3.4}
@@ -258,7 +275,7 @@ The total estimated consumption of 25,100,000 credits falls within the available
 \subsection{Daily Collection Pipeline}
 \label{subsec:3.4.1}
 
-Measurement results are collected from the RIPE Atlas REST API by \texttt{fetch\_ripe\_atlas.py} on a daily schedule at 06:00 UTC, retrieving results for the previous calendar day. The script reads the measurement plan from \texttt{measurements.json} (produced by \texttt{create\_ripe\_measurements.py}) and iterates over all active measurement identifiers.
+Measurement results are collected from the RIPE Atlas REST API by \texttt{fetch\_ripe\_atlas.py} on a daily schedule at 10:00 UTC, retrieving results for the previous calendar day. The script reads the measurement plan from \texttt{measurements.json} (produced by \texttt{create\_ripe\_measurements.py}) and iterates over all active measurement identifiers.
 
 The collection is fully paginated, following RIPE Atlas API \texttt{next} links until all results for the time window are retrieved. Error handling includes automatic retry with exponential backoff (up to 5 attempts, base delay 2 seconds, doubling on each retry) and explicit handling of HTTP 429 rate-limit responses (waits for the \texttt{Retry-After} header duration before retrying). Failed measurement IDs are recorded in \texttt{fetch\_errors\_<date>.json} for post-hoc investigation. To avoid redundant downloads, already-fetched files are skipped unless the \texttt{--force} flag is specified.
 
@@ -314,15 +331,15 @@ The following validation filters are applied during parsing:
 
 Results are stored in a single-tier Parquet architecture optimised for the analytical query patterns of the analysis phase:
 
-\textbf{Cumulative Parquet file} (\texttt{data/processed/dns\_results.parquet}): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. This file grows at approximately 1--2 MB/month for the primary campaign (100 domains $\times$ 50 probes $\times$ 30 days, after columnar compression with dictionary encoding for repeated string values such as \texttt{country\_code}, \texttt{continent}, and \texttt{answer\_ips}).
+\textbf{Cumulative Parquet file} (\texttt{data/processed/dns\_results.parquet}): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. This file grows at approximately 40--60 MB/month for the primary campaign (250 domains $\times$ 200 probes $\times$ 30 days, after columnar compression with dictionary encoding for repeated string values such as \texttt{country\_code}, \texttt{continent}, and \texttt{answer\_ips}).
 
 \textbf{Daily archives} (\texttt{data/processed/dns\_results\_<date>.parquet}): Individual daily Parquet files are also retained for point-in-time analysis and as a recovery mechanism in case of cumulative file corruption.
 
 \textbf{Raw JSON files} (\texttt{data/raw/msm\_<id>\_<date>.json}): Raw RIPE Atlas JSON results are retained locally for 7 days, then deleted after cloud synchronisation. This rolling window allows re-parsing with an updated schema if needed, while controlling local storage consumption on the Raspberry Pi.
 
-\textbf{Cloud backup}: All Parquet files, daily archives, and reports are synchronised daily to two cloud destinations via rclone: Microsoft OneDrive (UNamur institutional account) and Google Drive (personal account). The \texttt{sync\_cloud.sh} script detects which remotes are configured and synchronises to all available destinations in parallel. The rclone configuration is persisted in a Docker named volume, surviving container updates.
+\textbf{Cloud backup}: All Parquet files, daily archives, and reports are synchronised daily to Google Drive (personal account, 2 TB) via rclone. The rclone configuration is persisted in a Docker named volume, surviving container updates.
 
-\textbf{Storage estimate} for a three-month campaign (99 domains $\times$ 50 probes):
+\textbf{Storage estimate} for a 50-day campaign (250 domains $\times$ 200 probes):
 
 \begin{table}[H]
 \centering
@@ -331,10 +348,10 @@ Results are stored in a single-tier Parquet architecture optimised for the analy
 \toprule
 \textbf{Tier} & \textbf{Volume} & \textbf{Location} \\
 \midrule
-Raw JSON (7-day rolling) & \textasciitilde{}70 MB & Pi local + cloud archive \\
-Cumulative Parquet & \textasciitilde{}5 MB & Pi + OneDrive + Google Drive \\
-Daily Parquet archives & \textasciitilde{}10 MB & Pi + OneDrive + Google Drive \\
-Reports and figures & \textasciitilde{}50 MB & Pi + OneDrive + Google Drive \\
+Raw JSON (7-day rolling) & \textasciitilde{}70 MB & Pi local \\
+Cumulative Parquet & \textasciitilde{}80--100 MB & Pi + Google Drive \\
+Daily Parquet archives & \textasciitilde{}80--100 MB & Pi + Google Drive \\
+Reports and figures & \textasciitilde{}50 MB & Pi + Google Drive \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -347,17 +364,23 @@ Reports and figures & \textasciitilde{}50 MB & Pi + OneDrive + Google Drive \\
 
 \textbf{Objective}: For each domain in the corpus, determine whether the set of IP addresses returned varies systematically by the geographic location of the querying probe.
 
-\textbf{Step 1 --- Compute per-domain IP diversity}: For each domain and each measurement day, the probe set is partitioned by continent. For each continent, the set of unique IP addresses returned is computed from all probes in that continent. A domain is classified as \textbf{geographically diverse} if at least two continents receive distinct IP address sets on the same day.
+The analysis operates at two levels of geographic granularity, exploiting the country-level probe diversity achieved by the stratified selection algorithm (Section~\ref{subsec:3.3.1}).
 
-\textbf{Step 2 --- Aggregate over time}: A domain is classified as exhibiting geographic diversity if it returns geographically differentiated responses on at least one measurement day. The \texttt{pct\_geo\_diverse} metric gives the percentage of days on which geographic differentiation is observed, characterising the consistency of differentiation over time.
+\textbf{Step 1 --- Continent-level diversity (coarse)}: For each domain and each measurement day, the probe set is partitioned by continent. For each continent, the union of all IP addresses returned by probes in that continent is computed. A domain is classified as \textbf{continent-diverse} if at least two continents receive distinct IP address sets on the same day. This level of analysis is comparable to prior RIPE Atlas DNS studies.
 
-\textbf{Step 3 --- NSID analysis}: For domains with geographic IP variation, the presence of NSID values is used to distinguish between anycast instance selection (different NSID per region, indicating different anycast PoP) and DNS-based CDN routing (uniform NSID with varying A records, indicating CDN geographic database lookup).
+\textbf{Step 2 --- Country-level diversity (fine-grained)}: The same computation is repeated at the country level. A domain is classified as \textbf{country-diverse} if at least two countries receive distinct IP address sets on the same day. This finer granularity can reveal \textbf{intra-continental differentiation} --- cases where DNS routing differs between countries within the same continent (e.g.\ within Europe, or between Brazil and Argentina in South America) --- which would be invisible at continent level alone.
+
+\textbf{Step 3 --- Aggregate over time}: For each domain, the proportion of measurement days on which geographic differentiation is observed (\texttt{pct\_geo\_diverse}) characterises the consistency of differentiation over the campaign. A domain is included in the geo-diverse count if differentiation is observed on at least one day.
+
+\textbf{Step 4 --- NSID analysis}: For domains with geographic IP variation, the presence of NSID values is used to distinguish between anycast instance selection (different NSID per region, indicating different anycast PoP) and DNS-based CDN routing (uniform NSID with varying A records, indicating CDN geographic database lookup).
 
 \textbf{Key metrics}:
 \begin{itemize}
-  \item Total proportion of domains exhibiting geographic diversity
-  \item Distribution of the number of distinct IP address sets across continents
-  \item Top domains by geographic diversity score
+  \item Proportion of domains exhibiting continent-level geographic diversity
+  \item Proportion of domains exhibiting country-level geographic diversity
+  \item Proportion of domains exhibiting intra-continental diversity (country-level only)
+  \item Distribution of the number of distinct IP address sets across countries and continents
+  \item Top domains by country-level geographic diversity score
   \item Proportion of geographically diverse domains returning NSID values
 \end{itemize}
 
@@ -402,7 +425,7 @@ A \textbf{Mann-Whitney U test} (non-parametric, for independent samples) compare
 
 \textbf{Objective}: Quantify the impact of resolver type on DNS responses, comparing local ISP resolvers with three major public DNS services.
 
-This analysis uses the supplementary Q4 measurement campaign (Section 3.3.3), which provides four simultaneous observations for 50 domains from the same 50 probes.
+This analysis uses the supplementary Q4 measurement campaign (Section 3.3.3), which provides four simultaneous observations for 250 domains from the same 200 probes.
 
 \textbf{Step 1 --- Per-resolver statistics}: For each resolver type (\texttt{isp\_local}, \texttt{google}, \texttt{cloudflare}, \texttt{quad9}), the following metrics are computed: error rate (proportion of RCODE != 0 responses), median RTT, and mean answer count.
 
@@ -427,7 +450,7 @@ The measurement design follows the ethical framework of Kisteleki et al.~\cite{K
 
 \textbf{Probe host protection}: All query targets are publicly accessible domains from the Tranco Top 10K corpus. Direct authoritative queries for A records are indistinguishable from normal client DNS traffic.
 
-\textbf{Infrastructure impact}: The measurement frequency (once per domain per day, 50 probes, 100 domains) generates approximately 5,000 queries per day --- negligible compared to OpenINTEL's production campaign of several hundred million queries per day \cite{vanRijswijk2016}.
+\textbf{Infrastructure impact}: The measurement frequency (once per domain per day, 200 probes, 250 domains) generates approximately 50,000 queries per day --- negligible compared to OpenINTEL's production campaign of several hundred million queries per day \cite{vanRijswijk2016}.
 
 \textbf{Transparency}: All measurements are tagged with a project description in RIPE Atlas, allowing authoritative server operators to identify the measurement source. The measurement plan (\texttt{measurements.json}) records all active measurement IDs.
 

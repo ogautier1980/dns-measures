@@ -112,3 +112,12 @@ temp/
 
 # Sources - texte brut PDF (régénérable via pdftotext)
 sources/converted/
+
+# Données locales pipeline (sur le Pi, sync Google Drive — non versionné)
+dns-pipeline/
+
+# Artifacts LaTeX dans output/updated/
+output/updated/
+
+# Fichiers backup
+*.bak

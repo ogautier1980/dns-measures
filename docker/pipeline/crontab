@@ -1,0 +1,25 @@
+# Crontab — Pipeline de mesures DNS
+# Toutes les heures sont en UTC
+
+# Variables d'environnement pour les jobs cron
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PYTHONPATH=/app
+
+# ── Collecte quotidienne ───────────────────────────────────────────────────────
+# Chaque jour à 06h00 UTC : fetch résultats d'hier + parsing Parquet
+0 6 * * * root cd /app && python scripts/pipeline.py daily >> /app/logs/pipeline.log 2>&1
+
+# ── Analyse hebdomadaire ───────────────────────────────────────────────────────
+# Chaque dimanche à 07h00 UTC : analyse complète Q1–Q4 + génération des figures
+0 7 * * 0 root cd /app && python scripts/pipeline.py analyse >> /app/logs/pipeline.log 2>&1
+
+# ── Rafraîchissement Tranco ────────────────────────────────────────────────────
+# Chaque lundi à 05h00 UTC : nouvelle liste Tranco (mise à jour hebdomadaire)
+0 5 * * 1 root cd /app && python scripts/pipeline.py weekly >> /app/logs/pipeline.log 2>&1
+
+# ── Rotation des logs ─────────────────────────────────────────────────────────
+# Chaque 1er du mois à 04h00 UTC : archive le log du mois précédent
+0 4 1 * * root cd /app/logs && cp pipeline.log "pipeline_$(date +\%Y-\%m).log.gz" 2>/dev/null | gzip -f pipeline_$(date +\%Y-\%m).log 2>/dev/null; echo "" > pipeline.log
+
+# Ligne vide obligatoire en fin de crontab

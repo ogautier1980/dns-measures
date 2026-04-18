@@ -1,0 +1,86 @@
+\chapter{Configuration RIPE Atlas}
+
+Cette annexe présente la configuration détaillée des mesures RIPE Atlas utilisées pour cette étude.
+
+\section{Paramètres des mesures DNS}
+
+\begin{lstlisting}[style=json,caption=Configuration JSON d'une mesure DNS RIPE Atlas]
+{
+  "definitions": [
+    {
+      "target": "www.example.com",
+      "description": "DNS A query for www.example.com",
+      "type": "dns",
+      "af": 4,
+      "query_class": "IN",
+      "query_type": "A",
+      "query_argument": "www.example.com",
+      "use_probe_resolver": false,
+      "use_resolver": false,
+      "set_rd_bit": false,
+      "set_do_bit": false,
+      "set_cd_bit": false,
+      "timeout": 10000,
+      "retry": 2,
+      "protocol": "UDP"
+    }
+  ],
+  "probes": [
+    {
+      "requested": 100,
+      "type": "area",
+      "value": "WW",
+      "tags": {
+        "include": ["system-ipv4-works"]
+      }
+    }
+  ],
+  "is_oneoff": false,
+  "interval": 86400
+}
+\end{lstlisting}
+
+\section{Sélection des sondes}
+
+Critères de filtrage appliqués :
+\begin{itemize}
+    \item Statut : \texttt{connected} (sondes actives)
+    \item Uptime : $>80\%$ sur les 30 derniers jours
+    \item Support IPv4 : obligatoire
+    \item Taux de succès DNS : $>85\%$ sur les 7 derniers jours
+    \item Distribution géographique : au moins 5 sondes par continent
+\end{itemize}
+
+\chapter{Structure des données}
+
+\section{Schéma Apache Avro}
+
+\begin{lstlisting}[caption=Schéma Avro pour les résultats DNS]
+{
+  "type": "record",
+  "name": "DNSMeasurement",
+  "namespace": "dns.measurements",
+  "fields": [
+    {"name": "timestamp", "type": "long"},
+    {"name": "probe_id", "type": "int"},
+    {"name": "domain", "type": "string"},
+    {"name": "query_type", "type": "string"},
+    {
+      "name": "answers",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "Answer",
+          "fields": [
+            {"name": "rdata", "type": "string"},
+            {"name": "ttl", "type": "int"}
+          ]
+        }
+      }
+    },
+    {"name": "rtt", "type": "float"},
+    {"name": "error", "type": ["null", "string"], "default": null}
+  ]
+}
+\end{lstlisting}

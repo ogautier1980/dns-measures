@@ -1,7 +1,7 @@
 % Chapter 5 — auto-generated from chapter5_conclusion.md
 % Edit the Markdown source, not this file.
 
-\chapter{Discussion and Conclusion}
+\chapter{Chapter 5 --- Discussion and Conclusion}
 
 \section{Discussion of Results}
 \label{sec:5.1}
@@ -219,24 +219,22 @@ Popular domains disproportionately use sophisticated CDN and DNS infrastructure 
 \textbf{Primary empirical contribution.}
 This thesis provides the first systematic, multi-vantage-point quantification of DNS response diversity for the Tranco Top-10K --- the most widely used corpus in DNS and web measurement research \cite{LePochat2019}. By deploying [VALUE] probes across six geographic strata and collecting [VALUE] million DNS measurements over [VALUE] months, we characterise four dimensions of DNS behaviour --- geographic diversity (Q1), temporal stability (Q2), probe-bias sensitivity (Q3), and resolver impact (Q4) --- at a scale and resolution not previously achieved for this domain corpus.
 
-\textbf{Empirical validation of literature hypotheses.} Table~\ref{tab:hypothesis_validation} summarises the validation status of key claims from the literature.
+\textbf{Empirical validation of literature hypotheses.}
 
 \begin{table}[H]
 \centering
 \small
-\begin{tabularx}{\linewidth}{X p{3.5cm} p{3cm}}
+\begin{tabular}{l l l}
 \toprule
 \textbf{Claim} & \textbf{Source} & \textbf{Status} \\
 \midrule
-Anycast inflation is CDN-context-dependent & Koch et al.~\cite{Koch2021} & [Confirmed / Qualified] \\
-Public DNS imposes $\geq$14\% throughput penalty vs.\ ISP & Hours et al.~\cite{Hours2016} & [Confirmed / Magnitude differs] \\
-ECS mitigates remote-DNS geographic mismatch & Wang et al.~\cite{Wang2018}; RFC~7871~\cite{RFC7871} & [Partially confirmed / Not confirmed] \\
-RIPE Atlas geographic bias persists post-2017 & Bajpai et al.~\cite{Bajpai2017} & [Confirmed] \\
-DNS infrastructure is oligopolistically concentrated & Xu et al.~\cite{Xu2023} & [Confirmed for Top-10K] \\
+Anycast inflation is CDN-context-dependent & Koch et al.\textasciitilde{}\cite{Koch2021} & [Confirmed / Qualified] \\
+Public DNS imposes $\geq$14\% throughput penalty vs. ISP & Hours et al.\textasciitilde{}\cite{Hours2016} & [Confirmed / Magnitude differs] \\
+ECS mitigates remote-DNS geographic mismatch & Wang et al.\textasciitilde{}\cite{Wang2018}; RFC\textasciitilde{}7871\textasciitilde{}\cite{RFC7871} & [Partially confirmed / Not confirmed] \\
+RIPE Atlas geographic bias persists post-2017 & Bajpai et al.\textasciitilde{}\cite{Bajpai2017} & [Confirmed] \\
+DNS infrastructure is oligopolistically concentrated & Xu et al.\textasciitilde{}\cite{Xu2023} & [Confirmed for Top-10K] \\
 \bottomrule
-\end{tabularx}
-\caption{Empirical validation of claims from the literature}
-\label{tab:hypothesis_validation}
+\end{tabular}
 \end{table}
 
 \textbf{Quantitative results summary.}

@@ -1,0 +1,81 @@
+# Pipeline de mesures DNS — image autonome
+# Compatible x86_64 et ARM64 (Raspberry Pi 5)
+#
+# Build local :
+#   docker build -f Dockerfile.pipeline -t dns-pipeline .
+#
+# Build multi-arch (depuis une machine x86 avec buildx) :
+#   docker buildx build --platform linux/amd64,linux/arm64 \
+#     -f Dockerfile.pipeline -t votreuser/dns-pipeline:latest --push .
+
+FROM python:3.11-slim-bookworm
+
+LABEL maintainer="DNS Measures Pipeline"
+LABEL description="Pipeline automatique de mesures DNS — collecte, stockage, analyse"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+# Le script lit les variables d'environnement ou le fichier /app/.env
+ENV PYTHONPATH=/app
+
+# ── Dépendances système ────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Outils DNS système (dig, host) — utiles pour debug
+    dnsutils \
+    # Cron pour l'automatisation
+    cron \
+    # Compression (données archivées)
+    gzip \
+    # Certificats TLS (appels HTTPS API)
+    ca-certificates \
+    # Bibliothèques C requises par scipy/matplotlib
+    libatlas-base-dev \
+    libopenblas-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+RUN pip install --no-cache-dir --upgrade pip
+
+COPY requirements-pipeline.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements-pipeline.txt
+
+# ── Structure de l'application ─────────────────────────────────────────────────
+WORKDIR /app
+
+# Copier uniquement les scripts du pipeline (pas LaTeX, pas notebooks, etc.)
+COPY scripts/fetch_tranco.py          scripts/
+COPY scripts/create_ripe_measurements.py  scripts/
+COPY scripts/fetch_ripe_atlas.py      scripts/
+COPY scripts/parse_dns_results.py     scripts/
+COPY scripts/analyse_dns.py           scripts/
+COPY scripts/pipeline.py              scripts/
+
+# Copier la configuration cron et l'entrypoint
+COPY docker/pipeline/crontab          /etc/cron.d/dns-pipeline
+COPY docker/pipeline/entrypoint.sh    /usr/local/bin/entrypoint.sh
+
+RUN chmod 0644 /etc/cron.d/dns-pipeline \
+    && chmod +x /usr/local/bin/entrypoint.sh
+
+# Créer les répertoires de données (seront montés comme volumes en production)
+RUN mkdir -p \
+    /app/data/raw \
+    /app/data/processed \
+    /app/reports \
+    /app/latex/figures \
+    /app/logs
+
+# ── Variables d'environnement ──────────────────────────────────────────────────
+# À fournir via --env-file .env ou -e au lancement
+# RIPE_ATLAS_API_KEY=xxxx
+
+# Le répertoire de travail des scripts correspond à /app
+# Les chemins relatifs (data/raw, data/processed, reports…) sont résolus depuis /app
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

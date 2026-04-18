@@ -1,0 +1,67 @@
+services:
+
+  dns-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline
+    image: dns-pipeline:latest
+    container_name: dns-pipeline
+    hostname: dns-pipeline
+
+    # ── Redémarrage automatique ──────────────────────────────────────────────
+    restart: unless-stopped
+
+    # ── Clé API RIPE Atlas ───────────────────────────────────────────────────
+    # Option 1 : fichier .env à la racine du projet (recommandé)
+    env_file:
+      - .env
+    # Option 2 : variable inline (décommenter si pas de fichier .env)
+    # environment:
+    #   - RIPE_ATLAS_API_KEY=votre-cle-ici
+
+    # ── Volumes persistants ──────────────────────────────────────────────────
+    # Les données survivent aux redémarrages et mises à jour du container
+    volumes:
+      # Résultats JSON bruts RIPE Atlas (~1 Go/mois pour 10K domaines × 100 sondes)
+      - dns-raw:/app/data/raw
+      # Corpus Tranco, Parquet cumulatif, plan de mesures
+      - dns-processed:/app/data/processed
+      # Rapports CSV/JSON des analyses Q1–Q4
+      - dns-reports:/app/reports
+      # Figures PNG pour le LaTeX (synchronisation optionnelle avec le poste de travail)
+      - dns-figures:/app/latex/figures
+      # Logs du pipeline
+      - dns-logs:/app/logs
+
+    # ── Ressources (important pour le Raspberry Pi 5 — 4 ou 8 Go de RAM) ────
+    deploy:
+      resources:
+        limits:
+          memory: 1G       # Le pipeline DNS n'a pas besoin de plus
+          cpus: "1.5"      # Laisse des ressources au système
+        reservations:
+          memory: 256M
+
+    # ── Réseau ───────────────────────────────────────────────────────────────
+    # Accès Internet requis pour :
+    #   - API Tranco (tranco-list.eu)
+    #   - API RIPE Atlas (atlas.ripe.net)
+    network_mode: bridge
+
+    # ── Timezone ─────────────────────────────────────────────────────────────
+    # Les horaires cron sont en UTC — pas besoin de changer
+    environment:
+      - TZ=UTC
+
+# ── Volumes nommés ────────────────────────────────────────────────────────────
+volumes:
+  dns-raw:
+    driver: local
+  dns-processed:
+    driver: local
+  dns-reports:
+    driver: local
+  dns-figures:
+    driver: local
+  dns-logs:
+    driver: local

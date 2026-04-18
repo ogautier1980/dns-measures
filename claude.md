@@ -6,7 +6,7 @@
 **Promoteurs** : Fl. Rochet, J. Dejaeghere. **Co-promoteur** : Pierre Luycx.
 **Repo GitHub** : https://github.com/ogautier1980/dns-measures.git
 
-### État au 11 avril 2026 — Ce qui est en place
+### État au 18 avril 2026 — Ce qui est en place
 
 | Version mémoire | Fichier | PDF | Pages |
 |---|---|---|---|
@@ -17,7 +17,7 @@
 
 **Compilation** : `cd /workspace/latex && make long-en` (ou `make all` pour les 4)
 
-### Pipeline DNS — État au 11 avril 2026
+### Pipeline DNS — État au 18 avril 2026
 
 **Deux repos distincts :**
 - `/workspace/pipeline-standalone` → repo GitHub `ogautier-unam/dns-pipeline` (code pipeline)
@@ -34,7 +34,7 @@
 | Q1 (diversité géo) | Périodique auth NS | ✅ Actif | 248/250 mesures Ongoing, fetch quotidien 10h UTC |
 | Q2 (stabilité temps) | Périodique auth NS | ✅ Actif | Mêmes mesures |
 | Q3 (biais sondes) | Périodique auth NS | ✅ Actif | Mêmes mesures |
-| Q4 (comparaison résolveurs) | One-off | ⚠️ Partiel | 8/1000 créées — relancer --q4-resume les prochains jours |
+| Q4 (comparaison résolveurs) | One-off | 🚫 Bloqué | Limite RIPE Atlas 100 mesures concurrentes — contacter atlas@ripe.net |
 
 **Architecture pipeline (sur Raspberry Pi à la maison) :**
 - Docker container `dns-pipeline` tourne en continu avec watchdog cron
@@ -47,11 +47,11 @@
 - Sync cloud : **Google Drive uniquement** (OneDrive UNamur supprimé — ne fonctionnait pas)
 
 **Crédits RIPE Atlas :**
-- Solde : 29,000,000 crédits
+- Solde initial : 29,000,000 crédits
 - Phase pilote consommée : ~495,000 (Q1-Q3) + ~100,000 (Q4 partiel 50 dom) ≈ 600,000
-- Phase principale Q1-Q3 : 250 × 200 × 10 = 500,000 crédits/jour × 49 jours ≈ 24,500,000
+- Phase principale Q1-Q3 : 250 × 200 × 10 = 500,000 crédits/jour × 50 jours ≈ 25,000,000
 - Phase principale Q4 : 250 dom × 200 sondes × 4 résolveurs × 10 crédits ≈ 2,000,000
-- Total estimé : ~27,095,000 — dans le budget (29,000,000 disponibles)
+- Total estimé : ~27,595,000 — dans le budget (marge ~1,400,000)
 
 **Bugs corrigés (important pour reprises futures) :**
 - `parse_dns_results.py` : `--date yesterday` ne fonctionnait pas (glob cherchait "*yesterday*") — corrigé
@@ -59,6 +59,8 @@
 - `sync_cloud.sh` : `set -e` tuait le cron sur erreur rclone — supprimé
 - `entrypoint.sh` : watchdog cron ajouté (relance auto si cron meurt)
 - Volumes Docker : noms réels = `dns-pipeline_dns-raw`, `dns-pipeline_dns-processed`, etc.
+- `measurements.json` : tous les msm_id auth étaient None après tentatives --q4-resume — corrigé via `repair_measurements_json.py` (fetch API par description pattern "geo-diversity - auth"), 247 IDs récupérés
+- **Q4 bloqué** : limite RIPE Atlas = 100 mesures concurrentes **totales** (one-off + périodiques), les périodiques ne comptent PAS. Avec 247 périodiques actives, aucune one-off possible. Solution : contacter atlas@ripe.net pour demander une limite plus élevée.
 
 **Commande de déploiement phase principale (à faire après sync 11h UTC) :**
 ```bash
@@ -85,14 +87,16 @@ docker exec dns-pipeline python /app/scripts/create_ripe_measurements.py \
 - `fetch_ripe_atlas.py` : fetch résultats par date depuis l'API
 - `parse_dns_results.py` : parsing JSON → Parquet
 - `pipeline.py` : orchestration (init / daily / analyse / weekly)
-- `analyse_dns.py` : analyse Q1-Q4 + figures
+- `analyse_dns.py` : analyse Q1-Q4 + figures (Q1 : deux niveaux continent + pays, diversité intra-continentale)
+- `repair_measurements_json.py` : reconstruit measurements.json depuis l'API RIPE Atlas par pattern de description
 
 ### Ce qui reste à faire
 
-1. **Compléter Q4** : relancer `--q4-resume` chaque jour jusqu'à 1000/1000 mesures
-2. **Attendre ~7 semaines** de collecte (jusqu'à fin mai 2026)
+1. **Débloquer Q4** : contacter atlas@ripe.net pour demander une limite > 100 mesures concurrentes (one-off)
+2. **Attendre ~50 jours** de collecte (jusqu'à fin mai 2026)
 3. **Remplir chapitre 4** (Résultats) avec les vraies mesures
 4. **Remplir chapitre 5** (Conclusion) basé sur les résultats
+5. **Appliquer remarques promoteurs** sur les autres chapitres (03, 04, 05) — working-version/ à compléter
 
 ### Attention — points sensibles
 - La version longue FR (`main_fr_long.tex`) compile avec warnings Unicode (non bloquants).
@@ -100,6 +104,8 @@ docker exec dns-pipeline python /app/scripts/create_ripe_measurements.py \
 - Le corpus Tranco est **figé** pour garantir la validité de Q2. Ne pas le régénérer.
 - Les données sont sur le Pi (`~/dns-pipeline/`), sync vers `/workspace/dns-pipeline/` via Google Drive.
 - Volumes Docker nommés `dns-pipeline_dns-raw`, `dns-pipeline_dns-processed`, `dns-pipeline_dns-logs`, `dns-pipeline_dns-reports`, `dns-pipeline_dns-figures`, `dns-pipeline_rclone-config`.
+- **working-version/** : répertoire de travail pour les remarques des promoteurs. Contient les chapitres révisés (01-intro, 02-etat-art avec Chung2017 + Jonker2016) + bibliography.bib mis à jour. Version de référence pour les modifications en cours.
+- **RIPE Atlas limite 100** : les mesures périodiques (Q1-Q3) ne comptent PAS dans la limite. Seules les one-off (Q4) comptent. La limite s'applique aux one-off uniquement.
 
 ## Vue d'ensemble du projet
 
