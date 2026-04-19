@@ -81,6 +81,13 @@ docker exec dns-pipeline python /app/scripts/create_ripe_measurements.py \
   --output data/processed/measurements.json
 ```
 
+**Déploiement d'un script modifié sur le Pi (après push GitHub) :**
+```bash
+cd ~/dns-pipeline && git pull
+docker cp scripts/analyse_dns.py dns-pipeline:/app/scripts/
+# Remplacer analyse_dns.py par le nom du script modifié
+```
+
 **Scripts clés dans `pipeline-standalone/scripts/` :**
 - `create_ripe_measurements.py` : création mesures (défaut : 250 dom × 200 sondes, stratification pays)
 - `stop_all_measurements.py` : arrêt des mesures actives RIPE Atlas
