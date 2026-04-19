@@ -57,19 +57,19 @@ Table~\ref{tab:4.2} reports the geographic distribution of the 10,819 unique pro
 \begin{table}[H]
 \centering
 \small
-\caption{Geographic distribution of unique probe IDs by continent (2--18 April 2026)}
+\caption{Geographic distribution of unique probe IDs by continent (2--18 April 2026). ``Countries covered'' is the number of distinct countries contributing at least one probe across the full campaign; ``Avg.\ probes/country'' is the ratio of unique probe IDs to countries covered, reflecting sampling density.}
 \label{tab:4.2}
-\begin{tabular}{l r r}
+\begin{tabular}{l r r r r}
 \toprule
-\textbf{Continent} & \textbf{Unique probe IDs} & \textbf{Share (\%)} \\
+\textbf{Continent} & \textbf{Unique probe IDs} & \textbf{Share (\%)} & \textbf{Countries covered} & \textbf{Avg.\ probes/country} \\
 \midrule
-Europe          & 6,251 & 57.8\% \\
-North America   & 2,293 & 21.2\% \\
-Asia-Pacific    & 1,338 & 12.4\% \\
-South America   &   371 &  3.4\% \\
-Oceania         &   349 &  3.2\% \\
-Africa          &   217 &  2.0\% \\
-\textbf{Total}  & \textbf{10,819} & \textbf{100\%} \\
+Europe          & 6,270 & 57.8\% & 44  & 142.5 \\
+North America   & 2,293 & 21.2\% & 13  & 176.4 \\
+Asia-Pacific    & 1,339 & 12.4\% & 63  &  21.3 \\
+South America   &   371 &  3.4\% & 10  &  37.1 \\
+Oceania         &   350 &  3.2\% &  8  &  43.8 \\
+Africa          &   217 &  2.0\% & 35  &   6.2 \\
+\textbf{Total}  & \textbf{10,840} & \textbf{100\%} & \textbf{173} & \textbf{62.7} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -103,14 +103,14 @@ The 111 remaining domains (44.9\%) returned a consistent set of IP addresses acr
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/fig_q1a_ip_set_diversity.png}
-\caption{Distribution of the number of distinct IP address sets observed across continental probe groups (17-day measurement window, 247 domains). A value of 1 indicates a uniform response across all continents; values above 1 indicate geographic differentiation.}
+\caption{Distribution of the number of distinct IP address sets per domain, at two geographic granularities (17-day measurement window, 247 domains). \textit{Left}: continent-level --- a value of 1 indicates a uniform response across all six continental probe groups; values above 1 indicate cross-continental differentiation. \textit{Right}: country-level --- the long tail extending to 54 distinct IP sets reflects fine-grained CDN routing that differentiates responses at the individual country level.}
 \label{fig:q1a}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/fig_q1b_top20_geo_diverse.png}
-\caption{Top 20 most geographically diverse domains, ranked by mean number of distinct IP address sets observed across continental probe groups.}
+\caption{Top 20 most geographically diverse domains, ranked by mean number of distinct IP address sets observed at the country level. Values annotated on each bar are the mean count over the 17-day measurement window.}
 \label{fig:q1b}
 \end{figure}
 
@@ -124,9 +124,9 @@ Among the 136 continent-diverse domains, the NSID presence rate is expected to b
 \subsection{Interpretation}
 \label{subsec:4.2.3}
 
-The 55.1\% continent-level geographic diversity rate among the Tranco Top 250 is consistent with the CDN-heavy composition of the top-ranked domains: major web properties served by Cloudflare, Akamai, Fastly, or Amazon CloudFront routinely return different IP pools to different geographic regions. The 10.43 mean country-level IP sets suggests that CDN operators maintain fine-grained geographic routing tables at the country or even sub-country level.
+The 55.1\% continent-level geographic diversity rate among the Tranco Top 250 is consistent with the CDN-heavy composition of the top-ranked domains: major web properties served by Cloudflare, Akamai, Fastly, or Amazon CloudFront routinely return different IP pools to different geographic regions. The jump from a mean of 2.64 distinct IP sets at the continent level to 10.43 at the country level (Section~\ref{subsec:4.2.1}) indicates that CDN operators do not simply route by continental region: they maintain fine-grained routing tables that differentiate responses at the individual country level or below.
 
-The 17-day measurement window provides a more reliable estimate of geographic diversity than the initial 2-day pilot: CDN routing policies that change slowly (e.g., weekly pool rotations) are now captured within the observation period. The remaining uncertainty is that domains with DNS-level CDN routing driven primarily by ECS (Section~\ref{subsec:3.3.4}) may exhibit diversity patterns visible at the resolver level but not at the probe level, since RIPE Atlas probes use their local ISP resolver which may or may not forward ECS to authoritative servers.
+The 17-day measurement window provides a more reliable estimate of geographic diversity than the 9-day pilot phase alone: CDN routing policies that change slowly (e.g., weekly pool rotations) are now captured within the observation period. The remaining uncertainty is that domains with DNS-level CDN routing driven primarily by ECS (Section~\ref{subsec:3.3.4}) may exhibit diversity patterns visible at the resolver level but not at the probe level, since RIPE Atlas probes use their local ISP resolver which may or may not forward ECS to authoritative servers.
 
 \bigskip
 \section{Results for Q2: Temporal Stability}
@@ -188,7 +188,7 @@ The weekly change rate (38.4\%) being indistinguishable from the daily rate (38.
 
 The actual probe distribution (Table~\ref{tab:4.2}) shows that Europe and North America together account for 79.0\% of unique probe IDs, despite the geographic stratification strategy described in Section~\ref{subsec:3.3.1}. This is substantially higher than the target of approximately 30\% (15\% per zone in a balanced global design) and confirms the well-documented structural concentration of RIPE Atlas in Western networks~\cite{Bajpai2017}.
 
-Despite this concentration, the stratification algorithm succeeded in recruiting probes from all six continents and from 173 countries, ensuring that the geographical coverage is global even if the probe counts are unequal.
+The sampling density column (avg.\ probes/country) reveals the depth of the imbalance more starkly than raw counts alone: a European country contributes on average 142.5 probe IDs to the dataset, versus 6.2 for an African country. Asia-Pacific, despite contributing 63 countries (the most of any continent), averages only 21.3 probes per country, reflecting both the scarcity of RIPE Atlas probes in the region and the large number of countries it encompasses. Despite this concentration, the stratification algorithm succeeded in recruiting probes from 173 countries across all six continents, ensuring that global geographic coverage is maintained even if sampling density is unequal.
 
 \subsection{Statistical Test of Measurement Impact}
 \label{subsec:4.4.2}
@@ -212,18 +212,16 @@ This test is also statistically significant ($\alpha = 0.05$), indicating that c
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_q3_probe_bias.png}
-\caption{Left: geographic distribution of unique probe IDs by continent. Right: mean number of unique IP address sets observed per (domain, continent) pair, with standard deviation. The Europe+NA group (EU 57.8\%, NA 21.2\%) dominates the probe count; the Mann-Whitney test ($p = 0.024$) confirms that this bias produces a statistically significant difference in observed DNS diversity between the EU+NA group and other regions.}
+\caption{Probe share versus diversity detection rate per continent. Red bars show each continent's share of unique probe IDs in the dataset; orange bars show the percentage of domains for which that continent's probes detect at least one day of geographically differentiated DNS responses. Despite holding only 2--3\% of probes, South America, Oceania, and Africa detect diversity in 55\% of domains --- comparable to or higher than Europe (47\%), which holds 58\% of probes. This indicates that geographic probe imbalance does not prevent underrepresented regions from contributing meaningful diversity observations.}
 \label{fig:q3}
 \end{figure}
 
 \subsection{Interpretation}
 \label{subsec:4.4.3}
 
-The statistically significant difference between EU+NA and other regions ($p = 0.024$) quantifies the impact of RIPE Atlas geographic bias on the measurement results for Q1 and Q2. The practical consequence is that the 55.1\% geographic diversity rate reported in Section~\ref{sec:4.2} should be regarded as a conservative lower bound: regions underrepresented in the probe pool (Africa, South America, Oceania) may return distinct DNS responses that the current probe distribution cannot detect with statistical reliability.
+Figure~\ref{fig:q3} reveals a counter-intuitive result: despite holding only 2--3\% of probes, South America (55.5\%), Oceania (54.7\%), and Africa (55.1\%) detect geographic DNS diversity in a higher proportion of domains than Europe (47.4\%), which holds 58\% of probes. This finding suggests that probe density does not limit the ability to \emph{detect} geographic diversity: even a small number of probes from an underrepresented region is sufficient to observe that authoritative servers return different IP addresses there. The Mann-Whitney test ($p = 0.024$) confirms that the IP-set distributions differ statistically between EU+NA and other regions, which should be interpreted as evidence that CDN routing genuinely differentiates responses by region, not as a sign that underrepresented regions are blind spots.
 
-The mean per-(domain, continent) IP-set counts by region reinforce this interpretation: Africa (mean 9.81, median 3.0), Oceania (mean 6.46, median 2.0), and South America (mean 7.90, median 2.0) show lower diversity than Asia-Pacific (mean 37.8, median 3.0), Europe (mean 40.8, median 3.0), and North America (mean 33.2, median 3.0). The high means and large standard deviations for the three well-represented regions reflect a small number of highly diverse domains pulling up the average, a pattern consistent with long-tailed IP-set distributions.
-
-Despite the geographic imbalance, the uniform 99.6\% domain coverage per continent confirms that every continental region provides measurements for virtually every domain in the corpus, avoiding the partial coverage problem that would make cross-continental comparisons unreliable.
+The practical implication for the 55.1\% geographic diversity rate reported in Section~\ref{sec:4.2} is nuanced: the rate is not significantly biased downward by probe imbalance, since underrepresented regions actively contribute diversity observations. The 99.6\% domain coverage per continent confirms that every region provides measurements for virtually every domain, avoiding the partial coverage problem that would make cross-continental comparisons unreliable.
 
 \bigskip
 \section{Results for Q4: Impact of Resolver Choice}
