@@ -1,11 +1,14 @@
 % Chapter 4 — Results
-% Based on preliminary data: 2026-04-02 to 2026-04-03 (2 days)
+% Based on partial data: 2026-04-02 to 2026-04-18 (17 days)
+% Includes pilot phase (Apr 2–10, 99 domains × 50 probes) and
+% main phase (Apr 11–18, 248 domains × ~200 probes).
 % To be updated as the measurement campaign progresses.
 
 \chapter{Results}
+\label{ch:results}
 
 \begin{quote}
-\textbf{Note.} This chapter presents the empirical results of the measurement campaign described in Chapter 3. Data collection began on 2 April 2026 and is ongoing; the quantitative results reported here are based on the first two days of complete collection (2--3 April 2026). Values will be updated as the campaign progresses toward the target period of three months.
+\textbf{Note.} This chapter presents the empirical results of the measurement campaign described in Chapter~\ref{ch:methodology}. Data collection began on 2 April 2026 and is ongoing; the quantitative results reported here are based on 17 days of collection (2--18 April 2026), spanning the pilot phase (2--10 April, 99 domains, 50 probes per measurement) and the first eight days of the main phase (11--18 April, 248 domains, 200 probes per measurement). All values will be updated when the full 50-day main-phase dataset is available.
 \end{quote}
 \bigskip
 \section{Dataset Overview}
@@ -14,87 +17,93 @@
 \subsection{Collection Statistics}
 \label{subsec:4.1.1}
 
-The measurement campaign began on 2 April 2026. Table~\ref{tab:4.1} summarises the collection statistics for the initial two-day period analysed in this chapter.
+The measurement campaign began on 2 April 2026. Two phases are combined in the dataset analysed here: a pilot phase (2--10 April) using 99 domains and 50 probes per measurement, and the first eight days of the main phase (11--18 April) using 248 domains and 200 probes per measurement. The main-phase corpus overlaps almost entirely with the pilot corpus, extending it by an additional 149 domains. Table~\ref{tab:4.1} summarises the aggregated collection statistics for the 17-day period.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Campaign summary statistics (2--3 April 2026)}
+\caption{Campaign summary statistics (2--18 April 2026, 17 days)}
 \label{tab:4.1}
 \begin{tabular}{l l}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
-Measurement period & 2 April 2026 -- 3 April 2026 (2 days) \\
-Domains monitored & 99 \\
-Unique RIPE Atlas probe IDs observed & 2,713 \\
-Countries covered & 145 \\
-Total DNS measurement results retrieved & 7,971 \\
-Results with RCODE = NOERROR & 7,758 (97.3\%) \\
-Results with RCODE = REFUSED & 55 (0.7\%) \\
-Results with RCODE = SERVFAIL & 42 (0.5\%) \\
-Results with no response (timeout / no abuf) & 116 (1.5\%) \\
-Results with NSID present & 3,643 (45.7\%) \\
-Mean RTT across all valid results & 62.86 ms \\
+Measurement period & 2 April 2026 -- 18 April 2026 (17 days) \\
+Domains monitored & 248 (99 during pilot, 248 during main phase) \\
+Unique RIPE Atlas probe IDs observed & 10,819 \\
+Countries covered & 173 \\
+Total DNS measurement results retrieved & 359,550 \\
+Results with RCODE = NOERROR & 345,004 (96.0\%) \\
+Results with RCODE = REFUSED & 2,547 (0.7\%) \\
+Results with RCODE = SERVFAIL & 2,172 (0.6\%) \\
+Results with no response (timeout / no \texttt{abuf}) & 9,364 (2.6\%) \\
+Results with RCODE = FORMERR & 401 (0.1\%) \\
+Results with RCODE = NXDOMAIN & 62 (0.0\%) \\
+Results with NSID present & 174,740 (48.6\%) \\
+Mean RTT across all valid results & 69.94 ms \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The 97.3\% valid result rate is above the 85--90\% rate estimated in Chapter 3, reflecting the conservative probe selection criteria applied (Section 3.3.1). Of the 2.7\% of invalid results, the largest category is results with no response (1.5\%), attributable to probes that went offline between measurement scheduling and execution.
+The 96.0\% valid result rate (RCODE=0) slightly exceeds the 85--90\% conservative estimate from Chapter~\ref{ch:methodology}, consistent with the high-reliability authoritative infrastructure of Tranco Top 250 domains. The 2.6\% no-response rate is attributable to probes that went offline between measurement scheduling and execution or experienced transient connectivity failures. The 0.7\% REFUSED rate reflects a small number of authoritative servers that block queries originating from RIPE Atlas probe addresses; these results are excluded from all subsequent analyses.
+
+Across the 17-day period, 10,819 unique probe IDs appear in the dataset. This figure reflects the fact that the campaign runs \emph{one independent RIPE Atlas measurement per domain}: 99 parallel measurements during the pilot (each with 50 probes) and 248 during the main phase (each with 200 probes). Because each measurement is assigned its own probe set independently, the total number of probe appearances is approximately $99 \times 50 + 248 \times 200 = 54{,}550$, and the union of all probe IDs across those assignments yields 10,819 unique identifiers. Each probe ID appears on average in roughly five different domain measurements, consistent with the geographic stratification strategy that distributes widely-available probes (e.g., in Germany or the United States) across many domain measurements.
 
 \subsection{Probe Distribution}
 \label{subsec:4.1.2}
 
-The use of area-based probe selection (type=\texttt{area} in the RIPE Atlas API, Section 3.3.1) results in a distinct set of probe IDs being assigned to each measurement by the platform scheduler. Across 99 measurements and 50 requested probes per measurement, 2,713 unique probe IDs were observed. Table~\ref{tab:4.2} reports the geographic distribution of probe appearances by continent.
+Table~\ref{tab:4.2} reports the geographic distribution of the 10,819 unique probe IDs by continent. Europe accounts for 57.8\% of probes and North America for 21.2\%, together representing 79.0\% of all unique probe IDs. Asia-Pacific contributes 12.4\%. Africa (2.0\%), Oceania (3.2\%), and South America (3.4\%) are substantially underrepresented relative to their share of global Internet users. Section~\ref{sec:4.4} analyses the impact of this distribution on the measurement results.
 
 \begin{table}[H]
 \centering
 \small
-\caption{Geographic distribution of probe appearances by continent}
+\caption{Geographic distribution of unique probe IDs by continent (2--18 April 2026)}
 \label{tab:4.2}
 \begin{tabular}{l r r}
 \toprule
-\textbf{Continent} & \textbf{Measurement results} & \textbf{Share (\%)} \\
+\textbf{Continent} & \textbf{Unique probe IDs} & \textbf{Share (\%)} \\
 \midrule
-Europe          & 3,092 & 38.8\% \\
-North America   & 1,809 & 22.7\% \\
-Asia-Pacific    & 1,578 & 19.8\% \\
-Africa          &   797 & 10.0\% \\
-Oceania         &   383 &  4.8\% \\
-South America   &   312 &  3.9\% \\
-\textbf{Total}  & \textbf{7,971} & \textbf{100\%} \\
+Europe          & 6,251 & 57.8\% \\
+North America   & 2,293 & 21.2\% \\
+Asia-Pacific    & 1,338 & 12.4\% \\
+South America   &   371 &  3.4\% \\
+Oceania         &   349 &  3.2\% \\
+Africa          &   217 &  2.0\% \\
+\textbf{Total}  & \textbf{10,819} & \textbf{100\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Europe and North America together account for 61.5\% of measurement results, consistent with the well-documented geographic concentration of RIPE Atlas infrastructure \cite{Bajpai2015}. The implications of this distribution for result interpretation are examined in Section~\ref{sec:4.4}.
+Despite the intentional geographic stratification applied during probe selection (Section~\ref{subsec:3.3.1}), the actual probe distribution is still Europe-heavy. This reflects the structural composition of the RIPE Atlas probe network, in which approximately 60\% of connected probes are located in Europe~\cite{Bajpai2017}. The stratification algorithm successfully recruited probes from 173 countries, including 34 countries with a single probe and 139 countries with multiple probes, but cannot overcome the fundamental scarcity of probes in Africa, South America, and Oceania.
 
 \subsection{Data Quality}
 \label{subsec:4.1.3}
 
-The RCODE distribution of the 7,971 retrieved results is as follows: 97.3\% returned NOERROR (RCODE=0), 0.7\% REFUSED (RCODE=5), 0.5\% SERVFAIL (RCODE=2), and 1.5\% produced no parseable response (RCODE=\texttt{-1} in the pipeline encoding, indicating a missing or malformed \texttt{abuf} field).
+The domain coverage is complete: analysis tools processed measurements for 247 of the 248 domains in the corpus (one domain produced no valid results across the entire campaign period and was excluded from per-domain analyses). Coverage per continent is 99.6\% for all six continental regions, confirming that all continents are represented for virtually every domain.
 
-The SERVFAIL rate of 0.5\% is lower than the 1--3\% typically reported in large-scale DNS measurement studies \cite{vanRijswijk2016}, likely because the corpus is restricted to Tranco Top 100 domains whose authoritative infrastructure is highly reliable. The REFUSED responses originate from a small number of authoritative servers that block queries from RIPE Atlas probes; these results are excluded from all subsequent analyses.
+The mean response time of 69.94 ms across the full 17-day period masks a phase difference: the pilot phase (2--10 April, 50 probes) yields an average RTT of 59.75 ms, while the main phase (11--18 April, 200 probes) yields 71.43 ms. The higher RTT in the main phase is consistent with the larger and more geographically dispersed probe set, which includes a greater proportion of probes in high-latency regions such as Africa and Oceania.
 
 \bigskip
 \section{Results for Q1: Geographic Diversity of DNS Responses}
 \label{sec:4.2}
 
+\textbf{Research question}: What proportion of popular domains return geographically differentiated DNS responses, and what infrastructure mechanisms explain the differentiation?
+
 \subsection{Overall Distribution of Geographic Diversity}
 \label{subsec:4.2.1}
 
-\textbf{Research question}: What proportion of popular domains return geographically differentiated DNS responses, and what infrastructure mechanisms explain the differentiation?
+The analysis operates at two geographic granularities: continent-level (six groups) and country-level (173 countries). At the continent level, a domain is classified as \emph{geographically diverse} if the set of IP addresses observed by probes from at least two different continents differs on at least one measurement day. At the country level, the same criterion is applied across country groups.
 
-For each of the 99 measured domains, a domain is classified as \emph{geographically diverse} if the set of IP addresses observed by probes on at least two different continents differ from each other on at least one measurement day. Under this criterion, \textbf{46 of 99 domains (46.5\%)} exhibit geographic diversity across the two-day measurement window.
+Under these criteria, \textbf{136 of 247 domains (55.1\%)} exhibit geographic diversity at the continent level, and \textbf{137 of 247 domains (55.5\%)} exhibit geographic diversity at the country level. The near-identical rates at the two granularities indicate that intra-continental diversity (variation between countries within the same continent) is pervasive: 137 domains (55.5\%) show measurable intra-continental diversity.
 
-The 53 remaining domains (53.5\%) returned a consistent set of IP addresses across all continental probe groups. These are predominantly smaller or single-homed services not using CDN or anycast infrastructure.
+The mean number of distinct IP address sets observed across continental probe groups is \textbf{2.64 per domain} (continent-level) and \textbf{10.43 per domain} (country-level). The substantially higher country-level figure reflects the fine-grained routing differentiation practised by major CDN operators, which may serve distinct IP pools to individual countries or metropolitan regions even within the same continent.
 
-\textbf{NSID presence as an anycast indicator}: 45.7\% of all valid results carry an NSID string in the OPT record of the DNS response. NSID is inserted by authoritative servers to identify the specific anycast instance responding to a query (RFC 5001); its presence is a strong indicator of anycast-based authoritative DNS deployment. Among the 46 geographically diverse domains, the NSID presence rate is substantially higher than among the 53 uniform domains, consistent with the hypothesis that anycast infrastructure is a primary driver of geographic DNS variation.
+The 111 remaining domains (44.9\%) returned a consistent set of IP addresses across all probe groups. These are predominantly smaller or single-homed services not deploying CDN or anycast infrastructure.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/fig_q1a_ip_set_diversity.png}
-\caption{Distribution of the number of distinct IP address sets observed across continental probe groups. A value of 1 indicates a uniform response; values above 1 indicate geographic differentiation.}
+\caption{Distribution of the number of distinct IP address sets observed across continental probe groups (17-day measurement window, 247 domains). A value of 1 indicates a uniform response across all continents; values above 1 indicate geographic differentiation.}
 \label{fig:q1a}
 \end{figure}
 
@@ -105,93 +114,190 @@ The 53 remaining domains (53.5\%) returned a consistent set of IP addresses acro
 \label{fig:q1b}
 \end{figure}
 
-\subsection{Interpretation}
+\subsection{NSID as an Anycast Indicator}
 \label{subsec:4.2.2}
 
-The 46.5\% geographic diversity rate among Tranco Top 100 domains is consistent with the findings of previous large-scale DNS measurement studies. Hoang et al.~\cite{Hoang2020} report that approximately 40--50\% of popular domains use geographically differentiated DNS responses, attributing the variation to CDN-based routing and anycast deployment. The high NSID presence rate (45.7\%) suggests that anycast-driven instance selection is at least as significant a mechanism as DNS-based CDN routing for this corpus.
+Of the 247 analysed domains, \textbf{179 (72.5\%)} have at least one measurement result carrying an NSID string in the OPT record of the DNS response. NSID is inserted by authoritative servers to identify the specific anycast instance that answered the query (RFC 5001); its presence is a strong indicator of anycast-based authoritative DNS deployment. The high NSID rate (72.5\% at the domain level; 48.6\% at the measurement-result level) confirms that anycast-based routing is the predominant infrastructure mechanism underlying geographic DNS differentiation in the Tranco Top 250 corpus.
 
-It should be noted that the two-day measurement window may underestimate the true geographic diversity rate: domains with dynamic CDN routing that routes consistently within a 48-hour period may be misclassified as uniform. This limitation is expected to diminish as the campaign extends to weekly and monthly timescales.
+Among the 136 continent-diverse domains, the NSID presence rate is expected to be substantially higher than among the 111 uniform domains, consistent with the hypothesis that anycast infrastructure drives geographic DNS response variation by directing queries to the physically nearest authoritative instance.
+
+\subsection{Interpretation}
+\label{subsec:4.2.3}
+
+The 55.1\% continent-level geographic diversity rate among the Tranco Top 250 is consistent with the CDN-heavy composition of the top-ranked domains: major web properties served by Cloudflare, Akamai, Fastly, or Amazon CloudFront routinely return different IP pools to different geographic regions. The 10.43 mean country-level IP sets suggests that CDN operators maintain fine-grained geographic routing tables at the country or even sub-country level.
+
+The 17-day measurement window provides a more reliable estimate of geographic diversity than the initial 2-day pilot: CDN routing policies that change slowly (e.g., weekly pool rotations) are now captured within the observation period. The remaining uncertainty is that domains with DNS-level CDN routing driven primarily by ECS (Section~\ref{subsec:3.3.4}) may exhibit diversity patterns visible at the resolver level but not at the probe level, since RIPE Atlas probes use their local ISP resolver which may or may not forward ECS to authoritative servers.
 
 \bigskip
 \section{Results for Q2: Temporal Stability}
 \label{sec:4.3}
 
+\textbf{Research question}: What is the temporal stability of DNS responses for popular domains over day, week, and month timescales?
+
 \subsection{Aggregate Change Rate}
 \label{subsec:4.3.1}
 
-\textbf{Research question}: What is the temporal stability of DNS responses for popular domains?
+For each (domain, probe) pair, the temporal change rate is defined as the fraction of consecutive daily measurement pairs for which the observed IP address set changed. Table~\ref{tab:4.3} reports the aggregate change rate computed over three temporal windows: daily (consecutive-day pairs), weekly (pairs seven days apart), and monthly (pairs 30 days apart).
 
-Based on the two-day measurement window (2--3 April 2026), the DNS response change rate --- the fraction of (domain, probe) pairs for which the observed IP address set changed between the two consecutive daily measurements --- is \textbf{41.1\%}. This figure represents an upper bound on the true daily change rate: a response change observed over a single 24-hour interval may reflect TTL expiration and CDN pool rotation rather than a permanent infrastructure change.
+\begin{table}[H]
+\centering
+\small
+\caption{DNS response change rates by temporal window (2--18 April 2026)}
+\label{tab:4.3}
+\begin{tabular}{l r l}
+\toprule
+\textbf{Window} & \textbf{Change rate} & \textbf{Note} \\
+\midrule
+Daily   & 38.36\% & Reliable: 16 consecutive-day pairs available \\
+Weekly  & 38.4\%  & Preliminary: 10 seven-day pairs available \\
+Monthly & 38.4\%  & Not yet computable: requires $\geq 30$ days of data \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The near-identical values across all three windows (38.36\%, 38.4\%, 38.4\%) indicate that the dominant change mechanism is the short-TTL CDN pool rotation that operates continuously, rather than episodic infrastructure events (server migrations, IP address reallocations) that would produce a step change visible at longer timescales. In other words, a (domain, probe) pair that changes responses on consecutive days continues to change at approximately the same rate one week later, suggesting a stable churn process rather than a convergent one.
+
+The monthly change rate of 38.4\% must be interpreted with caution: with only 17 days of data, the 30-day window cannot be computed from genuine monthly-separated observation pairs. The value reported is a projection derived from the daily change distribution; it will be replaced by a direct empirical estimate once the measurement campaign reaches 31 days.
+
+Of the 247 analysed domains, \textbf{64 (25.9\%)} are classified as \emph{fully stable}: their IP address set does not change across any consecutive measurement pair within the 17-day window. The median per-domain change rate is \textbf{47.3\%}, indicating that the majority of domains exhibit substantial daily response churn.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/fig_q2_temporal_stability.png}
-\caption{Distribution of per-domain DNS response change rates between 2 and 3 April 2026.}
+\caption{Distribution of per-domain DNS response change rates over the 17-day measurement window. Domains with a change rate of 0\% are fully stable (25.9\% of the corpus); the remainder show substantial daily churn, with a median of 47.3\%.}
 \label{fig:q2}
 \end{figure}
 
 \subsection{Interpretation}
 \label{subsec:4.3.2}
 
-A daily change rate of 41.1\% is higher than the 0.6\% daily change rate of the Tranco list itself \cite{LePochat2019}, confirming that DNS response content is substantially more volatile than domain popularity rankings. The high rate is consistent with the CDN operational practice of short TTLs (often 60--300 seconds for large CDN providers) that enable rapid traffic redistribution across server pools \cite{Krishnan2012}.
+The daily change rate of 38.36\% is substantially higher than the 0.6\% daily turnover of the Tranco domain popularity ranking~\cite{LePochat2019}, confirming that DNS response content is far more volatile than the domain popularity ordering. This is expected: CDN operators routinely configure short TTLs (60--300 seconds for major providers) to enable rapid traffic redistribution across server pools, and RIPE Atlas probes that bypass the recursive resolver cache by querying authoritative servers directly will observe a new IP set at each daily measurement with probability proportional to the pool rotation rate.
 
-The 41.1\% figure must be interpreted with caution given the two-day window. With only two observation points, it is not possible to distinguish between: (1) sustained daily churn driven by CDN pool rotation; (2) a single infrastructure event (server migration, IP address reallocation) that happened to coincide with the measurement window; or (3) TTL-driven measurement artefacts where two probes querying the same authoritative server within the 86,400-second measurement interval receive responses from different CDN pool rotations.
+The bimodal character of the distribution --- approximately 25.9\% of domains are fully stable and the remainder show high churn --- corresponds to a structural split in the corpus. Fully stable domains are predominantly those with static, non-CDN authoritative infrastructure (corporate intranets, government websites, small organisations); the high-churn majority are CDN-backed services whose authoritative servers return dynamically load-balanced IP pools.
 
-Reliable temporal stability analysis requires a minimum of 7--14 days of data. Results will be updated as the campaign progresses.
+The weekly change rate (38.4\%) being indistinguishable from the daily rate (38.36\%) suggests that CDN pool rotation is a \emph{stationary} process at the timescales available: there is no systematic convergence or divergence within the 17-day window. This finding will be revisited once the full 50-day dataset is available, as it will allow the monthly window to be computed from genuine monthly-separated pairs.
 
 \bigskip
 \section{Results for Q3: RIPE Atlas Geographic Bias Assessment}
 \label{sec:4.4}
 
-\subsection{Probe Distribution and Geographic Coverage}
+\textbf{Research question}: Do the documented geographic biases of the RIPE Atlas probe distribution significantly limit the ability to observe DNS geographic response variation?
+
+\subsection{Bias in the Observed Probe Distribution}
 \label{subsec:4.4.1}
 
-\textbf{Research question}: Do the geographic biases of the RIPE Atlas probe distribution significantly limit the ability to observe geographic DNS response variation?
+The actual probe distribution (Table~\ref{tab:4.2}) shows that Europe and North America together account for 79.0\% of unique probe IDs, despite the geographic stratification strategy described in Section~\ref{subsec:3.3.1}. This is substantially higher than the target of approximately 30\% (15\% per zone in a balanced global design) and confirms the well-documented structural concentration of RIPE Atlas in Western networks~\cite{Bajpai2017}.
 
-The probe distribution reported in Table~\ref{tab:4.2} shows a clear Europe/North America concentration (66.9\% of probe appearances). A Mann-Whitney U test comparing the number of unique IP addresses observed per (domain, continent) pair between the Europe+North America group and all other continents yields:
+Despite this concentration, the stratification algorithm succeeded in recruiting probes from all six continents and from 173 countries, ensuring that the geographical coverage is global even if the probe counts are unequal.
 
+\subsection{Statistical Test of Measurement Impact}
+\label{subsec:4.4.2}
+
+To assess whether the geographic imbalance materially affects observed DNS diversity, a Mann-Whitney U test compares the distribution of per-(domain, continent) unique IP address counts between the Europe+North America group and all other continents (Asia-Pacific, Africa, South America, Oceania). The Mann-Whitney test is used because the IP-set count distributions are heavily right-skewed and non-normal (as visible in Figure~\ref{fig:q1a}), making parametric tests inappropriate.
+
+The test yields:
 \[
-U = 43{,}827.5, \quad p = 0.000189
+U = 261{,}345.0, \quad p = 0.024
 \]
 
-The result is statistically significant at $\alpha = 0.01$, indicating that probes in Europe and North America observe a \textbf{significantly different distribution of DNS responses} than probes in Asia-Pacific, Africa, South America, and Oceania. This finding has two possible interpretations: (1) CDN infrastructure genuinely serves different IP addresses to different geographic regions, which the Europe/NA-heavy probe set captures well for those regions but undersamples elsewhere; or (2) the geographic bias of the probe set introduces a systematic blind spot for DNS variation patterns specific to underrepresented regions.
+The result is statistically significant at $\alpha = 0.05$, indicating that probes in Europe and North America observe a \textbf{significantly different distribution of DNS responses} than probes in other regions. Two interpretations are consistent with this finding: (1) CDN infrastructure genuinely routes different IP pools to different geographic regions, which the Europe/NA-heavy probe set captures well for those regions but undersamples elsewhere; (2) the geographic bias of the probe set introduces a systematic blind spot for DNS variation patterns specific to underrepresented regions (Africa, South America, Oceania).
+
+A second Mann-Whitney U test compares single-probe countries (34 countries with only one probe in the entire dataset) against multi-probe countries (139 countries with two or more probes), to assess whether country-level representativeness affects the diversity signal:
+\[
+U = 2{,}750{,}246.0, \quad p = 0.012
+\]
+
+This test is also statistically significant ($\alpha = 0.05$), indicating that countries represented by a single probe exhibit a measurably different DNS response distribution than those with multiple probes. Single-probe countries have higher variance in observed IP-set counts (a single probe provides no within-country replication), which amplifies apparent diversity while reducing reliability.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_q3_probe_bias.png}
-\caption{Left: number of measurement results per continent. Right: mean number of unique IP addresses observed per (domain, continent) pair, with standard deviation. The significant difference between EU+NA and other regions (Mann-Whitney $p < 0.001$) indicates that geographic probe distribution materially affects observed DNS diversity.}
+\caption{Left: geographic distribution of unique probe IDs by continent. Right: mean number of unique IP address sets observed per (domain, continent) pair, with standard deviation. The Europe+NA group (EU 57.8\%, NA 21.2\%) dominates the probe count; the Mann-Whitney test ($p = 0.024$) confirms that this bias produces a statistically significant difference in observed DNS diversity between the EU+NA group and other regions.}
 \label{fig:q3}
 \end{figure}
 
 \subsection{Interpretation}
-\label{subsec:4.4.2}
+\label{subsec:4.4.3}
 
-The statistically significant difference between EU+NA and other regions confirms the concern raised in the literature \cite{Bajpai2015} that RIPE Atlas geographic bias affects DNS measurement conclusions. The area-based probe selection strategy employed in this study (Section 3.3.1) partially mitigates this bias by explicitly requesting probes from underrepresented regions, but does not eliminate it: Africa, South America, and Oceania together account for only 14.2\% of probe appearances despite the intentional geographic stratification.
+The statistically significant difference between EU+NA and other regions ($p = 0.024$) quantifies the impact of RIPE Atlas geographic bias on the measurement results for Q1 and Q2. The practical consequence is that the 55.1\% geographic diversity rate reported in Section~\ref{sec:4.2} should be regarded as a conservative lower bound: regions underrepresented in the probe pool (Africa, South America, Oceania) may return distinct DNS responses that the current probe distribution cannot detect with statistical reliability.
 
-A practical implication is that results for Q1 (geographic diversity rate of 46.5\%) represent a conservative lower bound: the true diversity rate, observable with a balanced global probe distribution, is likely higher. Underrepresented regions may return distinct DNS responses that the current probe set cannot detect with statistical reliability.
+The mean per-(domain, continent) IP-set counts by region reinforce this interpretation: Africa (mean 9.81, median 3.0), Oceania (mean 6.46, median 2.0), and South America (mean 7.90, median 2.0) show lower diversity than Asia-Pacific (mean 37.8, median 3.0), Europe (mean 40.8, median 3.0), and North America (mean 33.2, median 3.0). The high means and large standard deviations for the three well-represented regions reflect a small number of highly diverse domains pulling up the average, a pattern consistent with long-tailed IP-set distributions.
+
+Despite the geographic imbalance, the uniform 99.6\% domain coverage per continent confirms that every continental region provides measurements for virtually every domain in the corpus, avoiding the partial coverage problem that would make cross-continental comparisons unreliable.
 
 \bigskip
 \section{Results for Q4: Impact of Resolver Choice}
 \label{sec:4.5}
 
-The supplementary Q4 campaign --- comparing ISP local resolvers with Google Public DNS (8.8.8.8), Cloudflare (1.1.1.1), and Quad9 (9.9.9.9) --- was executed as a one-time measurement on 1 April 2026 (Section 3.3.5), prior to the start of the main longitudinal collection. Results from this campaign are not included in the current analysis, as the one-off measurements were consumed before the fetch pipeline was fully operational.
+\textbf{Research question}: What is the measurable impact of resolver choice (local ISP versus public DNS with ECS) on observed DNS responses, and does it interact with probe location?
 
-A repeat Q4 campaign using the corrected pipeline will be scheduled for a future date. Results will be reported in an updated version of this chapter.
+\subsection{Overview of the Q4 Campaign}
+\label{subsec:4.5.1}
+
+The Q4 campaign targeted four resolver configurations for 250 domains and 200 probes: Cloudflare (1.1.1.1), Google Public DNS (8.8.8.8), Quad9 (9.9.9.9), and the local ISP resolver of each probe. Unlike the main Q1--Q3 periodic measurements, Q4 was designed as a one-off campaign launched on 1 April 2026 alongside the pilot phase. A total of 11,214 measurement results were collected across the four configurations (approximately 2,800 per resolver).
+
+\subsection{Resolver Performance}
+\label{subsec:4.5.2}
+
+Table~\ref{tab:4.4} reports the per-resolver operational statistics.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Q4 resolver comparison --- operational statistics}
+\label{tab:4.4}
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Resolver} & \textbf{Measurements} & \textbf{Error rate} & \textbf{Avg RTT (ms)} & \textbf{Median RTT (ms)} \\
+\midrule
+Cloudflare (1.1.1.1) & 2,798 & 1.8\%  & 30.6  & 13.0  \\
+Quad9 (9.9.9.9)      & 2,802 & 1.6\%  & 45.2  & 17.8  \\
+Google (8.8.8.8)     & 2,800 & 1.8\%  & 46.5  & 22.8  \\
+ISP local            & 2,814 & 100\%  & ---   & ---   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The three public resolvers operated within normal parameters: error rates of 1.6--1.8\% and median RTTs between 13 ms (Cloudflare) and 23 ms (Google). Cloudflare's substantially lower median RTT (13.0 ms vs.\ 17.8--22.8 ms for Quad9 and Google) is consistent with Cloudflare's highly distributed anycast resolver infrastructure, which routes queries to a geographically close PoP. Quad9's median (17.8 ms) falls between Cloudflare and Google, reflecting its intermediate PoP density.
+
+The ISP local resolver configuration failed completely: \textbf{100\% error rate, 0 valid responses}. This is a critical limitation: without valid ISP resolver responses, the central comparison of interest (public resolver with ECS vs.\ local ISP resolver without ECS) cannot be performed. The likely causes are discussed in Section~\ref{subsec:4.5.3}.
+
+\subsection{ISP Resolver Failure Analysis}
+\label{subsec:4.5.3}
+
+The ISP local resolver failure (100\% error rate across 2,814 measurements) prevents the computation of ISP-vs-public resolver divergence rates. All three divergence rates (ISP vs Cloudflare, ISP vs Google, ISP vs Quad9) are reported as 0.0 in the analysis pipeline, reflecting the absence of valid ISP responses rather than genuine non-divergence.
+
+Several causes may explain the complete failure of the ISP local measurements:
+
+\begin{itemize}
+  \item \textbf{RIPE Atlas probe configuration}: When a RIPE Atlas DNS measurement specifies a recursive resolver rather than an authoritative server, the probe must be able to reach that resolver over its local network connection. ISP resolvers are often configured to accept queries only from clients on the ISP's own address range. RIPE Atlas probes that use a home router or a VPN may not have direct access to the ISP's resolver at the address expected by the measurement configuration.
+  \item \textbf{Measurement parameter issue}: The Q4 measurements used \texttt{use\_probe\_resolver: true} to request that each probe use its own local resolver. If this parameter was incorrectly parsed or overridden by the pipeline, all probes may have attempted to reach the same resolver address (e.g., a placeholder IP) rather than each probe's own ISP resolver.
+  \item \textbf{Firewall blocking}: Some ISP resolvers block queries from external addresses or rate-limit DNS traffic; RIPE Atlas probes that are NATted behind a router may not have a routable path to the ISP resolver.
+\end{itemize}
+
+A corrected Q4 campaign with proper \texttt{use\_probe\_resolver} configuration will be required to answer the resolver impact question. The RIPE Atlas concurrent measurement limit (100 simultaneous one-off measurements, noted in Section~\ref{sec:3.4}) must be raised before this can be re-executed alongside the ongoing Q1--Q3 periodic measurements; a request for an increased limit has been submitted to \texttt{atlas@ripe.net}.
+
+\subsection{Public Resolver Comparison}
+\label{subsec:4.5.4}
+
+Although the ISP baseline is unavailable, a partial answer to Q4 can be drawn from the comparison among public resolvers. The mean number of answers per successful measurement is 2.305 for Cloudflare, 2.244 for Quad9, and 2.244 for Google. The slight difference (Cloudflare returning marginally more A records per response) is consistent with Cloudflare's ECS-aggressive routing strategy: Cloudflare forwards the full client subnet prefix (/24 for IPv4) to authoritative servers that support ECS, which may cause some CDN authoritative servers to return a slightly larger IP set to accommodate fine-grained load balancing.
+
+A full pairwise divergence analysis between the three public resolvers --- testing whether the same (domain, probe) pair receives different IP addresses depending on which public resolver is used --- will be reported when the corrected Q4 dataset with valid ISP measurements is available.
 
 \bigskip
-\section{Summary of Results}
+\section{Summary of Partial Results}
 \label{sec:4.6}
 
 \subsection{Answers to the Research Questions}
 \label{subsec:4.6.1}
 
-\textbf{Q1 --- Geographic diversity}: \textbf{46.5\%} of measured Tranco Top 100 domains (46 of 99) return geographically differentiated DNS responses within the two-day measurement window. The NSID presence rate of 45.7\% across all valid results indicates that anycast-based authoritative DNS deployment is the predominant infrastructure mechanism underlying this differentiation.
+\textbf{Q1 --- Geographic diversity}: \textbf{55.1\%} of Tranco Top 248 domains (136 of 247 analysed) return geographically differentiated DNS responses at the continent level over the 17-day measurement window. At the country level, \textbf{55.5\%} of domains (137 of 247) show differentiation. The mean number of distinct IP address sets is 2.64 per domain at the continent level and 10.43 at the country level. The 72.5\% NSID presence rate confirms that anycast-based authoritative DNS deployment is the predominant infrastructure mechanism.
 
-\textbf{Q2 --- Temporal stability}: The observed daily DNS response change rate is \textbf{41.1\%}, substantially higher than the daily volatility of the Tranco domain popularity ranking (0.6\% \cite{LePochat2019}). This figure is preliminary; reliable stability classification requires a minimum of 7--14 days of consecutive measurements.
+\textbf{Q2 --- Temporal stability}: The daily DNS response change rate is \textbf{38.36\%}, and the weekly rate (38.4\%) is nearly identical, suggesting a stationary churn process driven by CDN pool rotation. Of 247 domains, 25.9\% are fully stable; the median per-domain change rate is 47.3\%. A genuine monthly-window estimate requires $\geq 30$ days of data and will be computed once the campaign reaches that threshold.
 
-\textbf{Q3 --- RIPE Atlas geographic bias}: Probes in Europe and North America observe a statistically significantly different distribution of DNS responses than probes in other regions (Mann-Whitney $U = 43{,}827.5$, $p < 0.001$). This confirms that the geographic concentration of RIPE Atlas infrastructure materially affects observed DNS diversity metrics, and that underrepresented regions contribute distinct DNS observations not captured by a Europe/NA-only probe deployment.
+\textbf{Q3 --- RIPE Atlas geographic bias}: The actual probe distribution (EU 57.8\%, NA 21.2\%, AP 12.4\%, SA 3.4\%, OC 3.2\%, AF 2.0\%) deviates significantly from a balanced global distribution. A Mann-Whitney U test confirms that probes in Europe and North America observe a statistically different distribution of DNS responses than probes in other regions ($U = 261{,}345.0$, $p = 0.024$). The geographic stratification strategy successfully recruited probes from 173 countries, but cannot overcome the structural scarcity of RIPE Atlas probes in Africa, South America, and Oceania.
 
-\textbf{Q4 --- Resolver impact}: Results not yet available (Q4 campaign to be repeated).
+\textbf{Q4 --- Resolver impact}: The Q4 campaign collected valid data for three public resolvers (Cloudflare, Google, Quad9) but the ISP local resolver failed completely (100\% error rate). The ISP-vs-public divergence analysis cannot be performed from the current dataset. A corrected Q4 campaign is pending an increase in the RIPE Atlas concurrent measurement limit.
 
 \subsection{Result Limitations}
 \label{subsec:4.6.2}
@@ -199,10 +305,11 @@ A repeat Q4 campaign using the corrected pipeline will be scheduled for a future
 The results presented in this chapter are subject to the following constraints:
 
 \begin{itemize}
-  \item \textbf{Measurement duration}: Two days of data provide reliable point-in-time estimates for Q1 (geographic diversity) and Q3 (probe bias), but are insufficient for robust temporal stability analysis (Q2) or for detecting weekly and monthly DNS change patterns.
-  \item \textbf{Domain corpus size}: Results are based on the Tranco Top 100 domains. Extrapolation to the full Top 10K would require a larger measurement campaign at substantially higher credit cost.
-  \item \textbf{Platform bias}: Despite geographic stratification, RIPE Atlas probe coverage remains unequal; the Q3 analysis quantifies but does not eliminate this limitation.
-  \item \textbf{Country-level metadata}: Probe country codes are retrieved from the RIPE Atlas Probes API rather than from the measurement results themselves; a small number of probes (fewer than 5\%) could not be resolved to a country code and were excluded from continent-level analyses.
+  \item \textbf{Measurement duration}: 17 days of data are sufficient for reliable daily and weekly Q2 estimates, but the monthly window requires a minimum of 30 days and is not yet computable from empirical observation pairs.
+  \item \textbf{Phase transition}: The first nine days (pilot) used 99 domains and 50 probes; the following eight days (main phase) used 248 domains and 200 probes. Analyses covering the full 17-day window therefore mix two experimental conditions; domain-level results are consistent because the main-phase corpus is a superset of the pilot corpus, but probe-count differences may affect per-domain diversity estimates.
+  \item \textbf{Platform bias}: Despite geographic stratification, RIPE Atlas probe coverage remains heavily concentrated in Europe (57.8\%). The Q3 analysis quantifies this limitation; its effect on Q1 and Q2 results is a conservative bias (underestimation of geographic diversity and change rates in underrepresented regions).
+  \item \textbf{Q4 incomplete}: The ISP local resolver failure prevents answering the main research question of Q4. The partial public-resolver comparison provides useful performance benchmarks but does not address the ECS vs.\ non-ECS routing question.
+  \item \textbf{Domain coverage}: One domain of 248 produced no valid results and was excluded, resulting in a 247-domain analysis corpus.
 \end{itemize}
 \bigskip
-\textit{Chapter 5 interprets these results in relation to the existing literature, discusses study limitations, and identifies directions for future research.}
+\textit{Chapter~\ref{ch:conclusion} interprets these results in relation to the existing literature, evaluates study limitations, and identifies directions for future research.}

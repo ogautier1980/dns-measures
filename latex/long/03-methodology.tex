@@ -2,6 +2,7 @@
 % Edit the Markdown source, not this file.
 
 \chapter{Methodology}
+\label{ch:methodology}
 
 \begin{quote}
 \textbf{Note on sourcing.} This chapter describes the technical methodology of the measurement campaign as actually implemented and deployed. Sources from the bibliography are cited where the methodology is directly informed by or adapted from prior work. General software engineering choices (API usage, data format parameters, statistical tests) are not attributed to sources.
@@ -84,7 +85,7 @@ The pipeline is orchestrated by a cron daemon running inside the container, with
 
 The weekly Tranco list refresh is intentionally disabled during the active measurement period. Keeping the domain corpus fixed throughout the campaign is required for the validity of the Q2 temporal stability analysis: if domains entered or left the measurement set mid-campaign, observed response changes could not be distinguished from corpus changes. The corpus will be refreshed after the measurement period concludes.
 
-The pipeline source code is available at \url{https://github.com/ogautier-unam/dns-pipeline} and implements the six Python scripts described in the following sections.
+The pipeline source code is available at \url{https://github.com/ogautier-unam/dns-pipeline}. The five core scripts (\texttt{fetch\_tranco.py}, \texttt{create\_ripe\_measurements.py}, \texttt{fetch\_ripe\_atlas.py}, \texttt{parse\_dns\_results.py}, \texttt{analyse\_dns.py}) are introduced as they appear in the pipeline, alongside \texttt{pipeline.py}, which acts as the top-level orchestrator and is invoked by the cron scheduler.
 \bigskip
 \section{Domain Corpus Selection}
 \label{sec:3.2}
@@ -359,6 +360,17 @@ Reports and figures & \textasciitilde{}50 MB & Pi + Google Drive \\
 \section{Analysis Methods}
 \label{sec:3.5}
 
+All analyses described in this section are implemented in \texttt{analyse\_dns.py} (step 5 of Table~\ref{tab:pipeline_stages}), which reads the cumulative \texttt{dns\_results.parquet} file and produces per-question CSV reports and PNG figures.
+
+\subsection{Statistical Testing Approach}
+\label{subsec:3.5.0}
+
+Several analyses in this section compare two independent groups of observations (e.g.\ probes from different geographic regions, or different resolver types). All such comparisons use the \textbf{Mann-Whitney U test} (also known as the Wilcoxon rank-sum test), a non-parametric test that evaluates whether one group tends to produce systematically larger values than the other, without assuming any particular distribution of the data.
+
+The Mann-Whitney U test was preferred over a Student's t-test. The t-test is a parametric test that compares the means of two groups under the assumption that the data follow a normal distribution; it is widely used but sensitive to violations of that assumption. Here, two characteristics of the data make the t-test unsuitable. First, the primary response variable --- the number of unique IP addresses observed per domain --- is a count variable with a heavily right-skewed distribution: most domains return one or two IP addresses, while a small number of CDN-heavy domains return many more, violating the normality assumption. Second, the groups being compared are of unequal size, which further reduces the reliability of parametric tests on small samples. The Mann-Whitney U test is robust to both non-normality and unequal group sizes.
+
+The null hypothesis in each case is that the two groups are drawn from the same distribution (i.e.\ no systematic difference). A p-value below 0.05 is used as the significance threshold throughout.
+
 \subsection{Q1 --- Geographic Diversity of DNS Responses}
 \label{subsec:3.5.1}
 
@@ -406,18 +418,24 @@ The analysis operates at two levels of geographic granularity, exploiting the co
 \subsection{Q3 --- Assessment of RIPE Atlas Geographic Bias}
 \label{subsec:3.5.3}
 
-\textbf{Objective}: Evaluate whether the geographic concentration of RIPE Atlas probes in Europe and North America significantly limits the ability to observe geographic DNS variation.
+\textbf{Objective}: Evaluate whether the geographic concentration of RIPE Atlas probes in Europe and North America significantly limits the ability to observe geographic DNS variation, at both continent and country level.
 
-\textbf{Method}: The probe distribution actually achieved at deployment is compared to the target allocation from Section 3.3.1. For each continent, the coverage rate (proportion of domains observed by at least one probe) and the mean number of unique IP addresses observed per domain are computed.
+The analysis operates at the same two levels of granularity as Q1, assessing probe bias at both continent and country level. Both sub-analyses use the Mann-Whitney U test described in Section~\ref{subsec:3.5.0}.
 
-A \textbf{Mann-Whitney U test} (non-parametric, for independent samples) compares the distribution of unique IPs observed per domain between Europe+North America probes and probes from all other regions. A statistically significant difference (p < 0.05) indicates that the geographic stratification captures meaningfully different DNS responses from underrepresented regions.
+\textbf{Continent-level bias}: The probe distribution actually achieved at deployment is compared to the target allocation from Section~\ref{subsec:3.3.1}. For each continent, the coverage rate (proportion of domains observed by at least one probe) and the mean number of unique IP addresses observed per domain are computed. The Mann-Whitney U test compares the distribution of unique IPs per domain between Europe+North America probes and probes from all other regions. A statistically significant result indicates that the geographic stratification captures meaningfully different DNS responses from underrepresented regions; a non-significant result would suggest that EU+NA probes alone would have been sufficient.
+
+\textbf{Country-level bias}: The probe selection algorithm (Section~\ref{subsec:3.3.1}) operates in three rounds within each continental stratum. Round~1 assigns one probe per country (country-first strategy); Round~3 adds extra probes per country to fill remaining continental quotas. This naturally produces two categories: \textbf{single-probe countries} (covered exactly once in Round~1, representing marginal geographic coverage) and \textbf{multi-probe countries} (receiving additional probes in Round~3, typically larger or better-connected countries).
+
+The Mann-Whitney U test compares the number of unique IP addresses observed per domain from single-probe countries against those from multi-probe countries. A statistically significant result indicates that single-probe (marginal) countries genuinely observe distinct DNS responses --- validating the country-first selection strategy and confirming that the extra geographic diversity is not redundant. A non-significant result would suggest that the additional countries covered by Round~1 add breadth without adding observational value.
 
 \textbf{Key metrics}:
 \begin{itemize}
-  \item Actual probe distribution by continent at deployment
-  \item Per-continent domain coverage rate
+  \item Actual probe distribution by continent and by country at deployment
+  \item Number of distinct countries with at least one probe
+  \item Number of single-probe vs.\ multi-probe countries per continent
   \item Mean unique IPs per domain per continent
-  \item Mann-Whitney U statistic and p-value (EU+NA vs. other regions)
+  \item Mann-Whitney U: EU+NA vs.\ other continents
+  \item Mann-Whitney U: single-probe vs.\ multi-probe countries
 \end{itemize}
 
 \subsection{Q4 --- Impact of Resolver Choice}
@@ -431,7 +449,7 @@ This analysis uses the supplementary Q4 measurement campaign (Section 3.3.3), wh
 
 \textbf{Step 2 --- Divergence analysis}: For each domain and each probe, the \texttt{answer\_ips} returned by the local ISP resolver is compared against each public DNS service. A divergence event is recorded when the IP sets differ. The per-comparison divergence rate is the proportion of (domain, probe) pairs showing divergence.
 
-\textbf{Step 3 --- Statistical validation}: For each pairwise comparison (ISP local vs. each public resolver), the Mann-Whitney U test is applied to the distribution of RTT values across all probes.
+\textbf{Step 3 --- Statistical validation}: For each pairwise comparison (ISP local vs.\ each public resolver), the Mann-Whitney U test (Section~\ref{subsec:3.5.0}) is applied to the distribution of RTT values across all probes.
 
 \textbf{Key metrics}:
 \begin{itemize}
