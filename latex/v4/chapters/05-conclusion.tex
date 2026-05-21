@@ -1,0 +1,236 @@
+\chapter{Discussion and Conclusion}
+\label{ch:conclusion}
+\iffalse
+\fi
+\section{Discussion of Results}
+\label{sec:5.1}
+
+Chapter~\ref{ch:method} was designed around four research questions; Chapter~\ref{ch:results} reported what the data produced. This section reads the results against the existing literature and draws out practical consequences for measurement methodology. The campaign runs for 50 days (2 April -- 21 May 2026); all quantitative claims here are from the 45-day partial dataset (2 April -- 16 May 2026) and will be updated when the campaign closes.
+
+\bigskip
+\subsection{Interpreting Geographic Diversity (Q1)}
+\label{subsec:5.1.1}
+
+59.9\% of the 247 analysed Tranco Top-250 domains return different \ac{IP} address sets to probes in at least two continents on at least one measurement day. At the country level the rate is 60.3\%, with a mean of 11.45 distinct \ac{IP} sets across the 173 countries covered --- four times the 2.67 continent-level figure. \ac{CDN} routing tables go well below the continental grain.
+
+OpenINTEL~\cite{vanRijswijk2016} queries from one server in the Netherlands --- structurally blind to geographic differentiation. The 59.9\% rate is the number that quantifies what it misses.
+
+Koch~\cite{Koch2021} showed anycast routing produces operationally significant variation. The 77.3\% domain-level \ac{NSID} rate and the 9.3-point gap between diverse (56.6\%) and uniform domains (47.3\%) put a concrete scale on Koch's finding for the Tranco Top-250.
+
+Bortzmeyer~\cite{Bortzmeyer2013} showed probes in different regions reach different anycast instances. The 51.9\% result-level \ac{NSID} rate confirms this at scale: more than half of all \ac{DNS} responses in the dataset carry a per-instance identifier returned by a physically distinct server.
+
+Li~\cite{Li2025} and Hours~\cite{Hours2016} observed country-level routing tables for individual \ac{CDN} operators. The four-fold gap --- 11.45 country-level versus 2.67 continent-level distinct \ac{IP} sets --- shows the same granularity holds across the Top-250 as a corpus.
+
+Xu~\cite{Xu2023} documented that 48.5\% of popular domains share the top-10 \ac{DNS} hosting providers. Figure~\ref{fig:q1b} reflects this directly: geographic diversity is concentrated in the hyperscale operators, not spread evenly.
+
+The measurement consequences follow directly.
+
+\begin{itemize}
+  \item \textit{Longitudinal \ac{DNS} observatories.} A single vantage point misses geographic differentiation for the majority of popular domains. A handful of probes across continents catches what a Dutch server cannot.
+  \item \textit{Network performance research.} Using \ac{DNS} records to infer content-server location requires geographic qualification. For 59.9\% of popular domains the \ac{IP} from one location is not the \ac{IP} from another. Assuming otherwise introduces systematic error into latency or routing inferences.
+\end{itemize}
+
+\bigskip
+\subsection{Interpreting Temporal Stability (Q2)}
+\label{subsec:5.1.2}
+
+The aggregate daily \ac{DNS} response change rate is 38.24\%; the median per-domain rate is 48.8\%. Of 247 domains, 20.6\% are fully stable. Weekly (38.29\%) and monthly (38.30\%) rates are within 0.06 points of the daily figure --- \ac{CDN} pool rotation is a stationary process, not a convergent one.
+
+Le Pochat~\cite{LePochat2019} measured a 0.6\% daily change rate in the Tranco list itself. Our per-domain \ac{DNS} change rate is 38.24\% --- about 64 times higher. A stable popularity ranking does not mean stable \ac{DNS} records; the two layers evolve on completely different timescales. The explanation is the short \ac{TTL}s (60--300 seconds) that major \ac{CDN} operators set deliberately to enable near-real-time pool rotation.
+
+Van Rijswijk-Deij~\cite{vanRijswijk2016} demonstrated that \ac{DNS} infrastructure evolves on timescales ranging from hours (\ac{TTL}-driven updates) to years (infrastructure migrations). Our 50-day campaign captures only the short end of this spectrum. The near-identity of daily, weekly, and monthly change rates (38.24\%, 38.29\%, 38.30\%) suggests that the dominant mechanism is high-frequency \ac{CDN} pool rotation rather than episodic infrastructure events. With fifteen monthly comparison pairs now available, this conclusion is well-supported.
+
+Figure~\ref{fig:q2} shows a clear split. 20.6\% of domains have a change rate near zero; the rest cluster around a 48.8\% median. Two infrastructure types explain it. Some organisations run their own authoritative servers and never rotate the \ac{IP} pool. Others use a \ac{CDN} with a short \ac{TTL} and a dynamically updated pool. There is no middle ground in the data.
+
+For measurement practice the split matters.
+
+\begin{itemize}
+  \item \textit{Measurement frequency.} The 20.6\% of stable domains do not need daily sampling --- weekly would capture the same picture. For the rest, daily is the minimum: a weekly probe would miss most of the rotation.
+  \item \textit{Archival strategy.} A tiered policy --- daily for the volatile majority, weekly for the stable tail --- cuts measurement volume without losing change coverage.
+\end{itemize}
+
+\bigskip
+\subsection{Interpreting the Impact of Geographic Bias (Q3)}
+\label{subsec:5.1.3}
+
+The probe distribution is heavily EU+NA concentrated (79.0\% combined) --- exactly what the RIPE Atlas platform's documented probe geography predicts. Despite the imbalance, Africa (59.5\%), South America (58.3\%), and Oceania (59.5\%) each detect geographic \ac{DNS} diversity in a share comparable to or above Europe (52.6\%) and Asia-Pacific (47.4\%), each holding only 2--3\% of probes. Mann-Whitney yields $p = 0.091$.
+
+Bajpai~\cite{Bajpai2017} put 91\% of RIPE Atlas probes in Europe and North America as of 2017; the 2026 figure is 79.0\%. The skew has eased slightly but has not closed. Geographic tag filtering (\texttt{system-ipv4-works}, \texttt{system-resolves-a-correctly}) is necessary but not sufficient: Africa contributes only 218 unique probe IDs across 35 countries --- 6.2 per country --- and no selection algorithm can fix that.
+
+Nosyk~\cite{Nosyk2025} identified geographic bias as the principal limitation of platform-wide \ac{DNS} measurements. The sampling density analysis corroborates this: European countries contribute 142.7 probe IDs on average versus 6.2 for African countries. The finding that under-represented continents detect comparable per-domain diversity to Europe qualifies Nosyk's pessimistic conclusion: the imbalance affects within-region statistical reliability but does not prevent diversity detection.
+
+The equal detection rate in under-represented regions follows from how \ac{CDN} operators engineer their networks. Africa, South America, and Oceania each get their own \ac{IP} pools because the topology demands it. One probe in Lagos is enough to detect that Google's authoritative server returns a different \ac{IP} set there than in Frankfurt. The Europe-centric skew in RIPE Atlas is a bottleneck for statistically characterising diversity at fine granularity --- not for detecting that it exists.
+
+The 59.9\% diversity rate is unbiased by probe imbalance --- under-represented regions detect routing differences at comparable rates to Europe. Future campaigns aiming at intra-regional characterisation need more hardware in Africa, where the average is 6.2 probe IDs per country.
+
+\bigskip
+\subsection{Interpreting Resolver Impact (Q4)}
+\label{subsec:5.1.4}
+
+\hl{\textit{To be completed}}
+
+\bigskip
+\section{Limitations of the Study}
+\label{sec:5.2}
+
+No measurement study is without constraints. The results in Chapter~\ref{ch:results} are subject to three categories of limitation: methodological (what the design cannot address), technical (what the platform prevented), and interpretive (what the analysis cannot distinguish).
+
+\bigskip
+\subsection{Methodological Limitations}
+\label{subsec:5.2.1}
+
+50 days is a short window. It catches the daily \ac{CDN} rotation, but monthly seasonality, \ac{CDN} capacity additions ahead of peak traffic, and long-term infrastructure migrations are all invisible at this timescale. Van Rijswijk-Deij~\cite{vanRijswijk2016} needed multi-year data to characterise infrastructure evolution. The results here are a bounded snapshot, not a longitudinal record.
+
+The Tranco Top-250 is the 0.002\% of registered domains that carries most of the traffic. The long tail --- roughly 360 million registered domains~\cite{vanRijswijk2016} --- likely looks very different in both geographic diversity and temporal stability. Do not extrapolate these results beyond the popular-domain tier.
+
+As quantified in Section~\ref{sec:4.4}, 79.0\% of probes are located in Europe and North America. Despite the three-round stratification protocol, the absolute number of probes in Africa, South America, and Oceania remains small (218, 374, and 350 unique probe IDs respectively), limiting within-region statistical power. Finer-grained analyses (e.g., country-level temporal stability, intra-regional \ac{IP}-set variance) require more probes per country than are currently available in these regions.
+
+\bigskip
+\subsection{Technical Limitations}
+\label{subsec:5.2.2}
+
+The RIPE Atlas concurrent measurement limit (100 simultaneous one-off measurements) is a hard practical constraint. The 248 ongoing periodic measurements for Q1--Q3 left no room for concurrent one-off campaigns; Q4 required a platform-level exemption that was not granted in time.
+
+Probe independence is partial. The 248 parallel periodic measurements are each assigned probes by the RIPE Atlas scheduler independently, but the same probe can appear in multiple measurements. A probe that goes offline produces correlated errors across every domain measurement it contributes to. With 10,862 unique probe IDs across 54,550 appearances (average five per probe), per-probe failures introduce correlations that the per-domain independence assumption underlying the Mann-Whitney tests does not account for.
+
+The pilot phase (2--10 April, 99 domains, 50 probes) and main phase (11 April -- 21 May 2026, 248 domains, 200 probes) have different experimental conditions. Domain-level analyses are consistent across the boundary --- the main-phase corpus is a superset --- but the probe-count difference (50 versus 200) means pilot-phase days have lower statistical power than main-phase days.
+
+\bigskip
+\subsection{Interpretive Limitations}
+\label{subsec:5.2.3}
+
+The \ac{NSID} gap (56.6\% for diverse domains, 47.3\% for uniform) points to anycast as the dominant mechanism. It does not separate it. Anycast, GeoDNS, and \ac{ECS} all produce different \ac{IP} addresses in different regions. Three causes, one observable effect.
+
+Hyperscale \ac{CDN} operators (Google, Meta, Microsoft, Amazon, Cloudflare) dominate the Tranco Top-250. The 59.9\% diversity rate is probably higher than what a random sample from the Top-10K would show. The results describe the top tier of the \ac{DNS} hierarchy. That is the tier that carries most of the world's traffic --- but it is not the whole namespace.
+
+The interpretation of Q2 (Section~\ref{subsec:5.1.2}) relies on the observed day-week-month rate equality to argue that \ac{CDN} pool rotation is stationary. With fifteen monthly comparison pairs now available this conclusion is robust; longer-cycle patterns would nonetheless require extending the campaign beyond 50 days.
+
+\bigskip
+\section{Contributions of This Work}
+\label{sec:5.3}
+
+\subsection{Scientific Contributions}
+\label{subsec:5.3.1}
+
+The first 45 days of the campaign produced 1,564,904 \ac{DNS} measurements from 10,862 unique RIPE Atlas probes across 173 countries. These results yield concrete answers at a geographic resolution not previously reported: how widespread geographic \ac{DNS} differentiation is (Q1), how stable responses are over time (Q2), and whether the RIPE Atlas probe imbalance prevents under-represented regions from contributing meaningful observations (Q3). Table~\ref{tab:hypothesis_validation} summarises the validation status of key claims from the literature against these partial results.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{X p{3.5cm} p{3.8cm}}
+\toprule
+\textbf{Claim} & \textbf{Source} & \textbf{Status} \\
+\midrule
+Single-vantage-point \ac{DNS} measurement misses geographic variation & Van Rijswijk-Deij~\cite{vanRijswijk2016} & \textbf{Confirmed}: 59.9\% of domains are continent-diverse \\
+Anycast is the primary mechanism of geographic \ac{DNS} variation & Koch~\cite{Koch2021}; Bortzmeyer~\cite{Bortzmeyer2013} & \textbf{Confirmed}: 77.3\% \ac{NSID} rate; higher for diverse domains \\
+\ac{CDN} routing operates at sub-continental granularity & Hours~\cite{Hours2016}; Li~\cite{Li2025} & \textbf{Confirmed}: 11.45 country-level vs 2.67 continent-level \ac{IP} sets \\
+\ac{DNS} response content is more volatile than domain popularity rankings & Le Pochat~\cite{LePochat2019} & \textbf{Confirmed}: 38.24\% daily change rate vs 0.6\% Tranco churn \\
+RIPE Atlas geographic bias persists and affects \ac{DNS} measurements & Bajpai~\cite{Bajpai2017}; Nosyk~\cite{Nosyk2025} & \textbf{Confirmed} (EU+NA 79\%, $p=0.091$), diversity detection not impaired \\
+Public resolver vs \ac{ISP} resolver comparison (Q4) & Hours~\cite{Hours2016}; Wang~\cite{Wang2018} & \hl{\textit{To be completed}} \\
+\bottomrule
+\end{tabularx}
+\caption{Empirical validation status of key claims from the literature}
+\label{tab:hypothesis_validation}
+\end{table}
+
+\bigskip
+\subsection{Methodological Contributions}
+\label{subsec:5.3.2}
+
+The full pipeline --- probe selection, campaign configuration, daily fetch, Parquet parsing, and Q1--Q4 analysis --- is documented in Chapter~\ref{ch:method} and published on GitHub (\url{https://github.com/ogautier-unam/dns-pipeline}). Le Pochat~\cite{LePochat2019} identified reproducibility as a first-order concern for domain-ranking studies; the permalink to the exact Tranco snapshot, combined with the archived RIPE Atlas measurement IDs, lets any researcher reconstruct the full dataset from scratch.
+
+Prior \ac{DNS} measurement studies typically characterise geographic diversity at the continent level. The two-level analysis here (continent + country) shows that diversity rates are nearly identical at both levels (59.9\% and 60.3\%), while \ac{CDN} routing granularity is four times finer at the country level (mean 11.45 distinct \ac{IP} sets versus 2.67 at continent). The method is reusable for any future distributed \ac{DNS} measurement study.
+
+Bajpai~\cite{Bajpai2017}, Nosyk~\cite{Nosyk2025}, and Boswell and Perkins~\cite{Boswell2024} each identified a different failure mode for RIPE Atlas \ac{DNS} campaigns. This work operationalises their recommendations in one place: system-tag filtering (\texttt{system-ipv4-works}, \texttt{system-resolves-a-correctly}); direct authoritative-server queries to cut resolver artefacts; credit-budget planning across 250 parallel periodic measurements; and \ac{NSID}-based anycast instance identification as a routine field in the Parquet schema.
+
+\bigskip
+\subsection{Data Contribution}
+\label{subsec:5.3.3}
+
+The 50-day measurement campaign (2 April -- 21 May 2026) closes today, with the final dataset to be published upon completion. The 45-day partial dataset (1,564,904 measurements, 10,862 probe IDs, 173 countries) is archived locally and backed up to Google Drive via rclone. Storage format is Parquet, schema is fully documented, and analysis scripts are paired with the data --- consistent with \ac{FAIR} data principles.
+
+\bigskip
+\section{Future Work}
+\label{sec:5.4}
+
+\bigskip
+\subsection{Immediate Extensions}
+\label{subsec:5.4.1}
+
+\textit{Completing the current campaign.}
+The campaign closed on 21 May 2026. Recomputing all Q1--Q3 metrics with the full 50-day dataset consolidates the monthly-window stability estimate for Q2 to the maximum number of pairs, increases statistical power for Q3, and produces a clean publishable snapshot without the pilot-main phase mix.
+
+\textit{Q4 resolver impact campaign.}
+\hl{\textit{To be completed}}
+
+Extending collection beyond 50 days would enable detection of monthly and seasonal patterns in \ac{CDN} provisioning. Van Rijswijk-Deij~\cite{vanRijswijk2016} demonstrated that multi-year data is necessary to characterise infrastructure evolution at scale; the pipeline is designed for continuous operation and can be extended with minimal additional effort.
+
+\bigskip
+\subsection{New Research Questions}
+\label{subsec:5.4.2}
+
+\textit{\ac{IPv6} geographic diversity.}
+Do \ac{DNS} \ac{AAAA} responses exhibit the same geographic diversity as \ac{A} responses? The hypothesis, grounded in Bajpai~\cite{Bajpai2017}, is that \ac{IPv6} \ac{CDN} deployment lags \ac{IPv4}, producing lower inter-regional diversity. A dual-stack extension (simultaneous \ac{A} + \ac{AAAA} queries from \ac{IPv6}-enabled probes) would test this and inform \ac{IPv6} transition planning.
+
+\textit{Longitudinal anomaly detection.}
+Van der Toorn~\cite{vanderToorn2018} showed that longitudinal \ac{DNS} data detects malicious infrastructure changes 100 days before commercial blacklists. A dataset capturing both temporal and spatial dimensions of \ac{DNS} responses could enable analogous detection based on anomalous changes in the \emph{geographic distribution} of responses --- a spatial anomaly signature potentially distinct from purely temporal indicators.
+
+\textit{\ac{DNS} centralisation and digital sovereignty.}
+Xu~\cite{Xu2023} documented high concentration in the global \ac{DNS} resolver ecosystem. The authoritative-side \ac{CDN} concentration visible in this thesis's data is a complementary perspective: the fraction of popular domains whose \ac{DNS} infrastructure is controlled by non-European providers raises questions relevant to EU regulation (NIS2 Directive, Data Act). A policy-oriented analysis correlating per-continent diversity metrics with jurisdictional data would contribute to this debate.
+
+\bigskip
+\subsection{Methodological Improvements}
+\label{subsec:5.4.3}
+
+The current methodology detects \emph{that} geographic diversity exists; it does not attribute it to a specific mechanism. Anycast routing, GeoDNS, and \ac{ECS} all produce the same observable effect: different \ac{IP} sets in different regions. A dedicated experiment varying resolver \ac{ECS} behaviour while holding probe location constant --- using a custom resolver that selectively enables or disables \ac{ECS} per query --- would cleanly isolate the \ac{ECS} contribution.
+
+The observation that daily and weekly change rates are equal is consistent with stationary \ac{CDN} pool rotation, but does not establish the causal mechanism. Hours~\cite{Hours2016} used Bayesian networks to isolate causal effects in a related \ac{DNS} context. A causal inference framework with \ac{TTL}, change rate, \ac{CDN} provider, and domain popularity as variables would test whether short \ac{TTL} configuration drives frequent record updates, or merely co-occurs with them.
+
+RIPE Atlas probe scarcity in Africa (6.2 probes per country on average) limits within-region statistical power. Supplementing with data from NLNOG Ring, CAIDA Ark, or regional academic measurement networks would enable robust country-level analysis in the regions currently limited to single-probe coverage.
+
+\bigskip
+\section{General Conclusion}
+\label{sec:5.5}
+
+\subsection{Summary of the Thesis}
+\label{subsec:5.5.1}
+
+The thesis started with an operational problem: how do you measure \ac{DNS} responses for popular domains across the whole planet, daily, for 50 days, on a student credit budget?
+
+Chapter 2 pinpointed the blind spot. OpenINTEL~\cite{vanRijswijk2016} runs from one server in the Netherlands --- geographically blind. RIPE Atlas has the probes, but every prior \ac{DNS} study used it for a single service at a single moment. Nobody had run a 50-domain-or-more, 50-day, multi-continent campaign with direct authoritative queries. On top of that, Xu~\cite{Xu2023} showed resolver choice is a confound: 90\% of forwarding resolvers collapse through 5\% of recursive resolvers, so even 200 geographically spread probes can return 200 identical answers.
+
+The method chapter resolves these with three choices. Probes selected across 173 countries using a three-round stratification algorithm. The RD bit cleared for Q1--Q3, so queries hit the authoritative server from the probe's own \ac{IP}. A separate four-resolver one-off campaign (Q4) to isolate resolver impact from geographic routing.
+
+\bigskip
+\subsection{Answers to the Research Questions}
+\label{subsec:5.5.2}
+
+Q1 --- \textit{Geographic diversity.} \textbf{59.9\%} of Tranco Top-250 domains return different \ac{DNS} \ac{A} records in at least two continents; 60.3\% differ by country. Mean distinct \ac{IP} sets: 2.67 per domain at continent level, 11.45 at country level. \ac{NSID} appears in 77.3\% of domains and 51.9\% of individual results --- anycast-based authoritative \ac{DNS} is the main mechanism. OpenINTEL, running from one server, sees uniform \ac{DNS} responses for a majority of the most-visited websites on the web.
+
+Q2 --- \textit{Temporal stability.} \textbf{20.6\%} of domains are fully stable over the 50-day window. The rest are not: the aggregate daily change rate is \textbf{38.24\%} and the median per-domain rate is \textbf{48.8\%}. Daily, weekly, and monthly change rates are all within 0.06 percentage points of each other --- \ac{CDN} pool rotation is a stationary high-frequency process, not a convergent one. \ac{DNS} response content is about 64$\times$ more volatile than the Tranco popularity ranking itself~\cite{LePochat2019}.
+
+Q3 --- \textit{Probe bias.} The RIPE Atlas geographic bias persists (EU+NA: 79.0\% of probes in 2026), confirming Bajpai's~\cite{Bajpai2017} findings nine years later. A Mann-Whitney test yields $p = 0.091$, above the $\alpha = 0.05$ threshold. Under-represented continents --- Africa (59.5\%), South America (58.3\%), and Oceania (59.5\%) --- each detect diversity in more than 58\% of domains despite holding 2--3\% of probes, at or above Europe (52.6\%), demonstrating that zone-based probe assignment preserves diversity observability even with few probes per country.
+
+Q4 --- \textit{Resolver impact.} \hl{\textit{To be completed}}
+
+RIPE Atlas makes distributed authoritative-querying \ac{DNS} measurement technically feasible. The results confirm it is also scientifically necessary: for 59.9\% of the most visited websites, a single-location observatory reports uniform \ac{DNS} responses where the actual infrastructure returns different answers in different parts of the world.
+
+\bigskip
+\subsection{Lessons Learned}
+\label{subsec:5.5.3}
+
+RIPE Atlas delivers global reach, but probe scarcity in Africa and South America cannot be fixed by any selection algorithm~\cite{Bajpai2017} --- the hardware is simply not there. System-tag filtering excludes broken probes; it does not achieve geographic balance. The 100 concurrent one-off measurement cap caught this campaign off guard: any study combining periodic and one-off campaigns must plan around that constraint before the periodic measurements are running.
+
+Daily Parquet files partitioned by date scaled without friction for 50-day continuous collection. Raw JSON on the Pi for 7 days handles schema-fix re-parses; after cloud sync confirms the copy it can go. rclone to Google Drive costs nothing for a home-hosted node, and a Pi failure cannot lose more than 24 hours.
+
+A single vantage point misses geographic \ac{DNS} variation for 59.9\% of the most popular domains. Probe-distribution bias does not prevent diversity detection: Africa and South America flag routing differentiation in proportions comparable to Europe on 2--3\% of the probes. What thin coverage cannot do is characterise the structure of that diversity at the country level --- detecting that it exists is not the same as describing where and how.
+
+\bigskip
+\subsection{Closing Remarks}
+\label{subsec:5.5.4}
+
+Every web request, email delivery, and API call starts with a \ac{DNS} query. What the resolver gets back depends on where it is --- but that geographic structure is rarely measured from the users' side. Filling that gap, even partially, is what this thesis set out to do.
+
+The 1,564,904 measurements from the first 45 days show a \ac{DNS} layer that is more geographically heterogeneous than single-vantage-point observatories can see (59.9\% of Tranco Top-250 domains return different \ac{IP}s in different continents), more volatile than the stability of the popularity ranking implies (38.24\% daily change rate versus 0.6\% Tranco churn), and less sensitive to probe imbalance than previously assumed (Africa and South America detect comparable diversity to Europe on a fraction of the probes).
+
+Bortzmeyer noted in 2013~\cite{Bortzmeyer2013} that \ac{DNS} gets less measurement attention than its role warrants. The tools to fix that now exist: RIPE Atlas for global reach, Tranco for a stable and manipulation-resistant corpus, Parquet for efficient open storage. The remaining barriers are methodological discipline and sustained collection effort. The pipeline and dataset published alongside this thesis are designed to lower both for whoever comes next.
