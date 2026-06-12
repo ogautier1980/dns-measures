@@ -1,0 +1,538 @@
+\chapter{Method}
+\label{ch:method}
+
+\section{Overview}
+\label{sec:3.1}
+
+\subsection{Methodological Objective}
+\label{subsec:3.1.1}
+
+The global methodological objective of this thesis is to capture the geographic and temporal diversity of \ac{DNS} responses for a representative corpus of popular domains, using geographically distributed active measurements, in a manner that is reproducible, ethically sound, and practically feasible within the available resource budget. The system must answer four empirical research questions:
+
+\begin{itemize}
+  \item \textbf{Q1}: What proportion of Tranco top-ranked domains return geographically differentiated \ac{DNS} responses, and what infrastructure mechanisms explain the differentiation?
+  \item \textbf{Q2}: What is the temporal stability of \ac{DNS} responses for popular domains at day, week, and month timescales?
+  \item \textbf{Q3}: Do the geographic biases of the RIPE Atlas probe distribution significantly limit the ability to observe geographic \ac{DNS} variation?
+  \item \textbf{Q4}: What is the measurable impact of resolver type --- local \ac{ISP} resolver versus public \ac{DNS} service --- on the \ac{DNS} responses observed?
+\end{itemize}
+
+\subsection{System Architecture}
+\label{subsec:3.1.2}
+
+The measurement system is organised in five sequential stages, inspired by the architecture of OpenINTEL \cite{vanRijswijk2016} but adapted to the constraints and capabilities of the RIPE Atlas platform:
+
+\begin{enumerate}
+  \item \textbf{Domain corpus preparation}: Retrieval and filtering of the Tranco Top 250 domain list.
+  \item \textbf{Measurement scheduling}: Configuration and deployment of RIPE Atlas \ac{DNS} measurement campaigns.
+  \item \textbf{Data collection}: Automated daily retrieval of measurement results via the RIPE Atlas REST API.
+  \item \textbf{Storage and preprocessing}: Parsing, validation, and archival in Parquet format.
+  \item \textbf{Analysis}: Quantitative analysis addressing Q1--Q4.
+\end{enumerate}
+
+The key design trade-off throughout is the three-way tension between domain coverage (how many domains are measured), geographic coverage (how many geographically distributed probes), and temporal resolution (measurement frequency), all bounded by the finite RIPE Atlas credit budget. The system is fully configurable via \texttt{--max-domains} and \texttt{--total-probes} parameters; the main phase operating point is 250 domains and 200 probes, consuming approximately 500,000 credits per day (250 domains $\times$ 200 probes $\times$ 10 credits per measurement).
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{c l l}
+\toprule
+\textbf{Step} & \textbf{Stage} & \textbf{Output} \\
+\midrule
+1 & Domain corpus preparation (\texttt{fetch\_tranco.py})         & \texttt{tranco\_corpus.csv} \\
+2 & Measurement scheduling (\texttt{create\_ripe\_measurements.py}) & \texttt{measurements.json} \\
+3 & Data collection (\texttt{fetch\_ripe\_atlas.py})               & \texttt{data/raw/msm\_*.json} \\
+4 & Parsing \& storage (\texttt{parse\_dns\_results.py})           & \texttt{dns\_results*.parquet} \\
+5 & Analysis (\texttt{analyse\_dns.py})                            & Reports \& figures \\
+\bottomrule
+\end{tabular}
+\caption{Five-stage pipeline architecture. Steps 1--2 are run once at campaign initialisation; steps 3--4 run daily; step 5 runs weekly.}
+\label{tab:pipeline_stages}
+\end{table}
+
+\subsection{Infrastructure}
+\label{subsec:3.1.3}
+
+The entire pipeline runs as a Docker container on a Raspberry Pi 5 (ARM64 architecture), operating continuously and autonomously. This choice reflects the need for a low-cost, always-on measurement platform that can sustain a 50-day measurement campaign without manual intervention.
+
+The container image is based on \texttt{python:3.11-slim-bookworm} and is compiled natively for the ARM64 architecture, ensuring full compatibility with the Raspberry Pi 5 hardware. The image contains only the dependencies required for the pipeline (dnspython, pandas, pyarrow, scipy, matplotlib, rclone), keeping its footprint under 1 GB.
+
+Data persistence is managed through Docker named volumes, which survive container restarts and image updates. Every day, our system automatically sends a copy of the results to cloud storage using rclone, targeting Google Drive as the remote backup destination.
+
+The pipeline is orchestrated by a cron daemon running inside the container, with the following schedule (all times UTC):
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Time (UTC)} & \textbf{Day} & \textbf{Action} \\
+\midrule
+10:00 & Daily & Fetch RIPE Atlas results + Parquet parsing \\
+11:00 & Daily & Cloud sync (Parquet + raw JSON $\rightarrow$ Google Drive) \\
+12:00 & Sunday & Q1--Q4 analysis + figure generation \\
+13:00 & Sunday & Cloud sync (reports + figures $\rightarrow$ Google Drive) \\
+04:00 & 1st of month & Log rotation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The weekly Tranco list refresh is intentionally disabled during the active measurement period. Keeping the domain corpus fixed throughout the campaign is required for the validity of the Q2 temporal stability analysis: if domains entered or left the measurement set mid-campaign, observed response changes could not be distinguished from corpus changes. The corpus will be refreshed after the measurement period concludes.
+
+The pipeline source code is available at \url{xxx} (\hl{\textit{To be completed}}). The five core scripts (\texttt{fetch\_tranco.py}, \texttt{create\_ripe\_measurements.py}, \texttt{fetch\_ripe\_atlas.py}, \texttt{parse\_dns\_results.py} and \texttt{analyse\_dns.py}) are introduced as they appear in the pipeline, alongside \texttt{pipeline.py}, which acts as the top-level orchestrator and is invoked by the cron scheduler.
+
+\section{Domain Corpus Selection}
+\label{sec:3.2}
+
+\subsection{Tranco List Configuration}
+\label{subsec:3.2.1}
+
+The domain corpus is the Tranco Top 250 list, retrieved via the Tranco API at \url{https://tranco-list.eu}. The choice of Tranco over commercial ranking lists (Alexa — discontinued May 2022 —, Cisco Umbrella, Majestic) is motivated in Chapter 2 (Section~\ref{sec:2.6}) and rests on three properties established by Le Pochat~\cite{LePochat2019}: stability (0.6\% daily change versus approximately 50\% for post-2018 Alexa), manipulation resistance (quadrupled manipulation effort relative to single-source lists), and archivability (each generated list is assigned a unique identifier retrievable indefinitely via permalink).
+
+The \texttt{fetch\_tranco.py} script retrieves the most recent available list, falling back up to seven days if the current day's list has not yet been published. The exact Tranco list identifier and generation date are recorded in \texttt{tranco\_meta.json} alongside the corpus, ensuring full reproducibility.
+
+The list is retrieved once at the start of the measurement campaign and kept fixed for its entire duration. Although Tranco provides a stable list, any mid-campaign change to the measured domain set would conflate \ac{DNS} response variation with corpus variation, making it impossible to distinguish true temporal instability (Q2) from artefacts of domain rotation. The Tranco list identifier and retrieval date are recorded in \texttt{tranco\_meta.json} to allow exact reproduction of the corpus by any future researcher.
+
+\subsection{Domain Corpus Size}
+\label{subsec:3.2.2}
+
+The measurement campaign was conducted in two successive phases, each driven by the available RIPE Atlas credit balance:
+
+\textbf{Pilot phase (1--10 April 2026)}: The corpus was limited to the top 100 domains with 50 probes, consuming approximately 50,000 credits per day. This phase served to validate the full pipeline end-to-end --- probe selection, measurement creation, daily fetch, parsing, and cloud synchronisation --- before committing to a larger credit budget.
+
+\textbf{Main phase (from 11 April 2026)}: Following validation and the allocation of additional RIPE Atlas credits (30,000,000 total), the corpus was extended to 250 domains with 200 probes, consuming approximately 500,000 credits per day. At this rate, the remaining campaign period of approximately 50 days consumes 25,000,000 credits, well within the available balance.
+
+The choice of 250 domains reflects a trade-off between two competing constraints:
+
+\textbf{Representativeness}: The Tranco Top 250 is a great way to get a sense of the big players in the global \ac{CDN}-backed services market. It’s not just about the top dogs, though - it also shines a light on some of the smaller, second-tier platforms that are still worth paying attention to. Studies by Calder~\cite{Calder2015} and Wang~\cite{Wang2018} confirm that \ac{CDN} routing diversity is most pronounced in the highest-traffic domains, but measurable geographic variation extends into the broader popular-domain tier, motivating the extension beyond the pilot corpus.
+
+\textbf{Feasibility}: At 200 probes per measurement, the Top 250 corpus consumes 500,000 credits per day --- sustainable over the 50-day main phase within the available credit allocation of 30,000,000 credits.
+
+The pipeline exposes \texttt{--max-domains} and \texttt{--total-probes} parameters, so the corpus can be extended to a larger Tranco slice without any further modification.
+
+\subsection{Domain Filtering and Validation}
+\label{subsec:3.2.3}
+
+Before the measurement campaign begins, each domain in the Tranco list is pre-validated by 
+
+\texttt{fetch\_tranco.py} in two steps:
+
+\textbf{Technical validity}: A \ac{DNS} \ac{A} record query is issued against Google Public \ac{DNS} (8.8.8.8) and Cloudflare \ac{DNS} (1.1.1.1) as reference resolvers. Domains returning \texttt{NXDOMAIN} or \texttt{SERVFAIL} are excluded. Applied to the Tranco Top 10,000 list from which the campaign corpus is drawn, this step yielded 8,365 valid domains --- a filtering rate of approximately 16\%, higher than the 5--6\% reported by Le Pochat~\cite{LePochat2019}, which may reflect the broader scope of the list and the inclusion of parked or inactive domains in lower-ranked positions.
+
+\textbf{Authoritative server pre-resolution}: The authoritative name servers for each domain are identified by resolving the domain's \ac{NS} records from the same reference resolvers. This pre-resolution step maps each domain to its authoritative server set. The resulting corpus is saved as \texttt{tranco\_corpus.csv} with fields \texttt{rank}, \texttt{domain}, and \texttt{ns} (pipe-separated list of authoritative name-server hostnames). Domains for which the \ac{NS} \ac{IP} address could not be resolved at measurement time are skipped. In practice, 2 of the top-250 domains were excluded on this basis, yielding 248 active RIPE Atlas measurements for the main campaign.
+
+\section{RIPE Atlas Measurement Configuration}
+\label{sec:3.3}
+
+\subsection{Probe Selection}
+\label{subsec:3.3.1}
+
+Probe selection is implemented in \texttt{create\_ripe\_measurements.py} and follows the filtering protocol recommended by Bajpai et al.~\cite{Bajpai2017}. Geographic distribution across zones is delegated to RIPE Atlas. The selection proceeds in three steps.
+
+\textbf{Step 1 --- System tag filtering}: All probes must satisfy the following RIPE Atlas system tags:
+
+\begin{itemize}
+  \item \texttt{system-ipv4-works}: \ac{IPv4} connectivity verified by built-in platform measurements.
+  \item \texttt{system-resolves-a-correctly}: The probe's local resolver returns correct \ac{A} records, filtering out probes whose resolver intercepts or misroutes external queries~\cite{Boswell2024}.
+
+\end{itemize}
+
+For hardware probes, version v3 or later is required. Holterbach~\cite{Holterbach2015} show that hardware v1 and v2 probes experience timing precision degradation under concurrent measurement load (up to +7.7\,ms at the 95th percentile), while v3 probes experience negligible degradation (+0.06\,ms); software probes are not subject to this hardware constraint.
+
+\textbf{Step 2 --- Geographic distribution}: To compensate for RIPE Atlas's documented geographic concentration (91\% of dual-stacked probes in the "\ac{RIPE NCC}" and "\ac{ARIN}" regions~\cite{Bajpai2017}), probe allocation targets an inverse-weighted over-representation of under-represented regions. For the current campaign, geographic distribution is delegated to RIPE Atlas using five built-in geographic zones with the following allocation:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r}
+\toprule
+\textbf{RIPE Atlas zone} & \textbf{Allocation (200 probes)} \\
+\midrule
+West           & 60 (30\%) \\
+North-Central  & 48 (24\%) \\
+South-East     & 40 (20\%) \\
+North-East     & 32 (16\%) \\
+South-Central  & 20 (10\%) \\
+\textbf{Total} & \textbf{200 (100\%)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/ripe_atlas_zones_map.png}
+\caption{Geographic coverage of the five RIPE Atlas probe zones used for probe allocation. Source:~\cite{RIPEAtlasDocs2026}.}
+\label{fig:ripe_atlas_zones}
+\end{figure}
+
+The resulting continent-level distribution is reported in Table~\ref{tab:4.2}. For future campaigns, the pipeline implements a continent-level stratification (Step 3) designed to achieve the following targets:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l l}
+\toprule
+\textbf{Region} & \textbf{Atlas distribution} & \textbf{Pilot (50 probes)} & \textbf{Main (200 probes)} & \textbf{Target \%} \\
+\midrule
+Europe        & \textasciitilde{}40\% & 15  & 60  & 30\% \\
+North America & \textasciitilde{}28\% & 12  & 50  & 25\% \\
+Asia-Pacific  & \textasciitilde{}16\% & 10  & 40  & 20\% \\
+South America & \textasciitilde{}8\%  &  5  & 20  & 10\% \\
+Africa        & \textasciitilde{}5\%  &  5  & 20  & 10\% \\
+Oceania       & \textasciitilde{}3\%  &  3  & 10  &  5\% \\
+\textbf{Total} & \textbf{100\%} & \textbf{50} & \textbf{200} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These proportions preserve the relative weighting from prior work~\cite{Bajpai2017} while scaling to the target probe count. The probe count is configurable via \texttt{--total-probes}.
+
+\textbf{Step 3 --- Country and \ac{AS} diversity}: Within each continental stratum, the pipeline implements a three-round algorithm to maximise both country coverage and \ac{AS} diversity:
+
+\begin{itemize}
+  \item \textbf{Round 1}: One probe per country, prioritising countries not geographically assimilated by a larger neighbour. Micro-states and dependencies (Luxembourg, Monaco, San Marino, Liechtenstein, Andorra, Vatican, Gibraltar, etc.) are de-prioritised, as their \ac{DNS} infrastructure typically routes through the same \ac{CDN} \ac{PoPs} as their larger neighbours.
+  \item \textbf{Round 2}: One probe per de-prioritised country, if the continental quota has not yet been reached.
+  \item \textbf{Round 3}: Additional probes per country (preferring a different \ac{AS} each time) until the quota is filled.
+\end{itemize}
+
+Within each round, the probe selected for a given country is the one with the highest hardware version that introduces a new \ac{AS} not yet represented in the selected set. The selected probe set is saved as \texttt{selected\_probes\_<date>.json} for full reproducibility. This algorithm is fully implemented in the pipeline and will be activated for future campaigns, replacing the zone-based assignment used for the current campaign.
+
+\subsection{Primary Campaign: Direct Authoritative DNS Queries}
+\label{subsec:3.3.2}
+
+The primary measurement campaign queries authoritative name servers directly, bypassing recursive resolvers. As discussed in Chapter 2 (Section~\ref{sec:2.5}), two complementary approaches are possible: using the probe's default resolver (which reflects real user experience) or querying the authoritative server directly (which isolates the geographic routing signal). For Q1--Q3, the direct authoritative approach is chosen for two reasons:
+
+\begin{enumerate}
+  \item \textbf{Resolver centralization} \cite{Xu2023}: Over 90\% of forwarding resolvers are backed by fewer than 5\% of indirect recursive resolvers. Querying through probe resolvers would collapse the geographic diversity of probe vantage points into a small number of centralised resolution paths, making geographic \ac{DNS} variation invisible.
+  \item \textbf{Cache state divergence}: Probes using local resolvers have heterogeneous cache states, introducing variation that mimics geographic routing differences but is actually an artefact of cache timing. Direct authoritative queries bypass resolver caches entirely.
+\end{enumerate}
+
+The default resolver approach is used for Q4 (Section~\ref{subsec:3.3.3}), where the research question is precisely about the impact of resolver choice on end-user experience.
+
+For each domain in the corpus, the primary authoritative name server identified during pre-resolution is used as the measurement target. The RIPE Atlas \ac{DNS} measurement is configured as follows:
+
+
+\begin{lstlisting}[style=json]
+{
+  "type": "dns",
+  "af": 4,
+  "target": "<authoritative_ns_ip>",
+  "query_type": "A",
+  "query_class": "IN",
+  "query_argument": "<domain>",
+  "use_probe_resolver": false,
+  "set_rd_bit": false,
+  "set_nsid_bit": true,
+  "set_do_bit": false,
+  "set_cd_bit": false,
+  "protocol": "UDP",
+  "udp_payload_size": 1024,
+  "include_abuf": true,
+  "retry": 2,
+  "timeout": 5000,
+  "is_oneoff": false,
+  "interval": 86400,
+  "description": "DNS geo-diversity - auth - <domain> - <YYYY-MM-DD>"
+}
+
+\end{lstlisting}
+
+Table~\ref{tab:msm_params} describes each parameter and its justification.
+
+Full API documentation is available in~\cite{RIPEAtlasDocs2026}.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{l l X}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Justification} \\
+\midrule
+\texttt{type} & \texttt{"dns"} & RIPE Atlas measurement type for \ac{DNS} queries. \\
+\texttt{af} & \texttt{4} & \ac{IPv4} address family; probes resolve the target using \ac{IPv4}. \\
+\texttt{target} & \textit{ns\_ip} & \ac{IP} address of the authoritative name server identified during pre-resolution; queries bypass recursive resolvers entirely. \\
+\texttt{query\_type} & \texttt{"A"} & Requests \ac{IPv4} address records, which are the primary indicator of \ac{CDN} geographic routing. \\
+\texttt{query\_class} & \texttt{"IN"} & Internet class; the only class used in practice for public \ac{DNS}. \\
+\texttt{query\_argument} & \textit{domain} & The domain name being queried. \\
+\texttt{use\_probe\_resolver} & \texttt{false} & Disables routing through the probe's local resolver; queries are sent directly to the authoritative server. \\
+\texttt{set\_rd\_bit} & \texttt{false} & \ac{RD} bit unset; the authoritative server is queried directly and must not recurse. \\
+\texttt{set\_nsid\_bit} & \texttt{true} & Requests the \ac{NSID} option~\cite{RFC5001}; the authoritative server's response identifies the physical anycast instance that answered, enabling anycast routing analysis~\cite{Bortzmeyer2013,Finnegan2018}. \\
+\texttt{set\_do\_bit} & \texttt{false} & \ac{DNSSEC} OK bit unset; \ac{DNSSEC} validation is not required for \ac{IP} address collection and would increase response size without benefit. \\
+\texttt{set\_cd\_bit} & \texttt{false} & Checking Disabled bit unset; \ac{DNSSEC} checking is not relevant for direct authoritative queries. \\
+\texttt{protocol} & \texttt{"UDP"} & Standard \ac{DNS} transport; UDP is used by default and is sufficient for responses of this size. \\
+\texttt{udp\_payload\_size} & \texttt{1024} & EDNS0 buffer size in bytes; set large enough to accommodate the \ac{NSID} option in the response without truncation. \\
+\texttt{include\_abuf} & \texttt{true} & Includes the raw \ac{DNS} response packet (base64-encoded), enabling full parsing of all \ac{DNS} sections and OPT record \ac{NSID} decoding~\cite{RFC5001}. \\
+\texttt{retry} & \texttt{2} & Number of retransmission attempts on timeout before the result is recorded as no-response. \\
+\texttt{timeout} & \texttt{5000} & Per-attempt timeout in milliseconds (5 seconds); consistent with RIPE Atlas defaults for \ac{DNS} measurements. \\
+\texttt{is\_oneoff} & \texttt{false} & Configures the measurement as periodic rather than a one-shot query. \\
+\texttt{interval} & \texttt{86400} & Repetition interval in seconds (24 hours); provides the daily temporal resolution needed to detect \ac{DNS} response changes within the credit budget. \\
+\texttt{description} & \textit{see value} & Human-readable label in the RIPE Atlas dashboard, including the domain name and creation date for traceability. \\
+\bottomrule
+\end{tabularx}
+\caption{RIPE Atlas DNS measurement parameters for the primary Q1--Q3 campaign.}
+\label{tab:msm_params}
+\end{table}
+
+\subsection{Supplementary Campaign for Q4: Resolver Comparison}
+\label{subsec:3.3.3}
+
+To address Q4, a supplementary one-off measurement campaign is conducted on the full 250-domain corpus using the same 200 probes as Q1--Q3. Using the same probe set ensures that any observed inter-resolver divergence is attributable to resolver infrastructure rather than probe geographic differences. This campaign provides three simultaneous resolver observations per domain per probe:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Campaign label} & \textbf{Target IP} & \textbf{Resolver} \\
+\midrule
+\texttt{google} & 8.8.8.8 & Google Public \ac{DNS} \\
+\texttt{cloudflare} & 1.1.1.1 & Cloudflare \ac{DNS} \\
+\texttt{quad9} & 9.9.9.9 & Quad9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Q4 campaign uses \texttt{set\_rd\_bit: true} and a \ac{UDP} payload of 4096 bytes, appropriate for recursive resolver queries. Measurements are configured as one-off (\texttt{is\_oneoff: true}) to avoid continuous credit consumption. A fourth configuration targeting the probe's local \ac{ISP} resolver via \texttt{use\_probe\_resolver: true} was planned but abandoned: the RIPE Atlas API rejects the combination of a target \ac{IP} and \texttt{use\_probe\_resolver: true}, and empirical testing of the probe's \texttt{/etc/resolv.conf} entry showed that a large fraction of probes point to loopback addresses or directly to public resolvers, making the \ac{ISP} condition indistinguishable from the public-resolver conditions.
+
+This three-way comparison tests whether the choice of public recursive resolver affects the \ac{CDN}-assigned \ac{IP} addresses observed from each geographic vantage point, and quantifies the contribution of resolver-level infrastructure (anycast routing, \ac{ECS} policy) to overall \ac{DNS} response variability.
+
+\subsection{Credit Budget}
+\label{subsec:3.3.4}
+
+The RIPE Atlas credit consumption is estimated as follows (10 credits per probe per measurement instance):
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l l l}
+\toprule
+\textbf{Phase} & \textbf{Domains} & \textbf{Probes} & \textbf{Duration} & \textbf{Credits} \\
+\midrule
+Pilot — primary (direct auth)       & 100 &  50 & 10 days  & $\approx$500,000 \\
+Pilot — Q4 resolver comparison      &  50 &  50 & once     & $\approx$100,000 \\
+Main — primary (direct auth)        & 250 & 200 & 50 days  & $\approx$25,000,000 \\
+Main — Q4 resolver comparison       & 250 & 200 & once     & $\approx$2,000,000 \\
+\textbf{Total campaign}             &     &     &          & $\approx$\textbf{27,600,000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+One-off DNS measurements consume 20 credits per probe (double the periodic rate), because results are delivered immediately rather than batched. The main Q4 campaign therefore costs $750 \times 200 \times 20 = 3{,}000{,}000$ credits, spread over three days due to RIPE Atlas's rolling 24-hour credit limit of 1,000,000 credits. The total estimated consumption of approximately 28,600,000 credits remains within the initial balance of 30,000,000 credits, leaving a margin of approximately 1,400,000 credits. The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated daily and total consumption before any measurements are created.
+
+\section{Data Collection and Processing}
+\label{sec:3.4}
+
+\subsection{Daily Collection Pipeline}
+\label{subsec:3.4.1}
+
+Measurement results are collected from the RIPE Atlas REST API by \texttt{fetch\_ripe\_atlas.py} on a daily schedule at 10:00 UTC, retrieving results for the previous calendar day. The script reads the measurement plan from \texttt{measurements.json} (produced by \texttt{create\_ripe\_measurements.py}) and iterates over all active measurement identifiers.
+
+The collection is fully paginated, following RIPE Atlas API \texttt{next} links until all results for the time window are retrieved. Error handling includes automatic retry with exponential backoff (up to 5 attempts, base delay 2 seconds, doubling on each retry) and explicit handling of \ac{HTTP} 429 rate-limit responses (waits for the \texttt{Retry-After} header duration before retrying). Failed measurement IDs are recorded in \texttt{fetch\_errors\_<date>.json} for subsequent investigation. And to avoid downloading the same files over and over, it skips the ones it’s already got, unless \texttt{--force} flag is specified to make it redo them anyway.
+
+The raw results are stored in JSON files, which are kept in the data/raw/ folder and named \texttt{data/raw/m\-sm\_<id>\_<date>.json}.
+
+\subsection{Parsing and Field Extraction}
+\label{subsec:3.4.2}
+
+Each raw RIPE Atlas \ac{DNS} result is parsed by \texttt{parse\_dns\_results.py}, which extracts the following fields into a structured Parquet record:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\texttt{msm\_id} & int64 & RIPE Atlas measurement ID \\
+\texttt{prb\_id} & int32 & RIPE Atlas probe ID \\
+\texttt{timestamp} & int64 & Actual measurement time (Unix epoch) \\
+\texttt{date} & string & ISO date (YYYY-MM-DD) \\
+\texttt{country\_code} & string & ISO 3166-1 alpha-2 country code \\
+\texttt{asn\_v4} & int32 & Probe \ac{AS} Number \\
+\texttt{continent} & string & Continent code (EU/NA/SA/AF/AP/OC) \\
+\texttt{query\_domain} & string & Queried domain name \\
+\texttt{rcode} & int16 & \ac{DNS} response code (0 = NOERROR) \\
+\texttt{answer\_count} & int16 & Number of \ac{A}/\ac{AAAA} records returned \\
+\texttt{answer\_ips} & string & Pipe-separated list of returned \ac{IP} addresses \\
+\texttt{ttl\_min} & int32 & Minimum \ac{TTL} across answer records \\
+\texttt{rt\_ms} & float32 & Response time in milliseconds \\
+\texttt{nsid\_str} & string & \ac{NSID} value (ASCII, if returned) \\
+\texttt{nsid\_hex} & string & \ac{NSID} value (hex encoding) \\
+\texttt{abuf\_size} & int32 & \ac{DNS} response packet size in bytes \\
+\texttt{resolver\_ip} & string & Target resolver \ac{IP} (Q4 campaign only) \\
+\texttt{use\_probe\_resolver} & bool & True for \ac{ISP} local resolver campaign \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \ac{NSID} value is extracted by decoding the raw ABUF binary field: the script walks the \ac{DNS} packet structure to locate the OPT record (type 41) in the Additional section, then parses EDNS0 options to extract option code 3 (\ac{NSID}, ~\cite{RFC5001}).
+
+\subsection{Data Validation}
+\label{subsec:3.4.3}
+
+The following validation filters are applied during parsing:
+
+\textbf{RCODE filtering}: Only results with \texttt{rcode = 0} (NOERROR) and \texttt{answer\_count > 0} are used for Q1 and Q2 content analysis. Results with \texttt{rcode != 0} are retained in the Parquet dataset with their specific error codes for reliability and censorship analysis.
+
+\textbf{Deduplication}: The cumulative Parquet file (\texttt{dns\_results.parquet}) is deduplicated on \texttt{(msm\_id, prb\_id, timestamp)} on each daily append to prevent double-counting in case of re-fetch. Here \texttt{timestamp} is the measurement timestamp set by the probe at the moment of the DNS query --- not the fetch time --- so re-fetching the same day's results produces identical tuples and the deduplication correctly discards the duplicates.
+
+\subsection{Storage Architecture}
+\label{subsec:3.4.4}
+
+Results are stored in a single-tier Parquet architecture optimised for the analytical query patterns of the analysis phase:
+
+\textbf{Cumulative Parquet file} (\texttt{data/processed/dns\_results.parquet}): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. This file grows at approximately 40--60 MB/month for the primary campaign (250 domains $\times$ 200 probes $\times$ 30 days, after columnar compression with dictionary encoding for repeated string values such as \texttt{country\_code}, \texttt{continent}, and \texttt{answer\_ips}).
+
+\textbf{Daily archives} (\texttt{data/processed/dns\_results\_<date>.parquet}): Individual daily Parquet files are also retained for point-in-time analysis and as a recovery mechanism in case of cumulative file corruption.
+
+\textbf{Raw JSON files} (\texttt{data/raw/msm\_<id>\_<date>.json}): Raw RIPE Atlas JSON results are retained locally for 7 days, then deleted after cloud synchronisation. This rolling window allows re-parsing with an updated schema if needed, while controlling local storage consumption on the Raspberry Pi.
+
+\textbf{Cloud backup}: All Parquet files, daily archives, and reports are synchronised daily to Google Drive via rclone. The rclone configuration is persisted in a Docker named volume, surviving container updates.
+
+\textbf{Storage estimate} for a 50-day campaign (250 domains $\times$ 200 probes):
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l l l}
+\toprule
+\textbf{Tier} & \textbf{Volume} & \textbf{Location} \\
+\midrule
+Raw JSON (7-day rolling) & \textasciitilde{}70 MB & Pi local \\
+Cumulative Parquet & \textasciitilde{}80--100 MB & Pi + Google Drive \\
+Daily Parquet archives & \textasciitilde{}80--100 MB & Pi + Google Drive \\
+Reports and figures & \textasciitilde{}50 MB & Pi + Google Drive \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\bigskip
+\section{Analysis Methods}
+\label{sec:3.5}
+
+This section explains how the analyses were done using \texttt{analyse\_dns.py}. This script is listed as step 5 in Table~\ref{tab:pipeline_stages}. It reads the cumulative \texttt{dns\_results.parquet} file and produces reports and figures for each question. The reports are in CSV format and the figures are in PNG format.
+
+\subsection{Statistical Testing Approach}
+\label{subsec:3.5.0}
+
+Several analyses in this section compare two independent groups of observations (e.g.\ probes from different geographic regions, or different resolver types). All such comparisons use the Mann-Whitney U test (also known as the Wilcoxon rank-sum test), a non-parametric test that evaluates whether one group tends to produce systematically larger values than the other, without assuming any particular distribution of the data.
+
+The Mann-Whitney U test was chosen instead of a Student's t-test. The t-test is a parametric test that compares the means of two groups under the assumption that the data follow a normal distribution; it is widely used but sensitive to violations of that assumption. Here, two characteristics of the data make the t-test unsuitable. First, the primary response variable --- the number of unique \ac{IP} addresses observed per domain --- is a count variable with a heavily right-skewed distribution: most domains return one or two \ac{IP} addresses, while a small number of \ac{CDN}-heavy domains return many more, violating the normality assumption. Second, the groups being compared are of unequal size, which further reduces the reliability of parametric tests on small samples. The Mann-Whitney U test is robust to both non-normality and unequal group sizes.
+
+The null hypothesis in each case is that the two groups are drawn from the same distribution (i.e.\ no systematic difference). A p-value below 0.05 is used as the significance threshold throughout.
+
+\subsection{Q1 --- Geographic Diversity of DNS Responses}
+\label{subsec:3.5.1}
+
+\textbf{Objective}: For each domain in the corpus, determine whether the set of \ac{IP} addresses returned varies systematically by the geographic location of the querying probe.
+
+The study works on two different levels, looking at things from a broad view and a more detailed view. It uses the variety of data from different countries, which was made possible by the stratified selection algorithm (Section~\ref{subsec:3.3.1}).
+
+\textbf{Step 1 --- Continent-level diversity (coarse)}: For each domain and each measurement day, the probe set is partitioned by continent. For each continent, the union of all \ac{IP} addresses returned by probes in that continent is computed. A domain is classified as continent-diverse if at least two continents receive distinct \ac{IP} address sets on the same day. This level of analysis is comparable to prior RIPE Atlas \ac{DNS} studies.
+
+\textbf{Step 2 --- Country-level diversity (fine-grained)}: The same computation is repeated at the country level. A domain is classified as country-diverse if at least two countries receive distinct \ac{IP} address sets on the same day. This finer granularity can reveal intra-continental differentiation --- cases where \ac{DNS} routing differs between countries within the same continent (e.g.\ within Europe, or between Brazil and Argentina in South America) --- which would be invisible at continent level alone.
+
+\textbf{Step 3 --- Aggregate over time}: For each domain, the proportion of measurement days on which geographic differentiation is observed (\texttt{pct\_geo\_diverse}) characterises the consistency of differentiation over the campaign. A domain is considered to have geographic diversity if there's at least one day when differentiation is observed.
+
+\textbf{Step 4 --- \ac{NSID} analysis}: For domains with geographic \ac{IP} variation, the presence of \ac{NSID} values is used to distinguish between anycast instance selection (different \ac{NSID} per region, indicating different anycast \ac{PoP}) and \ac{DNS}-based \ac{CDN} routing (uniform \ac{NSID} with varying \ac{A} records, indicating \ac{CDN} geographic database lookup).
+
+\textbf{Key metrics}:
+\begin{itemize}
+  \item Proportion of domains exhibiting continent-level geographic diversity
+  \item Proportion of domains exhibiting country-level geographic diversity
+  \item Proportion of domains exhibiting intra-continental diversity (country-level only)
+  \item Distribution of the number of distinct \ac{IP} address sets across countries and continents
+  \item Top domains by country-level geographic diversity score
+  \item Proportion of geographically diverse domains returning \ac{NSID} values
+\end{itemize}
+
+\subsection{Q2 --- Temporal Stability}
+\label{subsec:3.5.2}
+
+\textbf{Objective}: Quantify the rate of change of \ac{DNS} responses for each domain over time.
+
+\textbf{Step 1 --- Per-probe change detection}: For each (domain, probe) pair, consecutive daily observations are compared. A change event is recorded when the \texttt{answer\_ips} value differs between two consecutive measurement days.
+
+\textbf{Step 2 --- Change rate computation}: The per-domain change rate is the proportion of observation pairs for which at least one probe observes a change in the \ac{IP} address set. It is computed at three temporal granularities: daily (pairs of consecutive days), weekly (pairs of observations 7 days apart), and monthly (pairs of observations 30 days apart).
+
+\textbf{Step 3 --- Distribution analysis}: The distribution of per-domain change rates is computed across the full corpus, identifying the proportions of fully stable, occasionally changing, and highly volatile domains.
+
+\textbf{Key metrics}:
+\begin{itemize}
+  \item Distribution of per-domain daily change rates
+  \item Proportion of fully stable domains (0\% change rate)
+  \item Median change rate across the corpus
+  \item Stability breakdown by temporal window (day/week/month)
+\end{itemize}
+
+\subsection{Q3 --- Assessment of RIPE Atlas Geographic Bias}
+\label{subsec:3.5.3}
+
+\textbf{Objective}: Evaluate whether the geographic concentration of RIPE Atlas probes in Europe and North America significantly limits the ability to observe geographic \ac{DNS} variation, at both continent and country level.
+
+The analysis operates at the same two levels of granularity as Q1, assessing probe bias at both continent and country level. Both sub-analyses use the Mann-Whitney U test described in Section~\ref{subsec:3.5.0}.
+
+\textbf{Continent-level bias}: The probe distribution actually achieved at deployment is compared to the target allocation from Section~\ref{subsec:3.3.1}. For each continent, the coverage rate (proportion of domains observed by at least one probe) and the mean number of unique \ac{IP} addresses observed per domain are computed. The Mann-Whitney U test compares the distribution of unique \ac{IP}s per domain between Europe+North America probes and probes from all other regions. A statistically significant result indicates that the geographic stratification captures meaningfully different \ac{DNS} responses from under-represented regions; a non-significant result would suggest that EU+NA probes alone would have been sufficient.
+
+\textbf{Country-level bias}: The probe selection algorithm (Section~\ref{subsec:3.3.1}) operates in three rounds within each continental stratum. Round~1 assigns one probe per country (country-first strategy); Round~3 adds extra probes per country to fill remaining continental quotas. This naturally produces two categories: single-probe countries (covered exactly once in Round~1, representing marginal geographic coverage) and multi-probe countries (receiving additional probes in Round~3, typically larger or better-connected countries).
+
+The Mann-Whitney U test compares the number of unique \ac{IP} addresses observed per domain from single-probe countries against those from multi-probe countries. A statistically significant result indicates that single-probe (marginal) countries genuinely observe distinct \ac{DNS} responses --- validating the country-first selection strategy and confirming that the extra geographic diversity is not redundant. A non-significant result would suggest that the additional countries covered by Round~1 add breadth without adding observational value.
+
+\textbf{Key metrics}:
+\begin{itemize}
+  \item Actual probe distribution by continent and by country at deployment
+  \item Number of distinct countries with at least one probe
+  \item Number of single-probe vs.\ multi-probe countries per continent
+  \item Mean unique \ac{IP}s per domain per continent
+  \item Mann-Whitney U: EU+NA vs.\ other continents
+  \item Mann-Whitney U: single-probe vs.\ multi-probe countries
+\end{itemize}
+
+\subsection{Q4 --- Impact of Resolver Choice}
+\label{subsec:3.5.4}
+
+\textbf{Objective}: Quantify inter-resolver divergence among three major public \ac{DNS} services (Google 8.8.8.8, Cloudflare 1.1.1.1, Quad9 9.9.9.9) and identify the infrastructure mechanisms responsible.
+
+This analysis uses the supplementary Q4 measurement campaign (Section~\ref{subsec:3.3.3}), which provides three simultaneous observations for 250 domains from the same 200 probes.
+
+\textbf{Step 1 --- Per-resolver statistics}: For each resolver (\texttt{google}, \texttt{cloudflare}, \texttt{quad9}), the following metrics are computed: error rate (proportion of RCODE $\neq$ 0), median \ac{RTT}, mean \ac{RTT}, and mean answer count.
+
+\textbf{Step 2 --- Pairwise divergence analysis}: For each (domain, probe) pair, the \texttt{answer\_ips} returned by each resolver are compared across all three resolver pairs (Google vs.\ Cloudflare, Google vs.\ Quad9, Cloudflare vs.\ Quad9). A divergence event is recorded when the two \ac{IP} sets are completely disjoint. The per-pair divergence rate is the proportion of (domain, probe) tuples showing divergence.
+
+\textbf{Key metrics}:
+\begin{itemize}
+  \item Error rate and median \ac{RTT} per resolver
+  \item Pairwise \ac{IP} divergence rate for all three resolver pairs
+\end{itemize}
+
+\bigskip
+\section{Ethical Considerations and Reproducibility}
+\label{sec:3.6}
+
+\subsection{Ethical Design}
+\label{subsec:3.6.1}
+
+The measurement design follows the ethical framework of Kisteleki~\cite{Kisteleki2016} and the principles of the Menlo Report (2012)~\cite{Bailey2012}:
+
+\textbf{Probe host protection}: All query targets are publicly accessible domains from the Tranco Top 250 corpus. Direct authoritative queries for \ac{A} records are indistinguishable from normal client \ac{DNS} traffic.
+
+\textbf{Infrastructure impact}: The measurement frequency (once per domain per day, 200 probes, 250 domains) generates approximately 50,000 queries per day --- negligible compared to OpenINTEL's production campaign of several hundred million queries per day \cite{vanRijswijk2016}.
+
+\textbf{Transparency}: All measurements are tagged with a project description in RIPE Atlas, allowing authoritative server operators to identify the measurement source. The measurement plan (\texttt{measure\-ments.json}) records all active measurement IDs.
+
+\subsection{Scientific Reproducibility}
+\label{subsec:3.6.2}
+
+\textbf{Fixed domain corpus}: The Tranco list identifier recorded in \texttt{tranco\_meta.json} for each measurement week enables exact reproduction of the domain corpus.
+
+\textbf{Measurement traceability}: All RIPE Atlas measurement IDs are recorded in \texttt{measurements.json}. Any researcher with a RIPE Atlas account can retrieve the original raw results using these IDs.
+
+\textbf{Probe set reproducibility}: The selected probe IDs and their metadata (country, \ac{AS} number, hardware version) are saved in \texttt{selected\_probes\_<date>.json}.
+
+\textbf{Software versioning}: The analysis pipeline is published at \url{xxx} (\hl{\textit{To be completed}}). The \texttt{require\-ments.\-txt} file specifies exact package versions (Python 3.11, dnspython, pandas, pyarrow, scipy, matplotlib) to eliminate software version ambiguity.
+
+\textbf{Infrastructure reproducibility}: The Docker container image built from the published \texttt{Dockerfile} provides a fully reproducible execution environment across x86\_64 and ARM64 architectures, ensuring that the pipeline can be redeployed from source on any compatible host.
+
+\subsection{Open Science}
+\label{subsec:3.6.3}
+
+In accordance with open science principles, the measurement dataset and the pipeline source code are made publicly available through two complementary channels. The full DNS measurement dataset in Parquet format, covering the 38-day campaign (2 April -- 9 May 2026, 1,273,475 results), is deposited on Zenodo~\cite{Zenodo}, a general-purpose open-access repository operated by CERN. The deposit receives a \ac{DOI}, making the dataset permanently citable and independently verifiable, and is released under the Creative Commons CC BY 4.0 licence. \hl{\textit{DOI to be added upon deposit.}} The complete pipeline source code (collection, parsing, and analysis scripts, Dockerfile, and configuration) is published on GitHub at \url{xxx} under the MIT licence, providing a versioned, reproducible snapshot of the software used to produce the results.

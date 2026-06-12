@@ -67,7 +67,13 @@ The 61.9\% diversity rate is unbiased by probe imbalance --- under-represented r
 \subsection{Interpreting Resolver Impact (Q4)}
 \label{subsec:5.1.4}
 
-\hl{\textit{To be completed}}
+The Q4 campaign reveals that resolver choice is not a neutral variable in \ac{DNS} measurement: querying Google 8.8.8.8, Cloudflare 1.1.1.1, or Quad9 9.9.9.9 from the same probe for the same domain produces completely different \ac{IP} sets in 52--55\% of observations. This rate is consistent across all three resolver pairs, pointing to a structural property of the ecosystem.
+
+Two mechanisms explain it. \textit{Anycast infrastructure}: each resolver operates an independent global anycast network. From a given probe, the path to 8.8.8.8, 1.1.1.1, and 9.9.9.9 terminates at different physical servers with different upstream \ac{BGP} contexts. Those servers forward queries from their own \ac{IP} space; \ac{CDN} authoritative servers interpret that address as the geographic signal and return a location-optimised answer pool accordingly. Resolver selection therefore acts as a second geographic variable, layered on top of the probe's actual location.
+
+\textit{\ac{ECS} policy}: Cloudflare propagates the client's full \ac{IP} prefix; Google truncates to /24; Quad9 suppresses \ac{ECS} entirely~\cite{RFC7871}. \ac{CDN} operators implementing \ac{ECS}-aware routing~\cite{Wang2018} respond to those different signals with different \ac{IP} pools for the same domain, even when the underlying query comes from the same client.
+
+The practical implication for the Q1--Q3 methodology is direct: by querying authoritative servers with the \ac{RD} bit cleared, Q1--Q3 bypasses both mechanisms entirely. The probe's own \ac{IP} determines the \ac{CDN} answer, and no resolver anycast or \ac{ECS} artefact is introduced. The 50\%+ divergence rate measured in Q4 quantifies exactly what Q1--Q3 avoids --- and confirms that the design choice was correct.
 
 \bigskip
 \section{Limitations of the Study}
@@ -89,7 +95,7 @@ As quantified in Section~\ref{sec:4.4}, 79.0\% of probes are located in Europe a
 \subsection{Technical Limitations}
 \label{subsec:5.2.2}
 
-The RIPE Atlas concurrent measurement limit (100 simultaneous one-off measurements) is a hard practical constraint. The 248 ongoing periodic measurements for Q1--Q3 left no room for concurrent one-off campaigns; Q4 required a platform-level exemption that was not granted in time.
+Executing the Q4 one-off campaign required navigating two RIPE Atlas constraints. The 1,000,000-credit rolling 24-hour limit forced the 750 measurements to be spread across three separate days. The global limit of 25 concurrent one-off measurements to the same target \ac{IP} (shared across all RIPE Atlas users) required automatic retry logic in the creation script. Both constraints were worked around programmatically; the campaign completed in full.
 
 Probe independence is partial. The 248 parallel periodic measurements are each assigned probes by the RIPE Atlas scheduler independently, but the same probe can appear in multiple measurements. A probe that goes offline produces correlated errors across every domain measurement it contributes to. With 10,874 unique probe IDs across 54,550 appearances (average five per probe), per-probe failures introduce correlations that the per-domain independence assumption underlying the Mann-Whitney tests does not account for.
 
@@ -126,7 +132,7 @@ Anycast is the primary mechanism of geographic \ac{DNS} variation & Koch~\cite{K
 \ac{CDN} routing operates at sub-continental granularity & Hours~\cite{Hours2016}; Li~\cite{Li2025} & \textbf{Confirmed}: 11.57 country-level vs 2.67 continent-level \ac{IP} sets \\
 \ac{DNS} response content is more volatile than domain popularity rankings & Le Pochat~\cite{LePochat2019} & \textbf{Confirmed}: 38.19\% daily change rate vs 0.6\% Tranco churn \\
 RIPE Atlas geographic bias persists and affects \ac{DNS} measurements & Bajpai~\cite{Bajpai2017}; Nosyk~\cite{Nosyk2025} & \textbf{Confirmed} (EU+NA 79\%, $p=0.073$), diversity detection not impaired \\
-Public resolver vs \ac{ISP} resolver comparison (Q4) & Hours~\cite{Hours2016}; Wang~\cite{Wang2018} & \hl{\textit{To be completed}} \\
+Public resolver divergence (Q4) & Wang~\cite{Wang2018}; Hours~\cite{Hours2016} & \textbf{Confirmed}: 52--55\% cross-resolver \ac{IP} divergence; Cloudflare median \ac{RTT} 37\% lower than Google/Quad9 \\
 \bottomrule
 \end{tabularx}
 \caption{Empirical validation status of key claims from the literature}
@@ -160,8 +166,8 @@ The 66-day measurement campaign (2 April -- 6 June 2026) is now complete. The fu
 \textit{Extending the current campaign.}
 The 66-day campaign closed on 6 June 2026. The next step is extending collection beyond this window to capture monthly and seasonal patterns in \ac{CDN} provisioning. The pipeline is designed for continuous operation and can be restarted with the same corpus after Q4 measurements complete.
 
-\textit{Q4 resolver impact campaign.}
-\hl{\textit{To be completed}}
+\textit{ISP resolver comparison.}
+The Q4 design originally included a fourth configuration targeting each probe's local \ac{ISP} resolver. This condition was abandoned after discovering that the RIPE Atlas \ac{API} rejects the combination of a target \ac{IP} field and \texttt{use\_probe\_resolver: true}, and that a large fraction of RIPE Atlas probes resolve their \texttt{/etc/resolv.conf} to loopback addresses or directly to a public resolver, making the \ac{ISP} condition structurally indistinguishable. A future study comparing \ac{ISP} recursive resolvers would require either platform-level support for capturing the actual resolver identity per probe, or a custom measurement agent able to record the resolver used for each query.
 
 Van Rijswijk-Deij~\cite{vanRijswijk2016} demonstrated that multi-year data is necessary to characterise infrastructure evolution at scale; 66 days is a start, not a conclusion.
 
@@ -199,7 +205,7 @@ The thesis started with an operational problem: how do you measure \ac{DNS} resp
 
 Chapter 2 pinpointed the blind spot. OpenINTEL~\cite{vanRijswijk2016} runs from one server in the Netherlands --- geographically blind. RIPE Atlas has the probes, but every prior \ac{DNS} study used it for a single service at a single moment. Nobody had run a 250-domain, 66-day, multi-continent campaign with direct authoritative queries. On top of that, Xu~\cite{Xu2023} showed resolver choice is a confound: 90\% of forwarding resolvers collapse through 5\% of recursive resolvers, so even 200 geographically spread probes can return 200 identical answers.
 
-The method chapter resolves these with three choices. Probes selected across 173 countries using a three-round stratification algorithm. The RD bit cleared for Q1--Q3, so queries hit the authoritative server from the probe's own \ac{IP}. A separate four-resolver one-off campaign (Q4) to isolate resolver impact from geographic routing.
+The method chapter resolves these with three choices. Probes selected across 173 countries using a three-round stratification algorithm. The RD bit cleared for Q1--Q3, so queries hit the authoritative server from the probe's own \ac{IP}. A separate three-resolver one-off campaign (Q4) to isolate resolver infrastructure impact from geographic routing.
 
 \bigskip
 \subsection{Answers to the Research Questions}
@@ -211,7 +217,7 @@ Q2 --- \textit{Temporal stability.} \textbf{19.4\%} of domains are fully stable 
 
 Q3 --- \textit{Probe bias.} The RIPE Atlas geographic bias persists (EU+NA: 79.0\% of probes in 2026), confirming Bajpai's~\cite{Bajpai2017} findings nine years later. A Mann-Whitney test yields $p = 0.073$, above the $\alpha = 0.05$ threshold. Under-represented continents --- Africa (59.5\%), South America (58.3\%), and Oceania (59.5\%) --- each detect diversity in more than 58\% of domains despite holding 2--3\% of probes, at or above Europe (52.6\%), demonstrating that zone-based probe assignment preserves diversity observability even with few probes per country.
 
-Q4 --- \textit{Resolver impact.} \hl{\textit{To be completed}}
+Q4 --- \textit{Resolver impact.} \textbf{52--55\%} cross-resolver \ac{IP} divergence for all three resolver pairs: the same probe querying the same domain through Google, Cloudflare, or Quad9 gets completely different \ac{IP} addresses in more than half of cases. Cloudflare's median \ac{RTT} (15.5\,ms) is 37\% lower than Google (24.7\,ms) and Quad9 (23.4\,ms). Divergence is driven by independent anycast routing and divergent \ac{ECS} policies. Resolver choice is a confound of comparable magnitude to probe location.
 
 RIPE Atlas makes distributed authoritative-querying \ac{DNS} measurement technically feasible. The results confirm it is also scientifically necessary: for 61.9\% of the most visited websites, a single-location observatory reports uniform \ac{DNS} responses where the actual infrastructure returns different answers in different parts of the world.
 

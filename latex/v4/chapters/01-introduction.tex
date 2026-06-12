@@ -49,12 +49,12 @@ Q2 --- \textit{Temporal stability}: What is the temporal stability of \ac{DNS} r
 
 Q3 --- \textit{RIPE Atlas geographic bias}: Do the documented geographic biases of the RIPE Atlas probe distribution~\cite{Bajpai2017} (91\% of probes in Europe/North America) significantly affect the ability to observe \ac{DNS} geographic variation?
 
-Q4 --- \textit{Resolver impact}: Does switching from a local \ac{ISP} resolver to Google 8.8.8.8 or Cloudflare 1.1.1.1 change the \ac{DNS} answer a probe receives? Does that difference interact with where the probe is located?
+Q4 --- \textit{Resolver impact}: Do the three major public \ac{DNS} resolvers --- Google (8.8.8.8), Cloudflare (1.1.1.1), and Quad9 (9.9.9.9) --- return consistent \ac{DNS} responses for the same domain queried from the same geographic location? How large is the cross-resolver divergence, and which infrastructure factors drive it?
 
-Sixty-six days, one measurement per day: 2~April through 6~June~2026. A pilot phase (02--09~April, 99~domains, 50~probes) confirmed the fetch-and-parse pipeline before the main campaign scaled to 250~domains $\times$ 200~probes on 11~April. Each morning a cron job fetched the previous day's results from the RIPE Atlas \ac{API} and parsed them into dated Parquet files on a Raspberry Pi at home, synced nightly to Google Drive. Q4 did not run as planned: RIPE Atlas enforces a cap of 100 concurrent one-off measurements per account, and with 247~periodic measurements already active, no slot was available for the resolver-comparison campaign. The three completed questions draw from the same authoritative-side dataset.
+Sixty-six days, one measurement per day: 2~April through 6~June~2026. A pilot phase (02--09~April, 99~domains, 50~probes) confirmed the fetch-and-parse pipeline before the main campaign scaled to 250~domains $\times$ 200~probes on 11~April. Each morning a cron job fetched the previous day's results from the RIPE Atlas \ac{API} and parsed them into dated Parquet files on a Raspberry Pi at home, synced nightly to Google Drive. The Q4 one-off campaign (750~measurements, 250~domains $\times$ 3~resolvers $\times$ 200~probes) ran in June 2026. All four questions draw from the same corpus and probe set.
 
 \bigskip
 \section{Thesis Structure}
 \label{sec:1.4}
 
-Chapter~\ref{ch:state-of-the-art} reviews distributed \ac{DNS} measurement, geographic routing, and probe bias, and locates this thesis within that literature. Chapter~\ref{ch:method} covers corpus selection, probe configuration, and the collection pipeline. Chapter~\ref{ch:results} presents measurements for Q1--Q3 along with partial Q4 data. Chapter~\ref{ch:conclusion} interprets the findings and identifies what remains open.
+Chapter~\ref{ch:state-of-the-art} reviews distributed \ac{DNS} measurement, geographic routing, and probe bias, and locates this thesis within that literature. Chapter~\ref{ch:method} covers corpus selection, probe configuration, and the collection pipeline. Chapter~\ref{ch:results} presents measurements for Q1--Q4. Chapter~\ref{ch:conclusion} interprets the findings and identifies what remains open.

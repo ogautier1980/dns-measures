@@ -222,13 +222,74 @@ The 61.9\% diversity rate is therefore not pulled down by the probe imbalance: u
 \section{Results for Q4: Impact of Resolver Choice}
 \label{sec:4.5}
 
-\textbf{Research question}: What is the measurable impact of resolver choice (local \ac{ISP} versus public \ac{DNS} with \ac{ECS}) on observed \ac{DNS} responses, and does it interact with probe location?
+\textbf{Research question}: Do the three major public \ac{DNS} resolvers --- Google (8.8.8.8), Cloudflare (1.1.1.1), Quad9 (9.9.9.9) --- return consistent \ac{DNS} responses for the same domain queried from the same geographic location? How large is the cross-resolver divergence?
 
 \subsection{Overview of the Q4 Campaign}
 \label{subsec:4.5.1}
 
-The Q4 campaign targeted four resolver configurations for 250 domains and 200 probes: Cloudflare (1.1.1.1), Google Public \ac{DNS} (8.8.8.8), Quad9 (9.9.9.9), and the local \ac{ISP} resolver of each probe. Unlike the main Q1--Q3 periodic measurements, Q4 was designed as a one-off campaign.
-\hl{\textit{To be completed}}
+The Q4 campaign queried 250 domains using the same 200 RIPE Atlas probes as Q1--Q3, directing recursive \ac{DNS} queries to three public resolvers. The campaign ran as a one-off measurement in June 2026 (RIPE Atlas measurements 177,787,616 to 179,470,557), comprising 750 measurements (250 domains $\times$ 3 resolvers). Each measurement targeted 200 probes, for a theoretical maximum of 50,000 probe-level results per resolver. Realised totals reflect a 3--6\% availability loss (Table~\ref{tab:q4_resolver_stats}).
+
+\subsection{Per-Resolver Statistics}
+\label{subsec:4.5.2}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r r r r r}
+\toprule
+\textbf{Resolver} & \textbf{n results} & \textbf{Error rate} & \textbf{Avg RTT (ms)} & \textbf{Median RTT (ms)} & \textbf{Avg answers} \\
+\midrule
+Cloudflare (1.1.1.1) & 47{,}346 & 2\% & 45.8 & \textbf{15.5} & 2.27 \\
+Google (8.8.8.8)     & 47{,}318 & 1\% & 50.5 & 24.7          & 2.25 \\
+Quad9 (9.9.9.9)      & 47{,}067 & 1\% & 68.2 & 23.4          & 2.24 \\
+\bottomrule
+\end{tabular}
+\caption{Q4 per-resolver statistics (250 domains, 200 probes, one-off campaign, June 2026)}
+\label{tab:q4_resolver_stats}
+\end{table}
+
+Error rates are uniformly low (1--2\%), confirming high availability for all three services. The performance gap is pronounced: Cloudflare's median \ac{RTT} of 15.5\,ms is 37\% lower than Google (24.7\,ms) and 34\% lower than Quad9 (23.4\,ms). Mean values are substantially higher than medians (45.8, 50.5, and 68.2\,ms), reflecting a right-skewed distribution driven by high-latency probes in Africa, Oceania, and South America. Figure~\ref{fig:q4a} shows both metrics.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\textwidth]{figures/fig_q4_resolver_comparison.png}
+  \caption{Q4 --- Median RTT and error rate per public resolver (250 domains, 200 probes)}
+  \label{fig:q4a}
+\end{figure}
+
+Mean answer counts are nearly identical across resolvers (2.24--2.27), confirming that all three retrieve the same number of \ac{IP} addresses per domain in expectation. The divergence analysis (Section~\ref{subsec:4.5.3}) examines whether those addresses are equivalent.
+
+\subsection{Cross-Resolver IP Divergence}
+\label{subsec:4.5.3}
+
+For each (domain, probe) pair, the \ac{IP} sets returned by each resolver are compared pairwise. A divergence event is recorded when the two \ac{IP} sets are completely disjoint.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{l r}
+\toprule
+\textbf{Resolver pair} & \textbf{Divergence (\% disjoint IP sets)} \\
+\midrule
+Cloudflare vs Google & 51.8\% \\
+Cloudflare vs Quad9  & 52.8\% \\
+Google vs Quad9      & 55.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Q4 cross-resolver \ac{IP} divergence: fraction of (domain, probe) pairs returning completely disjoint \ac{IP} sets}
+\label{tab:q4_divergence}
+\end{table}
+
+More than half of all (domain, probe) observations yield entirely different \ac{IP} addresses depending on which public resolver is queried. Divergence rates are consistent across all three pairs (52--55\%), indicating a structural property of the ecosystem rather than a characteristic of any single operator. Figure~\ref{fig:q4b} visualises these rates.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.70\textwidth]{figures/fig_q4b_divergence.png}
+  \caption{Q4 --- Cross-resolver \ac{IP} divergence: fraction of (domain, probe) pairs with completely disjoint \ac{IP} sets}
+  \label{fig:q4b}
+\end{figure}
+
+Two mechanisms jointly explain this result. First, all three resolvers operate independent global anycast networks: queries from the same probe to 8.8.8.8, 1.1.1.1, and 9.9.9.9 may each terminate at a different physical server. These anycast instances forward queries from their own \ac{IP} space; \ac{CDN} authoritative servers use that \ac{IP} to assign a geographically optimised answer pool, so the same probe receives different pools from each resolver. Second, the three resolvers differ materially in their \ac{EDNS} Client Subnet (\ac{ECS}) policies~\cite{RFC7871}: Cloudflare forwards the full client prefix, Google forwards a /24 prefix, and Quad9 suppresses \ac{ECS} entirely for privacy. \ac{CDN} authoritative servers implementing \ac{ECS}-aware routing~\cite{Wang2018,Hours2016} therefore receive different geographic signals from each resolver and return different \ac{IP} pools even when the query originates from the same location.
 
 \bigskip
 \section{Summary of Partial Results}
@@ -243,7 +304,7 @@ The Q4 campaign targeted four resolver configurations for 250 domains and 200 pr
 
 \textbf{Q3 --- RIPE Atlas geographic bias}: Europe (57.8\%) and North America (21.2\%) hold 79.0\% of probe IDs combined. A Mann-Whitney U test yields $U = 257{,}767.0$, $p = 0.073$ --- not significant at $\alpha = 0.05$. Africa (59.5\%), South America (58.3\%), and Oceania (59.5\%) each detect geographic diversity in more than 58\% of domains despite holding only 2--3\% of probes --- at or above the European rate (52.6\%). Zone-based probe assignment preserves diversity observability regardless of probe density.
 
-\textbf{Q4 --- Resolver impact}: \hl{\textit{To be completed}}
+\textbf{Q4 --- Resolver impact}: Low and consistent error rates (1--2\%) for all three resolvers; Cloudflare median \ac{RTT} 15.5\,ms is 37\% lower than Google (24.7\,ms) and Quad9 (23.4\,ms). Cross-resolver \ac{IP} divergence exceeds 50\% for all three resolver pairs (51.8--55.0\%): the same probe querying the same domain through different public resolvers receives completely different \ac{IP} addresses in more than half of cases, driven by independent anycast routing and divergent \ac{ECS} policies.
 
 \subsection{Result Limitations}
 \label{subsec:4.6.2}

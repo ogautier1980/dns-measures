@@ -262,31 +262,30 @@ Full API documentation is available in~\cite{RIPEAtlasDocs2026}.
 \subsection{Supplementary Campaign for Q4: Resolver Comparison}
 \label{subsec:3.3.3}
 
-To address Q4, a supplementary one-off measurement campaign is conducted on the full 250-domain corpus, identical to the primary campaign. Using the same domain set ensures full comparability between the authoritative \ac{DNS} responses (Q1--Q3) and the recursive resolver responses (Q4). This campaign provides four simultaneous resolver-type observations from the same 200 probes:
+To address Q4, a supplementary one-off measurement campaign is conducted on the full 250-domain corpus using the same 200 probes as Q1--Q3. Using the same probe set ensures that any observed inter-resolver divergence is attributable to resolver infrastructure rather than geographic probe differences. The campaign provides three simultaneous resolver observations per (domain, probe) pair:
 
 \begin{table}[H]
 \centering
 \small
-\begin{tabular}{l l l l}
+\begin{tabular}{l l l}
 \toprule
-\textbf{Campaign} & \textbf{Target} & \textbf{\texttt{use\_probe\_resolver}} & \textbf{Resolver} \\
+\textbf{Campaign label} & \textbf{Target IP} & \textbf{Resolver} \\
 \midrule
-\texttt{isp\_local} & --- & \texttt{true} & Probe's local \ac{ISP} resolver \\
-\texttt{google} & 8.8.8.8 & \texttt{false} & Google Public \ac{DNS} \\
-\texttt{cloudflare} & 1.1.1.1 & \texttt{false} & Cloudflare \ac{DNS} \\
-\texttt{quad9} & 9.9.9.9 & \texttt{false} & Quad9 \\
+\texttt{google} & 8.8.8.8 & Google Public \ac{DNS} \\
+\texttt{cloudflare} & 1.1.1.1 & Cloudflare \ac{DNS} \\
+\texttt{quad9} & 9.9.9.9 & Quad9 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The Q4 campaign uses \texttt{set\_rd\_bit: true} and a larger \ac{UDP} payload size (4096 bytes) appropriate for recursive resolver queries. Measurements are configured as one-off (\texttt{is\_oneoff: true}) to avoid continuous credit consumption.
+The Q4 campaign uses \texttt{set\_rd\_bit: true} and a \ac{UDP} payload of 4096 bytes, appropriate for recursive resolver queries. Measurements are configured as one-off (\texttt{is\_oneoff: true}) to avoid continuous credit consumption. A fourth configuration targeting the probe's local \ac{ISP} resolver via \texttt{use\_probe\_resolver: true} was planned but abandoned: the RIPE Atlas \ac{API} rejects the combination of a target \ac{IP} field and \texttt{use\_probe\_resolver: true}, and probe-side inspection showed that a large fraction of RIPE Atlas probes resolve their \texttt{/etc/resolv.conf} to loopback addresses or directly to public resolvers, making the \ac{ISP} condition structurally indistinguishable.
 
-The four configurations give a direct answer to Q4. Does resolver choice change which \ac{CDN}-assigned \ac{IP} a probe sees? Does the local \ac{ISP} resolver stay closer to the authoritative answer than Google or Cloudflare?
+The three configurations test whether resolver infrastructure (anycast routing, \ac{ECS} policy) changes the \ac{CDN}-assigned \ac{IP} addresses a probe receives for the same domain.
 
 \subsection{Credit Budget}
 \label{subsec:3.3.4}
 
-The RIPE Atlas credit consumption is estimated as follows (10 credits per probe per measurement instance):
+Periodic measurements cost 10 credits per probe per instance; one-off measurements cost 20 credits per probe (results delivered immediately). The Q4 one-off campaign costs $750 \times 200 \times 20 = 3{,}000{,}000$ credits, spread over three days due to RIPE Atlas's rolling 24-hour credit limit of 1,000,000 credits.
 
 \begin{table}[H]
 \centering
@@ -295,15 +294,15 @@ The RIPE Atlas credit consumption is estimated as follows (10 credits per probe 
 \toprule
 \textbf{Phase} & \textbf{Domains} & \textbf{Probes} & \textbf{Duration} & \textbf{Credits} \\
 \midrule
-Pilot --- primary (direct auth)       & 100 &  50 & 9 days  & $\approx$450,000 \\
-Main --- primary (direct auth)        & 250 & 200 & 41 days  & $\approx$20,500,000 \\
-Main --- Q4 resolver comparison       & 250 & 200 & once     & $\approx$2,000,000 \\
-\textbf{Total campaign}             &     &     &          & $\approx$\textbf{22,950,000} \\
+Pilot --- primary (direct auth)  & 100 &  50 & 9 days  & $\approx$450,000 \\
+Main --- primary (direct auth)   & 250 & 200 & 57 days & $\approx$28,500,000 \\
+Main --- Q4 (3 resolvers, once)  & 250 & 200 & once    & $\approx$3,000,000 \\
+\textbf{Total campaign}          &     &     &         & $\approx$\textbf{31,950,000} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The total estimated consumption of approximately 22,950,000 credits remains within the initial balance of 30,000,000 credits, leaving a margin of approximately 7,050,000 credits. The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated daily and total consumption before any measurements are created.
+The estimated total of approximately 31,950,000 credits exceeds the initial balance of 29,000,000; the difference was covered by credits accumulated from hosting two RIPE Atlas probes throughout the campaign. The credit budget is monitored by the log output of \texttt{create\_ripe\_measurements.py}, which prints the estimated daily and total consumption before any measurements are created.
 
 \section{Data Collection and Processing}
 \label{sec:3.4}
@@ -445,13 +444,13 @@ Reported figures: actual probe distribution by continent and country; count of c
 \subsection{Q4 --- Impact of Resolver Choice}
 \label{subsec:3.5.4}
 
-Q4 measures how much switching resolver type changes the answer a probe receives. The one-off campaign (Section~\ref{subsec:3.3.3}) runs the same 200 probes against each of the 250 domains four times --- once per resolver type (\texttt{isp\_local}, \texttt{google}, \texttt{cloudflare}, \texttt{quad9}).
+Q4 measures how much resolver infrastructure changes the answer a probe receives. The one-off campaign (Section~\ref{subsec:3.3.3}) runs the same 200 probes against each of the 250 domains three times --- once per public resolver (\texttt{google}, \texttt{cloudflare}, \texttt{quad9}).
 
-Each resolver type is first profiled independently: error rate (non-zero RCODE fraction), median \ac{RTT}, and mean answer count. These baselines establish whether any resolver is structurally noisier or slower before the cross-resolver comparison begins.
+Each resolver is first profiled independently: error rate (non-zero RCODE fraction), median \ac{RTT}, and mean answer count. These baselines establish whether any resolver is structurally noisier or slower before the cross-resolver comparison begins.
 
-The core comparison is pairwise. For each (domain, probe) pair the local \ac{ISP} \texttt{answer\_ips} is compared against each public-resolver response; the divergence rate is the fraction of pairs where the two sets differ. A geographic breakdown by continent answers whether the ISP-versus-public gap is uniform across regions or concentrated in specific areas, as would be expected if public resolvers steer probes to US-region \ac{CDN} nodes regardless of probe location.
+The core comparison is pairwise across all three resolver pairs: Google vs.\ Cloudflare, Google vs.\ Quad9, Cloudflare vs.\ Quad9. For each (domain, probe) pair, the \texttt{answer\_ips} returned by each resolver are compared; a divergence event is recorded when the two \ac{IP} sets are completely disjoint (no shared address). The per-pair divergence rate is the fraction of (domain, probe) tuples showing divergence.
 
-A Mann-Whitney U test on \ac{RTT} distributions rounds out the comparison. Reported figures: error rate and median \ac{RTT} per resolver; pairwise \ac{IP} divergence rates; and the continental disaggregation of those rates.
+Reported figures: error rate and median \ac{RTT} per resolver; pairwise \ac{IP} divergence rates for all three resolver pairs.
 
 \bigskip
 \section{Ethical Considerations and Reproducibility}
