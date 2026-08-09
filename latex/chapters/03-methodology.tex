@@ -13,7 +13,7 @@ The global methodological objective of this thesis is to capture the geographic 
   \item \textbf{Q1}: What proportion of Tranco top-ranked domains return geographically differentiated \ac{DNS} responses, and what infrastructure mechanisms explain the differentiation?
   \item \textbf{Q2}: What is the temporal stability of \ac{DNS} responses for popular domains at day, week, and month timescales?
   \item \textbf{Q3}: Do the geographic biases of the RIPE Atlas probe distribution significantly limit the ability to observe geographic \ac{DNS} variation?
-  \item \textbf{Q4}: Do the three major public DNS resolvers return consistent \ac{DNS} responses for the same domain queried from the same geographic location, and how large is the divergence?
+  \item \textbf{Q4}: Do the three major public \ac{DNS} resolvers return consistent \ac{DNS} responses for the same domain queried from the same geographic location, and how large is the divergence?
 \end{itemize}
 
 \subsection{System Architecture}
@@ -263,7 +263,7 @@ Full API documentation is available in~\cite{RIPEAtlasDocs2026}.
 \texttt{set\_nsid\_bit} & \texttt{true} & Requests the \ac{NSID} option~\cite{RFC5001}; the authoritative server's response identifies the physical anycast instance that answered, enabling anycast routing analysis~\cite{Bortzmeyer2013,Finnegan2018}. \\
 \texttt{set\_do\_bit} & \texttt{false} & \ac{DNSSEC} OK bit unset; \ac{DNSSEC} validation is not required for \ac{IP} address collection and would increase response size without benefit. \\
 \texttt{set\_cd\_bit} & \texttt{false} & Checking Disabled bit unset; \ac{DNSSEC} checking is not relevant for direct authoritative queries. \\
-\texttt{protocol} & \texttt{"UDP"} & Standard \ac{DNS} transport; UDP is used by default and is sufficient for responses of this size. \\
+\texttt{protocol} & \texttt{"UDP"} & Standard \ac{DNS} transport; \ac{UDP} is used by default and is sufficient for responses of this size. \\
 \texttt{udp\_payload\_size} & \texttt{1024} & EDNS0 buffer size in bytes; set large enough to accommodate the \ac{NSID} option in the response without truncation. \\
 \texttt{include\_abuf} & \texttt{true} & Includes the raw \ac{DNS} response packet (base64-encoded), enabling full parsing of all \ac{DNS} sections and OPT record \ac{NSID} decoding~\cite{RFC5001}. \\
 \texttt{retry} & \texttt{2} & Number of retransmission attempts on timeout before the result is recorded as no-response. \\
@@ -498,9 +498,9 @@ To evaluate this potential infrastructure bias, the analysis mirrors the dual-la
 
 This assessment leverages the dedicated Q4 measurement campaign detailed in Section~\ref{subsec:3.3.3}, which yields a matrix of three concurrent resolver observations across 250 domains and 200 probes.
 
-\textbf{Step 1 — Baseline Resolver Profiling}. The pipeline extracts aggregate performance profiles for each resolver (\texttt{google}, \texttt{cloudflare}, \texttt{quad9}). For each resolver, we compute the error rate (proportion of non-zero \ac{RCODE} outputs), the mean and median \ac{RTT}, and the mean number of returned answer records.
+\textbf{Step 1 — Baseline Resolver Profiling}. The pipeline extracts aggregate performance profiles for each resolver (\texttt{google}, \texttt{cloudflare}, \texttt{quad9}). For each resolver, we compute the error rate (proportion of non-zero RCODE outputs), the mean and median \ac{RTT}, and the mean number of returned answer records.
 
-\textbf{Step 2 — Pairwise IP Divergence}. At the individual (domain, probe) level, the system compares the \texttt{answer\_ips} pools returned by each pair of resolvers. A divergence event is recorded when the \ac{IP} sets differ between two resolvers for the same (domain, probe) pair. The divergence rate is the fraction of successful query pairs exhibiting this discrepancy, computed for each of the three resolver pairs (CF/G, CF/Q9, G/Q9).
+\textbf{Step 2 — Pairwise \ac{IP} Divergence}. At the individual (domain, probe) level, the system compares the \texttt{answer\_ips} pools returned by each pair of resolvers. A divergence event is recorded when the \ac{IP} sets differ between two resolvers for the same (domain, probe) pair. The divergence rate is the fraction of successful query pairs exhibiting this discrepancy, computed for each of the three resolver pairs (CF/G, CF/Q9, G/Q9).
 
 \textbf{Key metrics}:
 \begin{itemize}

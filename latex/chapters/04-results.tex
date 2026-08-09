@@ -303,7 +303,7 @@ Google (8.8.8.8)     & 47,318 & 0.01\% & 50.5 ms & 24.7 ms & 2.25 \\
 Quad9 (9.9.9.9)      & 47,067 & 0.01\% & 68.2 ms & 23.4 ms & 2.24 \\
 \bottomrule
 \end{tabular}
-\caption{Aggregate resolver performance profiles across 250 domains and 200 probes. Error rate is the proportion of non-zero \ac{RCODE} responses. RTT is the probe-to-resolver round-trip time.}
+\caption{Aggregate resolver performance profiles across 250 domains and 200 probes. Error rate is the proportion of non-zero RCODE responses. \ac{RTT} is the probe-to-resolver round-trip time.}
 \label{tab:4.4}
 \end{table}
 
@@ -364,7 +364,7 @@ This finding complements the Q1 result (69.6\% of domains are geographically div
 
   \item \textbf{Platform bias}: Campaign~1's zone-based selection concentrates 79.5\% of probe IDs in Europe and North America, reflecting the structural composition of the RIPE Atlas network. Campaign~2's stratified selection substantially corrects this but introduces predominantly single-probe countries (122 of 136). While the Q3 evaluation confirms that the continental imbalance does not prevent diversity detection, the significant single vs.\ multi-probe result underscores that fine-grained intra-regional analysis remains limited for countries covered by only one probe.
 
-  \item \textbf{Q4 — ISP resolver absent}: The local \ac{ISP} resolver condition planned for Q4 was abandoned for two reasons. First, the RIPE Atlas \ac{API} rejects the combination of an explicit target \ac{IP} and \texttt{use\_probe\_resolver: true}. Second, and more fundamentally, probe inspection revealed that a large fraction of RIPE Atlas probes forward their queries to public resolvers (Cloudflare, Google) rather than to genuine \ac{ISP} infrastructure, making the \ac{ISP} condition structurally indistinguishable from the public resolver conditions already measured. The results therefore characterise divergence \emph{among} the three public resolvers but cannot address whether a true \ac{ISP} resolver would produce responses closer to the authoritative \ac{DNS} signal.
+  \item \textbf{Q4 --- \ac{ISP} resolver absent}: The local \ac{ISP} resolver condition planned for Q4 was abandoned for two reasons. First, the RIPE Atlas \ac{API} rejects the combination of an explicit target \ac{IP} and \texttt{use\_probe\_resolver: true}. Second, and more fundamentally, probe inspection revealed that a large fraction of RIPE Atlas probes forward their queries to public resolvers (Cloudflare, Google) rather than to genuine \ac{ISP} infrastructure, making the \ac{ISP} condition structurally indistinguishable from the public resolver conditions already measured. The results therefore characterise divergence \emph{among} the three public resolvers but cannot address whether a true \ac{ISP} resolver would produce responses closer to the authoritative \ac{DNS} signal.
 
   \item \textbf{IPv4 only}: The experimental scope is bounded to \ac{DNS} \ac{A} records queried over \ac{IPv4} transport, leaving \ac{AAAA} records and \ac{IPv6} routing dynamics outside the dataset.
 
