@@ -52,7 +52,7 @@ Every design decision in this system involves a credit budget constraint: measur
 \subsection{Infrastructure}
 \label{subsec:3.1.3}
 
-To ensure continuous and autonomous operation throughout the 123-day campaign, the entire pipeline is deployed within a Docker container on a Raspberry Pi 5 (ARM64 architecture). This low-cost, always-on hardware setup eliminates the need for manual intervention during long-term data collection.
+To ensure continuous and autonomous operation throughout the 127-day campaign, the entire pipeline is deployed within a Docker container on a Raspberry Pi 5 (ARM64 architecture). This low-cost, always-on hardware setup eliminates the need for manual intervention during long-term data collection.
 
 Built upon the \texttt{python:3.11-slim-bookworm} base image, the container is compiled natively for ARM64 to guarantee optimal hardware compatibility. Minimizing resource overhead was a priority; by limiting dependencies strictly to core libraries - including dnspython, pandas, pyarrow, scipy, matplotlib, and rclone - the final image footprint remains comfortably under 1 GB.
 
@@ -97,9 +97,9 @@ The empirical data collection was split into two sequential phases, tailored to 
 
 \textbf{The Pilot Phase (2--10 April 2026)}: To verify the end-to-end pipeline before committing significant resources, we restricted this initial run to the top 100 domains across 50 probes. Operating at this scale drew roughly 50,000 credits daily, allowing us to thoroughly test probe selection, measurement initialization, daily retrieval, parsing, and cloud synchronization without exhausting our budget.
 
-\textbf{First Main Campaign (11 April -- 11 June 2026)}: Once the infrastructure was validated, with approximately 50,000,000 RIPE Atlas credits available, the scope expanded to 250 domains and 200 probes. Two domains that failed NS pre-resolution were excluded, yielding 248 active measurements. This configuration consumed approximately 500,000 credits per day over 62 days, totalling approximately 31,000,000 credits. Probe selection for this campaign relied on RIPE Atlas geographic zone-based distribution.
+\textbf{First Main Campaign (11 April -- 11 June 2026)}: Once the infrastructure was validated, with approximately 50,000,000 RIPE Atlas credits available, the scope expanded to 250 domains and 200 probes. Two domains that failed \ac{NS} pre-resolution were excluded, yielding 248 active measurements. This configuration consumed approximately 500,000 credits per day over 62 days, totalling approximately 31,000,000 credits. Probe selection for this campaign relied on RIPE Atlas geographic zone-based distribution.
 
-\textbf{Second Main Campaign (14 June -- 7 August 2026)}: After a two-day interruption (12--13 June) to renew measurements, a second campaign ran for 55 days with 201 active domains and 150 probes, implementing the continent-level stratification algorithm described in Section~\ref{subsec:3.3.1}. This improved probe selection achieved coverage of 136 countries via a fixed probe set, with 201 domains returning daily results.
+\textbf{Second Main Campaign (14 June -- 8 August 2026)}: After a two-day interruption (12--13 June) to renew measurements, a second campaign ran for 56 days with 201 active domains and 150 probes, implementing the continent-level stratification algorithm described in Section~\ref{subsec:3.3.1}. This improved probe selection achieved coverage of 136 countries via a fixed probe set, with 201 domains returning daily results.
 
 The choice of 250 domains for the first campaign reflects a trade-off between two competing constraints:
 
@@ -200,7 +200,7 @@ This inverse weighting reduces Europe's share from 40\% to 9.3\% and North Ameri
   \item \textbf{Phase 3 (\ac{AS} Broadening)}: Finally, any remaining slots within the quota are populated by adding extra probes to already-selected countries. In this round, the pipeline explicitly prioritizes unique \ac{AS}s to guarantee architectural diversity.
 \end{itemize}
 
-Within each round, the probe selected for a given country is the one with the highest hardware version that introduces a new \ac{AS} not yet represented in the selected set. The selected probe set is saved as \texttt{selected\_probes\_<date>.json} for full reproducibility. This algorithm was activated for the second campaign (14 June -- 7 August 2026, 150 probes), replacing the zone-based assignment used in the first campaign.
+Within each round, the probe selected for a given country is the one with the highest hardware version that introduces a new \ac{AS} not yet represented in the selected set. The selected probe set is saved as \texttt{selected\_probes\_<date>.json} for full reproducibility. This algorithm was activated for the second campaign (14 June -- 8 August 2026, 150 probes), replacing the zone-based assignment used in the first campaign.
 
 \subsection{Primary Campaign: Direct Authoritative DNS Queries}
 \label{subsec:3.3.2}
@@ -273,7 +273,7 @@ Full API documentation is available in~\cite{RIPEAtlasDocs2026}.
 \texttt{description} & \textit{see value} & Human-readable label in the RIPE Atlas dashboard, including the domain name and creation date for traceability. \\
 \bottomrule
 \end{tabularx}
-\caption{RIPE Atlas DNS measurement parameters for the primary Q1--Q3 campaign.}
+\caption{RIPE Atlas \ac{DNS} measurement parameters for the primary Q1--Q3 campaign.}
 \label{tab:msm_params}
 \end{table}
 
@@ -313,8 +313,8 @@ The RIPE Atlas credit consumption is estimated as follows (10 credits per probe 
 \textbf{Phase} & \textbf{Domains} & \textbf{Probes} & \textbf{Duration} & \textbf{Credits/day} \\
 \midrule
 Pilot — primary (direct auth)            & 100 &  50 &  9 days  & $\approx$50,000 \\
-Campaign 1 — primary (direct auth)       & 248 & 200 & 59 days  & $\approx$500,000 \\
-Campaign 2 — primary (direct auth)       & 201 & 150 & 55 days  & $\approx$300,000 \\
+Campaign 1 — primary (direct auth)       & 248 & 200 & 61 days  & $\approx$500,000 \\
+Campaign 2 — primary (direct auth)       & 201 & 150 & 56 days  & $\approx$300,000 \\
 Q4 — resolver comparison (one-off)       & 233 & $\sim$200 & once     & --- \\
 \bottomrule
 \end{tabular}
@@ -332,7 +332,7 @@ The combined credit expenditure across all phases totalled approximately 51,000,
 
 Measurement results are collected from the RIPE Atlas REST API by \texttt{fetch\_ripe\_atlas.py} on a daily schedule at 10:00 UTC, retrieving results for the previous calendar day. The script reads the measurement plan from \texttt{measurements.json} (produced by \texttt{create\_ripe\_measurements.py}) and iterates over all active measurement identifiers.
 
-The collection is fully paginated, following RIPE Atlas API \texttt{next} links until all results for the time window are retrieved. Error handling includes automatic retry with exponential back-off (up to 5 attempts, base delay 2 seconds, doubling on each retry) and explicit handling of \ac{HTTP} 429 rate-limit responses (waits for the \texttt{Retry-After} header duration before retrying). Should any measurement IDs fail after all retries, they are recorded in \texttt{fetch\_errors\_<date>.json} for subsequent investigation; no such file was produced over the 123-day campaign. Already-retrieved files are skipped unless \texttt{--force} is specified.
+The collection is fully paginated, following RIPE Atlas API \texttt{next} links until all results for the time window are retrieved. Error handling includes automatic retry with exponential back-off (up to 5 attempts, base delay 2 seconds, doubling on each retry) and explicit handling of \ac{HTTP} 429 rate-limit responses (waits for the \texttt{Retry-After} header duration before retrying). Should any measurement IDs fail after all retries, they are recorded in \texttt{fetch\_errors\_<date>.json} for subsequent investigation; no such file was produced over the 127-day campaign. Already-retrieved files are skipped unless \texttt{--force} is specified.
 
 The raw results are stored in JSON files, which are kept in the data/raw/ folder and named \texttt{data/raw/m\-sm\_<id>\_<date>.json}.
 
@@ -386,7 +386,7 @@ The following validation filters are applied during parsing:
 
 Results are stored in a single-tier Parquet architecture optimised for the analytical query patterns of the analysis phase:
 
-\textbf{Cumulative Parquet file} (\texttt{data/processed/dns\_results.parquet}): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. Over the full 123-day campaign, this file reached 113 MB (approximately 27 MB/month on average, with higher growth during the first campaign at 200 probes and lower during the second at 150 probes), thanks to columnar compression with dictionary encoding for repeated string values such as \texttt{country\_code}, \texttt{continent}, and \texttt{answer\_ips}.
+\textbf{Cumulative Parquet file} (\texttt{data/processed/dns\_results.parquet}): All parsed results are appended daily to a single Parquet file using pyarrow with a fixed schema. Over the full 127-day campaign, this file reached 113 MB (approximately 27 MB/month on average, with higher growth during the first campaign at 200 probes and lower during the second at 150 probes), thanks to columnar compression with dictionary encoding for repeated string values such as \texttt{country\_code}, \texttt{continent}, and \texttt{answer\_ips}.
 
 \textbf{Daily archives} (\texttt{data/processed/dns\_results\_<date>.parquet}): In addition, the system preserves individual daily Parquet files. This redundancy serves a dual purpose: it facilitates granular, point-in-time analyses and provides a reliable rollback mechanism should the cumulative file suffer from data corruption.
 
@@ -394,7 +394,7 @@ Results are stored in a single-tier Parquet architecture optimised for the analy
 
 \textbf{Cloud backup}: Every 24 hours, the pipeline invokes rclone to push all Parquet datasets, historical archives, and reports to a remote Google Drive repository. To ensure operational continuity, the underlying configuration metadata is maintained inside a dedicated Docker named volume, rendering it immune to container updates or service restarts.
 
-\textbf{Storage estimate} for the full 123-day campaign:
+\textbf{Storage estimate} for the full 127-day campaign:
 
 \begin{table}[H]
 \centering
@@ -437,7 +437,7 @@ The analysis operates at two spatial granularities --- continental and national 
 
 \textbf{Step 2: Fine-Grained National Differentiation}. The pipeline subsequently replicates this aggregation logic at the country level. A domain achieves a country-diverse classification if two or more nations yield divergent \ac{IP} address responses within the same 24-hour window. Refining the granularity to this scale exposes critical intra-continental routing discrepancies — such as localized variations within the European network fabric or distinct pathing splits between Brazil and Argentina — that remain completely hidden during continent-level evaluation.
 
-\textbf{Step 3: Longitudinal Aggregation}. To evaluate the persistence of these routing behaviours over the entire 123-day campaign, we calculate the metric \texttt{pct\_geo\_diverse}, representing the exact proportion of observation days exhibiting geographic differentiation. A domain satisfies our broader geographic diversity criterion provided it triggers this differentiation signature on at least one operational day.
+\textbf{Step 3: Longitudinal Aggregation}. To evaluate the persistence of these routing behaviours over the entire 127-day campaign, we calculate the metric \texttt{pct\_geo\_diverse}, representing the exact proportion of observation days exhibiting geographic differentiation. A domain satisfies our broader geographic diversity criterion provided it triggers this differentiation signature on at least one operational day.
 
 \textbf{Step 4: \ac{NSID} Structural Disambiguation}. For domains demonstrating geographic \ac{IP} variation, the framework evaluates \ac{NSID} payloads to isolate the underlying routing mechanism. This heuristic successfully separates Anycast instance selection (characterized by distinct \ac{NSID} responses across regions, indicating localized Anycast \ac{PoP} termination) from \ac{DNS}-driven \ac{CDN} routing, where identical \ac{NSID} strings pair with dynamic \ac{A} records, pointing to a central geographic database lookup.
 
@@ -479,7 +479,7 @@ To evaluate this potential infrastructure bias, the analysis mirrors the dual-la
 
 \textbf{Continent-level bias}: The probe distribution actually achieved at deployment is compared to the target allocation from Section~\ref{subsec:3.3.1}. For each continent, the coverage rate (proportion of domains observed by at least one probe) and the mean number of unique \ac{IP} addresses observed per domain are computed. The Mann-Whitney U test compares the distribution of unique \ac{IP}s per domain between Europe+North America probes and probes from all other regions. A statistically significant result indicates that the geographic stratification captures meaningfully different \ac{DNS} responses from under-represented regions; a non-significant result would suggest that EU+NA probes alone would have been sufficient.
 
-\textbf{Country-level bias}: The combined dataset aggregates probe contributions per country across both campaigns and all 123 measurement days. This produces two analytical cohorts: countries from which only a single unique probe contributed data throughout the entire campaign (peripheral nations at the limits of RIPE Atlas coverage), and countries covered by multiple distinct probes. The Mann-Whitney U test evaluates the count of unique \ac{IP} addresses observed per domain, contrasting these two cohorts. A statistically significant outcome demonstrates that peripherally covered countries capture genuinely distinct \ac{DNS} behaviours, justifying the investment in broad geographic coverage. A non-significant result would imply that expanding national coverage yields administrative breadth without additional observational value.
+\textbf{Country-level bias}: The combined dataset aggregates probe contributions per country across both campaigns and all 127 measurement days. This produces two analytical cohorts: countries from which only a single unique probe contributed data throughout the entire campaign (peripheral nations at the limits of RIPE Atlas coverage), and countries covered by multiple distinct probes. The Mann-Whitney U test evaluates the count of unique \ac{IP} addresses observed per domain, contrasting these two cohorts. A statistically significant outcome demonstrates that peripherally covered countries capture genuinely distinct \ac{DNS} behaviours, justifying the investment in broad geographic coverage. A non-significant result would imply that expanding national coverage yields administrative breadth without additional observational value.
 
 \textbf{Key metrics}:
 \begin{itemize}
@@ -540,4 +540,4 @@ The measurement design follows the ethical framework of Kisteleki~\cite{Kistelek
 \subsection{Open Science}
 \label{subsec:3.6.3}
 
-In accordance with open science principles, the measurement dataset and the pipeline source code are made publicly available through two complementary channels. The full \ac{DNS} measurement dataset in Parquet format, covering the 123-day campaign (2 April -- 7 August 2026, approximately 3,974,697 results), is deposited on Zenodo~\cite{Zenodo}, a general-purpose open-access repository operated by CERN. The deposit receives a \ac{DOI}, making the dataset permanently citable and independently verifiable, and is released under the Creative Commons CC~BY~4.0 licence. The complete pipeline source code (collection, parsing, and analysis scripts, Dockerfile, and configuration) is published on GitHub at \url{https://github.com/ogautier-unam/dns-measurements} under the MIT licence, providing a versioned, reproducible snapshot of the software used to produce the results.
+In accordance with open science principles, the measurement dataset and the pipeline source code are made publicly available through two complementary channels. The full \ac{DNS} measurement dataset in Parquet format, covering the 127-day campaign (2 April -- 8 August 2026, approximately 4,146,242 results), is deposited on Zenodo~\cite{Zenodo}, a general-purpose open-access repository operated by CERN. The deposit receives a \ac{DOI}, making the dataset permanently citable and independently verifiable, and is released under the Creative Commons CC~BY~4.0 licence. The complete pipeline source code (collection, parsing, and analysis scripts, Dockerfile, and configuration) is published on GitHub at \url{https://github.com/ogautier-unam/dns-measurements} under the MIT licence, providing a versioned, reproducible snapshot of the software used to produce the results.
