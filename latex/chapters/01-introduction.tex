@@ -11,17 +11,17 @@ geographically distributed data to characterise anycast routing and \ac{CDN} beh
 
 Beyond the temporal dimension, \ac{DNS} responses exhibit a geographic dimension that single-vantage point measurement cannot observe. Three mechanisms produce this variation: (1) \textbf{\ac{CDN}-based routing} — authoritative servers return different \ac{IP} addresses depending on the inferred location of the querying resolver, directing clients to the nearest edge cluster~\cite{Li2025,Hours2016}; (2) \textbf{\ac{IP} anycast} — the same global \ac{IP} address is announced from multiple geographically distributed \ac{PoPs}, so queries from different regions reach different physical instances~\cite{Bortzmeyer2013,Koch2021}; and (3) \textbf{\ac{ECS}}~\cite{RFC7871} — the resolver embeds a truncated client \ac{IP} prefix in the query, enabling the \ac{CDN} to route by end-client location rather than resolver location~\cite{Wang2018}. 
 
-The proportion of popular domains that return geographically differentiated responses, the magnitude and temporal stability of that differentiation, and the mechanisms that drive it remain empirically uncharacterised at population scale. This is the research gap this thesis addresses.
+While we know that popular domains often tailor their responses based on geography, we still lack a large-scale, empirical understanding of this phenomenon. Specifically, the exact proportion of these domains, how much they vary, and the underlying mechanisms driving this differentiation over time remain unclear. This thesis aims to bridge this specific gap.
 
 \bigskip
 \section{DNS Resolution: a Brief Overview}
 \label{sec:1.2}
 
-Every time a browser contacts a website, a short chain of queries unfolds before any data is exchanged. \ac{DNS} handles the translation from human-readable names to numeric \ac{IP} addresses, through a hierarchy of servers distributed across the globe.
+Before any data exchange can occur between a browser and a website, a brief sequence of background queries takes place. This process relies on the \ac{DNS}, which maps user-friendly domain names to the numeric \ac{IP} addresses needed for routing. To achieve this, the \ac{DNS} operates as a decentralized hierarchy of servers worldwide.
 
-The namespace is divided into zones — administrative units, each delegated to one or more authoritative name servers that hold the canonical records for that portion of the tree. These records (\ac{RR}s) come in typed forms: an \ac{A} record binds a name to an \ac{IPv4} address; each record also carries a \ac{TTL}, after which any cached copy is considered expired.
+Administratively, the global \ac{DNS} namespace is partitioned into distinct 'zones'. Each zone is responsible for specific segments of the naming tree and falls under the management of one or more authoritative name servers holding the definitive canonical records. These \ac{RR}s are strictly typed. For instance, an \ac{A} record maps a hostname to its corresponding 32-bit address. Additionally, metadata like the \ac{TTL} goes with these records, defining exactly how long a cached copy remains valid before expiration.
 
-In practice, a client application never contacts an authoritative server directly. The query goes first to the operating system's stub resolver, which forwards it to a recursive resolver — the \ac{ISP}'s, or a public alternative such as Google (8.8.8.8) or Cloudflare (1.1.1.1). If the recursive resolver holds a valid cached answer, it returns it immediately. If not, it iterates down the hierarchy — from the root servers through the appropriate \ac{TLD} server, down to the domain's own authoritative servers — retrieves the answer, caches it for the \ac{TTL} duration, and passes it back to the client. Figure~\ref{fig:DNS_resolution} illustrates this process.
+In practice, a client application never contacts an authoritative servers directly. Instead, a query is first handled by the local operating system's stub resolver, which routes it to a recursive resolver (typically managed by the \ac{ISP} or public providers like Cloudflare and Google). This server checks its own local cache first; if a valid entry exists, it answers the client immediately. Otherwise, the resolver iterates down the \ac{DNS} hierarchy. It queries the root servers first, moves to the appropriate \ac{TLD} infrastructure, and finally reaches the domain's authoritative servers to fetch and cache the record for the duration of its \ac{TTL}. This sequence is mapped out in Figure~\ref{fig:DNS_resolution}.
 
 \begin{figure}[tp]
   \centering
@@ -30,7 +30,7 @@ In practice, a client application never contacts an authoritative server directl
   \label{fig:DNS_resolution}
 \end{figure}
 
-This architecture has two consequences central to this thesis. First, the recursive resolver acts as a geographic proxy: from the authoritative server's perspective, all queries originating from the same recursive resolver appear to come from a single location, regardless of where the end-users actually are. \ac{CDN} operators exploit this to tailor answers by resolver location. Second, because any resolver can query any authoritative server, it is possible to measure how authoritative servers respond to queries from different geographic vantage points — which is precisely the approach taken in Chapter~\ref{ch:method}.
+The consequences of this architecture are central to this thesis. First, the recursive resolver acts as a geographic proxy: from the authoritative server's point of view, all queries originating from the same recursive resolver appear to come from a single location, without taking into account where the end-users are actually located. \ac{CDN} operators exploit this to personalize responses based on the resolver's location. Second, because any resolver can query any authoritative server, it is possible to measure how authoritative servers respond to queries originating from different geographical observation points — which is precisely the approach taken in Chapter~\ref{ch:method}.
 
 \bigskip
 \section{Research Questions and Objectives}
@@ -40,31 +40,26 @@ This thesis addresses the following main research question:
 
 \textit{How can one design and deploy a distributed \ac{DNS} measurement system that captures the geographic and temporal diversity of \ac{DNS} responses for the most popular domains on the web, in a manner that is ethically sound, reproducible, and useful to the research community?}
 
-Four operational sub-questions guide the empirical analysis:
+To structure the empirical analysis, we formulate four operational sub-questions:
 
 \textbf{Q1 — Geographic diversity}: What proportion of popular domains return different \ac{DNS} responses depending on query origin, and which mechanisms (\ac{CDN} routing, anycast, \ac{ECS}) explain the differentiation? 
 
-Measuring the full Tranco Top-10K would require on the order of 10,000 concurrent RIPE Atlas measurements, far exceeding typical account limits; this thesis therefore focuses on the Tranco Top-250, which concentrates on the highest-traffic domains where geographic differentiation is most prevalent and the findings most practically relevant.
-
+To analyse the entire Tranco Top-10K, 10.000 simultaneous measurements would be required, far exceeding the limits of a RIPE Atlas account. Therefore this search will be limited to the top 250 domains in the Tranco list (Tranco Top-250), witch are the domains with the most traffic. This is where geographic differentiation is most frequent and therefore most interesting to observe.
 
 \textbf{Q2 — Temporal stability}: What is the temporal stability of \ac{DNS} responses at day, week, and month timescales over the measurement period?
 
 \textbf{Q3 — RIPE Atlas geographic bias}: Do the documented geographic biases of the RIPE Atlas probe distribution~\cite{Bajpai2017} (91\% of probes in Europe/North America) significantly affect the ability to observe \ac{DNS} geographic variation?
 
-\textbf{Q4 — Resolver impact}: Do the three major public \ac{DNS} resolvers (Google 8.8.8.8, Cloudflare 1.1.1.1, Quad9 9.9.9.9) return consistent \ac{DNS} responses for the same domain queried from the same geographic location, and how large is the inter-resolver divergence?
+\textbf{Q4 — Resolver impact}: Do the three major public DNS resolvers (Google 8.8.8.8, Cloudflare 1.1.1.1, Quad9 9.9.9.9) return consistent \ac{DNS} responses for the same domain queried from the same geographic location, and how large is the divergence?
 
-To answer these questions, the thesis designs, implements, and operates a measurement system that: (1) measures the Tranco Top 250 domains~\cite{LePochat2019} daily over 50 days — a duration chosen to cover at least one complete monthly cycle, enabling analysis of \ac{DNS} stability at the day, week, and month timescales required by Q2; (2) collects measurements from $\approx$200 globally distributed RIPE Atlas probes selected via RIPE Atlas geographic zone-based distribution; (3) archives results in Parquet format following \ac{FAIR} data principles; and (4) analyses the dataset to produce quantitative answers to Q1–Q4. The measurement design complies with the RIPE Atlas ethical guidelines~\cite{Kisteleki2016}: all queried domains are publicly accessible, measurement frequency respects \ac{DNS} \ac{TTL}s, and no politically sensitive content is included.
+To address these questions, this research relies on a custom-built measurement system deployed across two successive campaigns for a total of 123 measurement days (2 April -- 7 August 2026). A 9-day pilot phase (100 domains, $\approx$50 probes) validated the end-to-end pipeline, a first 59-day campaign (248 domains, 200 probes) was followed by a second 55-day campaign (201 domains, 150 probes) with continent-stratified probe selection covering 136 countries. This duration covers more than four complete monthly cycles, enabling robust analysis of \ac{DNS} stability at day, week and month level (Q2). 
+
+The methodology incorporates four main stages. First, we monitor the Tranco Top domains~\cite{LePochat2019} on a daily basis. Second, data collection utilizes globally distributed RIPE Atlas probes, sampled via the platform's geographic zone distribution. Third, the resulting dataset is archived in Parquet format, adhering to the \ac{FAIR} data principles. Finally, we process this data to provide quantitative answers to Q1–Q4.
+
+Throughout this process, the experimental design follows the RIPE Atlas ethical guidelines~\cite{Kisteleki2016}. We target only publicly accessible domains, respect \ac{DNS} \ac{TTL}s regarding query frequency, and strictly exclude politically sensitive content.
 
 \bigskip
 \section{Thesis Structure}
 \label{sec:1.4}
 
-\textbf{Chapter~\ref{ch:state-of-the-art}} reviews the state of the art across five domains: \ac{DNS} measurement paradigms and the OpenINTEL infrastructure; the RIPE Atlas platform and its biases; anycast routing and \ac{NSID}-based instance identification; \ac{CDN} \ac{DNS} routing and \ac{ECS}; and domain ranking lists, concluding with a gap analysis.
-
-\textbf{Chapter~\ref{ch:method}} describes the full measurement methodology: Tranco corpus configuration, RIPE Atlas probe selection and stratification, \ac{DNS} measurement parameters, data collection pipeline, and Parquet storage architecture.
-
-\textbf{Chapter~\ref{ch:results}} presents the empirical results of the measurement campaign: dataset statistics and answers
-to Q1–Q4 with quantitative evidence and visualisations.
-
-\textbf{Chapter~\ref{ch:conclusion}} discusses the results in light of the literature, evaluates study limitations, and draws
-conclusions with future research directions.
+Chapter~\ref{ch:state-of-the-art} reviews distributed \ac{DNS} measurement, geographic routing, and probe bias, and locates this thesis within that literature. Chapter~\ref{ch:method} covers corpus selection, probe configuration, and the collection pipeline. Chapter~\ref{ch:results} presents measurements for Q1--Q4. Chapter~\ref{ch:conclusion} interprets the findings and identifies what remains open.
